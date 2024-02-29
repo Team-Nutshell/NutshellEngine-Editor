@@ -110,8 +110,8 @@ class MathHelper():
 		return vector / np.linalg.norm(vector)
 
 	@staticmethod
-	def lookAtRH(fromVector, toVector, upVector):
-		tMf = np.subtract(toVector, fromVector)
+	def lookAtRH(fromPosition, toVector, upVector):
+		tMf = np.subtract(toVector, fromPosition)
 		forward = MathHelper.normalize(tMf)
 		fXu = np.cross(forward, upVector)
 		right = MathHelper.normalize(fXu)
@@ -119,7 +119,7 @@ class MathHelper():
 		return np.array([right[0], realUp[0], -forward[0], 0.0,
 					right[1], realUp[1], -forward[1], 0.0,
 					right[2], realUp[2], -forward[2], 0.0,
-					-np.dot(right, fromVector), -np.dot(realUp, fromVector), np.dot(forward, fromVector), 1.0], dtype=np.float32)
+					-np.dot(right, fromPosition), -np.dot(realUp, fromPosition), np.dot(forward, fromPosition), 1.0], dtype=np.float32)
 
 	@staticmethod
 	def perspectiveRH(fovY, aspectRatio, near, far):
@@ -235,20 +235,29 @@ class RendererCamera():
 		self.nearPlane = 0.01
 		self.farPlane = 100.0
 		self.cameraSpeed = 1.0
+		
+		tMf = np.subtract(self.position + self.direction, self.position)
+		forward = MathHelper.normalize(tMf)
+		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
+		self.right = MathHelper.normalize(fXu)
+		self.realUp = np.cross(self.right, forward)
 
 class Renderer(QOpenGLWidget):
 	def __init__(self):
 		super().__init__()
 		self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+		self.setMouseTracking(True)
 
 		self.camera = RendererCamera()
 
-		self.forwardKey = Qt.Key.Key_W
-		self.backwardKey = Qt.Key.Key_S
-		self.leftKey = Qt.Key.Key_A
-		self.rightKey = Qt.Key.Key_D
-		self.upKey = Qt.Key.Key_Space
-		self.downKey = Qt.Key.Key_Shift
+		self.cameraForwardKey = Qt.Key.Key_W
+		self.cameraBackwardKey = Qt.Key.Key_S
+		self.cameraLeftKey = Qt.Key.Key_A
+		self.cameraRightKey = Qt.Key.Key_D
+		self.cameraUpKey = Qt.Key.Key_Space
+		self.cameraDownKey = Qt.Key.Key_Shift
+
+		self.moveEntityKey = Qt.Key.Key_G
 
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
@@ -256,34 +265,42 @@ class Renderer(QOpenGLWidget):
 				if "cameraForwardKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraForwardKey"])
 					if not input.isEmpty():
-						self.forwardKey = input[0].key()
+						self.cameraForwardKey = input[0].key()
 				if "cameraBackwardKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraBackwardKey"])
 					if not input.isEmpty():
-						self.backwardKey = input[0].key()
+						self.cameraBackwardKey = input[0].key()
 				if "cameraLeftKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraLeftKey"])
 					if not input.isEmpty():
-						self.leftKey = input[0].key()
+						self.cameraLeftKey = input[0].key()
 				if "cameraRightKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraRightKey"])
 					if not input.isEmpty():
-						self.rightKey = input[0].key()
+						self.cameraRightKey = input[0].key()
 				if "cameraUpKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraUpKey"])
 					if not input.isEmpty():
-						self.upKey = input[0].key()
+						self.cameraUpKey = input[0].key()
 				if "cameraDownKey" in config["Renderer"]:
 					input = QKeySequence.fromString(config["Renderer"]["cameraDownKey"])
 					if not input.isEmpty():
-						self.downKey = input[0].key()
+						self.cameraDownKey = input[0].key()
+				if "moveEntityKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["moveEntityKey"])
+					if not input.isEmpty():
+						self.moveEntityKey = input[0].key()
 
-		self.backwardKeyPressed = False
-		self.leftKeyPressed = False
-		self.rightKeyPressed = False
-		self.upKeyPressed = False
-		self.downKeyPressed = False
-		self.forwardKeyPressed = False
+		self.cameraForwardKeyPressed = False
+		self.cameraBackwardKeyPressed = False
+		self.cameraLeftKeyPressed = False
+		self.cameraRightKeyPressed = False
+		self.cameraUpKeyPressed = False
+		self.cameraDownKeyPressed = False
+
+		self.moveEntityKeyPressed = False
+
+		self.leftClickedPressed = False
 
 		self.mouseCursorPreviousPosition = np.array(2, dtype=np.float32)
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
@@ -632,6 +649,9 @@ class Renderer(QOpenGLWidget):
 			gl.glDrawArrays(gl.GL_TRIANGLES, 0, 3)
 
 	def updateCamera(self):
+		if self.moveEntityKeyPressed:
+			return
+
 		deltaTime = self.waitTimer.interval() / 1000
 		self.cameraYaw = (self.cameraYaw + self.mouseCursorDifference[0]) % 360.0
 		self.cameraPitch = max(-89.0, min(89.0, self.cameraPitch + self.mouseCursorDifference[1]))
@@ -646,20 +666,26 @@ class Renderer(QOpenGLWidget):
 		])
 		self.camera.direction = MathHelper.normalize(self.camera.direction)
 
-		if self.forwardKeyPressed:
+		if self.cameraForwardKeyPressed:
 			self.camera.position = np.add(self.camera.position, self.camera.direction * self.camera.cameraSpeed * deltaTime)
-		if self.backwardKeyPressed:
+		if self.cameraBackwardKeyPressed:
 			self.camera.position = np.add(self.camera.position, self.camera.direction * -self.camera.cameraSpeed * deltaTime)
-		if self.leftKeyPressed:
+		if self.cameraLeftKeyPressed:
 			t = MathHelper.normalize(np.array([-self.camera.direction[2], 0.0, self.camera.direction[0]]))
 			self.camera.position = np.add(self.camera.position, t * -self.camera.cameraSpeed * deltaTime)
-		if self.rightKeyPressed:
+		if self.cameraRightKeyPressed:
 			t = MathHelper.normalize(np.array([-self.camera.direction[2], 0.0, self.camera.direction[0]]))
 			self.camera.position = np.add(self.camera.position, t * self.camera.cameraSpeed * deltaTime)
-		if self.upKeyPressed:
+		if self.cameraUpKeyPressed:
 			self.camera.position[1] += self.camera.cameraSpeed * deltaTime
-		if self.downKeyPressed:
+		if self.cameraDownKeyPressed:
 			self.camera.position[1] -= self.camera.cameraSpeed * deltaTime
+
+		tMf = np.subtract(self.camera.position + self.camera.direction, self.camera.position)
+		forward = MathHelper.normalize(tMf)
+		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
+		self.camera.right = MathHelper.normalize(fXu)
+		self.camera.realUp = np.cross(self.camera.right, forward)
 
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 
@@ -698,67 +724,86 @@ class Renderer(QOpenGLWidget):
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.outlineSoloDepthImage)
 
 	def keyPressEvent(self, e):
-		if e.key() == self.forwardKey:
-			self.forwardKeyPressed = True
-		if e.key() == self.backwardKey:
-			self.backwardKeyPressed = True
-		if e.key() == self.leftKey:
-			self.leftKeyPressed = True
-		if e.key() == self.rightKey:
-			self.rightKeyPressed = True
-		if e.key() == self.upKey:
-			self.upKeyPressed = True
-		if e.key() == self.downKey:
-			self.downKeyPressed = True
+		if e.key() == self.cameraForwardKey:
+			self.cameraForwardKeyPressed = True
+		if e.key() == self.cameraBackwardKey:
+			self.cameraBackwardKeyPressed = True
+		if e.key() == self.cameraLeftKey:
+			self.cameraLeftKeyPressed = True
+		if e.key() == self.cameraRightKey:
+			self.cameraRightKeyPressed = True
+		if e.key() == self.cameraUpKey:
+			self.cameraUpKeyPressed = True
+		if e.key() == self.cameraDownKey:
+			self.cameraDownKeyPressed = True
+		if e.key() == self.moveEntityKey:
+			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed:
+				self.moveEntityKeyPressed = True
 		e.accept()
 
 	def keyReleaseEvent(self, e):
-		if e.key() == self.forwardKey:
-			self.forwardKeyPressed = False
-		if e.key() == self.backwardKey:
-			self.backwardKeyPressed = False
-		if e.key() == self.leftKey:
-			self.leftKeyPressed = False
-		if e.key() == self.rightKey:
-			self.rightKeyPressed = False
-		if e.key() == self.upKey:
-			self.upKeyPressed = False
-		if e.key() == self.downKey:
-			self.downKeyPressed = False
-		e.accept()
-
-	def mouseMoveEvent(self, e):
-		if e.buttons() & Qt.MouseButton.LeftButton:
-			mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
-			self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
-			self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
-		e.accept()
-
-	def mousePressEvent(self, e):
-		if e.button() == Qt.MouseButton.LeftButton:
-			self.setCursor(Qt.CursorShape.BlankCursor)
-			widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
-			QCursor.setPos(widgetCenter)
-			self.mouseCursorPreviousPosition = np.array([self.width() / 2, self.height() / 2])
-		elif e.button() == Qt.MouseButton.RightButton:
-			self.doPicking = True
-		e.accept()
-
-	def mouseReleaseEvent(self, e):
-		if e.button() == Qt.MouseButton.LeftButton:
-			self.setCursor(Qt.CursorShape.ArrowCursor)
-			widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
-			QCursor.setPos(widgetCenter)
+		if e.key() == self.cameraForwardKey:
+			self.cameraForwardKeyPressed = False
+		if e.key() == self.cameraBackwardKey:
+			self.cameraBackwardKeyPressed = False
+		if e.key() == self.cameraLeftKey:
+			self.cameraLeftKeyPressed = False
+		if e.key() == self.cameraRightKey:
+			self.cameraRightKeyPressed = False
+		if e.key() == self.cameraUpKey:
+			self.cameraUpKeyPressed = False
+		if e.key() == self.cameraDownKey:
+			self.cameraDownKeyPressed = False
+		if e.key() == self.moveEntityKey:
+			self.moveEntityKeyPressed = False
 			self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 		e.accept()
 
+	def mouseMoveEvent(self, e):
+		if self.moveEntityKeyPressed:
+			if globalInfo.currentEntityID != -1:
+				self.entityMovePosition = np.copy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"].position)
+				mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
+				self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
+				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
+		else:
+			if e.buttons() & Qt.MouseButton.LeftButton:
+				if self.leftClickedPressed:
+					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
+					self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
+					self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
+		e.accept()
+
+	def mousePressEvent(self, e):
+		if not self.moveEntityKeyPressed:
+			if e.button() == Qt.MouseButton.LeftButton:
+				self.setCursor(Qt.CursorShape.BlankCursor)
+				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
+				QCursor.setPos(widgetCenter)
+				self.mouseCursorPreviousPosition = np.array([self.width() / 2, self.height() / 2])
+				self.leftClickedPressed = True
+			elif e.button() == Qt.MouseButton.RightButton:
+				self.doPicking = True
+		e.accept()
+
+	def mouseReleaseEvent(self, e):
+		if not self.moveEntityKeyPressed:
+			if e.button() == Qt.MouseButton.LeftButton:
+				if self.leftClickedPressed:
+					self.setCursor(Qt.CursorShape.ArrowCursor)
+					widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
+					QCursor.setPos(widgetCenter)
+					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+					self.leftClickedPressed = False
+		e.accept()
+
 	def focusOutEvent(self, e):
-		self.forwardKeyPressed = False
-		self.backwardKeyPressed = False
-		self.leftKeyPressed = False
-		self.rightKeyPressed = False
-		self.upKeyPressed = False
-		self.downKeyPressed = False
+		self.cameraForwardKeyPressed = False
+		self.cameraBackwardKeyPressed = False
+		self.cameraLeftKeyPressed = False
+		self.cameraRightKeyPressed = False
+		self.cameraUpKeyPressed = False
+		self.cameraDownKeyPressed = False
 		e.accept()
 
 	def resizeEvent(self, e):
