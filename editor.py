@@ -31,6 +31,7 @@ class GlobalInfo():
 	def __init__(self):
 		self.entities = []
 		self.currentEntityID = -1
+		self.devicePixelRatio = 1.0
 		self.window = None
 		self.undoStack = QUndoStack()
 		self.signalEmitter = None
@@ -203,6 +204,19 @@ class OpenGLHelper():
 		gl.glDetachShader(program, fragmentShader)
 
 		return [program, programLinkState]
+
+	@staticmethod
+	def fullscreenVertexShaderCode():
+		return '''
+		#version 460
+
+		out vec2 uv;
+
+		void main() {
+			uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+			gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+		}
+		'''
 	
 class RendererCamera():
 	def __init__(self):
@@ -218,18 +232,15 @@ class Renderer(QOpenGLWidget):
 		super().__init__()
 		self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
-		self.entityProgram = None
-		self.gridProgram = None
-
 		self.camera = RendererCamera()
 
-		self.forwardKey = Qt.Key.Key_W if QLocale().system().uiLanguages()[0] != "fr-FR" else Qt.Key.Key_Z
+		self.forwardKey = Qt.Key.Key_W
 		self.forwardKeyPressed = False
 
 		self.backwardKey = Qt.Key.Key_S
 		self.backwardKeyPressed = False
 
-		self.leftKey = Qt.Key.Key_A if QLocale().system().uiLanguages()[0] != "fr-FR" else Qt.Key.Key_Q
+		self.leftKey = Qt.Key.Key_A
 		self.leftKeyPressed = False
 
 		self.rightKey = Qt.Key.Key_D
@@ -250,12 +261,13 @@ class Renderer(QOpenGLWidget):
 		self.waitTimer = QTimer()
 		self.waitTimer.timeout.connect(self.update)
 
-		self.pickedEntityID = np.iinfo(np.uint32).max
 		self.doPicking = False
 
 		self.gotResized = False
 
 	def initializeGL(self):
+		[fullscreenVertexShader, _] = OpenGLHelper.compileShader(gl.GL_VERTEX_SHADER, OpenGLHelper.fullscreenVertexShaderCode())
+
 		# Entity Program
 		entityVertexShaderCode = '''
 		#version 460
@@ -414,12 +426,68 @@ class Renderer(QOpenGLWidget):
 
 		self.pickingFramebuffer = gl.glGenFramebuffers(1)
 		self.createPickingImages()
+
+		# Outline
+		outlineSoloFragmentShaderCode = '''
+		#version 460
+
+		out float outColor;
+
+		void main() {
+			outColor = 1.0;
+		}
+		'''
+		[outlineSoloFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineSoloFragmentShaderCode)
+
+		[self.outlineSoloProgram, _] = OpenGLHelper.createProgram(entityVertexShader, outlineSoloFragmentShader)
+
+		self.outlineSoloFramebuffer = gl.glGenFramebuffers(1)
+		self.createOutlineSoloImages()
+
+		outlineFragmentShaderCode = '''
+		#version 460
+
+		uniform sampler2D outlineSoloTexture;
+
+		in vec2 uv;
+
+		out vec4 outColor;
+
+		void main() {
+			float value = texture(outlineSoloTexture, uv).r;
+			if (value == 1.0) {
+				discard;
+			}
+
+			vec2 texelSize = 1.0 / vec2(textureSize(outlineSoloTexture, 0));
+			bool foundValue = false;
+			for (float range = 0.0; range < 2.0; range++) {
+				float n = texture(outlineSoloTexture, uv + vec2(0.0, texelSize.y * (range + 1.0))).r;
+				float s = texture(outlineSoloTexture, uv + vec2(0.0, -texelSize.y * (range + 1.0))).r;
+				float e = texture(outlineSoloTexture, uv + vec2(-texelSize.x * (range + 1.0), 0.0)).r;
+				float w = texture(outlineSoloTexture, uv + vec2(texelSize.x * (range + 1.0), 0.0)).r;
+				if ((n == 1.0) || (s == 1.0) || (e == 1.0) || (w == 1.0)) {
+					outColor = vec4(1.0, 1.0, 0.0, 1.0);
+					foundValue = true;
+					break;
+				}
+			}
+			if (!foundValue) {
+				discard;
+			}
+		}
+		'''
+		[outlineFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineFragmentShaderCode)
+
+		[self.outlineProgram, _] = OpenGLHelper.createProgram(fullscreenVertexShader, outlineFragmentShader)
 		
+		# Render
 		self.waitTimer.start(16)
 
 	def paintGL(self):
 		if self.gotResized:
 			self.createPickingImages()
+			self.createOutlineSoloImages()
 
 			self.gotResized = False
 
@@ -432,6 +500,7 @@ class Renderer(QOpenGLWidget):
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 		gl.glEnable(gl.GL_DEPTH_TEST)
 		gl.glDepthFunc(gl.GL_LESS)
+		gl.glDepthMask(gl.GL_TRUE)
 		gl.glEnable(gl.GL_BLEND)
 		gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -472,6 +541,7 @@ class Renderer(QOpenGLWidget):
 			gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 			gl.glEnable(gl.GL_DEPTH_TEST)
 			gl.glDepthFunc(gl.GL_LESS)
+			gl.glDepthMask(gl.GL_TRUE)
 			gl.glDisable(gl.GL_BLEND)
 
 			for entity in globalInfo.entities:
@@ -492,11 +562,58 @@ class Renderer(QOpenGLWidget):
 					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
 					
 					gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
-
+				
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
-			self.pickedEntityID = gl.glReadPixels(cursorPosition.x(), self.height() - cursorPosition.y(), 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
+			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
+			if pickedEntityID != np.iinfo(np.uint32).max:
+				globalInfo.currentEntityID = pickedEntityID
+				globalInfo.signalEmitter.selectEntitySignal.emit(pickedEntityID)
 			
 			self.doPicking = False
+
+		# Outline
+		if globalInfo.currentEntityID != -1:
+			# Outline Solo
+			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.outlineSoloFramebuffer)
+			gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+			gl.glEnable(gl.GL_DEPTH_TEST)
+			gl.glDepthFunc(gl.GL_LESS)
+			gl.glDepthMask(gl.GL_TRUE)
+			gl.glDisable(gl.GL_BLEND)
+
+			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
+			entityPosition = np.copy(entity.components["transform"].position)
+			entityPosition[0] *= -1.0
+			translationMatrix = MathHelper.translate(entityPosition)
+			rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+			scalingMatrix = MathHelper.scale(entity.components["transform"].scale)
+			modelMatrix = MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+
+			gl.glUseProgram(self.outlineSoloProgram)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, viewProjMatrix)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, modelMatrix)
+
+			if "renderable" not in entity.components.keys():
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+				
+				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+
+			# Outline
+			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
+			gl.glDisable(gl.GL_DEPTH_TEST)
+			gl.glEnable(gl.GL_DEPTH_TEST)
+			gl.glDepthFunc(gl.GL_ALWAYS)
+
+			gl.glUseProgram(self.outlineProgram)
+			gl.glActiveTexture(gl.GL_TEXTURE0)
+			gl.glBindTexture(gl.GL_TEXTURE_2D, self.outlineSoloImage)
+			gl.glUniform1i(gl.glGetUniformLocation(self.outlineProgram, "outlineSoloTexture"), 0)
+
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
+
+			gl.glDrawArrays(gl.GL_TRIANGLES, 0, 3)
+
 
 	def updateCamera(self):
 		deltaTime = self.waitTimer.interval() / 1000
@@ -535,13 +652,34 @@ class Renderer(QOpenGLWidget):
 
 		self.pickingImage = gl.glGenTextures(1)
 		gl.glBindTexture(gl.GL_TEXTURE_2D, self.pickingImage)
-		gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32UI, self.width(), self.height(), 0, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT, None)
+		gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32UI, int(self.width() * globalInfo.devicePixelRatio), int(self.height() * globalInfo.devicePixelRatio), 0, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT, None)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
 		gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, self.pickingImage, 0)
 
 		self.pickingDepthImage = gl.glGenRenderbuffers(1)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.pickingDepthImage)
-		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.width(), self.height())
+		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, int(self.width() * globalInfo.devicePixelRatio), int(self.height() * globalInfo.devicePixelRatio))
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.pickingDepthImage)
+
+	def createOutlineSoloImages(self):
+		gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.outlineSoloFramebuffer)
+
+		self.outlineSoloImage = gl.glGenTextures(1)
+		gl.glBindTexture(gl.GL_TEXTURE_2D, self.outlineSoloImage)
+		gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RED, int(self.width() * globalInfo.devicePixelRatio), int(self.height() * globalInfo.devicePixelRatio), 0, gl.GL_RED, gl.GL_FLOAT, None)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+		gl.glFramebufferTexture(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, self.outlineSoloImage, 0)
+
+		self.outlineSoloDepthImage = gl.glGenRenderbuffers(1)
+		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.outlineSoloDepthImage)
+		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, int(self.width() * globalInfo.devicePixelRatio), int(self.height() * globalInfo.devicePixelRatio))
+		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.outlineSoloDepthImage)
 
 	def keyPressEvent(self, e):
 		if e.key() == self.forwardKey:
@@ -596,11 +734,6 @@ class Renderer(QOpenGLWidget):
 			widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
 			QCursor.setPos(widgetCenter)
 			self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
-		elif e.button() == Qt.MouseButton.RightButton:
-			if self.pickedEntityID != np.iinfo(np.uint32).max:
-				globalInfo.currentEntityID = self.pickedEntityID
-				globalInfo.signalEmitter.selectEntitySignal.emit(self.pickedEntityID)
-				self.pickedEntityID = np.iinfo(np.uint32).max
 		e.accept()
 
 	def focusOutEvent(self, e):
@@ -841,12 +974,20 @@ class Vector3Widget(QWidget):
 			self.previousZ = newZ
 			self.editingFinished.emit(newX, newY, newZ)
 
+class ComponentSeparatorLine(QFrame):
+	def __init__(self):
+		super().__init__()
+		self.setFrameShape(QFrame.Shape.HLine)
+		self.setLineWidth(1)
+		self.setStyleSheet("color: rgba(255, 255, 255, 120)")
+
 class TransformComponentWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.layout().addWidget(ComponentSeparatorLine())
 		self.layout().addWidget(QLabel("<b>Transform</b>"))
 		self.positionWidget = Vector3Widget("Position")
 		self.layout().addWidget(self.positionWidget)
@@ -854,6 +995,7 @@ class TransformComponentWidget(QWidget):
 		self.layout().addWidget(self.rotationWidget)
 		self.scaleWidget = Vector3Widget("Scale")
 		self.layout().addWidget(self.scaleWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
 		self.positionWidget.editingFinished.connect(self.onTransformUpdated)
 		self.rotationWidget.editingFinished.connect(self.onTransformUpdated)
 		self.scaleWidget.editingFinished.connect(self.onTransformUpdated)
@@ -899,12 +1041,6 @@ class TransformComponentWidget(QWidget):
 			newTransform.scale = [x, y, z]
 		globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, newTransform))
 
-class SeparatorLine(QFrame):
-	def __init__(self):
-		super().__init__()
-		self.setFrameShape(QFrame.Shape.HLine)
-		self.setLineWidth(1)
-
 class ComponentList(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -913,7 +1049,6 @@ class ComponentList(QWidget):
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.transformWidget = TransformComponentWidget()
 		self.layout().addWidget(self.transformWidget)
-		self.layout().addWidget(SeparatorLine())
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
@@ -1036,6 +1171,7 @@ if __name__ == "__main__":
 	app = QApplication([])
 	app.setStyle("Fusion")
 
+	globalInfo.devicePixelRatio = app.devicePixelRatio()
 	globalInfo.signalEmitter = SignalEmitter()
 
 	window = MainWindow()
