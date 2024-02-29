@@ -17,6 +17,14 @@ class Transform(Component):
 		self.rotation = np.zeros(3, dtype=np.float32)
 		self.scale = np.ones(3, dtype=np.float32)
 
+	def modelMatrix(self):
+		position = np.copy(self.position)
+		position[0] *= -1.0
+		translationMatrix = MathHelper.translate(position)
+		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.rotation[2]), [0.0, 0.0, 1.0])))
+		scalingMatrix = MathHelper.scale(self.scale)
+		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+
 class Entity():
 	def __init__(self, name, entityID=-1):
 		if entityID == -1:
@@ -27,14 +35,6 @@ class Entity():
 		self.name = name
 		self.isPersistent = False
 		self.components = {}
-
-	def modelMatrix(self):
-		entityPosition = np.copy(self.components["transform"].position)
-		entityPosition[0] *= -1.0
-		translationMatrix = MathHelper.translate(entityPosition)
-		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-		scalingMatrix = MathHelper.scale(self.components["transform"].scale)
-		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
 
 class GlobalInfo():
 	def __init__(self):
@@ -186,6 +186,24 @@ class MathHelper():
 				m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15],
 				m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15],
 				m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15]], dtype=np.float32)
+	
+	@staticmethod
+	def mat4x4Vec4Mult(m, v):
+		return np.array([
+			m[0] * v[0] + m[4] * v[1] + m[8] * v[2] +  m[12] * v[3],
+			m[1] * v[0] + m[5] * v[1] + m[9] * v[2] +  m[13] * v[3],
+			m[2] * v[0] + m[6] * v[1] + m[10] * v[2] +  m[14] * v[3],
+			m[3] * v[0] + m[7] * v[1] + m[11] * v[2] +  m[15] * v[3]], dtype=np.float32)
+	
+	@staticmethod
+	def unproject(p, width, height, invViewMatrix, invProjMatrix):
+		screenSpace = np.array([p[0] / width, p[1] / height], dtype=np.float32)
+		clipSpace = np.subtract(screenSpace * 2.0, np.array([1.0, 1.0], dtype=np.float32))
+		viewSpace = MathHelper.mat4x4Vec4Mult(invProjMatrix.reshape((16)), np.array([clipSpace[0], clipSpace[1], 0.0, 1.0], dtype=np.float32))
+		worldSpace = MathHelper.mat4x4Vec4Mult(invViewMatrix.reshape((16)), viewSpace)
+		worldSpace[0] *= -1.0
+
+		return worldSpace[:3] / worldSpace[3]
 
 class OpenGLHelper():
 	@staticmethod
@@ -241,6 +259,12 @@ class RendererCamera():
 		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
 		self.right = MathHelper.normalize(fXu)
 		self.realUp = np.cross(self.right, forward)
+
+		self.viewMatrix = None
+		self.projectionMatrix = None
+		self.viewProjMatrix = None
+		self.invViewMatrix = None
+		self.invProjMatrix = None
 
 class Renderer(QOpenGLWidget):
 	def __init__(self):
@@ -312,6 +336,8 @@ class Renderer(QOpenGLWidget):
 		self.waitTimer.timeout.connect(self.update)
 
 		self.doPicking = False
+
+		self.entityMoveTransform = None
 
 		self.gotResized = False
 
@@ -542,9 +568,6 @@ class Renderer(QOpenGLWidget):
 			self.gotResized = False
 
 		self.updateCamera()
-		viewMatrix = MathHelper.lookAtRH(self.camera.position, np.add(self.camera.position, self.camera.direction), [0.0, 1.0, 0.0])
-		projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
-		viewProjMatrix = MathHelper.mat4x4Mult(projectionMatrix, viewMatrix)
 
 		gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -556,10 +579,13 @@ class Renderer(QOpenGLWidget):
 
 		# Entities
 		gl.glUseProgram(self.entityProgram)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, viewProjMatrix)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 		for entity in globalInfo.entities:
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.modelMatrix())
+			if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+			else:
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
 			if "renderable" not in entity.components.keys():
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
@@ -569,9 +595,9 @@ class Renderer(QOpenGLWidget):
 
 		# Grid
 		gl.glUseProgram(self.gridProgram)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "view"), 1, False, viewMatrix)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "projection"), 1, False, projectionMatrix)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "viewProj"), 1, False, viewProjMatrix)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "view"), 1, False, self.camera.viewMatrix)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "projection"), 1, False, self.camera.projectionMatrix)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 		gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "near"), self.camera.nearPlane)
 		gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "far"), self.camera.farPlane)
 
@@ -589,10 +615,14 @@ class Renderer(QOpenGLWidget):
 			gl.glDisable(gl.GL_BLEND)
 
 			gl.glUseProgram(self.pickingProgram)
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, viewProjMatrix)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 			for entity in globalInfo.entities:
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.modelMatrix())
+				if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+				else:
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
+
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
 				if "renderable" not in entity.components.keys():
@@ -622,10 +652,13 @@ class Renderer(QOpenGLWidget):
 			gl.glDisable(gl.GL_BLEND)
 
 			gl.glUseProgram(self.outlineSoloProgram)
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, viewProjMatrix)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.modelMatrix())
+			if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+			else:
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
 			if "renderable" not in entity.components.keys():
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
@@ -685,7 +718,14 @@ class Renderer(QOpenGLWidget):
 		forward = MathHelper.normalize(tMf)
 		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
 		self.camera.right = MathHelper.normalize(fXu)
+		self.camera.right[0] *= -1.0
 		self.camera.realUp = np.cross(self.camera.right, forward)
+		
+		self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.position, np.add(self.camera.position, self.camera.direction), [0.0, 1.0, 0.0])
+		self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
+		self.camera.viewProjMatrix = MathHelper.mat4x4Mult(self.camera.projectionMatrix, self.camera.viewMatrix)
+		self.camera.invViewMatrix = np.linalg.inv(np.copy(self.camera.viewMatrix).reshape((4, 4)))
+		self.camera.invProjMatrix = np.linalg.inv(np.copy(self.camera.projectionMatrix).reshape((4, 4)))
 
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 
@@ -724,6 +764,9 @@ class Renderer(QOpenGLWidget):
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.outlineSoloDepthImage)
 
 	def keyPressEvent(self, e):
+		if e.isAutoRepeat():
+			e.accept()
+			return
 		if e.key() == self.cameraForwardKey:
 			self.cameraForwardKeyPressed = True
 		if e.key() == self.cameraBackwardKey:
@@ -739,9 +782,15 @@ class Renderer(QOpenGLWidget):
 		if e.key() == self.moveEntityKey:
 			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed:
 				self.moveEntityKeyPressed = True
+				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
+				cursorPos = self.mapFromGlobal(QCursor.pos())
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
 		e.accept()
 
 	def keyReleaseEvent(self, e):
+		if e.isAutoRepeat():
+			e.accept()
+			return
 		if e.key() == self.cameraForwardKey:
 			self.cameraForwardKeyPressed = False
 		if e.key() == self.cameraBackwardKey:
@@ -757,31 +806,40 @@ class Renderer(QOpenGLWidget):
 		if e.key() == self.moveEntityKey:
 			self.moveEntityKeyPressed = False
 			self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+			if globalInfo.currentEntityID != -1:
+				globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+				self.entityMoveTransform = None
 		e.accept()
 
 	def mouseMoveEvent(self, e):
-		if self.moveEntityKeyPressed:
-			if globalInfo.currentEntityID != -1:
-				self.entityMovePosition = np.copy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"].position)
-				mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
-				self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
-				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
-		else:
+		if not self.moveEntityKeyPressed:
 			if e.buttons() & Qt.MouseButton.LeftButton:
 				if self.leftClickedPressed:
 					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
 					self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
 					self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
+		else:
+			if globalInfo.currentEntityID != -1:
+				mouseCursorCurrentPosition = np.array([e.pos().x(), self.height() - e.pos().y()])
+				worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+				worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+				worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
+				worldSpaceCursorDifferenceNormalized = MathHelper.normalize(worldSpaceCursorDifference)
+				worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
+				cameraEntityDifferenceLength = np.linalg.norm(np.subtract(self.entityMoveTransform.position, self.camera.position))
+				coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / self.camera.nearPlane
+				self.entityMoveTransform.position += worldSpaceCursorDifferenceNormalized * coefficient
+				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
 		e.accept()
 
 	def mousePressEvent(self, e):
 		if not self.moveEntityKeyPressed:
 			if e.button() == Qt.MouseButton.LeftButton:
+				self.leftClickedPressed = True
 				self.setCursor(Qt.CursorShape.BlankCursor)
 				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
 				QCursor.setPos(widgetCenter)
 				self.mouseCursorPreviousPosition = np.array([self.width() / 2, self.height() / 2])
-				self.leftClickedPressed = True
 			elif e.button() == Qt.MouseButton.RightButton:
 				self.doPicking = True
 		e.accept()
@@ -790,11 +848,11 @@ class Renderer(QOpenGLWidget):
 		if not self.moveEntityKeyPressed:
 			if e.button() == Qt.MouseButton.LeftButton:
 				if self.leftClickedPressed:
+					self.leftClickedPressed = False
 					self.setCursor(Qt.CursorShape.ArrowCursor)
 					widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
 					QCursor.setPos(widgetCenter)
 					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
-					self.leftClickedPressed = False
 		e.accept()
 
 	def focusOutEvent(self, e):
@@ -961,6 +1019,9 @@ class EntityList(QListWidget):
 		self.menu.popup(QCursor.pos())
 
 	def keyPressEvent(self, e):
+		if e.isAutoRepeat():
+			e.accept()
+			return
 		if len(self.selectedItems()) != 0:
 			currentSelectionIndex = self.row(self.selectedItems()[0])
 			if e.key() == Qt.Key.Key_Delete:
