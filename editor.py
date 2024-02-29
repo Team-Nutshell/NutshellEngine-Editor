@@ -3,9 +3,10 @@ import ctypes
 import OpenGL.GL as gl
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter
-from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator
+from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
+import configparser
 
 class Component():
 	pass
@@ -26,6 +27,14 @@ class Entity():
 		self.name = name
 		self.isPersistent = False
 		self.components = {}
+
+	def modelMatrix(self):
+		entityPosition = np.copy(self.components["transform"].position)
+		entityPosition[0] *= -1.0
+		translationMatrix = MathHelper.translate(entityPosition)
+		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+		scalingMatrix = MathHelper.scale(self.components["transform"].scale)
+		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
 
 class GlobalInfo():
 	def __init__(self):
@@ -84,7 +93,7 @@ class FileMenu(QMenu):
 		if fileDialog.exec():
 			files = fileDialog.selectedFiles()
 		return files
-	
+
 class EditMenu(QMenu):
 	def __init__(self):
 		super().__init__("&Edit")
@@ -111,7 +120,7 @@ class MathHelper():
 					right[1], realUp[1], -forward[1], 0.0,
 					right[2], realUp[2], -forward[2], 0.0,
 					-np.dot(right, fromVector), -np.dot(realUp, fromVector), np.dot(forward, fromVector), 1.0], dtype=np.float32)
-	
+
 	@staticmethod
 	def perspectiveRH(fovY, aspectRatio, near, far):
 		tanHalfFovY = np.tan(fovY / 2.0)
@@ -121,14 +130,14 @@ class MathHelper():
 					0.0, 1.0 / tanHalfFovY, 0.0, 0.0,
 					0.0, 0.0, far / nearMfar, -1.0,
 					0.0, 0.0, -(far * near) / farMnear, 0.0], dtype=np.float32)
-	
+
 	@staticmethod
 	def translate(translation):
 		return np.array([1.0, 0.0, 0.0, 0.0,
 					0.0, 1.0, 0.0, 0.0,
 					0.0, 0.0, 1.0, 0.0,
 					translation[0], translation[1], translation[2], 1.0], dtype=np.float32)
-	
+
 	@staticmethod
 	def rotate(angle, axis):
 		cosTheta = np.cos(angle)
@@ -147,14 +156,14 @@ class MathHelper():
 		cosTheta + ((axis[2] * axis[2]) * oMct),
 		0.0,
 		0.0, 0.0, 0.0, 1.0], dtype=np.float32)
-	
+
 	@staticmethod
 	def scale(scaling):
 		return np.array([scaling[0], 0.0, 0.0, 0.0,
 				0.0, scaling[1], 0.0, 0.0,
 				0.0, 0.0, scaling[2], 0.0,
 				0.0, 0.0, 0.0, 1.0], dtype=np.float32)
-	
+
 	@staticmethod
 	def mat4x4Mult(m1, m2):
 		return np.array([
@@ -189,7 +198,7 @@ class OpenGLHelper():
 			print("Error while compiling shader (", str(shaderType), "): ", gl.glGetShaderInfoLog(shader))
 			shaderCompilationState = False
 		return [shader, shaderCompilationState]
-	
+
 	@staticmethod
 	def createProgram(vertexShader, fragmentShader):
 		programLinkState = True
@@ -217,7 +226,7 @@ class OpenGLHelper():
 			gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
 		}
 		'''
-	
+
 class RendererCamera():
 	def __init__(self):
 		self.position = np.array([0.0, 1.0, -1.0], dtype=np.float32)
@@ -235,29 +244,53 @@ class Renderer(QOpenGLWidget):
 		self.camera = RendererCamera()
 
 		self.forwardKey = Qt.Key.Key_W
-		self.forwardKeyPressed = False
-
 		self.backwardKey = Qt.Key.Key_S
-		self.backwardKeyPressed = False
-
 		self.leftKey = Qt.Key.Key_A
-		self.leftKeyPressed = False
-
 		self.rightKey = Qt.Key.Key_D
-		self.rightKeyPressed = False
-
 		self.upKey = Qt.Key.Key_Space
-		self.upKeyPressed = False
-
 		self.downKey = Qt.Key.Key_Shift
+
+		config = configparser.ConfigParser()
+		if config.read("assets/options.ini") != []:
+			if "Renderer" in config:
+				if "cameraForwardKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraForwardKey"])
+					if not input.isEmpty():
+						self.forwardKey = input[0].key()
+				if "cameraBackwardKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraBackwardKey"])
+					if not input.isEmpty():
+						self.backwardKey = input[0].key()
+				if "cameraLeftKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraLeftKey"])
+					if not input.isEmpty():
+						self.leftKey = input[0].key()
+				if "cameraRightKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraRightKey"])
+					if not input.isEmpty():
+						self.rightKey = input[0].key()
+				if "cameraUpKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraUpKey"])
+					if not input.isEmpty():
+						self.upKey = input[0].key()
+				if "cameraDownKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["cameraDownKey"])
+					if not input.isEmpty():
+						self.downKey = input[0].key()
+
+		self.backwardKeyPressed = False
+		self.leftKeyPressed = False
+		self.rightKeyPressed = False
+		self.upKeyPressed = False
 		self.downKeyPressed = False
+		self.forwardKeyPressed = False
 
 		self.mouseCursorPreviousPosition = np.array(2, dtype=np.float32)
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
-		
+
 		self.cameraYaw = np.rad2deg(np.arctan2(self.camera.direction[2], self.camera.direction[0]))
 		self.cameraPitch = np.rad2deg(-np.arcsin(self.camera.direction[1]))
-		
+
 		self.waitTimer = QTimer()
 		self.waitTimer.timeout.connect(self.update)
 
@@ -317,13 +350,13 @@ class Renderer(QOpenGLWidget):
 
 		vec3 unprojectPoint(vec3 p) {
 			vec4 unprojected = inverse(view) * inverse(projection) * vec4(p, 1.0);
-			
+
 			return unprojected.xyz / unprojected.w;
 		}
 
 		void main() {
 			vec2 p = plane[gl_VertexID];
-			
+
 			nearPoint = unprojectPoint(vec3(p, 0.0));
 			farPoint = unprojectPoint(vec3(p, 1.0));
 
@@ -480,7 +513,7 @@ class Renderer(QOpenGLWidget):
 		[outlineFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineFragmentShaderCode)
 
 		[self.outlineProgram, _] = OpenGLHelper.createProgram(fullscreenVertexShader, outlineFragmentShader)
-		
+
 		# Render
 		self.waitTimer.start(16)
 
@@ -495,7 +528,7 @@ class Renderer(QOpenGLWidget):
 		viewMatrix = MathHelper.lookAtRH(self.camera.position, np.add(self.camera.position, self.camera.direction), [0.0, 1.0, 0.0])
 		projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
 		viewProjMatrix = MathHelper.mat4x4Mult(projectionMatrix, viewMatrix)
-		
+
 		gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 		gl.glEnable(gl.GL_DEPTH_TEST)
@@ -505,22 +538,16 @@ class Renderer(QOpenGLWidget):
 		gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 		# Entities
-		for entity in globalInfo.entities:
-			entityPosition = np.copy(entity.components["transform"].position)
-			entityPosition[0] *= -1.0
-			translationMatrix = MathHelper.translate(entityPosition)
-			rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-			scalingMatrix = MathHelper.scale(entity.components["transform"].scale)
-			modelMatrix = MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+		gl.glUseProgram(self.entityProgram)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, viewProjMatrix)
 
-			gl.glUseProgram(self.entityProgram)
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, viewProjMatrix)
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, modelMatrix)
+		for entity in globalInfo.entities:
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.modelMatrix())
 
 			if "renderable" not in entity.components.keys():
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
 				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
-				
+
 				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
@@ -544,31 +571,27 @@ class Renderer(QOpenGLWidget):
 			gl.glDepthMask(gl.GL_TRUE)
 			gl.glDisable(gl.GL_BLEND)
 
-			for entity in globalInfo.entities:
-				entityPosition = np.copy(entity.components["transform"].position)
-				entityPosition[0] *= -1.0
-				translationMatrix = MathHelper.translate(entityPosition)
-				rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-				scalingMatrix = MathHelper.scale(entity.components["transform"].scale)
-				modelMatrix = MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+			gl.glUseProgram(self.pickingProgram)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, viewProjMatrix)
 
-				gl.glUseProgram(self.pickingProgram)
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, viewProjMatrix)
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, modelMatrix)
+			for entity in globalInfo.entities:
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.modelMatrix())
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
 				if "renderable" not in entity.components.keys():
 					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
 					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
-					
+
 					gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
-				
+
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
 			if pickedEntityID != np.iinfo(np.uint32).max:
 				globalInfo.currentEntityID = pickedEntityID
-				globalInfo.signalEmitter.selectEntitySignal.emit(pickedEntityID)
-			
+			else:
+				globalInfo.currentEntityID = -1
+			globalInfo.signalEmitter.selectEntitySignal.emit(globalInfo.currentEntityID)
+
 			self.doPicking = False
 
 		# Outline
@@ -581,22 +604,16 @@ class Renderer(QOpenGLWidget):
 			gl.glDepthMask(gl.GL_TRUE)
 			gl.glDisable(gl.GL_BLEND)
 
-			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
-			entityPosition = np.copy(entity.components["transform"].position)
-			entityPosition[0] *= -1.0
-			translationMatrix = MathHelper.translate(entityPosition)
-			rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-			scalingMatrix = MathHelper.scale(entity.components["transform"].scale)
-			modelMatrix = MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
-
 			gl.glUseProgram(self.outlineSoloProgram)
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, viewProjMatrix)
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, modelMatrix)
+
+			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.modelMatrix())
 
 			if "renderable" not in entity.components.keys():
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
 				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
-				
+
 				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Outline
@@ -613,7 +630,6 @@ class Renderer(QOpenGLWidget):
 			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 			gl.glDrawArrays(gl.GL_TRIANGLES, 0, 3)
-
 
 	def updateCamera(self):
 		deltaTime = self.waitTimer.interval() / 1000
@@ -874,11 +890,12 @@ class EntityList(QListWidget):
 		self.takeItem(self.row(self.findItemWithEntityID(entityID)))
 
 	def onSelectEntity(self, entityID):
+		with QSignalBlocker(self) as signalBlocker:
+			self.clearSelection()
 		if entityID != -1:
 			with QSignalBlocker(self) as signalBlocker:
-				self.clearSelection()
 				self.findItemWithEntityID(entityID).setSelected(True)
-		
+
 	def onChangeNameEntity(self, entityID, name):
 		self.findItemWithEntityID(entityID).setText(name)
 
@@ -889,7 +906,7 @@ class EntityList(QListWidget):
 		else:
 			globalInfo.currentEntityID = -1
 			globalInfo.signalEmitter.selectEntitySignal.emit(-1)
-	
+
 	def showMenu(self, e):
 		if not self.itemAt(e):
 			self.menu.deleteEntityAction.setEnabled(False)
@@ -1018,15 +1035,16 @@ class TransformComponentWidget(QWidget):
 		if entityID != -1:
 			if "transform" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
 				self.show()
-				self.positionWidget.xLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].position[0]))
-				self.positionWidget.yLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].position[1]))
-				self.positionWidget.zLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].position[2]))
-				self.rotationWidget.xLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].rotation[0]))
-				self.rotationWidget.yLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].rotation[1]))
-				self.rotationWidget.zLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].rotation[2]))
-				self.scaleWidget.xLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].scale[0]))
-				self.scaleWidget.yLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].scale[1]))
-				self.scaleWidget.zLineEdit.setText(str(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"].scale[2]))
+				transform = globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"]
+				self.positionWidget.xLineEdit.setText(str(transform.position[0]))
+				self.positionWidget.yLineEdit.setText(str(transform.position[1]))
+				self.positionWidget.zLineEdit.setText(str(transform.position[2]))
+				self.rotationWidget.xLineEdit.setText(str(transform.rotation[0]))
+				self.rotationWidget.yLineEdit.setText(str(transform.rotation[1]))
+				self.rotationWidget.zLineEdit.setText(str(transform.rotation[2]))
+				self.scaleWidget.xLineEdit.setText(str(transform.scale[0]))
+				self.scaleWidget.yLineEdit.setText(str(transform.scale[1]))
+				self.scaleWidget.zLineEdit.setText(str(transform.scale[2]))
 			else:
 				self.hide()
 
@@ -1126,14 +1144,14 @@ class EntityInfoPanel(QWidget):
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 
 	def onSelectEntity(self, entityID):
-		if entityID == -1:
-			self.entityInfoName.hide()
-			self.componentScrollArea.hide()
-			self.entityInfoPersistence.hide()
-		else:
+		if entityID != -1:
 			self.entityInfoName.show()
 			self.componentScrollArea.show()
 			self.entityInfoPersistence.show()
+		else:
+			self.entityInfoName.hide()
+			self.componentScrollArea.hide()
+			self.entityInfoPersistence.hide()
 
 class MainWindow(QMainWindow):
 	def __init__(self):
@@ -1147,7 +1165,7 @@ class MainWindow(QMainWindow):
 		self.createRenderer()
 		self.createEntityInfoPanel()
 		self.show()
-	
+
 	def createMenuBar(self):
 		self.fileMenu = FileMenu()
 		self.editMenu = EditMenu()
