@@ -17,10 +17,15 @@ class Transform():
 
 	def toJson(self):
 		dictionary = {}
-		dictionary['position'] = [ float(self.position[0]), float(self.position[1]), float(self.position[2]) ]
-		dictionary['rotation'] = [ float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2]) ]
-		dictionary['scale'] = [ float(self.scale[0]), float(self.scale[1]), float(self.scale[2]) ]
+		dictionary["position"] = [float(self.position[0]), float(self.position[1]), float(self.position[2])]
+		dictionary["rotation"] = [float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2])]
+		dictionary["scale"] = [float(self.scale[0]), float(self.scale[1]), float(self.scale[2])]
 		return dictionary
+	
+	def fromJson(self, jsonData):
+		self.position = np.array(jsonData["position"], dtype=np.float32)
+		self.rotation = np.array(jsonData["rotation"], dtype=np.float32)
+		self.scale = np.array(jsonData["scale"], dtype=np.float32)
 
 	def modelMatrix(self):
 		position = np.copy(self.position)
@@ -39,15 +44,23 @@ class Entity():
 			self.entityID = entityID
 		self.name = name
 		self.isPersistent = False
-		self.components = {}
+		self.components = {"transform": Transform()}
 
 	def toJson(self):
 		dictionary = {}
-		dictionary['name'] = self.name
-		dictionary['isPersistent'] = self.isPersistent
-		if 'transform' in self.components:
-			dictionary['transform'] = self.components['transform'].toJson()
+		dictionary["name"] = self.name
+		dictionary["isPersistent"] = self.isPersistent
+		if "transform" in self.components:
+			dictionary["transform"] = self.components["transform"].toJson()
 		return dictionary
+	
+	def fromJson(self, jsonData):
+		if "name" in jsonData:
+			self.name = jsonData["name"]
+		if "isPersistent" in jsonData:
+			self.isPersistent = jsonData["isPersistent"]
+		if "transform" in jsonData:
+			self.components["transform"].fromJson(jsonData["transform"])
 
 class GlobalInfo():
 	def __init__(self):
@@ -81,13 +94,26 @@ class SceneManager():
 	def newScene():
 		globalInfo.currentScenePath = ""
 		globalInfo.window.setWindowTitle("NutshellEngine Editor")
-		while len(globalInfo.entities) != 0:
-			globalInfo.undoStack.push(DestroyEntityCommand(globalInfo.entities[-1].entityID))
+		globalInfo.undoStack.push(ClearSceneCommand())
 
 	@staticmethod
 	def openScene(filePath):
+		with open(filePath, "r") as f:
+			try:
+				sceneData = json.load(f)
+			except:
+				return
+		SceneManager.newScene()
 		globalInfo.currentScenePath = filePath
 		globalInfo.window.setWindowTitle("NutshellEngine Editor - " + filePath)
+		if "entities" in sceneData:
+			entities = []
+			for entity in sceneData["entities"]:
+				newEntity = Entity("")
+				newEntity.fromJson(entity)
+				entities.append(newEntity)
+			if len(entities) != 0:
+				globalInfo.undoStack.push(OpenSceneCommand(entities))
 
 	@staticmethod
 	def saveScene(filePath):
@@ -987,7 +1013,6 @@ class CreateEntityCommand(QUndoCommand):
 	def redo(self):
 		newEntity = Entity(self.entityName, self.entityID)
 		self.entityID = newEntity.entityID
-		newEntity.components["transform"] = Transform()
 		globalInfo.entities.append(newEntity)
 		self.index = len(globalInfo.entities) - 1
 		globalInfo.signalEmitter.createEntitySignal.emit(newEntity.entityID)
@@ -1006,6 +1031,40 @@ class DestroyEntityCommand(QUndoCommand):
 		self.index = globalInfo.findEntityById(self.destroyedEntity.entityID)
 		del globalInfo.entities[self.index]
 		globalInfo.signalEmitter.destroyEntitySignal.emit(self.destroyedEntity.entityID)
+
+class ClearSceneCommand(QUndoCommand):
+	def __init__(self):
+		super().__init__()
+		self.setText("Clear Scene")
+		self.previousEntities = copy.deepcopy(globalInfo.entities)
+
+	def undo(self):
+		globalInfo.entities = copy.deepcopy(self.previousEntities)
+		for i in range(len(self.previousEntities)):
+			globalInfo.signalEmitter.createEntitySignal.emit(self.previousEntities[i].entityID)
+
+	def redo(self):
+		while len(globalInfo.entities) != 0:
+			destroyedEntityID = globalInfo.entities[-1].entityID
+			del globalInfo.entities[-1]
+			globalInfo.signalEmitter.destroyEntitySignal.emit(destroyedEntityID)
+
+class OpenSceneCommand(QUndoCommand):
+	def __init__(self, entities):
+		super().__init__()
+		self.setText("Open Scene")
+		self.newEntities = copy.deepcopy(entities)
+
+	def undo(self):
+		while len(globalInfo.entities) != 0:
+			destroyedEntityID = globalInfo.entities[-1].entityID
+			del globalInfo.entities[-1]
+			globalInfo.signalEmitter.destroyEntitySignal.emit(destroyedEntityID)
+
+	def redo(self):
+		globalInfo.entities = copy.deepcopy(self.newEntities)
+		for i in range(len(self.newEntities)):
+			globalInfo.signalEmitter.createEntitySignal.emit(self.newEntities[i].entityID)
 
 class ChangeNameEntityCommand(QUndoCommand):
 	def __init__(self, entityID, name):
