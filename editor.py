@@ -2,20 +2,25 @@ import copy
 import ctypes
 import OpenGL.GL as gl
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy
 from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
 import configparser
+import json
 
-class Component():
-	pass
-
-class Transform(Component):
+class Transform():
 	def __init__(self):
 		self.position = np.zeros(3, dtype=np.float32)
 		self.rotation = np.zeros(3, dtype=np.float32)
 		self.scale = np.ones(3, dtype=np.float32)
+
+	def toJson(self):
+		dictionary = {}
+		dictionary['position'] = [ float(self.position[0]), float(self.position[1]), float(self.position[2]) ]
+		dictionary['rotation'] = [ float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2]) ]
+		dictionary['scale'] = [ float(self.scale[0]), float(self.scale[1]), float(self.scale[2]) ]
+		return dictionary
 
 	def modelMatrix(self):
 		position = np.copy(self.position)
@@ -36,6 +41,14 @@ class Entity():
 		self.isPersistent = False
 		self.components = {}
 
+	def toJson(self):
+		dictionary = {}
+		dictionary['name'] = self.name
+		dictionary['isPersistent'] = self.isPersistent
+		if 'transform' in self.components:
+			dictionary['transform'] = self.components['transform'].toJson()
+		return dictionary
+
 class GlobalInfo():
 	def __init__(self):
 		self.entities = []
@@ -45,6 +58,7 @@ class GlobalInfo():
 		self.undoStack = QUndoStack()
 		self.signalEmitter = None
 		self.entityID = 0
+		self.currentScenePath = ""
 
 	def findEntityById(self, entityID):
 		for i in range(len(self.entities)):
@@ -52,7 +66,35 @@ class GlobalInfo():
 				return i
 		return -1
 
+	def entitiesToJson(self):
+		dictionary = {}
+		entitiesArray = []
+		for entity in self.entities:
+			entitiesArray.append(entity.toJson())
+		dictionary["entities"] = entitiesArray
+		return dictionary
+
 globalInfo = GlobalInfo()
+
+class SceneManager():
+	@staticmethod
+	def newScene():
+		globalInfo.currentScenePath = ""
+		globalInfo.window.setWindowTitle("NutshellEngine Editor")
+		while len(globalInfo.entities) != 0:
+			globalInfo.undoStack.push(DestroyEntityCommand(globalInfo.entities[-1].entityID))
+
+	@staticmethod
+	def openScene(filePath):
+		globalInfo.currentScenePath = filePath
+		globalInfo.window.setWindowTitle("NutshellEngine Editor - " + filePath)
+
+	@staticmethod
+	def saveScene(filePath):
+		globalInfo.currentScenePath = filePath
+		globalInfo.window.setWindowTitle("NutshellEngine Editor - " + filePath)
+		with open(filePath, "w+", encoding="utf-8") as f:
+			json.dump(globalInfo.entitiesToJson(), f, ensure_ascii=False, indent=4)
 
 class SignalEmitter(QObject):
 	createEntitySignal = pyqtSignal(int)
@@ -73,8 +115,7 @@ class NewMessageBox(QMessageBox):
 			self.okButton()
 
 	def okButton(self):
-		while len(globalInfo.entities) != 0:
-			globalInfo.undoStack.push(DestroyEntityCommand(globalInfo.entities[-1].entityID))
+		SceneManager.newScene()
 
 class FileMenu(QMenu):
 	def __init__(self):
@@ -83,16 +124,38 @@ class FileMenu(QMenu):
 		self.newAction.setShortcut("Ctrl+N")
 		self.openAction = self.addAction("Open...", self.open)
 		self.openAction.setShortcut("Ctrl+O")
+		self.openAction = self.addAction("Save", self.save)
+		self.openAction.setShortcut("Ctrl+S")
+		self.openAction = self.addAction("Save as...", self.saveAs)
+		self.openAction.setShortcut("Shift+Ctrl+S")
 
 	def new(self):
 		NewMessageBox()
 
 	def open(self):
 		fileDialog = QFileDialog()
-		files = []
+		fileDialog.setWindowTitle("Open...")
+		fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)")
+		file = None
 		if fileDialog.exec():
-			files = fileDialog.selectedFiles()
-		return files
+			file = fileDialog.selectedFiles()[0]
+			SceneManager.openScene(file)
+		return file
+	
+	def save(self):
+		if globalInfo.currentScenePath == "":
+			self.saveAs()
+		else:
+			SceneManager.saveScene(globalInfo.currentScenePath)
+
+	def saveAs(self):
+		fileDialog = QFileDialog()
+		fileDialog.setWindowTitle("Save as...")
+		fileDialog.setDefaultSuffix("ntsn")
+		file = None
+		if fileDialog.exec():
+			file = fileDialog.selectedFiles()[0]
+			SceneManager.saveScene(file)
 
 class EditMenu(QMenu):
 	def __init__(self):
@@ -186,7 +249,7 @@ class MathHelper():
 				m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15],
 				m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15],
 				m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15]], dtype=np.float32)
-	
+
 	@staticmethod
 	def mat4x4Vec4Mult(m, v):
 		return np.array([
@@ -194,7 +257,7 @@ class MathHelper():
 			m[1] * v[0] + m[5] * v[1] + m[9] * v[2] +  m[13] * v[3],
 			m[2] * v[0] + m[6] * v[1] + m[10] * v[2] +  m[14] * v[3],
 			m[3] * v[0] + m[7] * v[1] + m[11] * v[2] +  m[15] * v[3]], dtype=np.float32)
-	
+
 	@staticmethod
 	def unproject(p, width, height, invViewMatrix, invProjMatrix):
 		screenSpace = np.array([p[0] / width, p[1] / height], dtype=np.float32)
@@ -253,12 +316,6 @@ class RendererCamera():
 		self.nearPlane = 0.01
 		self.farPlane = 100.0
 		self.cameraSpeed = 1.0
-		
-		tMf = np.subtract(self.position + self.direction, self.position)
-		forward = MathHelper.normalize(tMf)
-		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
-		self.right = MathHelper.normalize(fXu)
-		self.realUp = np.cross(self.right, forward)
 
 		self.viewMatrix = None
 		self.projectionMatrix = None
@@ -281,7 +338,9 @@ class Renderer(QOpenGLWidget):
 		self.cameraUpKey = Qt.Key.Key_Space
 		self.cameraDownKey = Qt.Key.Key_Shift
 
-		self.moveEntityKey = Qt.Key.Key_G
+		self.translateEntityKey = Qt.Key.Key_T
+		self.rotateEntityKey = Qt.Key.Key_R
+		self.scaleEntityKey = Qt.Key.Key_E
 
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
@@ -310,10 +369,18 @@ class Renderer(QOpenGLWidget):
 					input = QKeySequence.fromString(config["Renderer"]["cameraDownKey"])
 					if not input.isEmpty():
 						self.cameraDownKey = input[0].key()
-				if "moveEntityKey" in config["Renderer"]:
-					input = QKeySequence.fromString(config["Renderer"]["moveEntityKey"])
+				if "translateEntityKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["translateEntityKey"])
 					if not input.isEmpty():
-						self.moveEntityKey = input[0].key()
+						self.translateEntityKey = input[0].key()
+				if "rotateEntityKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["rotateEntityKey"])
+					if not input.isEmpty():
+						self.rotateEntityKey = input[0].key()
+				if "scaleEntityKey" in config["Renderer"]:
+					input = QKeySequence.fromString(config["Renderer"]["scaleEntityKey"])
+					if not input.isEmpty():
+						self.scaleEntityKey = input[0].key()
 
 		self.cameraForwardKeyPressed = False
 		self.cameraBackwardKeyPressed = False
@@ -322,7 +389,9 @@ class Renderer(QOpenGLWidget):
 		self.cameraUpKeyPressed = False
 		self.cameraDownKeyPressed = False
 
-		self.moveEntityKeyPressed = False
+		self.translateEntityKeyPressed = False
+		self.rotateEntityKeyPressed = False
+		self.scaleEntityKeyPressed = False
 
 		self.leftClickedPressed = False
 
@@ -682,7 +751,7 @@ class Renderer(QOpenGLWidget):
 			gl.glDrawArrays(gl.GL_TRIANGLES, 0, 3)
 
 	def updateCamera(self):
-		if self.moveEntityKeyPressed:
+		if self.anyEntityTransformKeyPressed():
 			return
 
 		deltaTime = self.waitTimer.interval() / 1000
@@ -714,13 +783,6 @@ class Renderer(QOpenGLWidget):
 		if self.cameraDownKeyPressed:
 			self.camera.position[1] -= self.camera.cameraSpeed * deltaTime
 
-		tMf = np.subtract(self.camera.position + self.camera.direction, self.camera.position)
-		forward = MathHelper.normalize(tMf)
-		fXu = np.cross(forward, np.array([0.0, 1.0, 0.0], dtype=np.float32))
-		self.camera.right = MathHelper.normalize(fXu)
-		self.camera.right[0] *= -1.0
-		self.camera.realUp = np.cross(self.camera.right, forward)
-		
 		self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.position, np.add(self.camera.position, self.camera.direction), [0.0, 1.0, 0.0])
 		self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
 		self.camera.viewProjMatrix = MathHelper.mat4x4Mult(self.camera.projectionMatrix, self.camera.viewMatrix)
@@ -763,6 +825,9 @@ class Renderer(QOpenGLWidget):
 		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, int(self.width() * globalInfo.devicePixelRatio), int(self.height() * globalInfo.devicePixelRatio))
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.outlineSoloDepthImage)
 
+	def anyEntityTransformKeyPressed(self):
+		return self.translateEntityKeyPressed or self.rotateEntityKeyPressed or self.scaleEntityKeyPressed
+
 	def keyPressEvent(self, e):
 		if e.isAutoRepeat():
 			e.accept()
@@ -779,9 +844,21 @@ class Renderer(QOpenGLWidget):
 			self.cameraUpKeyPressed = True
 		if e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = True
-		if e.key() == self.moveEntityKey:
-			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed:
-				self.moveEntityKeyPressed = True
+		if e.key() == self.translateEntityKey:
+			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+				self.translateEntityKeyPressed = True
+				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
+				cursorPos = self.mapFromGlobal(QCursor.pos())
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
+		if e.key() == self.rotateEntityKey:
+			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+				self.rotateEntityKeyPressed = True
+				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
+				cursorPos = self.mapFromGlobal(QCursor.pos())
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
+		if e.key() == self.scaleEntityKey:
+			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+				self.scaleEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
@@ -803,16 +880,31 @@ class Renderer(QOpenGLWidget):
 			self.cameraUpKeyPressed = False
 		if e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = False
-		if e.key() == self.moveEntityKey:
-			self.moveEntityKeyPressed = False
-			self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
-			if globalInfo.currentEntityID != -1:
-				globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
-				self.entityMoveTransform = None
+		if e.key() == self.translateEntityKey:
+			if self.translateEntityKeyPressed:
+				self.translateEntityKeyPressed = False
+				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+				if globalInfo.currentEntityID != -1:
+					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					self.entityMoveTransform = None
+		if e.key() == self.rotateEntityKey:
+			if self.rotateEntityKeyPressed:
+				self.rotateEntityKeyPressed = False
+				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+				if globalInfo.currentEntityID != -1:
+					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					self.entityMoveTransform = None
+		if e.key() == self.scaleEntityKey:
+			if self.scaleEntityKeyPressed:
+				self.scaleEntityKeyPressed = False
+				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+				if globalInfo.currentEntityID != -1:
+					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					self.entityMoveTransform = None
 		e.accept()
 
 	def mouseMoveEvent(self, e):
-		if not self.moveEntityKeyPressed:
+		if not self.anyEntityTransformKeyPressed():
 			if e.buttons() & Qt.MouseButton.LeftButton:
 				if self.leftClickedPressed:
 					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
@@ -821,19 +913,32 @@ class Renderer(QOpenGLWidget):
 		else:
 			if globalInfo.currentEntityID != -1:
 				mouseCursorCurrentPosition = np.array([e.pos().x(), self.height() - e.pos().y()])
-				worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
-				worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
-				worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
-				worldSpaceCursorDifferenceNormalized = MathHelper.normalize(worldSpaceCursorDifference)
-				worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
-				cameraEntityDifferenceLength = np.linalg.norm(np.subtract(self.entityMoveTransform.position, self.camera.position))
-				coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / self.camera.nearPlane
-				self.entityMoveTransform.position += worldSpaceCursorDifferenceNormalized * coefficient
+				if self.translateEntityKeyPressed:
+					worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+					worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+					worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
+					cameraEntityDifference = np.subtract(self.entityMoveTransform.position, self.camera.position)
+					if (np.dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0) and (np.dot(cameraEntityDifference, cameraEntityDifference) != 0.0):
+						worldSpaceCursorDifferenceNormalized = MathHelper.normalize(worldSpaceCursorDifference)
+						worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
+						cameraEntityDifferenceLength = np.linalg.norm(cameraEntityDifference)
+						coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / self.camera.nearPlane
+						self.entityMoveTransform.position += worldSpaceCursorDifferenceNormalized * coefficient
+				elif self.rotateEntityKeyPressed:
+					rotationMatrix = MathHelper.rotate((mouseCursorCurrentPosition[0] - self.mouseCursorPreviousPosition[0]) / self.width(), self.camera.direction)
+					rotationAngles = np.array([np.rad2deg(np.arctan2(rotationMatrix[9], rotationMatrix[10])), np.rad2deg(np.arctan2(-rotationMatrix[8], np.sqrt((rotationMatrix[9] * rotationMatrix[9]) + (rotationMatrix[10] * rotationMatrix[10])))), np.rad2deg(np.arctan2(rotationMatrix[4], rotationMatrix[0]))], dtype=np.float32)
+					self.entityMoveTransform.rotation -= rotationAngles
+					self.entityMoveTransform.rotation %= 360.0
+				elif self.scaleEntityKeyPressed:
+					mousePositionDifference = np.divide(np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition), np.array([self.width(), self.height()], dtype=np.float32))
+					if np.dot(mousePositionDifference, mousePositionDifference) != 0.0:
+						center = np.array([self.width() / 2, self.height() / 2], dtype=np.float32)
+						self.entityMoveTransform.scale += np.linalg.norm(mousePositionDifference) * (1.0 if np.dot(mousePositionDifference, np.subtract(mouseCursorCurrentPosition, center)) > 0.0 else -1.0)
 				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
 		e.accept()
 
 	def mousePressEvent(self, e):
-		if not self.moveEntityKeyPressed:
+		if not self.anyEntityTransformKeyPressed():
 			if e.button() == Qt.MouseButton.LeftButton:
 				self.leftClickedPressed = True
 				self.setCursor(Qt.CursorShape.BlankCursor)
@@ -845,7 +950,7 @@ class Renderer(QOpenGLWidget):
 		e.accept()
 
 	def mouseReleaseEvent(self, e):
-		if not self.moveEntityKeyPressed:
+		if not self.anyEntityTransformKeyPressed():
 			if e.button() == Qt.MouseButton.LeftButton:
 				if self.leftClickedPressed:
 					self.leftClickedPressed = False
@@ -971,6 +1076,10 @@ class EntityListItem(QListWidgetItem):
 class EntityList(QListWidget):
 	def __init__(self):
 		super().__init__()
+		sizePolicy = QSizePolicy()
+		sizePolicy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
+		sizePolicy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
+		self.setSizePolicy(sizePolicy)
 		self.menu = EntityListMenu()
 		self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.customContextMenuRequested.connect(self.showMenu)
@@ -1043,10 +1152,10 @@ class EntityList(QListWidget):
 class EntityPanel(QWidget):
 	def __init__(self):
 		super().__init__()
-		self.resize(300, self.height())
+		self.resize(100, self.height())
 		self.setMinimumWidth(50)
 		self.setLayout(QVBoxLayout())
-		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.layout().setContentsMargins(2, 2, 0, 2)
 		self.entityList = EntityList()
 		self.layout().addWidget(QLabel("Entity List"))
 		self.layout().addWidget(self.entityList)
@@ -1127,30 +1236,30 @@ class TransformComponentWidget(QWidget):
 
 	def onChangeEntityTransform(self, entityID, transform):
 		if entityID == globalInfo.currentEntityID:
-			self.positionWidget.xLineEdit.setText(str(transform.position[0]))
-			self.positionWidget.yLineEdit.setText(str(transform.position[1]))
-			self.positionWidget.zLineEdit.setText(str(transform.position[2]))
-			self.rotationWidget.xLineEdit.setText(str(transform.rotation[0]))
-			self.rotationWidget.yLineEdit.setText(str(transform.rotation[1]))
-			self.rotationWidget.zLineEdit.setText(str(transform.rotation[2]))
-			self.scaleWidget.xLineEdit.setText(str(transform.scale[0]))
-			self.scaleWidget.yLineEdit.setText(str(transform.scale[1]))
-			self.scaleWidget.zLineEdit.setText(str(transform.scale[2]))
+			self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
+			self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
+			self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
+			self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
+			self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
+			self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
+			self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
+			self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
+			self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
 
 	def onSelectEntity(self, entityID):
 		if entityID != -1:
 			if "transform" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
 				self.show()
 				transform = globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"]
-				self.positionWidget.xLineEdit.setText(str(transform.position[0]))
-				self.positionWidget.yLineEdit.setText(str(transform.position[1]))
-				self.positionWidget.zLineEdit.setText(str(transform.position[2]))
-				self.rotationWidget.xLineEdit.setText(str(transform.rotation[0]))
-				self.rotationWidget.yLineEdit.setText(str(transform.rotation[1]))
-				self.rotationWidget.zLineEdit.setText(str(transform.rotation[2]))
-				self.scaleWidget.xLineEdit.setText(str(transform.scale[0]))
-				self.scaleWidget.yLineEdit.setText(str(transform.scale[1]))
-				self.scaleWidget.zLineEdit.setText(str(transform.scale[2]))
+				self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
+				self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
+				self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
+				self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
+				self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
+				self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
+				self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
+				self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
+				self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
 			else:
 				self.hide()
 
@@ -1232,11 +1341,11 @@ class EntityInfoPersistenceWidget(QWidget):
 class EntityInfoPanel(QWidget):
 	def __init__(self):
 		super().__init__()
-		self.resize(300, self.height())
+		self.resize(175, self.height())
 		self.setMinimumWidth(50)
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
-		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.layout().setContentsMargins(0, 2, 2, 2)
 		self.layout().addWidget(QLabel("Entity Info"))
 		self.entityInfoName = EntityInfoNameWidget()
 		self.entityInfoName.hide()
