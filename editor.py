@@ -2,7 +2,7 @@ import copy
 import ctypes
 import OpenGL.GL as gl
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy, QPushButton
 from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
@@ -21,11 +21,14 @@ class Transform():
 		dictionary["rotation"] = [float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2])]
 		dictionary["scale"] = [float(self.scale[0]), float(self.scale[1]), float(self.scale[2])]
 		return dictionary
-	
+
 	def fromJson(self, jsonData):
-		self.position = np.array(jsonData["position"], dtype=np.float32)
-		self.rotation = np.array(jsonData["rotation"], dtype=np.float32)
-		self.scale = np.array(jsonData["scale"], dtype=np.float32)
+		if "position" in jsonData:
+			self.position = np.array(jsonData["position"], dtype=np.float32)
+		if "rotation" in jsonData:
+			self.rotation = np.array(jsonData["rotation"], dtype=np.float32)
+		if "scale" in jsonData:
+			self.scale = np.array(jsonData["scale"], dtype=np.float32)
 
 	def modelMatrix(self):
 		position = np.copy(self.position)
@@ -34,6 +37,19 @@ class Transform():
 		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.rotation[2]), [0.0, 0.0, 1.0])))
 		scalingMatrix = MathHelper.scale(self.scale)
 		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+
+class Renderable():
+	def __init__(self):
+		self.modelPath = ""
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["modelPath"] = self.modelPath
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "modelPath" in jsonData:
+			self.modelPath = jsonData["modelPath"]
 
 class Entity():
 	def __init__(self, name, entityID=-1):
@@ -50,10 +66,10 @@ class Entity():
 		dictionary = {}
 		dictionary["name"] = self.name
 		dictionary["isPersistent"] = self.isPersistent
-		if "transform" in self.components:
-			dictionary["transform"] = self.components["transform"].toJson()
+		for componentName in self.components.keys():
+			dictionary[componentName] = self.components[componentName].toJson()
 		return dictionary
-	
+
 	def fromJson(self, jsonData):
 		if "name" in jsonData:
 			self.name = jsonData["name"]
@@ -61,6 +77,9 @@ class Entity():
 			self.isPersistent = jsonData["isPersistent"]
 		if "transform" in jsonData:
 			self.components["transform"].fromJson(jsonData["transform"])
+		if "renderable" in jsonData:
+			self.components["renderable"] = Renderable()
+			self.components["renderable"].fromJson(jsonData["renderable"])
 
 class GlobalInfo():
 	def __init__(self):
@@ -129,6 +148,9 @@ class SignalEmitter(QObject):
 	changeNameEntitySignal = pyqtSignal(int, str)
 	changePersistenceEntitySignal = pyqtSignal(int, bool)
 	changeEntityTransformSignal = pyqtSignal(int, Transform)
+	addEntityRenderableSignal = pyqtSignal(int)
+	removeEntityRenderableSignal = pyqtSignal(int)
+	changeEntityRenderableSignal = pyqtSignal(int, Renderable)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -167,7 +189,7 @@ class FileMenu(QMenu):
 			file = fileDialog.selectedFiles()[0]
 			SceneManager.openScene(file)
 		return file
-	
+
 	def save(self):
 		if globalInfo.currentScenePath == "":
 			self.saveAs()
@@ -682,11 +704,10 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			if "renderable" not in entity.components.keys():
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
 		gl.glUseProgram(self.gridProgram)
@@ -720,11 +741,10 @@ class Renderer(QOpenGLWidget):
 
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
-				if "renderable" not in entity.components.keys():
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
 
-					gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
 
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
@@ -755,11 +775,10 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			if "renderable" not in entity.components.keys():
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Outline
 			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
@@ -1114,6 +1133,51 @@ class ChangeTransformEntityCommand(QUndoCommand):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["transform"] = copy.deepcopy(self.newTransform)
 		globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.newTransform)
 
+class AddRenderableEntityCommand(QUndoCommand):
+	def __init__(self, entityID):
+		super().__init__()
+		self.setText("Add Renderable Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.entityID = entityID
+
+	def undo(self):
+		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"]
+		globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+
+	def redo(self):
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = Renderable()
+		globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+
+class RemoveRenderableEntityCommand(QUndoCommand):
+	def __init__(self, entityID):
+		super().__init__()
+		self.setText("Remove Renderable Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.entityID = entityID
+		self.renderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"])
+
+	def undo(self):
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.renderable)
+		globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+
+	def redo(self):
+		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"]
+		globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+
+class ChangeRenderableEntityCommand(QUndoCommand):
+	def __init__(self, entityID, renderable):
+		super().__init__()
+		self.setText("Change Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name + " Renderable component")
+		self.entityID = entityID
+		self.previousRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(entityID)].components["renderable"])
+		self.newRenderable = copy.deepcopy(renderable)
+
+	def undo(self):
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.previousRenderable)
+		globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.previousRenderable)
+
+	def redo(self):
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.newRenderable)
+		globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.newRenderable)
+
 class EntityListMenu(QMenu):
 	def __init__(self):
 		super().__init__()
@@ -1265,12 +1329,53 @@ class Vector3Widget(QWidget):
 			self.previousZ = newZ
 			self.editingFinished.emit(newX, newY, newZ)
 
+class FileSelectorWidget(QWidget):
+	fileSelected = pyqtSignal(str)
+
+	def __init__(self, noFileText, buttonText):
+		super().__init__()
+		self.filePath = ""
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.filePathLabel = QLabel(noFileText)
+		self.layout().addWidget(self.filePathLabel)
+		self.filePathButton = QPushButton(buttonText)
+		self.filePathButton.clicked.connect(self.onFilePathButtonClicked)
+		self.layout().addWidget(self.filePathButton)
+
+	def onFilePathButtonClicked(self):
+		fileDialog = QFileDialog()
+		if self.filePath != "":
+			fileDialog.setDirectory(self.filePath.rsplit("/", 1)[0])
+		fileDialog.setWindowTitle(self.filePathButton.text())
+		if fileDialog.exec():
+			self.filePath = fileDialog.selectedFiles()[0]
+			self.filePathLabel.setText(self.filePath.rsplit("/")[-1])
+			self.fileSelected.emit(self.filePath)
+
 class ComponentSeparatorLine(QFrame):
 	def __init__(self):
 		super().__init__()
 		self.setFrameShape(QFrame.Shape.HLine)
 		self.setLineWidth(1)
 		self.setStyleSheet("color: rgba(255, 255, 255, 120)")
+
+class ComponentTitleWidget(QWidget):
+	def __init__(self, name):
+		super().__init__()
+		self.name = name
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		if self.name != "Transform":
+			self.removeWidgetButton = QPushButton("X")
+			self.removeWidgetButton.setFixedWidth(20)
+			self.removeWidgetButton.clicked.connect(self.onClick)
+			self.layout().addWidget(self.removeWidgetButton)
+		self.layout().addWidget(QLabel("<b>" + self.name + "</b>"))
+
+	def onClick(self):
+		if self.name == "Renderable":
+			globalInfo.undoStack.push(RemoveRenderableEntityCommand(globalInfo.currentEntityID))
 
 class TransformComponentWidget(QWidget):
 	def __init__(self):
@@ -1279,7 +1384,8 @@ class TransformComponentWidget(QWidget):
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.layout().addWidget(ComponentSeparatorLine())
-		self.layout().addWidget(QLabel("<b>Transform</b>"))
+		self.componentTitle = ComponentTitleWidget("Transform")
+		self.layout().addWidget(self.componentTitle)
 		self.positionWidget = Vector3Widget("Position")
 		self.layout().addWidget(self.positionWidget)
 		self.rotationWidget = Vector3Widget("Rotation")
@@ -1293,32 +1399,28 @@ class TransformComponentWidget(QWidget):
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.changeEntityTransformSignal.connect(self.onChangeEntityTransform)
 
+	def updateWidgets(self, transform):
+		self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
+		self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
+		self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
+		self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
+		self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
+		self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
+		self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
+		self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
+		self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
+
 	def onChangeEntityTransform(self, entityID, transform):
-		if entityID == globalInfo.currentEntityID:
-			self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
-			self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
-			self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
-			self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
-			self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
-			self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
-			self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
-			self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
-			self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(transform)
 
 	def onSelectEntity(self, entityID):
 		if entityID != -1:
 			if "transform" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
 				self.show()
 				transform = globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"]
-				self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
-				self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
-				self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
-				self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
-				self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
-				self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
-				self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
-				self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
-				self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
+				self.updateWidgets(transform)
 			else:
 				self.hide()
 
@@ -1333,6 +1435,56 @@ class TransformComponentWidget(QWidget):
 			newTransform.scale = [x, y, z]
 		globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, newTransform))
 
+class RenderableComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Renderable")
+		self.layout().addWidget(self.componentTitle)
+		self.modelFileSelection = FileSelectorWidget("No model path", "Choose model")
+		self.layout().addWidget(self.modelFileSelection)
+		self.layout().addWidget(ComponentSeparatorLine())
+		self.modelFileSelection.fileSelected.connect(self.onRenderableUpdated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityRenderableSignal.connect(self.onAddEntityRenderable)
+		globalInfo.signalEmitter.removeEntityRenderableSignal.connect(self.onRemoveEntityRenderable)
+		globalInfo.signalEmitter.changeEntityRenderableSignal.connect(self.onChangeEntityRenderable)
+
+	def updateWidgets(self, renderable):
+		if renderable.modelPath != "":
+			self.modelFileSelection.filePathLabel.setText(renderable.modelPath.rsplit("/")[-1])
+
+	def onAddEntityRenderable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			renderable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["renderable"]
+			self.updateWidgets(renderable)
+			self.show()
+
+	def onRemoveEntityRenderable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityRenderable(self, entityID, renderable):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(renderable)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "renderable" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				renderable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["renderable"]
+				self.updateWidgets(renderable)
+			else:
+				self.hide()
+
+	def onRenderableUpdated(self, filePath):
+		newRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["renderable"])
+		newRenderable.modelPath = filePath
+		globalInfo.undoStack.push(ChangeRenderableEntityCommand(globalInfo.currentEntityID, newRenderable))
+
 class ComponentList(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -1341,6 +1493,8 @@ class ComponentList(QWidget):
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.transformWidget = TransformComponentWidget()
 		self.layout().addWidget(self.transformWidget)
+		self.renderableWidget = RenderableComponentWidget()
+		self.layout().addWidget(self.renderableWidget)
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
