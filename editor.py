@@ -51,6 +51,47 @@ class Renderable():
 		if "modelPath" in jsonData:
 			self.modelPath = jsonData["modelPath"]
 
+class Rigidbody():
+	def __init__(self):
+		self.isStatic = False
+		self.isAffectedByConstants = True
+		self.lockRotation = False
+		self.mass = 1.0
+		self.inertia = 1.0
+		self.restitution = 0.0
+		self.staticFriction = 0.0
+		self.dynamicFriction = 0.0
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["isStatic"] = self.isStatic
+		dictionary["isAffectedByConstants"] = self.isAffectedByConstants
+		dictionary["lockRotation"] = self.lockRotation
+		dictionary["mass"] = self.mass
+		dictionary["inertia"] = self.inertia
+		dictionary["restitution"] = self.restitution
+		dictionary["staticFriction"] = self.staticFriction
+		dictionary["dynamicFriction"] = self.dynamicFriction
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "isStatic" in jsonData:
+			self.isStatic = jsonData["isStatic"]
+		if "isAffectedByConstants" in jsonData:
+			self.isAffectedByConstants = jsonData["isAffectedByConstants"]
+		if "lockRotation" in jsonData:
+			self.lockRotation = jsonData["lockRotation"]
+		if "mass" in jsonData:
+			self.mass = jsonData["mass"]
+		if "inertia" in jsonData:
+			self.inertia = jsonData["inertia"]
+		if "restitution" in jsonData:
+			self.restitution = jsonData["restitution"]
+		if "staticFriction" in jsonData:
+			self.staticFriction = jsonData["staticFriction"]
+		if "dynamicFriction" in jsonData:
+			self.dynamicFriction = jsonData["dynamicFriction"]
+
 class Entity():
 	def __init__(self, name, entityID=-1):
 		if entityID == -1:
@@ -80,6 +121,9 @@ class Entity():
 		if "renderable" in jsonData:
 			self.components["renderable"] = Renderable()
 			self.components["renderable"].fromJson(jsonData["renderable"])
+		if "rigidbody" in jsonData:
+			self.components["rigidbody"] = Rigidbody()
+			self.components["rigidbody"].fromJson(jsonData["rigidbody"])
 
 class GlobalInfo():
 	def __init__(self):
@@ -151,6 +195,9 @@ class SignalEmitter(QObject):
 	addEntityRenderableSignal = pyqtSignal(int)
 	removeEntityRenderableSignal = pyqtSignal(int)
 	changeEntityRenderableSignal = pyqtSignal(int, Renderable)
+	addEntityRigidbodySignal = pyqtSignal(int)
+	removeEntityRigidbodySignal = pyqtSignal(int)
+	changeEntityRigidbodySignal = pyqtSignal(int, Rigidbody)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -930,21 +977,21 @@ class Renderer(QOpenGLWidget):
 				self.translateEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 				if globalInfo.currentEntityID != -1:
-					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
 					self.entityMoveTransform = None
 		if e.key() == self.rotateEntityKey:
 			if self.rotateEntityKeyPressed:
 				self.rotateEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 				if globalInfo.currentEntityID != -1:
-					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
 					self.entityMoveTransform = None
 		if e.key() == self.scaleEntityKey:
 			if self.scaleEntityKeyPressed:
 				self.scaleEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 				if globalInfo.currentEntityID != -1:
-					globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
+					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
 					self.entityMoveTransform = None
 		e.accept()
 
@@ -1117,66 +1164,76 @@ class ChangePersistenceEntityCommand(QUndoCommand):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].isPersistent = self.newPersistence
 		globalInfo.signalEmitter.changePersistenceEntitySignal.emit(self.entityID, self.newPersistence)
 
-class ChangeTransformEntityCommand(QUndoCommand):
-	def __init__(self, entityID, transform):
+class AddComponentEntityCommand(QUndoCommand):
+	def __init__(self, entityID, componentName):
 		super().__init__()
-		self.setText("Change Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name + " Transform component")
-		self.entityID = entityID
-		self.previousTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(entityID)].components["transform"])
-		self.newTransform = copy.deepcopy(transform)
-
-	def undo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["transform"] = copy.deepcopy(self.previousTransform)
-		globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.previousTransform)
-
-	def redo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["transform"] = copy.deepcopy(self.newTransform)
-		globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.newTransform)
-
-class AddRenderableEntityCommand(QUndoCommand):
-	def __init__(self, entityID):
-		super().__init__()
-		self.setText("Add Renderable Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.setText("Add " + componentName + " Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.componentName = componentName
 		self.entityID = entityID
 
 	def undo(self):
-		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"]
-		globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()]
+		if self.componentName == "Renderable":
+			globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+		if self.componentName == "Rigidbody":
+			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
 
 	def redo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = Renderable()
-		globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+		if self.componentName == "Renderable":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = Renderable()
+			globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+		if self.componentName == "Rigidbody":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["rigidbody"] = Rigidbody()
+			globalInfo.signalEmitter.addEntityRigidbodySignal.emit(self.entityID)
 
-class RemoveRenderableEntityCommand(QUndoCommand):
-	def __init__(self, entityID):
+class RemoveComponentEntityCommand(QUndoCommand):
+	def __init__(self, entityID, componentName):
 		super().__init__()
-		self.setText("Remove Renderable Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.setText("Remove " + componentName + " Component to Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name)
+		self.componentName = componentName
 		self.entityID = entityID
-		self.renderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"])
+		self.component = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()])
 
 	def undo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.renderable)
-		globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.component)
+		if self.componentName == "Renderable":
+			globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
+		if self.componentName == "Rigidbody":
+			globalInfo.signalEmitter.addEntityRigidbodySignal.emit(self.entityID)
 
 	def redo(self):
-		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"]
-		globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()]
+		if self.componentName == "Renderable":
+			globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
+		if self.componentName == "Rigidbody":
+			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
 
-class ChangeRenderableEntityCommand(QUndoCommand):
-	def __init__(self, entityID, renderable):
+class ChangeComponentEntityCommand(QUndoCommand):
+	def __init__(self, entityID, component):
 		super().__init__()
-		self.setText("Change Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name + " Renderable component")
+		self.componentName = type(component).__name__
+		self.setText("Change Entity " + globalInfo.entities[globalInfo.findEntityById(entityID)].name + " " + self.componentName + " Component")
 		self.entityID = entityID
-		self.previousRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(entityID)].components["renderable"])
-		self.newRenderable = copy.deepcopy(renderable)
+		self.previousComponent = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(entityID)].components[self.componentName.lower()])
+		self.newComponent = copy.deepcopy(component)
 
 	def undo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.previousRenderable)
-		globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.previousRenderable)
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.previousComponent)
+		if self.componentName == "Transform":
+			globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.previousComponent)
+		if self.componentName == "Renderable":
+			globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.previousComponent)
+		if self.componentName == "Rigidbody":
+			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.previousComponent)
 
 	def redo(self):
-		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = copy.deepcopy(self.newRenderable)
-		globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.newRenderable)
+		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.newComponent)
+		if self.componentName == "Transform":
+			globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.newComponent)
+		if self.componentName == "Renderable":
+			globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.newComponent)
+		if self.componentName == "Rigidbody":
+			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.newComponent)
 
 class EntityListMenu(QMenu):
 	def __init__(self):
@@ -1283,6 +1340,50 @@ class EntityPanel(QWidget):
 		self.layout().addWidget(QLabel("Entity List"))
 		self.layout().addWidget(self.entityList)
 
+class BooleanWidget(QWidget):
+	stateChanged = pyqtSignal(bool)
+
+	def __init__(self, name):
+		super().__init__()
+		self.name = name
+		self.setLayout(QHBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.checkBox = QCheckBox()
+		self.layout().addWidget(self.checkBox)
+		self.nameLabel = QLabel(name)
+		self.layout().addWidget(self.nameLabel)
+		self.checkBox.stateChanged.connect(self.onStateChanged)
+
+	def onStateChanged(self):
+		self.stateChanged.emit(self.checkBox.isChecked())
+
+class ScalarWidget(QWidget):
+	editingFinished = pyqtSignal(float)
+
+	def __init__(self, name):
+		super().__init__()
+		self.name = name
+		self.previousValue = 0.0
+		useDot = QLocale(QLocale.Language.English, QLocale.Country.UnitedStates)
+		doubleValidator = QDoubleValidator()
+		doubleValidator.setLocale(useDot)
+		doubleValidator.setNotation(QDoubleValidator.Notation.StandardNotation)
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.nameLabel = QLabel(name)
+		self.layout().addWidget(self.nameLabel)
+		self.valueLineEdit = QLineEdit("0.0")
+		self.valueLineEdit.setValidator(doubleValidator)
+		self.layout().addWidget(self.valueLineEdit)
+		self.valueLineEdit.editingFinished.connect(self.onEditingFinished)
+
+	def onEditingFinished(self):
+		newValue = float(self.valueLineEdit.text())
+		if self.previousValue != newValue:
+			self.previousValue = newValue
+			self.editingFinished.emit(newValue)
+
 class Vector3Widget(QWidget):
 	editingFinished = pyqtSignal(float, float, float)
 
@@ -1374,8 +1475,7 @@ class ComponentTitleWidget(QWidget):
 		self.layout().addWidget(QLabel("<b>" + self.name + "</b>"))
 
 	def onClick(self):
-		if self.name == "Renderable":
-			globalInfo.undoStack.push(RemoveRenderableEntityCommand(globalInfo.currentEntityID))
+		globalInfo.undoStack.push(RemoveComponentEntityCommand(globalInfo.currentEntityID, self.name))
 
 class TransformComponentWidget(QWidget):
 	def __init__(self):
@@ -1433,7 +1533,7 @@ class TransformComponentWidget(QWidget):
 			newTransform.rotation = [x, y, z]
 		elif sender == self.scaleWidget:
 			newTransform.scale = [x, y, z]
-		globalInfo.undoStack.push(ChangeTransformEntityCommand(globalInfo.currentEntityID, newTransform))
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newTransform))
 
 class RenderableComponentWidget(QWidget):
 	def __init__(self):
@@ -1483,7 +1583,108 @@ class RenderableComponentWidget(QWidget):
 	def onRenderableUpdated(self, filePath):
 		newRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["renderable"])
 		newRenderable.modelPath = filePath
-		globalInfo.undoStack.push(ChangeRenderableEntityCommand(globalInfo.currentEntityID, newRenderable))
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRenderable))
+
+class RigidbodyComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Rigidbody")
+		self.layout().addWidget(self.componentTitle)
+		self.isStaticWidget = BooleanWidget("isStatic")
+		self.layout().addWidget(self.isStaticWidget)
+		self.isAffectedByConstantsWidget = BooleanWidget("isAffectedByConstants")
+		self.layout().addWidget(self.isAffectedByConstantsWidget)
+		self.lockRotationWidget = BooleanWidget("lockRotation")
+		self.layout().addWidget(self.lockRotationWidget)
+		self.massWidget = ScalarWidget("mass")
+		self.layout().addWidget(self.massWidget)
+		self.inertiaWidget = ScalarWidget("inertia")
+		self.layout().addWidget(self.inertiaWidget)
+		self.restitutionWidget = ScalarWidget("restitution")
+		self.layout().addWidget(self.restitutionWidget)
+		self.staticFrictionWidget = ScalarWidget("staticFriction")
+		self.layout().addWidget(self.staticFrictionWidget)
+		self.dynamicFrictionWidget = ScalarWidget("dynamicFriction")
+		self.layout().addWidget(self.dynamicFrictionWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
+		self.isStaticWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
+		self.isAffectedByConstantsWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
+		self.lockRotationWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
+		self.massWidget.editingFinished.connect(self.onRigidbodyScalarUpdated)
+		self.inertiaWidget.editingFinished.connect(self.onRigidbodyScalarUpdated)
+		self.restitutionWidget.editingFinished.connect(self.onRigidbodyScalarUpdated)
+		self.staticFrictionWidget.editingFinished.connect(self.onRigidbodyScalarUpdated)
+		self.dynamicFrictionWidget.editingFinished.connect(self.onRigidbodyScalarUpdated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityRigidbodySignal.connect(self.onAddEntityRigidbody)
+		globalInfo.signalEmitter.removeEntityRigidbodySignal.connect(self.onRemoveEntityRigidbody)
+		globalInfo.signalEmitter.changeEntityRigidbodySignal.connect(self.onChangeEntityRigidbody)
+
+	def updateWidgets(self, rigidbody):
+		with QSignalBlocker(self.isStaticWidget.checkBox) as signalBlocker:
+			self.isStaticWidget.checkBox.setChecked(rigidbody.isStatic)
+		with QSignalBlocker(self.isAffectedByConstantsWidget.checkBox) as signalBlocker:
+			self.isAffectedByConstantsWidget.checkBox.setChecked(rigidbody.isAffectedByConstants)
+		with QSignalBlocker(self.lockRotationWidget.checkBox) as signalBlocker:
+			self.lockRotationWidget.checkBox.setChecked(rigidbody.lockRotation)
+		self.massWidget.valueLineEdit.setText(format(rigidbody.mass, ".3f"))
+		self.inertiaWidget.valueLineEdit.setText(format(rigidbody.inertia, ".3f"))
+		self.restitutionWidget.valueLineEdit.setText(format(rigidbody.restitution, ".3f"))
+		self.staticFrictionWidget.valueLineEdit.setText(format(rigidbody.staticFriction, ".3f"))
+		self.dynamicFrictionWidget.valueLineEdit.setText(format(rigidbody.dynamicFriction, ".3f"))
+
+	def onAddEntityRigidbody(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			rigidbody = globalInfo.entities[globalInfo.findEntityById(entityID)].components["rigidbody"]
+			self.updateWidgets(rigidbody)
+			self.show()
+
+	def onRemoveEntityRigidbody(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityRigidbody(self, entityID, rigidbody):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(rigidbody)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "rigidbody" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				rigidbody = globalInfo.entities[globalInfo.findEntityById(entityID)].components["rigidbody"]
+				self.updateWidgets(rigidbody)
+			else:
+				self.hide()
+
+	def onRigidbodyBooleanUpdated(self, boolean):
+		newRigidbody = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["rigidbody"])
+		sender = self.sender()
+		if sender == self.isStaticWidget:
+			newRigidbody.isStatic = boolean
+		elif sender == self.isAffectedByConstantsWidget:
+			newRigidbody.isAffectedByConstants = boolean
+		elif sender == self.lockRotationWidget:
+			newRigidbody.lockRotation = boolean
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRigidbody))
+
+	def onRigidbodyScalarUpdated(self, scalar):
+		newRigidbody = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["rigidbody"])
+		sender = self.sender()
+		if sender == self.massWidget:
+			newRigidbody.mass = scalar
+		elif sender == self.inertiaWidget:
+			newRigidbody.inertia = scalar
+		elif sender == self.restitutionWidget:
+			newRigidbody.restitution = scalar
+		elif sender == self.staticFrictionWidget:
+			newRigidbody.staticFriction = scalar
+		elif sender == self.dynamicFrictionWidget:
+			newRigidbody.dynamicFriction = scalar
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRigidbody))
 
 class ComponentList(QWidget):
 	def __init__(self):
@@ -1495,6 +1696,8 @@ class ComponentList(QWidget):
 		self.layout().addWidget(self.transformWidget)
 		self.renderableWidget = RenderableComponentWidget()
 		self.layout().addWidget(self.renderableWidget)
+		self.rigidbodyWidget = RigidbodyComponentWidget()
+		self.layout().addWidget(self.rigidbodyWidget)
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
