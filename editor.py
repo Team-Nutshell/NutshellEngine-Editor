@@ -9,6 +9,7 @@ import numpy as np
 import configparser
 import json
 import re
+import os
 
 class Transform():
 	def __init__(self):
@@ -96,6 +97,7 @@ class Light():
 class Renderable():
 	def __init__(self):
 		self.modelPath = ""
+		self.meshes = []
 
 	def toJson(self):
 		dictionary = {}
@@ -253,6 +255,12 @@ class GlobalInfo():
 		self.signalEmitter = None
 		self.entityID = 0
 		self.currentScenePath = ""
+		self.workingDirectory = "."
+		config = configparser.ConfigParser()
+		if config.read("assets/options.ini") != []:
+			if "Path" in config:
+				if "workingDirectory" in config["Path"]:
+					self.workingDirectory = os.path.normpath(config["Path"]["workingDirectory"])
 
 	def findEntityById(self, entityID):
 		for i in range(len(self.entities)):
@@ -549,6 +557,12 @@ class RendererCamera():
 		self.invViewMatrix = None
 		self.invProjMatrix = None
 
+class RendererMesh():
+	def __init__(self):
+		self.vertexBuffer = 0
+		self.indexBuffer = 0
+		self.indexCount = 0
+
 class Renderer(QOpenGLWidget):
 	def __init__(self):
 		super().__init__()
@@ -794,11 +808,21 @@ class Renderer(QOpenGLWidget):
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
 		gl.glBufferData(gl.GL_ARRAY_BUFFER, defaultCubeVertices.nbytes, defaultCubeVertices, gl.GL_STATIC_DRAW)
 
+		self.defaultCubeMesh = RendererMesh()
+		self.defaultCubeMesh.vertexBuffer = self.defaultCubeVertexBuffer
+		self.defaultCubeMesh.indexBuffer = self.cubeTriangleIndexBuffer
+		self.defaultCubeMesh.indexCount = self.cubeTriangleIndexCount
+
 		# Frustum Cube
 		self.cameraFrustumCubeVertexBuffer = gl.glGenBuffers(1)
 		cameraFrustumCubeVertices = np.array([(-1.0, -1.0, -1.0), (1.0, -1.0, -1.0), (1.0, -1.0, 1.0), (-1.0, -1.0, 1.0), (-1.0, 1.0, -1.0), (1.0, 1.0, -1.0), (1.0, 1.0, 1.0), (-1.0, 1.0, 1.0)], dtype=np.float32)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
 		gl.glBufferData(gl.GL_ARRAY_BUFFER, cameraFrustumCubeVertices.nbytes, cameraFrustumCubeVertices, gl.GL_STATIC_DRAW)
+
+		self.cameraFrustumCubeMesh = RendererMesh()
+		self.cameraFrustumCubeMesh.vertexBuffer = self.cameraFrustumCubeVertexBuffer
+		self.cameraFrustumCubeMesh.indexBuffer = self.cubeLineIndexBuffer
+		self.cameraFrustumCubeMesh.indexCount = self.cubeLineIndexCount
 
 		# Picking
 		pickingFragmentShaderCode = '''
@@ -903,21 +927,21 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeMesh.vertexBuffer)
 			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
 			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.defaultCubeMesh.indexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.defaultCubeMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Entities Cameras
 		gl.glUseProgram(self.cameraFrustumProgram)
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
-		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
+		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeMesh.vertexBuffer)
 		gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.cameraFrustumProgram, "position"))
 		gl.glVertexAttribPointer(gl.glGetAttribLocation(self.cameraFrustumProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeLineIndexBuffer)
+		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cameraFrustumCubeMesh.indexBuffer)
 
 		for entity in globalInfo.entities:
 			if "camera" in entity.components:
@@ -935,7 +959,7 @@ class Renderer(QOpenGLWidget):
 				invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "model"), 1, False, invEntityCameraModel)
 
-				gl.glDrawElements(gl.GL_LINES, self.cubeLineIndexCount, gl.GL_UNSIGNED_INT, None)
+				gl.glDrawElements(gl.GL_LINES, self.cameraFrustumCubeMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
 		gl.glUseProgram(self.gridProgram)
@@ -969,12 +993,12 @@ class Renderer(QOpenGLWidget):
 
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeMesh.vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
 				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.defaultCubeMesh.indexBuffer)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
+				gl.glDrawElements(gl.GL_TRIANGLES, self.defaultCubeMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
@@ -1006,12 +1030,12 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeMesh.vertexBuffer)
 			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
 			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.defaultCubeMesh.indexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.defaultCubeMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Entity Camera
 			if "camera" in entity.components:
@@ -1029,12 +1053,12 @@ class Renderer(QOpenGLWidget):
 				invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, invEntityCameraModel)
 
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeMesh.vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
 				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeLineIndexBuffer)
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cameraFrustumCubeMesh.indexBuffer)
 
-				gl.glDrawElements(gl.GL_LINES, self.cubeLineIndexCount, gl.GL_UNSIGNED_INT, None)
+				gl.glDrawElements(gl.GL_LINES, self.cameraFrustumCubeMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Outline
 			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
@@ -1800,6 +1824,7 @@ class FileSelectorWidget(QWidget):
 		if fileDialog.exec():
 			self.filePath = fileDialog.selectedFiles()[0]
 			self.filePathLabel.setText(self.filePath.rsplit("/")[-1])
+			self.filePathLabel.setToolTip(self.filePath)
 			self.fileSelected.emit(self.filePath)
 
 class ComponentSeparatorLine(QFrame):
@@ -2115,7 +2140,15 @@ class RenderableComponentWidget(QWidget):
 
 	def updateWidgets(self, renderable):
 		if renderable.modelPath != "":
-			self.modelPathWidget.filePathLabel.setText(renderable.modelPath.rsplit("/")[-1])
+			modelPath = renderable.modelPath
+			if globalInfo.workingDirectory != ".":
+				if not os.path.isabs(modelPath):
+					modelPath = globalInfo.workingDirectory + "/" + modelPath
+			self.modelPathWidget.filePathLabel.setText(modelPath.rsplit("/")[-1])
+			self.modelPathWidget.filePathLabel.setToolTip(modelPath)
+		else:
+			self.modelPathWidget.filePathLabel.setText("No model path")
+			self.modelPathWidget.filePathLabel.setToolTip("")
 
 	def onAddEntityRenderable(self, entityID):
 		if entityID == globalInfo.currentEntityID:
