@@ -667,6 +667,20 @@ class Renderer(QOpenGLWidget):
 
 		[self.entityProgram, _] = OpenGLHelper.createProgram(entityVertexShader, entityFragmentShader)
 
+		# Camera Frustum Program
+		cameraFrustumFragmentShaderCode = '''
+		#version 460
+
+		out vec4 outColor;
+
+		void main() {
+			outColor = vec4(0.0, 1.0, 0.0, 1.0);
+		}
+		'''
+		[cameraFrustumFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, cameraFrustumFragmentShaderCode)
+
+		[self.cameraFrustumProgram, _] = OpenGLHelper.createProgram(entityVertexShader, cameraFrustumFragmentShader)
+
 		# Grid Program
 		gridVertexShaderCode = '''
 		#version 460
@@ -761,23 +775,30 @@ class Renderer(QOpenGLWidget):
 
 		[self.gridProgram, _] = OpenGLHelper.createProgram(gridVertexShader, gridFragmentShader)
 
-		# Cube
-		self.cubeVertexBuffer = gl.glGenBuffers(1)
-		cubeVertices = np.array([(-0.05, -0.05, -0.05), (0.05, -0.05, -0.05), (0.05, -0.05, 0.05), (-0.05, -0.05, 0.05), (-0.05, 0.05, -0.05), (0.05, 0.05, -0.05), (0.05, 0.05, 0.05), (-0.05, 0.05, 0.05)], dtype=np.float32)
-		self.cubeVertexCount = len(cubeVertices)
-		stride = cubeVertices.strides[0]
-		offset = ctypes.c_void_p(0)
-		vertexPositionLoc = gl.glGetAttribLocation(self.entityProgram, "position")
-		gl.glEnableVertexAttribArray(vertexPositionLoc)
-		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-		gl.glVertexAttribPointer(vertexPositionLoc, 3, gl.GL_FLOAT, False, stride, offset)
-		gl.glBufferData(gl.GL_ARRAY_BUFFER, cubeVertices.nbytes, cubeVertices, gl.GL_STATIC_DRAW)
+		# Cube indices
+		self.cubeTriangleIndexBuffer = gl.glGenBuffers(1)
+		cubeTriangleIndices = np.array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 1, 2, 6, 1, 6, 5, 0, 3, 7, 0, 7, 4, 0, 1, 5, 0, 5, 4, 3, 2, 6, 3, 6, 7], dtype=np.uint32)
+		self.cubeTriangleIndexCount = len(cubeTriangleIndices)
+		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
+		gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, cubeTriangleIndices.nbytes, cubeTriangleIndices, gl.GL_STATIC_DRAW)
 
-		self.cubeIndexBuffer = gl.glGenBuffers(1)
-		cubeIndices = np.array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 1, 2, 6, 1, 6, 5, 0, 3, 7, 0, 7, 4, 0, 1, 5, 0, 5, 4, 3, 2, 6, 3, 6, 7], dtype=np.uint32)
-		self.cubeIndexCount = len(cubeIndices)
-		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
-		gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, cubeIndices.nbytes, cubeIndices, gl.GL_STATIC_DRAW)
+		self.cubeLineIndexBuffer = gl.glGenBuffers(1)
+		cubeLineIndices = np.array([0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7], dtype=np.uint32)
+		self.cubeLineIndexCount = len(cubeLineIndices)
+		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeLineIndexBuffer)
+		gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, cubeLineIndices.nbytes, cubeLineIndices, gl.GL_STATIC_DRAW)
+
+		# Default Cube
+		self.defaultCubeVertexBuffer = gl.glGenBuffers(1)
+		defaultCubeVertices = np.array([(-0.05, -0.05, -0.05), (0.05, -0.05, -0.05), (0.05, -0.05, 0.05), (-0.05, -0.05, 0.05), (-0.05, 0.05, -0.05), (0.05, 0.05, -0.05), (0.05, 0.05, 0.05), (-0.05, 0.05, 0.05)], dtype=np.float32)
+		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+		gl.glBufferData(gl.GL_ARRAY_BUFFER, defaultCubeVertices.nbytes, defaultCubeVertices, gl.GL_STATIC_DRAW)
+
+		# Frustum Cube
+		self.cameraFrustumCubeVertexBuffer = gl.glGenBuffers(1)
+		cameraFrustumCubeVertices = np.array([(-1.0, -1.0, -1.0), (1.0, -1.0, -1.0), (1.0, -1.0, 1.0), (-1.0, -1.0, 1.0), (-1.0, 1.0, -1.0), (1.0, 1.0, -1.0), (1.0, 1.0, 1.0), (-1.0, 1.0, 1.0)], dtype=np.float32)
+		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
+		gl.glBufferData(gl.GL_ARRAY_BUFFER, cameraFrustumCubeVertices.nbytes, cameraFrustumCubeVertices, gl.GL_STATIC_DRAW)
 
 		# Picking
 		pickingFragmentShaderCode = '''
@@ -882,10 +903,39 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
+
+		# Entities Cameras
+		gl.glUseProgram(self.cameraFrustumProgram)
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
+
+		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
+		gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.cameraFrustumProgram, "position"))
+		gl.glVertexAttribPointer(gl.glGetAttribLocation(self.cameraFrustumProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeLineIndexBuffer)
+
+		for entity in globalInfo.entities:
+			if "camera" in entity.components:
+				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+					position = np.copy(self.entityMoveTransform.position)
+					position[0] *= -1.0
+					entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+					entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
+				else:
+					position = np.copy(entity.components["transform"].position)
+					position[0] *= -1.0
+					entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+					entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+				entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
+				invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "model"), 1, False, invEntityCameraModel)
+
+				gl.glDrawElements(gl.GL_LINES, self.cubeLineIndexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
 		gl.glUseProgram(self.gridProgram)
@@ -919,10 +969,12 @@ class Renderer(QOpenGLWidget):
 
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+				gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
 
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
@@ -947,16 +999,42 @@ class Renderer(QOpenGLWidget):
 			gl.glUseProgram(self.outlineSoloProgram)
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
+			# Entity
 			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
 			if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cubeVertexBuffer)
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeIndexBuffer)
+			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.defaultCubeVertexBuffer)
+			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeTriangleIndexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeIndexCount, gl.GL_UNSIGNED_INT, None)
+			gl.glDrawElements(gl.GL_TRIANGLES, self.cubeTriangleIndexCount, gl.GL_UNSIGNED_INT, None)
+
+			# Entity Camera
+			if "camera" in entity.components:
+				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+					position = np.copy(self.entityMoveTransform.position)
+					position[0] *= -1.0
+					entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+					entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
+				else:
+					position = np.copy(entity.components["transform"].position)
+					position[0] *= -1.0
+					entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+					entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+				entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
+				invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, invEntityCameraModel)
+
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.cameraFrustumCubeVertexBuffer)
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.cubeLineIndexBuffer)
+
+				gl.glDrawElements(gl.GL_LINES, self.cubeLineIndexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Outline
 			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
@@ -1156,10 +1234,12 @@ class Renderer(QOpenGLWidget):
 					self.entityMoveTransform.rotation -= rotationAngles
 					self.entityMoveTransform.rotation %= 360.0
 				elif self.scaleEntityKeyPressed:
-					mousePositionDifference = np.divide(np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition), np.array([self.width(), self.height()], dtype=np.float32))
-					if np.dot(mousePositionDifference, mousePositionDifference) != 0.0:
-						center = np.array([self.width() / 2, self.height() / 2], dtype=np.float32)
-						self.entityMoveTransform.scale += np.linalg.norm(mousePositionDifference) * (1.0 if np.dot(mousePositionDifference, np.subtract(mouseCursorCurrentPosition, center)) > 0.0 else -1.0)
+					worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+					worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
+					worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
+					worldSpaceCursorPreviousEntityDifference = np.subtract(worldSpaceCursorPreviousPosition, self.entityMoveTransform.position)
+					if np.dot(worldSpaceCursorPreviousEntityDifference, worldSpaceCursorPreviousEntityDifference) != 0.0:
+						self.entityMoveTransform.scale += ((np.linalg.norm(worldSpaceCursorDifference) * 1000.0) / np.linalg.norm(worldSpaceCursorPreviousEntityDifference)) * (1.0 if np.dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0 else -1.0)
 				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
 		e.accept()
 
