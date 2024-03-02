@@ -2378,6 +2378,68 @@ class ScriptableComponentWidget(QWidget):
 					self.scriptPathWidget.filePathLabel.setText("No script selected")
 				print(filePath + " is not a valid Script (missing NTSHENGN_SCRIPT(scriptName) macro")
 
+class AddComponentMenu(QMenu):
+	def __init__(self):
+		super().__init__()
+		self.addCameraComponentAction = self.addAction("Add Camera Component", self.addCameraComponent)
+		self.addLightComponentAction = self.addAction("Add Light Component", self.addLightComponent)
+		self.addRenderableComponentAction = self.addAction("Add Renderable Component", self.addRenderableComponent)
+		self.addRigidbodyComponentAction = self.addAction("Add Rigidbody Component", self.addRigidbodyComponent)
+		self.addCollidableComponentAction = self.addAction("Add Collidable Component", self.addCollidableComponent)
+		self.addScriptableComponentAction = self.addAction("Add Scriptable Component", self.addScriptableComponent)
+
+	def addCameraComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Camera"))
+
+	def addLightComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Light"))
+
+	def addRenderableComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Renderable"))
+
+	def addRigidbodyComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Rigidbody"))
+
+	def addCollidableComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Collidable"))
+
+	def addScriptableComponent(self):
+		globalInfo.undoStack.push(AddComponentEntityCommand(globalInfo.currentEntityID, "Scriptable"))
+
+class AddComponentButton(QPushButton):
+	def __init__(self):
+		super().__init__()
+		self.setText("Add Component")
+		self.menu = AddComponentMenu()
+		self.clicked.connect(self.onClick)
+
+	def onClick(self):
+		if "camera" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addCameraComponentAction.setEnabled(True)
+		else:
+			self.menu.addCameraComponentAction.setEnabled(False)
+		if "light" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addLightComponentAction.setEnabled(True)
+		else:
+			self.menu.addLightComponentAction.setEnabled(False)
+		if "renderable" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addRenderableComponentAction.setEnabled(True)
+		else:
+			self.menu.addRenderableComponentAction.setEnabled(False)
+		if "rigidbody" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addRigidbodyComponentAction.setEnabled(True)
+		else:
+			self.menu.addRigidbodyComponentAction.setEnabled(False)
+		if "collidable" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addCollidableComponentAction.setEnabled(True)
+		else:
+			self.menu.addCollidableComponentAction.setEnabled(False)
+		if "scriptable" not in globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components:
+			self.menu.addScriptableComponentAction.setEnabled(True)
+		else:
+			self.menu.addScriptableComponentAction.setEnabled(False)
+		self.menu.popup(QCursor.pos())
+
 class ComponentList(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -2398,6 +2460,8 @@ class ComponentList(QWidget):
 		self.layout().addWidget(self.collidableWidget)
 		self.scriptableWidget = ScriptableComponentWidget()
 		self.layout().addWidget(self.scriptableWidget)
+		self.addComponentWidget = AddComponentButton()
+		self.layout().addWidget(self.addComponentWidget)
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
