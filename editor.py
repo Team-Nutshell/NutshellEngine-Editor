@@ -2,8 +2,8 @@ import copy
 import ctypes
 import OpenGL.GL as gl
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy, QPushButton
-from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy, QPushButton, QComboBox, QColorDialog
+from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
 import configparser
@@ -37,6 +37,60 @@ class Transform():
 		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.rotation[2]), [0.0, 0.0, 1.0])))
 		scalingMatrix = MathHelper.scale(self.scale)
 		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
+
+class Camera():
+	def __init__(self):
+		self.forward = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+		self.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+		self.fov = 45.0
+		self.nearPlane = 0.3
+		self.farPlane = 200.0
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["forward"] = [float(self.forward[0]), float(self.forward[1]), float(self.forward[2])]
+		dictionary["up"] = [float(self.up[0]), float(self.up[1]), float(self.up[2])]
+		dictionary["fov"] = self.fov
+		dictionary["nearPlane"] = self.nearPlane
+		dictionary["farPlane"] = self.farPlane
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "forward" in jsonData:
+			self.forward = np.array(jsonData["forward"], dtype=np.float32)
+		if "up" in jsonData:
+			self.up = np.array(jsonData["up"], dtype=np.float32)
+		if "fov" in jsonData:
+			self.fov = jsonData["fov"]
+		if "nearPlane" in jsonData:
+			self.nearPlane = jsonData["nearPlane"]
+		if "farPlane" in jsonData:
+			self.farPlane = jsonData["farPlane"]
+
+class Light():
+	def __init__(self):
+		self.type = "Directional"
+		self.color = np.array([1.0, 1.0, 1.0], dtype=np.float32)
+		self.direction = np.array([0.0, -1.0, 0.0], dtype=np.float32)
+		self.cutoff = np.array([10.0, 20.0], dtype=np.float32)
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["type"] = self.type
+		dictionary["color"] = [float(self.color[0]), float(self.color[1]), float(self.color[2])]
+		dictionary["direction"] = [float(self.direction[0]), float(self.direction[1]), float(self.direction[2])]
+		dictionary["cutoff"] = [float(self.cutoff[0]), float(self.cutoff[1])]
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "type" in jsonData:
+			self.type = jsonData["type"]
+		if "color" in jsonData:
+			self.color = np.array(jsonData["color"], dtype=np.float32)
+		if "direction" in jsonData:
+			self.direction = np.array(jsonData["direction"], dtype=np.float32)
+		if "cutoff" in jsonData:
+			self.cutoff = np.array(jsonData["cutoff"], dtype=np.float32)
 
 class Renderable():
 	def __init__(self):
@@ -92,6 +146,43 @@ class Rigidbody():
 		if "dynamicFriction" in jsonData:
 			self.dynamicFriction = jsonData["dynamicFriction"]
 
+class Collidable():
+	def __init__(self):
+		self.type = "Box"
+		self.center = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+		self.radius = 0.5
+		self.halfExtent = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+		self.rotation = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+		self.base = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+		self.tip = np.array([0.0, 0.5, 0.0], dtype=np.float32)
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["type"] = self.type
+		dictionary["center"] = [float(self.center[0]), float(self.center[1]), float(self.center[2])]
+		dictionary["radius"] = self.radius
+		dictionary["halfExtent"] = [float(self.halfExtent[0]), float(self.halfExtent[1]), float(self.halfExtent[2])]
+		dictionary["rotation"] = [float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2])]
+		dictionary["base"] = [float(self.base[0]), float(self.base[1]), float(self.base[2])]
+		dictionary["tip"] = [float(self.tip[0]), float(self.tip[1]), float(self.tip[2])]
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "type" in jsonData:
+			self.type = jsonData["type"]
+		if "center" in jsonData:
+			self.center = np.array(jsonData["center"], dtype=np.float32)
+		if "radius" in jsonData:
+			self.radius = jsonData["radius"]
+		if "halfExtent" in jsonData:
+			self.halfExtent = jsonData["halfExtent"]
+		if "rotation" in jsonData:
+			self.rotation = jsonData["rotation"]
+		if "base" in jsonData:
+			self.base = jsonData["base"]
+		if "tip" in jsonData:
+			self.tip = jsonData["tip"]
+
 class Entity():
 	def __init__(self, name, entityID=-1):
 		if entityID == -1:
@@ -118,12 +209,21 @@ class Entity():
 			self.isPersistent = jsonData["isPersistent"]
 		if "transform" in jsonData:
 			self.components["transform"].fromJson(jsonData["transform"])
+		if "camera" in jsonData:
+			self.components["camera"] = Camera()
+			self.components["camera"].fromJson(jsonData["camera"])
+		if "light" in jsonData:
+			self.components["light"] = Light()
+			self.components["light"].fromJson(jsonData["light"])
 		if "renderable" in jsonData:
 			self.components["renderable"] = Renderable()
 			self.components["renderable"].fromJson(jsonData["renderable"])
 		if "rigidbody" in jsonData:
 			self.components["rigidbody"] = Rigidbody()
 			self.components["rigidbody"].fromJson(jsonData["rigidbody"])
+		if "collidable" in jsonData:
+			self.components["collidable"] = Collidable()
+			self.components["collidable"].fromJson(jsonData["collidable"])
 
 class GlobalInfo():
 	def __init__(self):
@@ -165,6 +265,7 @@ class SceneManager():
 			try:
 				sceneData = json.load(f)
 			except:
+				print(filePath + " is not a valid JSON file.")
 				return
 		SceneManager.newScene()
 		globalInfo.currentScenePath = filePath
@@ -192,12 +293,21 @@ class SignalEmitter(QObject):
 	changeNameEntitySignal = pyqtSignal(int, str)
 	changePersistenceEntitySignal = pyqtSignal(int, bool)
 	changeEntityTransformSignal = pyqtSignal(int, Transform)
+	addEntityCameraSignal = pyqtSignal(int)
+	removeEntityCameraSignal = pyqtSignal(int)
+	changeEntityCameraSignal = pyqtSignal(int, Camera)
+	addEntityLightSignal = pyqtSignal(int)
+	removeEntityLightSignal = pyqtSignal(int)
+	changeEntityLightSignal = pyqtSignal(int, Light)
 	addEntityRenderableSignal = pyqtSignal(int)
 	removeEntityRenderableSignal = pyqtSignal(int)
 	changeEntityRenderableSignal = pyqtSignal(int, Renderable)
 	addEntityRigidbodySignal = pyqtSignal(int)
 	removeEntityRigidbodySignal = pyqtSignal(int)
 	changeEntityRigidbodySignal = pyqtSignal(int, Rigidbody)
+	addEntityCollidableSignal = pyqtSignal(int)
+	removeEntityCollidableSignal = pyqtSignal(int)
+	changeEntityCollidableSignal = pyqtSignal(int, Collidable)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -746,7 +856,7 @@ class Renderer(QOpenGLWidget):
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 		for entity in globalInfo.entities:
-			if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+			if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
@@ -781,7 +891,7 @@ class Renderer(QOpenGLWidget):
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 			for entity in globalInfo.entities:
-				if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
 				else:
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
@@ -817,7 +927,7 @@ class Renderer(QOpenGLWidget):
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
-			if entity.entityID == globalInfo.currentEntityID and self.entityMoveTransform is not None:
+			if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
@@ -937,23 +1047,23 @@ class Renderer(QOpenGLWidget):
 		if e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = True
 		if e.key() == self.translateEntityKey:
-			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.translateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
-				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
 		if e.key() == self.rotateEntityKey:
-			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.rotateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
-				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
 		if e.key() == self.scaleEntityKey:
-			if globalInfo.currentEntityID != -1 and not self.leftClickedPressed and not self.anyEntityTransformKeyPressed():
+			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.scaleEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
-				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()])
+				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
 		e.accept()
 
 	def keyReleaseEvent(self, e):
@@ -999,12 +1109,15 @@ class Renderer(QOpenGLWidget):
 		if not self.anyEntityTransformKeyPressed():
 			if e.buttons() & Qt.MouseButton.LeftButton:
 				if self.leftClickedPressed:
-					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()])
+					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()], dtype=np.float32)
+					widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
+					self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()], dtype=np.float32)
 					self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
-					self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
+					widgetCenterGlobal = self.mapToGlobal(widgetCenter)
+					QCursor.setPos(widgetCenterGlobal)
 		else:
 			if globalInfo.currentEntityID != -1:
-				mouseCursorCurrentPosition = np.array([e.pos().x(), self.height() - e.pos().y()])
+				mouseCursorCurrentPosition = np.array([e.pos().x(), self.height() - e.pos().y()], dtype=np.float32)
 				if self.translateEntityKeyPressed:
 					worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
 					worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
@@ -1036,7 +1149,7 @@ class Renderer(QOpenGLWidget):
 				self.setCursor(Qt.CursorShape.BlankCursor)
 				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
 				QCursor.setPos(widgetCenter)
-				self.mouseCursorPreviousPosition = np.array([self.width() / 2, self.height() / 2])
+				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
 			elif e.button() == Qt.MouseButton.RightButton:
 				self.doPicking = True
 		e.accept()
@@ -1173,18 +1286,33 @@ class AddComponentEntityCommand(QUndoCommand):
 
 	def undo(self):
 		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()]
-		if self.componentName == "Renderable":
+		if self.componentName == "Camera":
+			globalInfo.signalEmitter.removeEntityCameraSignal.emit(self.entityID)
+		elif self.componentName == "Light":
+			globalInfo.signalEmitter.removeEntityLightSignal.emit(self.entityID)
+		elif self.componentName == "Renderable":
 			globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
+		elif self.componentName == "Collidable":
+			globalInfo.signalEmitter.removeEntityCollidableSignal.emit(self.entityID)
 
 	def redo(self):
-		if self.componentName == "Renderable":
+		if self.componentName == "Camera":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["camera"] = Camera()
+			globalInfo.signalEmitter.addEntityCameraSignal.emit(self.entityID)
+		elif self.componentName == "Light":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["light"] = Light()
+			globalInfo.signalEmitter.addEntityLightSignal.emit(self.entityID)
+		elif self.componentName == "Renderable":
 			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["renderable"] = Renderable()
 			globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["rigidbody"] = Rigidbody()
 			globalInfo.signalEmitter.addEntityRigidbodySignal.emit(self.entityID)
+		elif self.componentName == "Collidable":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["collidable"] = Collidable()
+			globalInfo.signalEmitter.addEntityCollidableSignal.emit(self.entityID)
 
 class RemoveComponentEntityCommand(QUndoCommand):
 	def __init__(self, entityID, componentName):
@@ -1196,17 +1324,29 @@ class RemoveComponentEntityCommand(QUndoCommand):
 
 	def undo(self):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.component)
-		if self.componentName == "Renderable":
+		if self.componentName == "Camera":
+			globalInfo.signalEmitter.addEntityCameraSignal.emit(self.entityID)
+		elif self.componentName == "Light":
+			globalInfo.signalEmitter.addEntityLightSignal.emit(self.entityID)
+		elif self.componentName == "Renderable":
 			globalInfo.signalEmitter.addEntityRenderableSignal.emit(self.entityID)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.signalEmitter.addEntityRigidbodySignal.emit(self.entityID)
+		elif self.componentName == "Collidable":
+			globalInfo.signalEmitter.addEntityCollidableSignal.emit(self.entityID)
 
 	def redo(self):
 		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()]
-		if self.componentName == "Renderable":
+		if self.componentName == "Camera":
+			globalInfo.signalEmitter.removeEntityCameraSignal.emit(self.entityID)
+		elif self.componentName == "Light":
+			globalInfo.signalEmitter.removeEntityLightSignal.emit(self.entityID)
+		elif self.componentName == "Renderable":
 			globalInfo.signalEmitter.removeEntityRenderableSignal.emit(self.entityID)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
+		elif self.componentName == "Collidable":
+			globalInfo.signalEmitter.removeEntityCollidableSignal.emit(self.entityID)
 
 class ChangeComponentEntityCommand(QUndoCommand):
 	def __init__(self, entityID, component):
@@ -1221,19 +1361,31 @@ class ChangeComponentEntityCommand(QUndoCommand):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.previousComponent)
 		if self.componentName == "Transform":
 			globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.previousComponent)
-		if self.componentName == "Renderable":
+		elif self.componentName == "Camera":
+			globalInfo.signalEmitter.changeEntityCameraSignal.emit(self.entityID, self.previousComponent)
+		elif self.componentName == "Light":
+			globalInfo.signalEmitter.changeEntityLightSignal.emit(self.entityID, self.previousComponent)
+		elif self.componentName == "Renderable":
 			globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.previousComponent)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.previousComponent)
+		elif self.componentName == "Collidable":
+			globalInfo.signalEmitter.changeEntityCollidableSignal.emit(self.entityID, self.previousComponent)
 
 	def redo(self):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.newComponent)
 		if self.componentName == "Transform":
 			globalInfo.signalEmitter.changeEntityTransformSignal.emit(self.entityID, self.newComponent)
-		if self.componentName == "Renderable":
+		elif self.componentName == "Camera":
+			globalInfo.signalEmitter.changeEntityCameraSignal.emit(self.entityID, self.newComponent)
+		elif self.componentName == "Light":
+			globalInfo.signalEmitter.changeEntityLightSignal.emit(self.entityID, self.newComponent)
+		elif self.componentName == "Renderable":
 			globalInfo.signalEmitter.changeEntityRenderableSignal.emit(self.entityID, self.newComponent)
-		if self.componentName == "Rigidbody":
+		elif self.componentName == "Rigidbody":
 			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.newComponent)
+		elif self.componentName == "Collidable":
+			globalInfo.signalEmitter.changeEntityCollidableSignal.emit(self.entityID, self.newComponent)
 
 class EntityListMenu(QMenu):
 	def __init__(self):
@@ -1345,7 +1497,6 @@ class BooleanWidget(QWidget):
 
 	def __init__(self, name):
 		super().__init__()
-		self.name = name
 		self.setLayout(QHBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
 		self.layout().setContentsMargins(0, 0, 0, 0)
@@ -1363,7 +1514,6 @@ class ScalarWidget(QWidget):
 
 	def __init__(self, name):
 		super().__init__()
-		self.name = name
 		self.previousValue = 0.0
 		useDot = QLocale(QLocale.Language.English, QLocale.Country.UnitedStates)
 		doubleValidator = QDoubleValidator()
@@ -1384,12 +1534,47 @@ class ScalarWidget(QWidget):
 			self.previousValue = newValue
 			self.editingFinished.emit(newValue)
 
+class Vector2Widget(QWidget):
+	editingFinished = pyqtSignal(float, float)
+
+	def __init__(self, name):
+		super().__init__()
+		self.previousX = 0.0
+		self.previousY = 0.0
+		useDot = QLocale(QLocale.Language.English, QLocale.Country.UnitedStates)
+		doubleValidator = QDoubleValidator()
+		doubleValidator.setLocale(useDot)
+		doubleValidator.setNotation(QDoubleValidator.Notation.StandardNotation)
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.nameLabel = QLabel(name)
+		self.layout().addWidget(self.nameLabel)
+		self.xLabel = QLabel("x:")
+		self.layout().addWidget(self.xLabel)
+		self.xLineEdit = QLineEdit("0.0")
+		self.xLineEdit.setValidator(doubleValidator)
+		self.layout().addWidget(self.xLineEdit)
+		self.yLabel = QLabel("y:")
+		self.layout().addWidget(self.yLabel)
+		self.yLineEdit = QLineEdit("0.0")
+		self.yLineEdit.setValidator(doubleValidator)
+		self.layout().addWidget(self.yLineEdit)
+		self.xLineEdit.editingFinished.connect(self.onEditingFinished)
+		self.yLineEdit.editingFinished.connect(self.onEditingFinished)
+
+	def onEditingFinished(self):
+		newX = float(self.xLineEdit.text())
+		newY = float(self.yLineEdit.text())
+		if (self.previousX != newX) or (self.previousY != newY):
+			self.previousX = newX
+			self.previousY = newY
+			self.editingFinished.emit(newX, newY)
+
 class Vector3Widget(QWidget):
 	editingFinished = pyqtSignal(float, float, float)
 
 	def __init__(self, name):
 		super().__init__()
-		self.name = name
 		self.previousX = 0.0
 		self.previousY = 0.0
 		self.previousZ = 0.0
@@ -1430,6 +1615,56 @@ class Vector3Widget(QWidget):
 			self.previousZ = newZ
 			self.editingFinished.emit(newX, newY, newZ)
 
+class ComboBoxWidget(QWidget):
+	elementSelected = pyqtSignal(str)
+
+	def __init__(self, name, elements):
+		super().__init__()
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.nameLabel = QLabel(name)
+		self.layout().addWidget(self.nameLabel)
+		self.comboBox = QComboBox()
+		self.comboBox.addItems(elements)
+		self.layout().addWidget(self.comboBox)
+		self.comboBox.currentTextChanged.connect(self.onElementSelected)
+
+	def onElementSelected(self, element):
+		self.elementSelected.emit(element)
+
+class ColorPickerWidget(QWidget):
+	colorChanged = pyqtSignal(float, float, float, float)
+
+	def __init__(self, name, defaultColor):
+		super().__init__()
+		self.previousR = defaultColor[0]
+		self.previousG = defaultColor[1]
+		self.previousB = defaultColor[2]
+		self.previousA = defaultColor[3]
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.nameLabel = QLabel(name)
+		self.layout().addWidget(self.nameLabel)
+		self.colorButton = QPushButton()
+		self.colorButton.setText("(" + format(defaultColor[0], ".2f") + ", " + format(defaultColor[1], ".2f") + ", " + format(defaultColor[2], ".2f") + ", " + format(defaultColor[3], ".2f") + ")")
+		buttonPalette = self.colorButton.palette()
+		buttonPalette.setColor(QPalette.ColorRole.Button, QColor.fromRgbF(defaultColor[0], defaultColor[1], defaultColor[2]))
+		buttonPalette.setColor(QPalette.ColorRole.ButtonText, QColor.fromRgbF(1.0 - np.clip(defaultColor[0], 0.0, 1.0), 1.0 - np.clip(defaultColor[1], 0.0, 1.0), 1.0 - np.clip(defaultColor[2], 0.0, 1.0)))
+		self.colorButton.setAutoFillBackground(True)
+		self.colorButton.setPalette(buttonPalette)
+		self.colorButton.update()
+		self.layout().addWidget(self.colorButton)
+		self.colorButton.clicked.connect(self.onColorButtonClicked)
+
+	def onColorButtonClicked(self):
+		newColor = QColorDialog.getColor(initial=QColor.fromRgbF(self.previousR, self.previousG, self.previousB, self.previousA), title="Select a color")
+		if (newColor.redF() != self.previousR) or (newColor.greenF() != self.previousG) or (newColor.blueF() != self.previousB) or (newColor.alphaF() != self.previousA):
+			self.previousR = newColor.redF()
+			self.previousG = newColor.greenF()
+			self.previousB = newColor.blueF()
+			self.previousA = newColor.alphaF()
+			self.colorChanged.emit(newColor.redF(), newColor.greenF(), newColor.blueF(), newColor.alphaF())
+
 class FileSelectorWidget(QWidget):
 	fileSelected = pyqtSignal(str)
 
@@ -1441,14 +1676,14 @@ class FileSelectorWidget(QWidget):
 		self.filePathLabel = QLabel(noFileText)
 		self.layout().addWidget(self.filePathLabel)
 		self.filePathButton = QPushButton(buttonText)
-		self.filePathButton.clicked.connect(self.onFilePathButtonClicked)
 		self.layout().addWidget(self.filePathButton)
+		self.filePathButton.clicked.connect(self.onFilePathButtonClicked)
 
 	def onFilePathButtonClicked(self):
 		fileDialog = QFileDialog()
+		fileDialog.setWindowTitle(self.filePathButton.text())
 		if self.filePath != "":
 			fileDialog.setDirectory(self.filePath.rsplit("/", 1)[0])
-		fileDialog.setWindowTitle(self.filePathButton.text())
 		if fileDialog.exec():
 			self.filePath = fileDialog.selectedFiles()[0]
 			self.filePathLabel.setText(self.filePath.rsplit("/")[-1])
@@ -1503,12 +1738,21 @@ class TransformComponentWidget(QWidget):
 		self.positionWidget.xLineEdit.setText(format(transform.position[0], ".3f"))
 		self.positionWidget.yLineEdit.setText(format(transform.position[1], ".3f"))
 		self.positionWidget.zLineEdit.setText(format(transform.position[2], ".3f"))
+		self.positionWidget.previousX = transform.position[0]
+		self.positionWidget.previousY = transform.position[1]
+		self.positionWidget.previousZ = transform.position[2]
 		self.rotationWidget.xLineEdit.setText(format(transform.rotation[0], ".3f"))
 		self.rotationWidget.yLineEdit.setText(format(transform.rotation[1], ".3f"))
 		self.rotationWidget.zLineEdit.setText(format(transform.rotation[2], ".3f"))
+		self.rotationWidget.previousX = transform.rotation[0]
+		self.rotationWidget.previousY = transform.rotation[1]
+		self.rotationWidget.previousZ = transform.rotation[2]
 		self.scaleWidget.xLineEdit.setText(format(transform.scale[0], ".3f"))
 		self.scaleWidget.yLineEdit.setText(format(transform.scale[1], ".3f"))
 		self.scaleWidget.zLineEdit.setText(format(transform.scale[2], ".3f"))
+		self.scaleWidget.previousX = transform.scale[0]
+		self.scaleWidget.previousY = transform.scale[1]
+		self.scaleWidget.previousZ = transform.scale[2]
 
 	def onChangeEntityTransform(self, entityID, transform):
 		if self.sender != self:
@@ -1535,6 +1779,210 @@ class TransformComponentWidget(QWidget):
 			newTransform.scale = [x, y, z]
 		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newTransform))
 
+class CameraComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Camera")
+		self.layout().addWidget(self.componentTitle)
+		self.forwardWidget = Vector3Widget("Forward")
+		self.layout().addWidget(self.forwardWidget)
+		self.upWidget = Vector3Widget("Up")
+		self.layout().addWidget(self.upWidget)
+		self.fovWidget = ScalarWidget("FOV")
+		self.layout().addWidget(self.fovWidget)
+		self.nearPlaneWidget = ScalarWidget("Near Plane")
+		self.layout().addWidget(self.nearPlaneWidget)
+		self.farPlaneWidget = ScalarWidget("Far Plane")
+		self.layout().addWidget(self.farPlaneWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
+		self.forwardWidget.editingFinished.connect(self.onCameraVector3Updated)
+		self.upWidget.editingFinished.connect(self.onCameraVector3Updated)
+		self.fovWidget.editingFinished.connect(self.onCameraScalarUpdated)
+		self.nearPlaneWidget.editingFinished.connect(self.onCameraScalarUpdated)
+		self.farPlaneWidget.editingFinished.connect(self.onCameraScalarUpdated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityCameraSignal.connect(self.onAddEntityCamera)
+		globalInfo.signalEmitter.removeEntityCameraSignal.connect(self.onRemoveEntityCamera)
+		globalInfo.signalEmitter.changeEntityCameraSignal.connect(self.onChangeEntityCamera)
+
+	def updateWidgets(self, camera):
+		self.forwardWidget.xLineEdit.setText(format(camera.forward[0], ".3f"))
+		self.forwardWidget.yLineEdit.setText(format(camera.forward[1], ".3f"))
+		self.forwardWidget.zLineEdit.setText(format(camera.forward[2], ".3f"))
+		self.forwardWidget.previousX = camera.forward[0]
+		self.forwardWidget.previousY = camera.forward[1]
+		self.forwardWidget.previousZ = camera.forward[2]
+		self.upWidget.xLineEdit.setText(format(camera.up[0], ".3f"))
+		self.upWidget.yLineEdit.setText(format(camera.up[1], ".3f"))
+		self.upWidget.zLineEdit.setText(format(camera.up[2], ".3f"))
+		self.upWidget.previousX = camera.up[0]
+		self.upWidget.previousY = camera.up[1]
+		self.upWidget.previousZ = camera.up[2]
+		self.fovWidget.valueLineEdit.setText(format(camera.fov, ".3f"))
+		self.fovWidget.previousValue = camera.fov
+		self.nearPlaneWidget.valueLineEdit.setText(format(camera.nearPlane, ".3f"))
+		self.nearPlaneWidget.previousValue = camera.nearPlane
+		self.farPlaneWidget.valueLineEdit.setText(format(camera.farPlane, ".3f"))
+		self.farPlaneWidget.previousValue = camera.farPlane
+
+	def onAddEntityCamera(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			camera = globalInfo.entities[globalInfo.findEntityById(entityID)].components["camera"]
+			self.updateWidgets(camera)
+			self.show()
+
+	def onRemoveEntityCamera(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityCamera(self, entityID, camera):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(camera)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "camera" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				camera = globalInfo.entities[globalInfo.findEntityById(entityID)].components["camera"]
+				self.updateWidgets(camera)
+			else:
+				self.hide()
+
+	def onCameraVector3Updated(self, x, y, z):
+		newCamera = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["camera"])
+		sender = self.sender()
+		if sender == self.forwardWidget:
+			newCamera.forward = [x, y, z]
+		elif sender == self.upWidget:
+			newCamera.up = [x, y, z]
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCamera))
+
+	def onCameraScalarUpdated(self, value):
+		newCamera = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["camera"])
+		sender = self.sender()
+		if sender == self.fovWidget:
+			newCamera.fov = value
+		elif sender == self.nearPlaneWidget:
+			newCamera.nearPlane = value
+		elif sender == self.farPlaneWidget:
+			newCamera.farPlane = value
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCamera))
+
+class LightComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Light")
+		self.layout().addWidget(self.componentTitle)
+		self.typeWidget = ComboBoxWidget("Type", ["Directional", "Point", "Spot"])
+		self.layout().addWidget(self.typeWidget)
+		self.colorWidget = ColorPickerWidget("Color", [1.0, 1.0, 1.0, 1.0])
+		self.layout().addWidget(self.colorWidget)
+		self.directionWidget = Vector3Widget("Direction")
+		self.layout().addWidget(self.directionWidget)
+		self.cutoffWidget = Vector2Widget("Cutoff")
+		self.layout().addWidget(self.cutoffWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
+		self.typeWidget.elementSelected.connect(self.onLightElementUpdated)
+		self.colorWidget.colorChanged.connect(self.onLightColorUpdated)
+		self.directionWidget.editingFinished.connect(self.onLightVector3Updated)
+		self.cutoffWidget.editingFinished.connect(self.onLightVector2Updated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityLightSignal.connect(self.onAddEntityLight)
+		globalInfo.signalEmitter.removeEntityLightSignal.connect(self.onRemoveEntityLight)
+		globalInfo.signalEmitter.changeEntityLightSignal.connect(self.onChangeEntityLight)
+
+	def updateWidgets(self, light):
+		with QSignalBlocker(self.typeWidget.comboBox) as signalBlocker:
+			self.typeWidget.comboBox.setCurrentText(light.type)
+		self.colorWidget.colorButton.setText("(" + format(light.color[0], ".2f") + ", " + format(light.color[1], ".2f") + ", " + format(light.color[2], ".2f") + ", 1.00)")
+		buttonPalette = self.colorWidget.colorButton.palette()
+		buttonPalette.setColor(QPalette.ColorRole.Button, QColor.fromRgbF(light.color[0], light.color[1], light.color[2]))
+		buttonPalette.setColor(QPalette.ColorRole.ButtonText, QColor.fromRgbF(1.0 - np.clip(light.color[0], 0.0, 1.0), 1.0 - np.clip(light.color[1], 0.0, 1.0), 1.0 - np.clip(light.color[2], 0.0, 1.0)))
+		self.colorWidget.colorButton.setAutoFillBackground(True)
+		self.colorWidget.colorButton.setPalette(buttonPalette)
+		self.colorWidget.colorButton.update()
+		self.colorWidget.previousR = light.color[0]
+		self.colorWidget.previousG = light.color[1]
+		self.colorWidget.previousB = light.color[2]
+		self.colorWidget.previousA = 1.0
+		self.directionWidget.xLineEdit.setText(format(light.direction[0], ".3f"))
+		self.directionWidget.yLineEdit.setText(format(light.direction[1], ".3f"))
+		self.directionWidget.zLineEdit.setText(format(light.direction[2], ".3f"))
+		self.directionWidget.previousX = light.direction[0]
+		self.directionWidget.previousY = light.direction[1]
+		self.directionWidget.previousZ = light.direction[2]
+		if (light.type == "Directional") or (light.type == "Spot"):
+			self.directionWidget.setEnabled(True)
+		else:
+			self.directionWidget.setEnabled(False)
+		self.cutoffWidget.xLineEdit.setText(format(light.cutoff[0], ".3f"))
+		self.cutoffWidget.yLineEdit.setText(format(light.cutoff[1], ".3f"))
+		self.cutoffWidget.previousX = light.cutoff[0]
+		self.cutoffWidget.previousY = light.cutoff[1]
+		if light.type == "Spot":
+			self.cutoffWidget.setEnabled(True)
+		else:
+			self.cutoffWidget.setEnabled(False)
+
+	def onAddEntityLight(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			light = globalInfo.entities[globalInfo.findEntityById(entityID)].components["light"]
+			self.updateWidgets(light)
+			self.show()
+
+	def onRemoveEntityLight(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityLight(self, entityID, light):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(light)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "light" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				light = globalInfo.entities[globalInfo.findEntityById(entityID)].components["light"]
+				self.updateWidgets(light)
+			else:
+				self.hide()
+
+	def onLightElementUpdated(self, element):
+		newLight = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["light"])
+		sender = self.sender()
+		if sender == self.typeWidget:
+			newLight.type = element
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newLight))
+
+	def onLightColorUpdated(self, r, g, b, a):
+		newLight = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["light"])
+		sender = self.sender()
+		if sender == self.colorWidget:
+			newLight.color = [r, g, b]
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newLight))
+
+	def onLightVector3Updated(self, x, y, z):
+		newLight = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["light"])
+		sender = self.sender()
+		if sender == self.directionWidget:
+			newLight.direction = [x, y, z]
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newLight))
+
+	def onLightVector2Updated(self, x, y):
+		newLight = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["light"])
+		sender = self.sender()
+		if sender == self.cutoffWidget:
+			newLight.cutoff = [x, y]
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newLight))
+
 class RenderableComponentWidget(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -1543,10 +1991,10 @@ class RenderableComponentWidget(QWidget):
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.componentTitle = ComponentTitleWidget("Renderable")
 		self.layout().addWidget(self.componentTitle)
-		self.modelFileSelection = FileSelectorWidget("No model path", "Choose model")
-		self.layout().addWidget(self.modelFileSelection)
+		self.modelPathWidget = FileSelectorWidget("No model path", "Select a model")
+		self.layout().addWidget(self.modelPathWidget)
 		self.layout().addWidget(ComponentSeparatorLine())
-		self.modelFileSelection.fileSelected.connect(self.onRenderableUpdated)
+		self.modelPathWidget.fileSelected.connect(self.onRenderableUpdated)
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.addEntityRenderableSignal.connect(self.onAddEntityRenderable)
 		globalInfo.signalEmitter.removeEntityRenderableSignal.connect(self.onRemoveEntityRenderable)
@@ -1554,7 +2002,7 @@ class RenderableComponentWidget(QWidget):
 
 	def updateWidgets(self, renderable):
 		if renderable.modelPath != "":
-			self.modelFileSelection.filePathLabel.setText(renderable.modelPath.rsplit("/")[-1])
+			self.modelPathWidget.filePathLabel.setText(renderable.modelPath.rsplit("/")[-1])
 
 	def onAddEntityRenderable(self, entityID):
 		if entityID == globalInfo.currentEntityID:
@@ -1593,21 +2041,21 @@ class RigidbodyComponentWidget(QWidget):
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.componentTitle = ComponentTitleWidget("Rigidbody")
 		self.layout().addWidget(self.componentTitle)
-		self.isStaticWidget = BooleanWidget("isStatic")
+		self.isStaticWidget = BooleanWidget("Is Static")
 		self.layout().addWidget(self.isStaticWidget)
-		self.isAffectedByConstantsWidget = BooleanWidget("isAffectedByConstants")
+		self.isAffectedByConstantsWidget = BooleanWidget("Is Affected By Constants")
 		self.layout().addWidget(self.isAffectedByConstantsWidget)
-		self.lockRotationWidget = BooleanWidget("lockRotation")
+		self.lockRotationWidget = BooleanWidget("Lock Rotation")
 		self.layout().addWidget(self.lockRotationWidget)
-		self.massWidget = ScalarWidget("mass")
+		self.massWidget = ScalarWidget("Mass")
 		self.layout().addWidget(self.massWidget)
-		self.inertiaWidget = ScalarWidget("inertia")
+		self.inertiaWidget = ScalarWidget("Inertia")
 		self.layout().addWidget(self.inertiaWidget)
-		self.restitutionWidget = ScalarWidget("restitution")
+		self.restitutionWidget = ScalarWidget("Restitution")
 		self.layout().addWidget(self.restitutionWidget)
-		self.staticFrictionWidget = ScalarWidget("staticFriction")
+		self.staticFrictionWidget = ScalarWidget("StaticFriction")
 		self.layout().addWidget(self.staticFrictionWidget)
-		self.dynamicFrictionWidget = ScalarWidget("dynamicFriction")
+		self.dynamicFrictionWidget = ScalarWidget("DynamicFriction")
 		self.layout().addWidget(self.dynamicFrictionWidget)
 		self.layout().addWidget(ComponentSeparatorLine())
 		self.isStaticWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
@@ -1686,6 +2134,153 @@ class RigidbodyComponentWidget(QWidget):
 			newRigidbody.dynamicFriction = scalar
 		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRigidbody))
 
+class CollidableComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Collidable")
+		self.layout().addWidget(self.componentTitle)
+		self.typeWidget = ComboBoxWidget("Type", ["Box", "Sphere", "Capsule"])
+		self.layout().addWidget(self.typeWidget)
+		self.centerWidget = Vector3Widget("Center")
+		self.layout().addWidget(self.centerWidget)
+		self.radiusWidget = ScalarWidget("Center")
+		self.layout().addWidget(self.radiusWidget)
+		self.halfExtentWidget = Vector3Widget("Half Extent")
+		self.layout().addWidget(self.halfExtentWidget)
+		self.rotationWidget = Vector3Widget("Rotation")
+		self.layout().addWidget(self.rotationWidget)
+		self.baseWidget = Vector3Widget("Base")
+		self.layout().addWidget(self.baseWidget)
+		self.tipWidget = Vector3Widget("Tip")
+		self.layout().addWidget(self.tipWidget)
+		self.typeWidget.elementSelected.connect(self.onCollidableElementUpdated)
+		self.centerWidget.editingFinished.connect(self.onCollidableVector3Updated)
+		self.radiusWidget.editingFinished.connect(self.onCollidableScalarUpdated)
+		self.halfExtentWidget.editingFinished.connect(self.onCollidableVector3Updated)
+		self.rotationWidget.editingFinished.connect(self.onCollidableVector3Updated)
+		self.baseWidget.editingFinished.connect(self.onCollidableVector3Updated)
+		self.tipWidget.editingFinished.connect(self.onCollidableVector3Updated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityCollidableSignal.connect(self.onAddEntityCollidable)
+		globalInfo.signalEmitter.removeEntityCollidableSignal.connect(self.onRemoveEntityCollidable)
+		globalInfo.signalEmitter.changeEntityCollidableSignal.connect(self.onChangeEntityCollidable)
+
+	def updateWidgets(self, collidable):
+		with QSignalBlocker(self.typeWidget.comboBox) as signalBlocker:
+			self.typeWidget.comboBox.setCurrentText(collidable.type)
+		self.centerWidget.xLineEdit.setText(format(collidable.center[0], ".3f"))
+		self.centerWidget.yLineEdit.setText(format(collidable.center[1], ".3f"))
+		self.centerWidget.zLineEdit.setText(format(collidable.center[2], ".3f"))
+		self.centerWidget.previousX = collidable.center[0]
+		self.centerWidget.previousY = collidable.center[1]
+		self.centerWidget.previousZ = collidable.center[2]
+		if collidable.type == "Sphere":
+			self.centerWidget.setEnabled(True)
+		else:
+			self.centerWidget.setEnabled(False)
+		self.radiusWidget.valueLineEdit.setText(format(collidable.radius, ".3f"))
+		self.radiusWidget.previousValue = collidable.radius
+		if (collidable.type == "Sphere") or (collidable.type == "Capsule"):
+			self.radiusWidget.setEnabled(True)
+		else:
+			self.radiusWidget.setEnabled(False)
+		self.halfExtentWidget.xLineEdit.setText(format(collidable.halfExtent[0], ".3f"))
+		self.halfExtentWidget.yLineEdit.setText(format(collidable.halfExtent[1], ".3f"))
+		self.halfExtentWidget.zLineEdit.setText(format(collidable.halfExtent[2], ".3f"))
+		self.halfExtentWidget.previousX = collidable.halfExtent[0]
+		self.halfExtentWidget.previousY = collidable.halfExtent[1]
+		self.halfExtentWidget.previousZ = collidable.halfExtent[2]
+		if collidable.type == "Box":
+			self.halfExtentWidget.setEnabled(True)
+		else:
+			self.halfExtentWidget.setEnabled(False)
+		self.rotationWidget.xLineEdit.setText(format(collidable.rotation[0], ".3f"))
+		self.rotationWidget.yLineEdit.setText(format(collidable.rotation[1], ".3f"))
+		self.rotationWidget.zLineEdit.setText(format(collidable.rotation[2], ".3f"))
+		self.rotationWidget.previousX = collidable.rotation[0]
+		self.rotationWidget.previousY = collidable.rotation[1]
+		self.rotationWidget.previousZ = collidable.rotation[2]
+		if collidable.type == "Box":
+			self.rotationWidget.setEnabled(True)
+		else:
+			self.rotationWidget.setEnabled(False)
+		self.baseWidget.xLineEdit.setText(format(collidable.base[0], ".3f"))
+		self.baseWidget.yLineEdit.setText(format(collidable.base[1], ".3f"))
+		self.baseWidget.zLineEdit.setText(format(collidable.base[2], ".3f"))
+		self.baseWidget.previousX = collidable.base[0]
+		self.baseWidget.previousY = collidable.base[1]
+		self.baseWidget.previousZ = collidable.base[2]
+		if collidable.type == "Capsule":
+			self.baseWidget.setEnabled(True)
+		else:
+			self.baseWidget.setEnabled(False)
+		self.tipWidget.xLineEdit.setText(format(collidable.tip[0], ".3f"))
+		self.tipWidget.yLineEdit.setText(format(collidable.tip[1], ".3f"))
+		self.tipWidget.zLineEdit.setText(format(collidable.tip[2], ".3f"))
+		self.tipWidget.previousX = collidable.tip[0]
+		self.tipWidget.previousY = collidable.tip[1]
+		self.tipWidget.previousZ = collidable.tip[2]
+		if collidable.type == "Capsule":
+			self.tipWidget.setEnabled(True)
+		else:
+			self.tipWidget.setEnabled(False)
+
+	def onAddEntityCollidable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			collidable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["collidable"]
+			self.updateWidgets(collidable)
+			self.show()
+
+	def onRemoveEntityCollidable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityCollidable(self, entityID, collidable):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(collidable)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "collidable" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				collidable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["collidable"]
+				self.updateWidgets(collidable)
+			else:
+				self.hide()
+
+	def onCollidableElementUpdated(self, element):
+		newCollidable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["collidable"])
+		sender = self.sender()
+		if sender == self.typeWidget:
+			newCollidable.type = element
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCollidable))
+
+	def onCollidableVector3Updated(self, x, y, z):
+		newCollidable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["collidable"])
+		sender = self.sender()
+		if sender == self.centerWidget:
+			newCollidable.center = [x, y, z]
+		elif sender == self.halfExtentWidget:
+			newCollidable.halfExtent = [x, y, z]
+		elif sender == self.rotationWidget:
+			newCollidable.rotation = [x, y, z]
+		elif sender == self.baseWidget:
+			newCollidable.base = [x, y, z]
+		elif sender == self.tipWidget:
+			newCollidable.tip = [x, y, z]
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCollidable))
+
+	def onCollidableScalarUpdated(self, value):
+		newCollidable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["collidable"])
+		sender = self.sender()
+		if sender == self.radiusWidget:
+			newCollidable.radius = value
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCollidable))
+
 class ComponentList(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -1694,10 +2289,16 @@ class ComponentList(QWidget):
 		self.layout().setContentsMargins(0, 0, 0, 0)
 		self.transformWidget = TransformComponentWidget()
 		self.layout().addWidget(self.transformWidget)
+		self.cameraWidget = CameraComponentWidget()
+		self.layout().addWidget(self.cameraWidget)
+		self.lightWidget = LightComponentWidget()
+		self.layout().addWidget(self.lightWidget)
 		self.renderableWidget = RenderableComponentWidget()
 		self.layout().addWidget(self.renderableWidget)
 		self.rigidbodyWidget = RigidbodyComponentWidget()
 		self.layout().addWidget(self.rigidbodyWidget)
+		self.collidableWidget = CollidableComponentWidget()
+		self.layout().addWidget(self.collidableWidget)
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
