@@ -8,6 +8,7 @@ from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
 import configparser
 import json
+import re
 
 class Transform():
 	def __init__(self):
@@ -183,6 +184,20 @@ class Collidable():
 		if "tip" in jsonData:
 			self.tip = jsonData["tip"]
 
+class Scriptable():
+	def __init__(self):
+		self.scriptPath = ""
+		self.scriptName = ""
+
+	def toJson(self):
+		dictionary = {}
+		dictionary["scriptName"] = self.scriptName
+		return dictionary
+
+	def fromJson(self, jsonData):
+		if "scriptName" in jsonData:
+			self.scriptName = jsonData["scriptName"]
+
 class Entity():
 	def __init__(self, name, entityID=-1):
 		if entityID == -1:
@@ -224,6 +239,9 @@ class Entity():
 		if "collidable" in jsonData:
 			self.components["collidable"] = Collidable()
 			self.components["collidable"].fromJson(jsonData["collidable"])
+		if "scriptable" in jsonData:
+			self.components["scriptable"] = Scriptable()
+			self.components["scriptable"].fromJson(jsonData["scriptable"])
 
 class GlobalInfo():
 	def __init__(self):
@@ -308,6 +326,9 @@ class SignalEmitter(QObject):
 	addEntityCollidableSignal = pyqtSignal(int)
 	removeEntityCollidableSignal = pyqtSignal(int)
 	changeEntityCollidableSignal = pyqtSignal(int, Collidable)
+	addEntityScriptableSignal = pyqtSignal(int)
+	removeEntityScriptableSignal = pyqtSignal(int)
+	changeEntityScriptableSignal = pyqtSignal(int, Scriptable)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -1296,6 +1317,8 @@ class AddComponentEntityCommand(QUndoCommand):
 			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
 		elif self.componentName == "Collidable":
 			globalInfo.signalEmitter.removeEntityCollidableSignal.emit(self.entityID)
+		elif self.componentName == "Scriptable":
+			globalInfo.signalEmitter.removeEntityScriptableSignal.emit(self.entityID)
 
 	def redo(self):
 		if self.componentName == "Camera":
@@ -1313,6 +1336,9 @@ class AddComponentEntityCommand(QUndoCommand):
 		elif self.componentName == "Collidable":
 			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["collidable"] = Collidable()
 			globalInfo.signalEmitter.addEntityCollidableSignal.emit(self.entityID)
+		elif self.componentName == "Scriptable":
+			globalInfo.entities[globalInfo.findEntityById(self.entityID)].components["scriptable"] = Scriptable()
+			globalInfo.signalEmitter.addEntityScriptableSignal.emit(self.entityID)
 
 class RemoveComponentEntityCommand(QUndoCommand):
 	def __init__(self, entityID, componentName):
@@ -1334,6 +1360,8 @@ class RemoveComponentEntityCommand(QUndoCommand):
 			globalInfo.signalEmitter.addEntityRigidbodySignal.emit(self.entityID)
 		elif self.componentName == "Collidable":
 			globalInfo.signalEmitter.addEntityCollidableSignal.emit(self.entityID)
+		elif self.componentName == "Scriptable":
+			globalInfo.signalEmitter.addEntityScriptableSignal.emit(self.entityID)
 
 	def redo(self):
 		del globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()]
@@ -1347,6 +1375,8 @@ class RemoveComponentEntityCommand(QUndoCommand):
 			globalInfo.signalEmitter.removeEntityRigidbodySignal.emit(self.entityID)
 		elif self.componentName == "Collidable":
 			globalInfo.signalEmitter.removeEntityCollidableSignal.emit(self.entityID)
+		elif self.componentName == "Scriptable":
+			globalInfo.signalEmitter.removeEntityScriptableSignal.emit(self.entityID)
 
 class ChangeComponentEntityCommand(QUndoCommand):
 	def __init__(self, entityID, component):
@@ -1371,6 +1401,8 @@ class ChangeComponentEntityCommand(QUndoCommand):
 			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.previousComponent)
 		elif self.componentName == "Collidable":
 			globalInfo.signalEmitter.changeEntityCollidableSignal.emit(self.entityID, self.previousComponent)
+		elif self.componentName == "Scriptable":
+			globalInfo.signalEmitter.changeEntityScriptableSignal.emit(self.entityID, self.previousComponent)
 
 	def redo(self):
 		globalInfo.entities[globalInfo.findEntityById(self.entityID)].components[self.componentName.lower()] = copy.deepcopy(self.newComponent)
@@ -1386,6 +1418,8 @@ class ChangeComponentEntityCommand(QUndoCommand):
 			globalInfo.signalEmitter.changeEntityRigidbodySignal.emit(self.entityID, self.newComponent)
 		elif self.componentName == "Collidable":
 			globalInfo.signalEmitter.changeEntityCollidableSignal.emit(self.entityID, self.newComponent)
+		elif self.componentName == "Scriptable":
+			globalInfo.signalEmitter.changeEntityScriptableSignal.emit(self.entityID, self.newComponent)
 
 class EntityListMenu(QMenu):
 	def __init__(self):
@@ -1498,12 +1532,11 @@ class BooleanWidget(QWidget):
 	def __init__(self, name):
 		super().__init__()
 		self.setLayout(QHBoxLayout())
-		self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
 		self.layout().setContentsMargins(0, 0, 0, 0)
-		self.checkBox = QCheckBox()
-		self.layout().addWidget(self.checkBox)
 		self.nameLabel = QLabel(name)
 		self.layout().addWidget(self.nameLabel)
+		self.checkBox = QCheckBox()
+		self.layout().addWidget(self.checkBox, 0, Qt.AlignmentFlag.AlignRight)
 		self.checkBox.stateChanged.connect(self.onStateChanged)
 
 	def onStateChanged(self):
@@ -1525,7 +1558,7 @@ class ScalarWidget(QWidget):
 		self.layout().addWidget(self.nameLabel)
 		self.valueLineEdit = QLineEdit("0.0")
 		self.valueLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.valueLineEdit)
+		self.layout().addWidget(self.valueLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.valueLineEdit.editingFinished.connect(self.onEditingFinished)
 
 	def onEditingFinished(self):
@@ -1550,15 +1583,15 @@ class Vector2Widget(QWidget):
 		self.nameLabel = QLabel(name)
 		self.layout().addWidget(self.nameLabel)
 		self.xLabel = QLabel("x:")
-		self.layout().addWidget(self.xLabel)
+		self.layout().addWidget(self.xLabel, 0, Qt.AlignmentFlag.AlignRight)
 		self.xLineEdit = QLineEdit("0.0")
 		self.xLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.xLineEdit)
+		self.layout().addWidget(self.xLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.yLabel = QLabel("y:")
-		self.layout().addWidget(self.yLabel)
+		self.layout().addWidget(self.yLabel, 0, Qt.AlignmentFlag.AlignRight)
 		self.yLineEdit = QLineEdit("0.0")
 		self.yLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.yLineEdit)
+		self.layout().addWidget(self.yLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.xLineEdit.editingFinished.connect(self.onEditingFinished)
 		self.yLineEdit.editingFinished.connect(self.onEditingFinished)
 
@@ -1587,20 +1620,20 @@ class Vector3Widget(QWidget):
 		self.nameLabel = QLabel(name)
 		self.layout().addWidget(self.nameLabel)
 		self.xLabel = QLabel("x:")
-		self.layout().addWidget(self.xLabel)
+		self.layout().addWidget(self.xLabel, 0, Qt.AlignmentFlag.AlignRight)
 		self.xLineEdit = QLineEdit("0.0")
 		self.xLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.xLineEdit)
+		self.layout().addWidget(self.xLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.yLabel = QLabel("y:")
-		self.layout().addWidget(self.yLabel)
+		self.layout().addWidget(self.yLabel, 0, Qt.AlignmentFlag.AlignRight)
 		self.yLineEdit = QLineEdit("0.0")
 		self.yLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.yLineEdit)
+		self.layout().addWidget(self.yLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.zLabel = QLabel("z:")
-		self.layout().addWidget(self.zLabel)
+		self.layout().addWidget(self.zLabel, 0, Qt.AlignmentFlag.AlignRight)
 		self.zLineEdit = QLineEdit("0.0")
 		self.zLineEdit.setValidator(doubleValidator)
-		self.layout().addWidget(self.zLineEdit)
+		self.layout().addWidget(self.zLineEdit, 0, Qt.AlignmentFlag.AlignRight)
 		self.xLineEdit.editingFinished.connect(self.onEditingFinished)
 		self.yLineEdit.editingFinished.connect(self.onEditingFinished)
 		self.zLineEdit.editingFinished.connect(self.onEditingFinished)
@@ -1626,7 +1659,7 @@ class ComboBoxWidget(QWidget):
 		self.layout().addWidget(self.nameLabel)
 		self.comboBox = QComboBox()
 		self.comboBox.addItems(elements)
-		self.layout().addWidget(self.comboBox)
+		self.layout().addWidget(self.comboBox, 0, Qt.AlignmentFlag.AlignRight)
 		self.comboBox.currentTextChanged.connect(self.onElementSelected)
 
 	def onElementSelected(self, element):
@@ -1653,7 +1686,7 @@ class ColorPickerWidget(QWidget):
 		self.colorButton.setAutoFillBackground(True)
 		self.colorButton.setPalette(buttonPalette)
 		self.colorButton.update()
-		self.layout().addWidget(self.colorButton)
+		self.layout().addWidget(self.colorButton, 0, Qt.AlignmentFlag.AlignRight)
 		self.colorButton.clicked.connect(self.onColorButtonClicked)
 
 	def onColorButtonClicked(self):
@@ -1676,7 +1709,7 @@ class FileSelectorWidget(QWidget):
 		self.filePathLabel = QLabel(noFileText)
 		self.layout().addWidget(self.filePathLabel)
 		self.filePathButton = QPushButton(buttonText)
-		self.layout().addWidget(self.filePathButton)
+		self.layout().addWidget(self.filePathButton, 0, Qt.AlignmentFlag.AlignRight)
 		self.filePathButton.clicked.connect(self.onFilePathButtonClicked)
 
 	def onFilePathButtonClicked(self):
@@ -2156,6 +2189,7 @@ class CollidableComponentWidget(QWidget):
 		self.layout().addWidget(self.baseWidget)
 		self.tipWidget = Vector3Widget("Tip")
 		self.layout().addWidget(self.tipWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
 		self.typeWidget.elementSelected.connect(self.onCollidableElementUpdated)
 		self.centerWidget.editingFinished.connect(self.onCollidableVector3Updated)
 		self.radiusWidget.editingFinished.connect(self.onCollidableScalarUpdated)
@@ -2281,6 +2315,69 @@ class CollidableComponentWidget(QWidget):
 			newCollidable.radius = value
 		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCollidable))
 
+class ScriptableComponentWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.componentTitle = ComponentTitleWidget("Scriptable")
+		self.layout().addWidget(self.componentTitle)
+		self.scriptPathWidget = FileSelectorWidget("No script selected", "Select a script")
+		self.layout().addWidget(self.scriptPathWidget)
+		self.layout().addWidget(ComponentSeparatorLine())
+		self.scriptPathWidget.fileSelected.connect(self.onScriptableUpdated)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+		globalInfo.signalEmitter.addEntityScriptableSignal.connect(self.onAddEntityScriptable)
+		globalInfo.signalEmitter.removeEntityScriptableSignal.connect(self.onRemoveEntityScriptable)
+		globalInfo.signalEmitter.changeEntityScriptableSignal.connect(self.onChangeEntityScriptable)
+
+	def updateWidgets(self, scriptable):
+		if scriptable.scriptName != "":
+			self.scriptPathWidget.filePathLabel.setText(scriptable.scriptName)
+		else:
+			self.scriptPathWidget.filePathLabel.setText("No script selected")
+
+	def onAddEntityScriptable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			scriptable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["scriptable"]
+			self.updateWidgets(scriptable)
+			self.show()
+
+	def onRemoveEntityScriptable(self, entityID):
+		if entityID == globalInfo.currentEntityID:
+			self.hide()
+
+	def onChangeEntityScriptable(self, entityID, scriptable):
+		if self.sender != self:
+			if entityID == globalInfo.currentEntityID:
+				self.updateWidgets(scriptable)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			if "scriptable" in globalInfo.entities[globalInfo.findEntityById(entityID)].components.keys():
+				self.show()
+				scriptable = globalInfo.entities[globalInfo.findEntityById(entityID)].components["scriptable"]
+				self.updateWidgets(scriptable)
+			else:
+				self.hide()
+
+	def onScriptableUpdated(self, filePath):
+		newScriptable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"])
+		with open(filePath, 'r') as f:
+			fileContent = f.read()
+			scriptName = re.search("NTSHENGN_SCRIPT(.*)", fileContent)
+			if scriptName != None:
+				newScriptable.scriptPath = filePath
+				newScriptable.scriptName = scriptName.group()[16:len(scriptName.group()) - 2].strip()
+				globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newScriptable))
+			else:
+				if globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName != "":
+					self.scriptPathWidget.filePathLabel.setText(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName)
+				else:
+					self.scriptPathWidget.filePathLabel.setText("No script selected")
+				print(filePath + " is not a valid Script (missing NTSHENGN_SCRIPT(scriptName) macro")
+
 class ComponentList(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -2299,6 +2396,8 @@ class ComponentList(QWidget):
 		self.layout().addWidget(self.rigidbodyWidget)
 		self.collidableWidget = CollidableComponentWidget()
 		self.layout().addWidget(self.collidableWidget)
+		self.scriptableWidget = ScriptableComponentWidget()
+		self.layout().addWidget(self.scriptableWidget)
 
 class ComponentScrollArea(QScrollArea):
 	def __init__(self):
@@ -2358,7 +2457,7 @@ class EntityInfoPersistenceWidget(QWidget):
 class EntityInfoPanel(QWidget):
 	def __init__(self):
 		super().__init__()
-		self.resize(175, self.height())
+		self.resize(185, self.height())
 		self.setMinimumWidth(50)
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
