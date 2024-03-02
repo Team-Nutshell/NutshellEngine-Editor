@@ -260,7 +260,7 @@ class GlobalInfo():
 		if config.read("assets/options.ini") != []:
 			if "Path" in config:
 				if "workingDirectory" in config["Path"]:
-					self.workingDirectory = os.path.normpath(config["Path"]["workingDirectory"])
+					self.workingDirectory = os.path.normpath(config["Path"]["workingDirectory"]).replace("\\", "/")
 
 	def findEntityById(self, entityID):
 		for i in range(len(self.entities)):
@@ -2140,10 +2140,12 @@ class RenderableComponentWidget(QWidget):
 
 	def updateWidgets(self, renderable):
 		if renderable.modelPath != "":
-			modelPath = renderable.modelPath
+			modelPath = os.path.normpath(renderable.modelPath).replace("\\", "/")
 			if globalInfo.workingDirectory != ".":
-				if not os.path.isabs(modelPath):
-					modelPath = globalInfo.workingDirectory + "/" + modelPath
+				if os.path.isabs(modelPath):
+					if modelPath.startswith(globalInfo.workingDirectory):
+						modelPath = modelPath[len(globalInfo.workingDirectory) + 1:]
+						renderable.modelPath = modelPath
 			self.modelPathWidget.filePathLabel.setText(modelPath.rsplit("/")[-1])
 			self.modelPathWidget.filePathLabel.setToolTip(modelPath)
 		else:
