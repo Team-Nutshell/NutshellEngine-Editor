@@ -2053,9 +2053,9 @@ class RigidbodyComponentWidget(QWidget):
 		self.layout().addWidget(self.inertiaWidget)
 		self.restitutionWidget = ScalarWidget("Restitution")
 		self.layout().addWidget(self.restitutionWidget)
-		self.staticFrictionWidget = ScalarWidget("StaticFriction")
+		self.staticFrictionWidget = ScalarWidget("Static Friction")
 		self.layout().addWidget(self.staticFrictionWidget)
-		self.dynamicFrictionWidget = ScalarWidget("DynamicFriction")
+		self.dynamicFrictionWidget = ScalarWidget("Dynamic Friction")
 		self.layout().addWidget(self.dynamicFrictionWidget)
 		self.layout().addWidget(ComponentSeparatorLine())
 		self.isStaticWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
@@ -2177,7 +2177,7 @@ class CollidableComponentWidget(QWidget):
 		self.centerWidget.previousX = collidable.center[0]
 		self.centerWidget.previousY = collidable.center[1]
 		self.centerWidget.previousZ = collidable.center[2]
-		if collidable.type == "Sphere":
+		if (collidable.type == "Box") or (collidable.type == "Sphere"):
 			self.centerWidget.setEnabled(True)
 		else:
 			self.centerWidget.setEnabled(False)
