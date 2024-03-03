@@ -555,11 +555,11 @@ class OpenGLHelper():
 		return '''
 		#version 460
 
-		out vec2 uv;
+		out vec2 fragUV;
 
 		void main() {
-			uv = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-			gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+			fragUV = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+			gl_Position = vec4(fragUV * 2.0 - 1.0, 0.0, 1.0);
 		}
 		'''
 
@@ -587,6 +587,7 @@ class RendererMesh():
 		self.vertexBuffer = 0
 		self.indexBuffer = 0
 		self.indexCount = 0
+		self.texturePath = "defaultTexture"
 
 class Renderer(QOpenGLWidget):
 	def __init__(self):
@@ -692,11 +693,18 @@ class Renderer(QOpenGLWidget):
 		#version 460
 
 		in vec3 position;
+		in vec3 normal;
+		in vec2 uv;
 
 		uniform mat4 viewProj;
 		uniform mat4 model;
 
+		out vec3 fragNormal;
+		out vec2 fragUV;
+
 		void main() {
+			fragNormal = (model * vec4(normal, 0.0)).xyz;
+			fragUV = uv;
 			gl_Position = viewProj * model * vec4(position, 1.0);
 		}
 		'''
@@ -705,10 +713,21 @@ class Renderer(QOpenGLWidget):
 		entityFragmentShaderCode = '''
 		#version 460
 
+		in vec3 fragNormal;
+		in vec2 fragUV;
+
+		uniform sampler2D textureSampler;
+		uniform bool doShading;
+
 		out vec4 outColor;
 
 		void main() {
-			outColor = vec4(1.0, 0.0, 0.0, 1.0);
+			if (doShading) {
+				outColor = vec4(texture(textureSampler, fragUV).rgb * dot(vec3(0.0, 1.0, 0.0), fragNormal), 1.0);
+			}
+			else {
+				outColor = vec4(texture(textureSampler, fragUV).rgb, 1.0);
+			}
 		}
 		'''
 		[entityFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, entityFragmentShaderCode)
@@ -837,9 +856,110 @@ class Renderer(QOpenGLWidget):
 
 		[self.gridProgram, _] = OpenGLHelper.createProgram(gridVertexShader, gridFragmentShader)
 
+		# Picking
+		pickingVertexShaderCode = '''
+		#version 460
+
+		in vec3 position;
+
+		uniform mat4 viewProj;
+		uniform mat4 model;
+
+		void main() {
+			gl_Position = viewProj * model * vec4(position, 1.0);
+		}
+		'''
+		[pickingVertexShader, _] = OpenGLHelper.compileShader(gl.GL_VERTEX_SHADER, pickingVertexShaderCode)
+
+		pickingFragmentShaderCode = '''
+		#version 460
+
+		uniform uint entityID;
+
+		out uint outEntityID;
+
+		void main() {
+			outEntityID = entityID;
+		}
+		'''
+		[pickingFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, pickingFragmentShaderCode)
+
+		[self.pickingProgram, _] = OpenGLHelper.createProgram(pickingVertexShader, pickingFragmentShader)
+
+		self.pickingFramebuffer = gl.glGenFramebuffers(1)
+		self.createPickingImages()
+
+		# Outline
+		outlineSoloVertexShaderCode = '''
+		#version 460
+
+		in vec3 position;
+
+		uniform mat4 viewProj;
+		uniform mat4 model;
+
+		void main() {
+			gl_Position = viewProj * model * vec4(position, 1.0);
+		}
+		'''
+		[outlineSoloVertexShader, _] = OpenGLHelper.compileShader(gl.GL_VERTEX_SHADER, outlineSoloVertexShaderCode)
+
+		outlineSoloFragmentShaderCode = '''
+		#version 460
+
+		out float outColor;
+
+		void main() {
+			outColor = 1.0;
+		}
+		'''
+		[outlineSoloFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineSoloFragmentShaderCode)
+
+		[self.outlineSoloProgram, _] = OpenGLHelper.createProgram(outlineSoloVertexShader, outlineSoloFragmentShader)
+
+		self.outlineSoloFramebuffer = gl.glGenFramebuffers(1)
+		self.createOutlineSoloImages()
+
+		outlineFragmentShaderCode = '''
+		#version 460
+
+		uniform sampler2D outlineSoloTexture;
+
+		in vec2 fragUV;
+
+		out vec4 outColor;
+
+		void main() {
+			float value = texture(outlineSoloTexture, fragUV).r;
+			if (value == 1.0) {
+				discard;
+			}
+
+			vec2 texelSize = 1.0 / vec2(textureSize(outlineSoloTexture, 0));
+			bool foundValue = false;
+			for (float range = 0.0; range < 2.0; range++) {
+				float n = texture(outlineSoloTexture, fragUV + vec2(0.0, texelSize.y * (range + 1.0))).r;
+				float s = texture(outlineSoloTexture, fragUV + vec2(0.0, -texelSize.y * (range + 1.0))).r;
+				float e = texture(outlineSoloTexture, fragUV + vec2(-texelSize.x * (range + 1.0), 0.0)).r;
+				float w = texture(outlineSoloTexture, fragUV + vec2(texelSize.x * (range + 1.0), 0.0)).r;
+				if ((n == 1.0) || (s == 1.0) || (e == 1.0) || (w == 1.0)) {
+					outColor = vec4(1.0, 1.0, 0.0, 1.0);
+					foundValue = true;
+					break;
+				}
+			}
+			if (!foundValue) {
+				discard;
+			}
+		}
+		'''
+		[outlineFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineFragmentShaderCode)
+
+		[self.outlineProgram, _] = OpenGLHelper.createProgram(fullscreenVertexShader, outlineFragmentShader)
+
 		# Cube indices
 		cubeTriangleIndexBuffer = gl.glGenBuffers(1)
-		cubeTriangleIndices = np.array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 1, 2, 6, 1, 6, 5, 0, 3, 7, 0, 7, 4, 0, 1, 5, 0, 5, 4, 3, 2, 6, 3, 6, 7], dtype=np.uint32)
+		cubeTriangleIndices = np.array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23], dtype=np.uint32)
 		cubeTriangleIndexCount = len(cubeTriangleIndices)
 		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, cubeTriangleIndexBuffer)
 		gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, cubeTriangleIndices.nbytes, cubeTriangleIndices, gl.GL_STATIC_DRAW)
@@ -852,7 +972,7 @@ class Renderer(QOpenGLWidget):
 
 		# Default Cube
 		defaultCubeVertexBuffer = gl.glGenBuffers(1)
-		defaultCubeVertices = np.array([(-0.05, -0.05, -0.05), (0.05, -0.05, -0.05), (0.05, -0.05, 0.05), (-0.05, -0.05, 0.05), (-0.05, 0.05, -0.05), (0.05, 0.05, -0.05), (0.05, 0.05, 0.05), (-0.05, 0.05, 0.05)], dtype=np.float32)
+		defaultCubeVertices = np.array([(0.05, 0.05, -0.05, 0.0, 1.0, 0.0, 1.0, 0.0), (-0.05, 0.05, -0.05, 0.0, 1.0, 0.0, 1.0, 1.0), (-0.05, 0.05, 0.05, 0.0, 1.0, 0.0, 0.0, 1.0), (0.05, 0.05, 0.05, 0.0, 1.0, 0.0, 0.0, 0.0), (0.05, -0.05, 0.05, 0.0, 0.0, 1.0, 1.0, 0.0), (0.05, 0.05, 0.05, 0.0, 0.0, 1.0, 1.0, 1.0), (-0.05, 0.05, 0.05, 0.0, 0.0, 1.0, 0.0, 1.0), (-0.05, -0.05, 0.05, 0.0, 0.0, 1.0, 0.0, 0.0), (-0.05, -0.05, 0.05, -1.0, 0.0, 0.0, 1.0, 0.0), (-0.05, 0.05, 0.05, -1.0, 0.0, 0.0, 1.0, 1.0), (-0.05, 0.05, -0.05, -1.0, 0.0, 0.0, 0.0, 1.0), (-0.05, -0.05, -0.05, -1.0, 0.0, 0.0, 0.0, 0.0), (-0.05, -0.05, -0.05, 0.0, -1.0, 0.0, 1.0, 0.0), (0.05, -0.05, -0.05, 0.0, -1.0, 0.0, 1.0, 1.0), (0.05, -0.05, 0.05, 0.0, -1.0, 0.0, 0.0, 1.0), (-0.05, -0.05, 0.05, 0.0, -1.0, 0.0, 0.0, 0.0), (0.05, -0.05, -0.05, 1.0, 0.0, 0.0, 1.0, 0.0), (0.05, 0.05, -0.05, 1.0, 0.0, 0.0, 1.0, 1.0), (0.05, 0.05, 0.05, 1.0, 0.0, 0.0, 0.0, 1.0), (0.05, -0.05, 0.05, 1.0, 0.0, 0.0, 0.0, 0.0), (-0.05, -0.05, -0.05, 0.0, 0.0, -1.0, 1.0, 0.0), (-0.05, 0.05, -0.05, 0.0, 0.0, -1.0, 1.0, 1.0), (0.05, 0.05, -0.05, 0.0, 0.0, -1.0, 0.0, 1.0), (0.05, -0.05, -0.05, 0.0, 0.0, -1.0, 0.0, 0.0)], dtype=np.float32)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, defaultCubeVertexBuffer)
 		gl.glBufferData(gl.GL_ARRAY_BUFFER, defaultCubeVertices.nbytes, defaultCubeVertices, gl.GL_STATIC_DRAW)
 
@@ -860,11 +980,24 @@ class Renderer(QOpenGLWidget):
 		defaultCubeMesh.vertexBuffer = defaultCubeVertexBuffer
 		defaultCubeMesh.indexBuffer = cubeTriangleIndexBuffer
 		defaultCubeMesh.indexCount = cubeTriangleIndexCount
+		defaultCubeMesh.texturePath = "defaultTexture"
 
 		defaultCubeModel = RendererModel()
 		defaultCubeModel.meshes.append(defaultCubeMesh)
 
 		globalInfo.rendererResourceManager.models["defaultCube"] = defaultCubeModel
+
+		# Default Texture
+		defaultTexture = gl.glGenTextures(1)
+		defaultTextureData = np.array([(145, 99, 65, 255), (208, 194, 175, 255), (208, 194, 175, 255), (145, 99, 65, 255)], dtype=np.uint8)
+		gl.glBindTexture(gl.GL_TEXTURE_2D, defaultTexture)
+		gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA8, 2, 2, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, defaultTextureData)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+		gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+
+		globalInfo.rendererResourceManager.textures["defaultTexture"] = defaultTexture
 
 		# Frustum Cube
 		cameraFrustumCubeVertexBuffer = gl.glGenBuffers(1)
@@ -881,79 +1014,6 @@ class Renderer(QOpenGLWidget):
 		cameraFrustumCubeModel.meshes.append(cameraFrustumCubeMesh)
 
 		globalInfo.rendererResourceManager.models["cameraFrustumCube"] = cameraFrustumCubeModel
-
-		# Picking
-		pickingFragmentShaderCode = '''
-		#version 460
-
-		uniform uint entityID;
-
-		out uint outEntityID;
-
-		void main() {
-			outEntityID = entityID;
-		}
-		'''
-		[pickingFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, pickingFragmentShaderCode)
-
-		[self.pickingProgram, _] = OpenGLHelper.createProgram(entityVertexShader, pickingFragmentShader)
-
-		self.pickingFramebuffer = gl.glGenFramebuffers(1)
-		self.createPickingImages()
-
-		# Outline
-		outlineSoloFragmentShaderCode = '''
-		#version 460
-
-		out float outColor;
-
-		void main() {
-			outColor = 1.0;
-		}
-		'''
-		[outlineSoloFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineSoloFragmentShaderCode)
-
-		[self.outlineSoloProgram, _] = OpenGLHelper.createProgram(entityVertexShader, outlineSoloFragmentShader)
-
-		self.outlineSoloFramebuffer = gl.glGenFramebuffers(1)
-		self.createOutlineSoloImages()
-
-		outlineFragmentShaderCode = '''
-		#version 460
-
-		uniform sampler2D outlineSoloTexture;
-
-		in vec2 uv;
-
-		out vec4 outColor;
-
-		void main() {
-			float value = texture(outlineSoloTexture, uv).r;
-			if (value == 1.0) {
-				discard;
-			}
-
-			vec2 texelSize = 1.0 / vec2(textureSize(outlineSoloTexture, 0));
-			bool foundValue = false;
-			for (float range = 0.0; range < 2.0; range++) {
-				float n = texture(outlineSoloTexture, uv + vec2(0.0, texelSize.y * (range + 1.0))).r;
-				float s = texture(outlineSoloTexture, uv + vec2(0.0, -texelSize.y * (range + 1.0))).r;
-				float e = texture(outlineSoloTexture, uv + vec2(-texelSize.x * (range + 1.0), 0.0)).r;
-				float w = texture(outlineSoloTexture, uv + vec2(texelSize.x * (range + 1.0), 0.0)).r;
-				if ((n == 1.0) || (s == 1.0) || (e == 1.0) || (w == 1.0)) {
-					outColor = vec4(1.0, 1.0, 0.0, 1.0);
-					foundValue = true;
-					break;
-				}
-			}
-			if (!foundValue) {
-				discard;
-			}
-		}
-		'''
-		[outlineFragmentShader, _] = OpenGLHelper.compileShader(gl.GL_FRAGMENT_SHADER, outlineFragmentShaderCode)
-
-		[self.outlineProgram, _] = OpenGLHelper.createProgram(fullscreenVertexShader, outlineFragmentShader)
 
 		# Render
 		self.waitTimer.start(16)
@@ -990,15 +1050,35 @@ class Renderer(QOpenGLWidget):
 				for mesh in entityModel:
 					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
 					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
+
+					gl.glActiveTexture(gl.GL_TEXTURE0)
+					gl.glBindTexture(gl.GL_TEXTURE_2D, mesh.texturePath)
+					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
+
+					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
 
 					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
 			else:
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
 				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
+
+				gl.glActiveTexture(gl.GL_TEXTURE0)
+				gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures["defaultTexture"])
+				gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
+
+				gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
 
 				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
@@ -1066,15 +1146,15 @@ class Renderer(QOpenGLWidget):
 					entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
 					for mesh in entityModel:
 						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
-						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
 
 						gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
 				else:
 					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
-					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
 
 					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
@@ -1113,15 +1193,15 @@ class Renderer(QOpenGLWidget):
 				entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
 				for mesh in entityModel:
 					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
-					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
 
 					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
 			else:
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
 
 				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
