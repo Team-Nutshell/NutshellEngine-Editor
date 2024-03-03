@@ -1318,6 +1318,7 @@ class Renderer(QOpenGLWidget):
 		if not self.anyEntityTransformKeyPressed():
 			if e.button() == Qt.MouseButton.LeftButton:
 				self.leftClickedPressed = True
+				self.savedMousePosition = QCursor.pos()
 				self.setCursor(Qt.CursorShape.BlankCursor)
 				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
 				QCursor.setPos(widgetCenter)
@@ -1332,8 +1333,7 @@ class Renderer(QOpenGLWidget):
 				if self.leftClickedPressed:
 					self.leftClickedPressed = False
 					self.setCursor(Qt.CursorShape.ArrowCursor)
-					widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
-					QCursor.setPos(widgetCenter)
+					QCursor.setPos(self.savedMousePosition)
 					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 		e.accept()
 
