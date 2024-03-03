@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLay
 from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
+from PIL import Image
+from pygltflib import GLTF2
+import struct
 import configparser
 import json
 import re
@@ -33,9 +36,7 @@ class Transform():
 			self.scale = np.array(jsonData["scale"], dtype=np.float32)
 
 	def modelMatrix(self):
-		position = np.copy(self.position)
-		position[0] *= -1.0
-		translationMatrix = MathHelper.translate(position)
+		translationMatrix = MathHelper.translate(self.position)
 		rotationMatrix = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.rotation[2]), [0.0, 0.0, 1.0])))
 		scalingMatrix = MathHelper.scale(self.scale)
 		return MathHelper.mat4x4Mult(translationMatrix, MathHelper.mat4x4Mult(rotationMatrix, scalingMatrix))
@@ -234,6 +235,14 @@ class Entity():
 		if "renderable" in jsonData:
 			self.components["renderable"] = Renderable()
 			self.components["renderable"].fromJson(jsonData["renderable"])
+			self.components["renderable"].modelPath = os.path.normpath(self.components["renderable"].modelPath).replace("\\", "/")
+			if self.components["renderable"].modelPath != "":
+				if not os.path.isabs(self.components["renderable"].modelPath):
+					self.components["renderable"].modelPath = os.path.normpath(globalInfo.workingDirectory + "/" + self.components["renderable"].modelPath).replace("\\", "/")
+				if os.path.exists(self.components["renderable"].modelPath):
+					globalInfo.rendererResourceManager.load(self.components["renderable"].modelPath)
+				else:
+					print("Model file \"" + self.components["renderable"].modelPath + "\" does not exist.")
 		if "rigidbody" in jsonData:
 			self.components["rigidbody"] = Rigidbody()
 			self.components["rigidbody"].fromJson(jsonData["rigidbody"])
@@ -248,6 +257,168 @@ class RendererResourceManager():
 	def __init__(self):
 		self.models = {}
 		self.textures = {}
+
+	def load(self, modelPath):
+		extension = modelPath.rsplit(".")[-1]
+		if (extension == "gltf") or (extension == "glb"):
+			self.loadGltf(modelPath)
+		else:
+			print("Model file extension \"." + extension + "\" is not supported.")
+
+	def loadGltf(self, modelPath):
+		rendererModel = RendererModel()
+		gltfData = GLTF2().load(modelPath)
+		scene = gltfData.scenes[gltfData.scene]
+		for nodeIndex in scene.nodes:
+			modelMatrix = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+			self.loadGltfNode(modelPath, rendererModel, np.copy(modelMatrix), gltfData, copy.deepcopy(gltfData.nodes[nodeIndex]))
+		globalInfo.rendererResourceManager.models[modelPath] = rendererModel
+
+	def loadGltfNode(self, modelPath, rendererModel, modelMatrix, gltfData, gltfNode):
+		if gltfNode.matrix is not None:
+			modelMatrix = MathHelper.mat4x4Mult(modelMatrix, np.array(gltfNode.matrix, dtype=np.float32))
+		else:
+			if gltfNode.translation is not None:
+				modelMatrix = MathHelper.mat4x4Mult(modelMatrix, MathHelper.translate(np.array(gltfNode.translation, dtype=np.float32)))
+			if gltfNode.rotation is not None:
+				modelMatrix = MathHelper.mat4x4Mult(modelMatrix, MathHelper.quatToMat4x4(np.array([gltfNode.rotation[3], gltfNode.rotation[0], gltfNode.rotation[1], gltfNode.rotation[2]], dtype=np.float32)))
+			if gltfNode.scale is not None:
+				modelMatrix = MathHelper.mat4x4Mult(modelMatrix, MathHelper.scale(np.array(gltfNode.scale, dtype=np.float32)))
+
+		if gltfNode.mesh is not None:
+			rendererMesh = RendererMesh()
+			mesh = gltfData.meshes[gltfNode.mesh]
+			for primitive in mesh.primitives:
+				vertexCount = 0
+
+				if primitive.attributes.POSITION is not None:
+					accessor = gltfData.accessors[primitive.attributes.POSITION]
+					vertexCount = accessor.count
+
+				vertices = np.zeros((vertexCount, 8), dtype=np.float32)
+				if primitive.attributes.POSITION is not None:
+					accessor = gltfData.accessors[primitive.attributes.POSITION]
+					bufferView = gltfData.bufferViews[accessor.bufferView]
+					buffer = gltfData.buffers[bufferView.buffer]
+					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
+
+					for vertexIndex in range(accessor.count):
+						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 12)
+						positionData = attributeData[offset:offset+12]
+						position = struct.unpack("<fff", positionData)
+						position = MathHelper.mat4x4Vec4Mult(modelMatrix, [position[0], position[1], position[2], 1.0])
+						vertices[vertexIndex][0] = position[0]
+						vertices[vertexIndex][1] = position[1]
+						vertices[vertexIndex][2] = position[2]
+
+				if primitive.attributes.NORMAL is not None:
+					accessor = gltfData.accessors[primitive.attributes.NORMAL]
+					bufferView = gltfData.bufferViews[accessor.bufferView]
+					buffer = gltfData.buffers[bufferView.buffer]
+					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
+
+					for vertexIndex in range(accessor.count):
+						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 12)
+						normalData = attributeData[offset:offset+12]
+						normal = struct.unpack("<fff", normalData)
+						normal = MathHelper.mat4x4Vec4Mult(MathHelper.transpose(np.linalg.inv(modelMatrix.reshape((4, 4))).reshape((16))), [normal[0], normal[1], normal[2], 0.0])
+						normal = MathHelper.normalize([normal[0], normal[1], normal[2]])
+						vertices[vertexIndex][3] = normal[0]
+						vertices[vertexIndex][4] = normal[1]
+						vertices[vertexIndex][5] = normal[2]
+
+				if primitive.attributes.TEXCOORD_0 is not None:
+					accessor = gltfData.accessors[primitive.attributes.TEXCOORD_0]
+					bufferView = gltfData.bufferViews[accessor.bufferView]
+					buffer = gltfData.buffers[bufferView.buffer]
+					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
+
+					for vertexIndex in range(accessor.count):
+						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 8)
+						uvData = attributeData[offset:offset+8]
+						uv = struct.unpack("<ff", uvData)
+						vertices[vertexIndex][6] = uv[0]
+						vertices[vertexIndex][7] = uv[1]
+
+				indices = np.empty((0), dtype=np.uint32)
+				if primitive.indices is not None:
+					accessor = gltfData.accessors[primitive.indices]
+					bufferView = gltfData.bufferViews[accessor.bufferView]
+					buffer = gltfData.buffers[bufferView.buffer]
+					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
+
+					for indexIndex in range(accessor.count):
+						if accessor.componentType == 5120: # Byte
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 1)
+							indexData = attributeData[offset:offset+1]
+							indices = np.append(indices, np.array(struct.unpack("<b", indexData), np.uint32))
+						elif accessor.componentType == 5121: # Unsigned Byte
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 1)
+							indexData = attributeData[offset:offset+1]
+							indices = np.append(indices, np.array(struct.unpack("<B", indexData), np.uint32))
+						elif accessor.componentType == 5122: # Short
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 2)
+							indexData = attributeData[offset:offset+2]
+							indices = np.append(indices, np.array(struct.unpack("<h", indexData), np.uint32))
+						elif accessor.componentType == 5123: # Unsigned Short
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 2)
+							indexData = attributeData[offset:offset+2]
+							indices = np.append(indices, np.array(struct.unpack("<H", indexData), np.uint32))
+						elif accessor.componentType == 5125: # Unsigned Int
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 4)
+							indexData = attributeData[offset:offset+4]
+							indices = np.append(indices, np.array(struct.unpack("<I", indexData), np.uint32))
+						elif accessor.componentType == 5126: # Float
+							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 4)
+							indexData = attributeData[offset:offset+4]
+							indices = np.append(indices, np.array(struct.unpack("<f", indexData), np.uint32))
+				else:
+					indices = np.arange(vertexCount, dtype=np.uint32)
+
+				texture = None
+				textureWidth = 0
+				textureHeight = 0
+				if primitive.material is not None:
+					material = gltfData.materials[primitive.material]
+
+					if material.pbrMetallicRoughness is not None:
+						if material.pbrMetallicRoughness.baseColorTexture is not None:
+							texturePath = gltfData.images[gltfData.textures[material.pbrMetallicRoughness.baseColorTexture.index].source].uri
+							texturePath = os.path.normpath(modelPath.rsplit("/", 1)[0] + "/" + texturePath).replace("\\", "/")
+							image = Image.open(texturePath, "r")
+							image = image.convert("RGBA")
+							textureWidth = image.width
+							textureHeight = image.height
+							texture = np.array(image.getdata(), dtype=np.uint8).flatten()
+							rendererMesh.texturePath = texturePath
+						elif material.pbrMetallicRoughness.baseColorFactor is not None:
+							texture = np.array([material.pbrMetallicRoughness.baseColorFactor[0] * 255, material.pbrMetallicRoughness.baseColorFactor[1] * 255, material.pbrMetallicRoughness.baseColorFactor[2] * 255, material.pbrMetallicRoughness.baseColorFactor[3] * 255], dtype=np.uint8)
+							textureWidth = 1
+							textureHeight = 1
+							rendererMesh.texturePath = np.array2string(texture)
+
+				rendererMesh.vertexBuffer = gl.glGenBuffers(1)
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, rendererMesh.vertexBuffer)
+				gl.glBufferData(gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
+
+				rendererMesh.indexBuffer = gl.glGenBuffers(1)
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, rendererMesh.indexBuffer)
+				gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
+
+				rendererMesh.indexCount = indices.size
+
+				globalInfo.rendererResourceManager.textures[rendererMesh.texturePath] = gl.glGenTextures(1)
+				gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[rendererMesh.texturePath])
+				gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA8, textureWidth, textureHeight, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, texture)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+
+				rendererModel.meshes.append(rendererMesh)
+
+		for childIndex in gltfNode.children:
+			self.loadGltfNode(modelPath, rendererModel, np.copy(modelMatrix), gltfData, copy.deepcopy(gltfData.nodes[childIndex]))
 
 class GlobalInfo():
 	def __init__(self):
@@ -296,7 +467,7 @@ class SceneManager():
 			try:
 				sceneData = json.load(f)
 			except:
-				print(filePath + " is not a valid JSON file.")
+				print("\"" + filePath + "\" is not a valid JSON file.")
 				return
 		SceneManager.newScene()
 		globalInfo.currentScenePath = filePath
@@ -428,6 +599,14 @@ class MathHelper():
 		return vector / np.linalg.norm(vector)
 
 	@staticmethod
+	def transpose(matrix):
+		return np.array([
+			matrix[0], matrix[4], matrix[8], matrix[12],
+			matrix[1], matrix[5], matrix[9], matrix[13],
+			matrix[2], matrix[6], matrix[10], matrix[14],
+			matrix[3], matrix[7], matrix[11], matrix[15]], dtype=np.float32)
+
+	@staticmethod
 	def lookAtRH(fromPosition, toVector, upVector):
 		tMf = np.subtract(toVector, fromPosition)
 		forward = MathHelper.normalize(tMf)
@@ -519,9 +698,28 @@ class MathHelper():
 		clipSpace = np.subtract(screenSpace * 2.0, np.array([1.0, 1.0], dtype=np.float32))
 		viewSpace = MathHelper.mat4x4Vec4Mult(invProjMatrix.reshape((16)), np.array([clipSpace[0], clipSpace[1], 0.0, 1.0], dtype=np.float32))
 		worldSpace = MathHelper.mat4x4Vec4Mult(invViewMatrix.reshape((16)), viewSpace)
-		worldSpace[0] *= -1.0
 
 		return worldSpace[:3] / worldSpace[3]
+
+	@staticmethod
+	def quatToMat4x4(quat):
+		return np.array([
+			1.0 - 2.0 * ((quat[2] * quat[2]) + (quat[3] * quat[3])),
+			2.0 * ((quat[1] * quat[2]) + (quat[0] * quat[3])),
+			2.0 * ((quat[1] * quat[3]) - (quat[0] * quat[2])),
+			0.0,
+
+			2.0 * ((quat[1] * quat[2]) - (quat[0] * quat[3])),
+			1.0 - 2.0 * ((quat[1] * quat[1]) + (quat[3] * quat[3])),
+			2.0 * ((quat[2] * quat[3]) + (quat[0] * quat[1])),
+			0.0,
+
+			2.0 * ((quat[1] * quat[3]) + (quat[0] * quat[2])),
+			2.0 * ((quat[2] * quat[3]) - (quat[0] * quat[1])),
+			1.0 - 2.0 * ((quat[1] * quat[1]) + (quat[2] * quat[2])),
+			0.0,
+
+			0.0, 0.0, 0.0, 1.0], dtype=np.float32)
 
 class OpenGLHelper():
 	@staticmethod
@@ -565,8 +763,8 @@ class OpenGLHelper():
 
 class RendererCamera():
 	def __init__(self):
-		self.position = np.array([0.0, 1.0, -1.0], dtype=np.float32)
-		self.direction = np.array([0.0, -1.0, 1.0], dtype=np.float32)
+		self.position = np.array([0.0, 1.0, 1.0], dtype=np.float32)
+		self.direction = np.array([0.0, -1.0, -1.0], dtype=np.float32)
 		self.direction = MathHelper.normalize(self.direction)
 		self.nearPlane = 0.01
 		self.farPlane = 100.0
@@ -1047,23 +1245,23 @@ class Renderer(QOpenGLWidget):
 
 			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
 				entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-				for mesh in entityModel:
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+				for entityMesh in entityModel.meshes:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
 
 					gl.glActiveTexture(gl.GL_TEXTURE0)
-					gl.glBindTexture(gl.GL_TEXTURE_2D, mesh.texturePath)
+					gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[entityMesh.texturePath])
 					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
 
 					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
 
-					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+					gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 			else:
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
@@ -1095,14 +1293,10 @@ class Renderer(QOpenGLWidget):
 			for entity in globalInfo.entities:
 				if "camera" in entity.components:
 					if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-						position = np.copy(self.entityMoveTransform.position)
-						position[0] *= -1.0
-						entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+						entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
 						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
 					else:
-						position = np.copy(entity.components["transform"].position)
-						position[0] *= -1.0
-						entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+						entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
 						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
 					entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
 					invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
@@ -1144,13 +1338,13 @@ class Renderer(QOpenGLWidget):
 
 				if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
 					entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-					for mesh in entityModel:
-						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+					for entityMesh in entityModel.meshes:
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
 						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
 						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
 
-						gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+						gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 				else:
 					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
@@ -1191,13 +1385,13 @@ class Renderer(QOpenGLWidget):
 
 			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
 				entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-				for mesh in entityModel:
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+				for entityMesh in entityModel.meshes:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
 
-					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+					gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
 			else:
 				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
@@ -1210,14 +1404,10 @@ class Renderer(QOpenGLWidget):
 			if self.showCameras:
 				if "camera" in entity.components:
 					if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-						position = np.copy(self.entityMoveTransform.position)
-						position[0] *= -1.0
-						entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+						entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
 						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
 					else:
-						position = np.copy(entity.components["transform"].position)
-						position[0] *= -1.0
-						entityCameraViewMatrix = MathHelper.lookAtRH(position, np.add(position, entity.components["camera"].forward), entity.components["camera"].up)
+						entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
 						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
 					entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
 					invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
@@ -2322,7 +2512,6 @@ class RenderableComponentWidget(QWidget):
 				if os.path.isabs(modelPath):
 					if modelPath.startswith(globalInfo.workingDirectory):
 						modelPath = modelPath[len(globalInfo.workingDirectory) + 1:]
-						renderable.modelPath = modelPath
 			self.modelPathWidget.filePathLabel.setText(modelPath.rsplit("/")[-1])
 			self.modelPathWidget.filePathLabel.setToolTip(modelPath)
 		else:
@@ -2356,6 +2545,8 @@ class RenderableComponentWidget(QWidget):
 	def onRenderableUpdated(self, filePath):
 		newRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["renderable"])
 		newRenderable.modelPath = filePath
+		if newRenderable.modelPath != "":
+			globalInfo.rendererResourceManager.load(os.path.normpath(os.path.abspath(newRenderable.modelPath)).replace("\\", "/"))
 		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRenderable))
 
 class RigidbodyComponentWidget(QWidget):
