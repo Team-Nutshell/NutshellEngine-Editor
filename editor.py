@@ -1400,6 +1400,29 @@ class Renderer(QOpenGLWidget):
 					self.entityMoveTransform = None
 		e.accept()
 
+	def mousePressEvent(self, e):
+		if not self.anyEntityTransformKeyPressed():
+			if e.button() == Qt.MouseButton.LeftButton:
+				self.leftClickedPressed = True
+				self.savedMousePosition = QCursor.pos()
+				self.setCursor(Qt.CursorShape.BlankCursor)
+				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
+				QCursor.setPos(widgetCenter)
+				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
+			elif e.button() == Qt.MouseButton.RightButton:
+				self.doPicking = True
+		e.accept()
+
+	def mouseReleaseEvent(self, e):
+		if not self.anyEntityTransformKeyPressed():
+			if e.button() == Qt.MouseButton.LeftButton:
+				if self.leftClickedPressed:
+					self.leftClickedPressed = False
+					self.setCursor(Qt.CursorShape.ArrowCursor)
+					QCursor.setPos(self.savedMousePosition)
+					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+		e.accept()
+
 	def mouseMoveEvent(self, e):
 		if not self.anyEntityTransformKeyPressed():
 			if e.buttons() & Qt.MouseButton.LeftButton:
@@ -1437,29 +1460,6 @@ class Renderer(QOpenGLWidget):
 					if np.dot(worldSpaceCursorPreviousEntityDifference, worldSpaceCursorPreviousEntityDifference) != 0.0:
 						self.entityMoveTransform.scale += ((np.linalg.norm(worldSpaceCursorDifference) * 1000.0) / np.linalg.norm(worldSpaceCursorPreviousEntityDifference)) * (1.0 if np.dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0 else -1.0)
 				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
-		e.accept()
-
-	def mousePressEvent(self, e):
-		if not self.anyEntityTransformKeyPressed():
-			if e.button() == Qt.MouseButton.LeftButton:
-				self.leftClickedPressed = True
-				self.savedMousePosition = QCursor.pos()
-				self.setCursor(Qt.CursorShape.BlankCursor)
-				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
-				QCursor.setPos(widgetCenter)
-				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
-			elif e.button() == Qt.MouseButton.RightButton:
-				self.doPicking = True
-		e.accept()
-
-	def mouseReleaseEvent(self, e):
-		if not self.anyEntityTransformKeyPressed():
-			if e.button() == Qt.MouseButton.LeftButton:
-				if self.leftClickedPressed:
-					self.leftClickedPressed = False
-					self.setCursor(Qt.CursorShape.ArrowCursor)
-					QCursor.setPos(self.savedMousePosition)
-					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 		e.accept()
 
 	def focusOutEvent(self, e):
