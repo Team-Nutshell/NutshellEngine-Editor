@@ -291,54 +291,58 @@ class RendererResourceManager():
 			for primitive in mesh.primitives:
 				vertexCount = 0
 
-				if primitive.attributes.POSITION is not None:
-					accessor = gltfData.accessors[primitive.attributes.POSITION]
-					vertexCount = accessor.count
-
-				vertices = np.zeros((vertexCount, 8), dtype=np.float32)
+				positions = None
 				if primitive.attributes.POSITION is not None:
 					accessor = gltfData.accessors[primitive.attributes.POSITION]
 					bufferView = gltfData.bufferViews[accessor.bufferView]
 					buffer = gltfData.buffers[bufferView.buffer]
 					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
 
-					for vertexIndex in range(accessor.count):
-						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 12)
-						positionData = attributeData[offset:offset+12]
-						position = struct.unpack("<fff", positionData)
-						position = MathHelper.mat4x4Vec4Mult(modelMatrix, [position[0], position[1], position[2], 1.0])
-						vertices[vertexIndex][0] = position[0]
-						vertices[vertexIndex][1] = position[1]
-						vertices[vertexIndex][2] = position[2]
+					vertexCount = accessor.count
 
+					offset = accessor.byteOffset + bufferView.byteOffset
+					positionData = attributeData[offset:offset+(12 * accessor.count)]
+					positions = struct.unpack("<" + ("f" * (3 * accessor.count)), positionData)
+
+				normals = None
 				if primitive.attributes.NORMAL is not None:
 					accessor = gltfData.accessors[primitive.attributes.NORMAL]
 					bufferView = gltfData.bufferViews[accessor.bufferView]
 					buffer = gltfData.buffers[bufferView.buffer]
 					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
 
-					for vertexIndex in range(accessor.count):
-						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 12)
-						normalData = attributeData[offset:offset+12]
-						normal = struct.unpack("<fff", normalData)
-						normal = MathHelper.mat4x4Vec4Mult(MathHelper.transpose(np.linalg.inv(modelMatrix.reshape((4, 4))).reshape((16))), [normal[0], normal[1], normal[2], 0.0])
-						normal = MathHelper.normalize([normal[0], normal[1], normal[2]])
-						vertices[vertexIndex][3] = normal[0]
-						vertices[vertexIndex][4] = normal[1]
-						vertices[vertexIndex][5] = normal[2]
+					offset = accessor.byteOffset + bufferView.byteOffset
+					normalData = attributeData[offset:offset+(12 * accessor.count)]
+					normals = struct.unpack("<" + ("f" * (3 * accessor.count)), normalData)
 
+				uvs = None
 				if primitive.attributes.TEXCOORD_0 is not None:
 					accessor = gltfData.accessors[primitive.attributes.TEXCOORD_0]
 					bufferView = gltfData.bufferViews[accessor.bufferView]
 					buffer = gltfData.buffers[bufferView.buffer]
 					attributeData = gltfData.get_data_from_buffer_uri(buffer.uri)
 
-					for vertexIndex in range(accessor.count):
-						offset = accessor.byteOffset + bufferView.byteOffset + (vertexIndex * 8)
-						uvData = attributeData[offset:offset+8]
-						uv = struct.unpack("<ff", uvData)
-						vertices[vertexIndex][6] = uv[0]
-						vertices[vertexIndex][7] = uv[1]
+					offset = accessor.byteOffset + bufferView.byteOffset
+					uvData = attributeData[offset:offset+(8 * accessor.count)]
+					uvs = struct.unpack("<" + ("f" * (2 * accessor.count)), uvData)
+
+				vertices = np.zeros((vertexCount, 8), dtype=np.float32)
+				for vertexIndex in range(vertexCount):
+					position = MathHelper.mat4x4Vec4Mult(modelMatrix, [positions[0 + (vertexIndex * 3)], positions[1 + (vertexIndex * 3)], positions[2 + (vertexIndex * 3)], 1.0])
+					vertices[vertexIndex][0] = position[0]
+					vertices[vertexIndex][1] = position[1]
+					vertices[vertexIndex][2] = position[2]
+
+					if normals is not None:
+						normal = MathHelper.mat4x4Vec4Mult(MathHelper.transpose(np.linalg.inv(modelMatrix.reshape((4, 4))).reshape((16))), [normals[0 + (vertexIndex * 3)], normals[1 + (vertexIndex * 3)], normals[2 + (vertexIndex * 3)], 0.0])
+						normal = MathHelper.normalize([normal[0], normal[1], normal[2]])
+						vertices[vertexIndex][3] = normal[0]
+						vertices[vertexIndex][4] = normal[1]
+						vertices[vertexIndex][5] = normal[2]
+
+					if uvs is not None:
+						vertices[vertexIndex][6] = uvs[0 + (vertexIndex * 2)]
+						vertices[vertexIndex][7] = uvs[1 + (vertexIndex * 2)]
 
 				indices = np.empty((0), dtype=np.uint32)
 				if primitive.indices is not None:
