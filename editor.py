@@ -1519,35 +1519,38 @@ class Renderer(QOpenGLWidget):
 			return
 		if e.key() == self.cameraForwardKey:
 			self.cameraForwardKeyPressed = True
-		if e.key() == self.cameraBackwardKey:
+		elif e.key() == self.cameraBackwardKey:
 			self.cameraBackwardKeyPressed = True
-		if e.key() == self.cameraLeftKey:
+		elif e.key() == self.cameraLeftKey:
 			self.cameraLeftKeyPressed = True
-		if e.key() == self.cameraRightKey:
+		elif e.key() == self.cameraRightKey:
 			self.cameraRightKeyPressed = True
-		if e.key() == self.cameraUpKey:
+		elif e.key() == self.cameraUpKey:
 			self.cameraUpKeyPressed = True
-		if e.key() == self.cameraDownKey:
+		elif e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = True
-		if e.key() == self.translateEntityKey:
+		elif e.key() == self.translateEntityKey:
 			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.translateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
-		if e.key() == self.rotateEntityKey:
+		elif e.key() == self.rotateEntityKey:
 			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.rotateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
-		if e.key() == self.scaleEntityKey:
+		elif e.key() == self.scaleEntityKey:
 			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.scaleEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
-		if e.key() == self.showHideCamerasKey:
+		elif e.key() == Qt.Key.Key_Delete:
+			if globalInfo.currentEntityID != -1:
+				globalInfo.undoStack.push(DestroyEntityCommand(globalInfo.currentEntityID))
+		elif e.key() == self.showHideCamerasKey:
 			globalInfo.signalEmitter.changeCameraViewStateSignal.emit(not self.showCameras)
 		e.accept()
 
@@ -1557,31 +1560,31 @@ class Renderer(QOpenGLWidget):
 			return
 		if e.key() == self.cameraForwardKey:
 			self.cameraForwardKeyPressed = False
-		if e.key() == self.cameraBackwardKey:
+		elif e.key() == self.cameraBackwardKey:
 			self.cameraBackwardKeyPressed = False
-		if e.key() == self.cameraLeftKey:
+		elif e.key() == self.cameraLeftKey:
 			self.cameraLeftKeyPressed = False
-		if e.key() == self.cameraRightKey:
+		elif e.key() == self.cameraRightKey:
 			self.cameraRightKeyPressed = False
-		if e.key() == self.cameraUpKey:
+		elif e.key() == self.cameraUpKey:
 			self.cameraUpKeyPressed = False
-		if e.key() == self.cameraDownKey:
+		elif e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = False
-		if e.key() == self.translateEntityKey:
+		elif e.key() == self.translateEntityKey:
 			if self.translateEntityKeyPressed:
 				self.translateEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 				if globalInfo.currentEntityID != -1:
 					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
 					self.entityMoveTransform = None
-		if e.key() == self.rotateEntityKey:
+		elif e.key() == self.rotateEntityKey:
 			if self.rotateEntityKeyPressed:
 				self.rotateEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 				if globalInfo.currentEntityID != -1:
 					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, self.entityMoveTransform))
 					self.entityMoveTransform = None
-		if e.key() == self.scaleEntityKey:
+		elif e.key() == self.scaleEntityKey:
 			if self.scaleEntityKeyPressed:
 				self.scaleEntityKeyPressed = False
 				self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
