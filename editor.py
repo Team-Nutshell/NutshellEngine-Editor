@@ -970,12 +970,22 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
-			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererModelManager.models):
+				entityModel = globalInfo.rendererModelManager.models[entity.components["renderable"].modelPath]
+				for mesh in entityModel:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+			else:
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+
+				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Entities Cameras
 		if self.showCameras:
@@ -1037,12 +1047,22 @@ class Renderer(QOpenGLWidget):
 
 				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
-				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+				if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererModelManager.models):
+					entityModel = globalInfo.rendererModelManager.models[entity.components["renderable"].modelPath]
+					for mesh in entityModel:
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+						gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+				else:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+
+					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
@@ -1074,12 +1094,22 @@ class Renderer(QOpenGLWidget):
 			else:
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
-			gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
-			gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererModelManager.models):
+				entityModel = globalInfo.rendererModelManager.models[entity.components["renderable"].modelPath]
+				for mesh in entityModel:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, mesh.vertexBuffer)
+					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer)
 
-			gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+					gl.glDrawElements(gl.GL_TRIANGLES, mesh.indexCount, gl.GL_UNSIGNED_INT, None)
+			else:
+				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].vertexBuffer)
+				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexBuffer)
+
+				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererModelManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Entity Camera
 			if self.showCameras:
