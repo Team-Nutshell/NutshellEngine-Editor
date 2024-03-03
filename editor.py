@@ -43,7 +43,7 @@ class Transform():
 
 class Camera():
 	def __init__(self):
-		self.forward = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+		self.forward = np.array([0.0, 0.0, -1.0], dtype=np.float32)
 		self.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
 		self.fov = 45.0
 		self.nearPlane = 0.3
@@ -584,6 +584,12 @@ class ViewMenu(QMenu):
 		self.showCameras = False
 		super().__init__("&View")
 		self.showHideCamerasAction = self.addAction("Show Cameras", self.showHideCameras)
+		self.showHideCamerasAction.setShortcut("C")
+		config = configparser.ConfigParser()
+		if config.read("assets/options.ini") != []:
+			if "Renderer" in config:
+				if "showHideCamerasKey" in config["Renderer"]:
+					self.showHideCamerasAction.setShortcut(config["Renderer"]["showHideCamerasKey"])
 		globalInfo.signalEmitter.changeCameraViewStateSignal.connect(self.onChangeCameraViewState)
 
 	def showHideCameras(self):
@@ -806,8 +812,6 @@ class Renderer(QOpenGLWidget):
 		self.rotateEntityKey = Qt.Key.Key_R
 		self.scaleEntityKey = Qt.Key.Key_E
 
-		self.showHideCamerasKey = Qt.Key.Key_C
-
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Renderer" in config:
@@ -847,10 +851,6 @@ class Renderer(QOpenGLWidget):
 					input = QKeySequence.fromString(config["Renderer"]["scaleEntityKey"])
 					if not input.isEmpty():
 						self.scaleEntityKey = input[0].key()
-				if "showHideCamerasKey" in config["Renderer"]:
-					input = QKeySequence.fromString(config["Renderer"]["showHideCamerasKey"])
-					if not input.isEmpty():
-						self.showHideCamerasKey = input[0].key()
 
 		self.cameraForwardKeyPressed = False
 		self.cameraBackwardKeyPressed = False
@@ -1550,8 +1550,6 @@ class Renderer(QOpenGLWidget):
 		elif e.key() == Qt.Key.Key_Delete:
 			if globalInfo.currentEntityID != -1:
 				globalInfo.undoStack.push(DestroyEntityCommand(globalInfo.currentEntityID))
-		elif e.key() == self.showHideCamerasKey:
-			globalInfo.signalEmitter.changeCameraViewStateSignal.emit(not self.showCameras)
 		e.accept()
 
 	def keyReleaseEvent(self, e):
