@@ -102,6 +102,9 @@ class Renderable():
 	def toJson(self):
 		dictionary = {}
 		dictionary["modelPath"] = self.modelPath
+		if globalInfo.workingDirectory != "":
+			if self.modelPath.startswith(globalInfo.workingDirectory):
+				dictionary["modelPath"] = self.modelPath[len(globalInfo.workingDirectory) + 1:]
 		return dictionary
 
 	def fromJson(self, jsonData):
@@ -242,7 +245,7 @@ class Entity():
 				if not os.path.isabs(self.components["renderable"].modelPath):
 					self.components["renderable"].modelPath = os.path.normpath(globalInfo.workingDirectory + "/" + self.components["renderable"].modelPath).replace("\\", "/")
 				if os.path.exists(self.components["renderable"].modelPath):
-					globalInfo.rendererResourceManager.load(self.components["renderable"].modelPath)
+					globalInfo.rendererResourceManager.loadModel(self.components["renderable"].modelPath)
 				else:
 					print("Model file \"" + self.components["renderable"].modelPath + "\" does not exist.")
 		if "rigidbody" in jsonData:
@@ -260,12 +263,176 @@ class RendererResourceManager():
 		self.models = {}
 		self.textures = {}
 
-	def load(self, modelPath):
+	def loadModel(self, modelPath):
 		extension = modelPath.rsplit(".")[-1]
-		if (extension == "gltf") or (extension == "glb"):
-			self.loadGltf(modelPath)
+		rendererModel = None
+		if (extension == "ntmd"):
+			rendererModel = self.loadNtmd(modelPath)
+		elif (extension == "gltf") or (extension == "glb"):
+			rendererModel = self.loadGltf(modelPath)
 		else:
 			print("Model file extension \"." + extension + "\" is not supported.")
+		if rendererModel is not None:
+			globalInfo.rendererResourceManager.models[modelPath] = rendererModel
+
+	def loadImage(self, imagePath):
+		imageWidth = 0
+		imageHeight = 0
+		image = None
+		extension = imagePath.rsplit(".")[-1]
+		if (extension == "ntim"):
+			imageWidth, imageHeight, image = self.loadNtim(imagePath)
+		else:
+			try:
+				imageData = Image.open(imagePath, "r")
+				imageData = imageData.convert("RGBA")
+				imageWidth = imageData.width
+				imageHeight = imageData.height
+				image = np.array(imageData.getdata(), dtype=np.uint8).flatten()
+			except:
+				print("An error occured when loading image file \"" + imagePath + "\".")
+		return imageWidth, imageHeight, image
+
+	def loadNtmd(self, modelPath):
+		rendererModel = RendererModel()
+		modelData = None
+		with open(modelPath, "r") as modelFile:
+			try:
+				modelData = json.load(modelFile)
+			except:
+				print("\"" + modelPath + "\" is not a valid JSON file.")
+				return None
+		if "primitives" in modelData:
+			for primitive in modelData["primitives"]:
+				rendererMesh = None
+				if "meshPath" in primitive:
+					rendererMesh = self.loadNtmh(primitive["meshPath"])
+
+				if rendererMesh is not None:
+					if "materialPath" in primitive:
+						materialPath = primitive["materialPath"]
+						materialData = None
+						with open(globalInfo.workingDirectory + "/" + materialPath, "r") as materialFile:
+							try:
+								materialData = json.load(materialFile)
+							except:
+								print("\"" + materialPath + "\" is not a valid JSON file.")
+								return None
+						if "diffuseTexture" in materialData:
+							diffuseTexture = materialData["diffuseTexture"]
+							if "imagePath" in diffuseTexture:
+								rendererMesh.texturePath = diffuseTexture["imagePath"]
+								if not os.path.isabs(rendererMesh.texturePath):
+									rendererMesh.texturePath = os.path.normpath(globalInfo.workingDirectory + "/" + rendererMesh.texturePath).replace("\\", "/")
+								textureWidth, textureHeight, texture = self.loadImage(rendererMesh.texturePath)
+
+								globalInfo.rendererResourceManager.textures[rendererMesh.texturePath] = gl.glGenTextures(1)
+								gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[rendererMesh.texturePath])
+								gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA8, textureWidth, textureHeight, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, texture)
+
+								gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+								gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+								gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+								gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+							if "imageSamplerPath" in diffuseTexture:
+								samplerPath = diffuseTexture["imageSamplerPath"]
+								samplerData = None
+								with open(globalInfo.workingDirectory + "/" + samplerPath, "r") as samplerFile:
+									try:
+										samplerData = json.load(samplerFile)
+									except:
+										print("\"" + samplerPath + "\" is not a valid JSON file.")
+								if samplerData is not None:
+									if "minFilter" in samplerData:
+										minFilter = samplerData["minFilter"]
+										if minFilter == "Nearest":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+									if "magFilter" in samplerData:
+										magFilter = samplerData["magFilter"]
+										if magFilter == "Nearest":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+									if "addressModeU" in samplerData:
+										addressModeU = samplerData["addressModeU"]
+										if addressModeU == "Repeat":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_REPEAT)
+										elif addressModeU == "MirrorRepeat":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_MIRRORED_REPEAT)
+									if "addressModeV" in samplerData:
+										addressModeV = samplerData["addressModeV"]
+										if addressModeV == "Repeat":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_REPEAT)
+										elif addressModeV == "MirrorRepeat":
+											gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_MIRRORED_REPEAT)
+
+				rendererModel.meshes.append(rendererMesh)
+		return rendererModel
+
+	def loadNtmh(self, meshPath):
+		rendererMesh = RendererMesh()
+		meshData = None
+		with open(globalInfo.workingDirectory + "/" + meshPath, "r") as meshFile:
+			try:
+				meshData = json.load(meshFile)
+			except:
+				print("\"" + meshPath + "\" is not a valid JSON file.")
+				return None
+
+		vertices = None
+		if "vertices" in meshData:
+			vertices = np.zeros((len(meshData["vertices"]), 8), dtype=np.float32)
+			for vertexIndex, vertex in enumerate(meshData["vertices"]):
+				if "position" in vertex:
+					position = vertex["position"]
+					vertices[vertexIndex][0] = position[0]
+					vertices[vertexIndex][1] = position[1]
+					vertices[vertexIndex][2] = position[2]
+
+				if "normal" in vertex:
+					normal = vertex["normal"]
+					vertices[vertexIndex][3] = normal[0]
+					vertices[vertexIndex][4] = normal[1]
+					vertices[vertexIndex][5] = normal[2]
+
+				if "uv" in vertex:
+					uv = vertex["uv"]
+					vertices[vertexIndex][6] = uv[0]
+					vertices[vertexIndex][7] = uv[1]
+
+		indices = np.zeros((0), dtype=np.uint32)
+		if "indices" in meshData:
+			indices = np.array(meshData["indices"], dtype=np.uint32)
+		else:
+			indices = np.arange(vertices.size, dtype=np.uint32)
+
+		rendererMesh.vertexBuffer = gl.glGenBuffers(1)
+		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, rendererMesh.vertexBuffer)
+		gl.glBufferData(gl.GL_ARRAY_BUFFER, vertices.nbytes, vertices, gl.GL_STATIC_DRAW)
+
+		rendererMesh.indexBuffer = gl.glGenBuffers(1)
+		gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, rendererMesh.indexBuffer)
+		gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
+
+		rendererMesh.indexCount = indices.size
+		return rendererMesh
+
+	def loadNtim(self, imagePath):
+		imageWidth = 0
+		imageHeight = 0
+		image = None
+		imageData = None
+		with open(imagePath, "r") as imageFile:
+			try:
+				imageData = json.load(imageFile)
+			except:
+				print("\"" + imagePath + "\" is not a valid JSON file.")
+		if imageData is not None:
+			if "width" in imageData:
+				imageWidth = imageData["width"]
+			if "height" in imageData:
+				imageHeight = imageData["height"]
+			if "data" in imageData:
+				image = np.array(imageData["data"], dtype=np.uint8)
+		return imageWidth, imageHeight, image
 
 	def loadGltf(self, modelPath):
 		rendererModel = RendererModel()
@@ -274,7 +441,7 @@ class RendererResourceManager():
 		for nodeIndex in scene.nodes:
 			modelMatrix = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
 			self.loadGltfNode(modelPath, rendererModel, np.copy(modelMatrix), gltfData, copy.deepcopy(gltfData.nodes[nodeIndex]))
-		globalInfo.rendererResourceManager.models[modelPath] = rendererModel
+		return rendererModel
 
 	def loadGltfNode(self, modelPath, rendererModel, modelMatrix, gltfData, gltfNode):
 		if gltfNode.matrix is not None:
@@ -346,7 +513,7 @@ class RendererResourceManager():
 						vertices[vertexIndex][6] = uvs[0 + (vertexIndex * 2)]
 						vertices[vertexIndex][7] = uvs[1 + (vertexIndex * 2)]
 
-				indices = np.empty((0), dtype=np.uint32)
+				indices = np.zeros((0), dtype=np.uint32)
 				if primitive.indices is not None:
 					accessor = gltfData.accessors[primitive.indices]
 					bufferView = gltfData.bufferViews[accessor.bufferView]
@@ -381,22 +548,42 @@ class RendererResourceManager():
 				else:
 					indices = np.arange(vertexCount, dtype=np.uint32)
 
-				texture = None
 				textureWidth = 0
 				textureHeight = 0
+				texture = None
+				minFilter = gl.GL_LINEAR
+				magFilter = gl.GL_LINEAR
+				wrapS = gl.GL_CLAMP_TO_EDGE
+				wrapT = gl.GL_CLAMP_TO_EDGE
 				if primitive.material is not None:
 					material = gltfData.materials[primitive.material]
 
 					if material.pbrMetallicRoughness is not None:
 						if material.pbrMetallicRoughness.baseColorTexture is not None:
-							texturePath = gltfData.images[gltfData.textures[material.pbrMetallicRoughness.baseColorTexture.index].source].uri
+							baseColorTexture = gltfData.textures[material.pbrMetallicRoughness.baseColorTexture.index]
+							texturePath = gltfData.images[baseColorTexture.source].uri
 							texturePath = os.path.normpath(modelPath.rsplit("/", 1)[0] + "/" + texturePath).replace("\\", "/")
-							image = Image.open(texturePath, "r")
-							image = image.convert("RGBA")
-							textureWidth = image.width
-							textureHeight = image.height
-							texture = np.array(image.getdata(), dtype=np.uint8).flatten()
+							textureWidth, textureHeight, texture = self.loadImage(texturePath)
 							rendererMesh.texturePath = texturePath
+
+							if baseColorTexture.sampler is not None:
+								sampler = gltfData.images[gltfData.samplers[baseColorTexture.sampler].sampler]
+								if sampler.minFilter is not None:
+									if (sampler.minFilter == 9728) or (sampler.minFilter == 9984) or (sampler.minFilter == 9986): # Nearest
+										minFilter = gl.GL_NEAREST
+								if sampler.magFilter is not None:
+									if (sampler.magFilter == 9728) or (sampler.magFilter == 9984) or (sampler.magFilter == 9986): # Nearest
+										magFilter = gl.GL_NEAREST
+								if sampler.wrapS is not None:
+									if sampler.wrapS == 10497: # Repeat
+										wrapS = gl.GL_REPEAT
+									elif sampler.wrapS == 10497: # MirroredRepeat
+										wrapS = gl.GL_MIRRORED_REPEAT
+								if sampler.wrapT is not None:
+									if sampler.wrapT == 10497: # Repeat
+										wrapT = gl.GL_REPEAT
+									elif sampler.wrapT == 10497: # MirroredRepeat
+										wrapT = gl.GL_MIRRORED_REPEAT
 						elif material.pbrMetallicRoughness.baseColorFactor is not None:
 							texture = np.array([material.pbrMetallicRoughness.baseColorFactor[0] * 255, material.pbrMetallicRoughness.baseColorFactor[1] * 255, material.pbrMetallicRoughness.baseColorFactor[2] * 255, material.pbrMetallicRoughness.baseColorFactor[3] * 255], dtype=np.uint8)
 							textureWidth = 1
@@ -416,12 +603,12 @@ class RendererResourceManager():
 				globalInfo.rendererResourceManager.textures[rendererMesh.texturePath] = gl.glGenTextures(1)
 				gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[rendererMesh.texturePath])
 				gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA8, textureWidth, textureHeight, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, texture)
-				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
-				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, minFilter)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, magFilter)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, wrapS)
+				gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, wrapT)
 
-				rendererModel.meshes.append(rendererMesh)
+				rendererModel.meshes.append(copy.deepcopy(rendererMesh))
 
 		for childIndex in gltfNode.children:
 			self.loadGltfNode(modelPath, rendererModel, np.copy(modelMatrix), gltfData, copy.deepcopy(gltfData.nodes[childIndex]))
@@ -555,6 +742,8 @@ class FileMenu(QMenu):
 		fileDialog = QFileDialog()
 		fileDialog.setWindowTitle("Open...")
 		fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)")
+		if globalInfo.workingDirectory != "":
+			fileDialog.setDirectory(globalInfo.workingDirectory)
 		file = None
 		if fileDialog.exec():
 			file = fileDialog.selectedFiles()[0]
@@ -2581,9 +2770,8 @@ class RenderableComponentWidget(QWidget):
 
 	def onRenderableUpdated(self, filePath):
 		newRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["renderable"])
-		newRenderable.modelPath = filePath
-		if newRenderable.modelPath != "":
-			globalInfo.rendererResourceManager.load(os.path.normpath(os.path.abspath(newRenderable.modelPath)).replace("\\", "/"))
+		newRenderable.modelPath = os.path.normpath(os.path.abspath(filePath)).replace("\\", "/")
+		globalInfo.rendererResourceManager.loadModel(newRenderable.modelPath)
 		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRenderable))
 
 class RigidbodyComponentWidget(QWidget):
