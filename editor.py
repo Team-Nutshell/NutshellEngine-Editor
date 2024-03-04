@@ -211,6 +211,8 @@ class Entity():
 		self.isPersistent = False
 		self.components = {"transform": Transform()}
 
+		self.isVisible = True
+
 	def toJson(self):
 		dictionary = {}
 		dictionary["name"] = self.name
@@ -518,6 +520,7 @@ class SignalEmitter(QObject):
 	removeEntityScriptableSignal = pyqtSignal(int)
 	changeEntityScriptableSignal = pyqtSignal(int, Scriptable)
 
+	toggleCurrentEntityVisibilitySignal = pyqtSignal(bool)
 	changeCameraViewStateSignal = pyqtSignal(bool)
 
 class NewMessageBox(QMessageBox):
@@ -587,17 +590,33 @@ class ViewMenu(QMenu):
 	def __init__(self):
 		self.showCameras = False
 		super().__init__("&View")
+		self.toggleCurrentEntityVisibilityAction = self.addAction("Toggle Current Entity Visibility", self.toggleCurrentEntityVisibility)
+		self.toggleCurrentEntityVisibilityAction.setShortcut("V")
+		self.toggleCurrentEntityVisibilityAction.setEnabled(False)
 		self.showHideCamerasAction = self.addAction("Show Cameras", self.showHideCameras)
 		self.showHideCamerasAction.setShortcut("C")
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Renderer" in config:
+				if "toggleCurrentEntityVisibility" in config["Renderer"]:
+					self.toggleCurrentEntityVisibilityAction.setShortcut(config["Renderer"]["toggleCurrentEntityVisibility"])
 				if "showHideCamerasKey" in config["Renderer"]:
 					self.showHideCamerasAction.setShortcut(config["Renderer"]["showHideCamerasKey"])
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.changeCameraViewStateSignal.connect(self.onChangeCameraViewState)
+
+	def toggleCurrentEntityVisibility(self):
+		globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible = not globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible
+		globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal.emit(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible)
 
 	def showHideCameras(self):
 		globalInfo.signalEmitter.changeCameraViewStateSignal.emit(not self.showCameras)
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			self.toggleCurrentEntityVisibilityAction.setEnabled(True)
+		else:
+			self.toggleCurrentEntityVisibilityAction.setEnabled(False)
 
 	def onChangeCameraViewState(self, cameraViewState):
 		self.showCameras = cameraViewState
@@ -1242,47 +1261,48 @@ class Renderer(QOpenGLWidget):
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 		for entity in globalInfo.entities:
-			if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
-			else:
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
+			if entity.isVisible:
+				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+				else:
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.entityProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
-				entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-				for entityMesh in entityModel.meshes:
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+				if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
+					entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
+					for entityMesh in entityModel.meshes:
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+
+						gl.glActiveTexture(gl.GL_TEXTURE0)
+						gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[entityMesh.texturePath])
+						gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
+
+						gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
+
+						gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
+				else:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
 
 					gl.glActiveTexture(gl.GL_TEXTURE0)
-					gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures[entityMesh.texturePath])
+					gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures["defaultTexture"])
 					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
 
 					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
 
-					gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
-			else:
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
-				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "position"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "normal"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "normal"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(12))
-				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.entityProgram, "uv"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.entityProgram, "uv"), 2, gl.GL_FLOAT, False, 32, ctypes.c_void_p(24))
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
-
-				gl.glActiveTexture(gl.GL_TEXTURE0)
-				gl.glBindTexture(gl.GL_TEXTURE_2D, globalInfo.rendererResourceManager.textures["defaultTexture"])
-				gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "textureSampler"), 0)
-
-				gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
-
-				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Entities Cameras
 		if self.showCameras:
@@ -1295,18 +1315,19 @@ class Renderer(QOpenGLWidget):
 			gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer)
 
 			for entity in globalInfo.entities:
-				if "camera" in entity.components:
-					if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-						entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
-						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
-					else:
-						entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
-						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-					entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
-					invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "model"), 1, False, invEntityCameraModel)
+				if entity.isVisible:
+					if "camera" in entity.components:
+						if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+							entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
+							entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
+						else:
+							entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
+							entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+						entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
+						invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.cameraFrustumProgram, "model"), 1, False, invEntityCameraModel)
 
-					gl.glDrawElements(gl.GL_LINES, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+						gl.glDrawElements(gl.GL_LINES, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
 		gl.glUseProgram(self.gridProgram)
@@ -1333,29 +1354,30 @@ class Renderer(QOpenGLWidget):
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
 
 			for entity in globalInfo.entities:
-				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
-				else:
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
+				if entity.isVisible:
+					if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+					else:
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.pickingProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-				gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
+					gl.glUniform1ui(gl.glGetUniformLocation(self.pickingProgram, "entityID"), entity.entityID)
 
-				if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
-					entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-					for entityMesh in entityModel.meshes:
-						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+					if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
+						entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
+						for entityMesh in entityModel.meshes:
+							gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+							gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
+							gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
+							gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+
+							gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
+					else:
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
 						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
 
-						gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
-				else:
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
-					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.pickingProgram, "position"))
-					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.pickingProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
-
-					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+						gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 			cursorPosition = self.mapFromGlobal(QCursor.pos())
 			pickedEntityID = gl.glReadPixels(cursorPosition.x() * globalInfo.devicePixelRatio, (self.height() - cursorPosition.y()) * globalInfo.devicePixelRatio, 1, 1, gl.GL_RED_INTEGER, gl.GL_UNSIGNED_INT)[0][0]
@@ -1382,47 +1404,48 @@ class Renderer(QOpenGLWidget):
 
 			# Entity
 			entity = globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)]
-			if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
-			else:
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
+			if entity.isVisible:
+				if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, self.entityMoveTransform.modelMatrix())
+				else:
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, entity.components["transform"].modelMatrix())
 
-			if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
-				entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
-				for entityMesh in entityModel.meshes:
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+				if ("renderable" in entity.components) and (entity.components["renderable"].modelPath in globalInfo.rendererResourceManager.models):
+					entityModel = globalInfo.rendererResourceManager.models[entity.components["renderable"].modelPath]
+					for entityMesh in entityModel.meshes:
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, entityMesh.vertexBuffer)
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+
+						gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
+				else:
+					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
 					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
 					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer)
+					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
 
-					gl.glDrawElements(gl.GL_TRIANGLES, entityMesh.indexCount, gl.GL_UNSIGNED_INT, None)
-			else:
-				gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer)
-				gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
-				gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 32, ctypes.c_void_p(0))
-				gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer)
+					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
-				gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+				# Entity Camera
+				if self.showCameras:
+					if "camera" in entity.components:
+						if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
+							entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
+							entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
+						else:
+							entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
+							entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
+						entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
+						invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, invEntityCameraModel)
 
-			# Entity Camera
-			if self.showCameras:
-				if "camera" in entity.components:
-					if (entity.entityID == globalInfo.currentEntityID) and (self.entityMoveTransform is not None):
-						entityCameraViewMatrix = MathHelper.lookAtRH(self.entityMoveTransform.position, np.add(self.entityMoveTransform.position, entity.components["camera"].forward), entity.components["camera"].up)
-						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(self.entityMoveTransform.rotation[2]), [0.0, 0.0, 1.0])))
-					else:
-						entityCameraViewMatrix = MathHelper.lookAtRH(entity.components["transform"].position, np.add(entity.components["transform"].position, entity.components["camera"].forward), entity.components["camera"].up)
-						entityCameraRotation = MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[0]), [1.0, 0.0, 0.0]), MathHelper.mat4x4Mult(MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[1]), [0.0, 1.0, 0.0]), MathHelper.rotate(np.deg2rad(entity.components["transform"].rotation[2]), [0.0, 0.0, 1.0])))
-					entityCameraProjectionMatrix = MathHelper.perspectiveRH(np.deg2rad(entity.components["camera"].fov), 16.0 / 9.0, max(entity.components["camera"].nearPlane, 0.001), max(entity.components["camera"].farPlane, 0.001))
-					invEntityCameraModel = np.linalg.inv(MathHelper.mat4x4Mult(entityCameraProjectionMatrix, MathHelper.mat4x4Mult(entityCameraRotation, entityCameraViewMatrix)).reshape((4, 4)))
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.outlineSoloProgram, "model"), 1, False, invEntityCameraModel)
+						gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer)
+						gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
+						gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
+						gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer)
 
-					gl.glBindBuffer(gl.GL_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer)
-					gl.glEnableVertexAttribArray(gl.glGetAttribLocation(self.outlineSoloProgram, "position"))
-					gl.glVertexAttribPointer(gl.glGetAttribLocation(self.outlineSoloProgram, "position"), 3, gl.GL_FLOAT, False, 12, ctypes.c_void_p(0))
-					gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer)
-
-					gl.glDrawElements(gl.GL_LINES, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+						gl.glDrawElements(gl.GL_LINES, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 			# Outline
 			gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
@@ -1928,6 +1951,7 @@ class EntityList(QListWidget):
 		globalInfo.signalEmitter.destroyEntitySignal.connect(self.onDestroyEntity)
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.changeNameEntitySignal.connect(self.onChangeNameEntity)
+		globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal.connect(self.onToggleCurrentEntityVisibility)
 
 	def findItemWithEntityID(self, entityID):
 		for i in range(self.count()):
@@ -1950,6 +1974,14 @@ class EntityList(QListWidget):
 
 	def onChangeNameEntity(self, entityID, name):
 		self.findItemWithEntityID(entityID).setText(name)
+
+	def onToggleCurrentEntityVisibility(self, isVisible):
+		font = self.findItemWithEntityID(globalInfo.currentEntityID).font()
+		if isVisible:
+			font.setItalic(False)
+		else:
+			font.setItalic(True)
+		self.findItemWithEntityID(globalInfo.currentEntityID).setFont(font)
 
 	def onItemSelectionChanged(self):
 		if len(self.selectedItems()) != 0:
