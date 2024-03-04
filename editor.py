@@ -1813,9 +1813,9 @@ class Renderer(QOpenGLWidget):
 				self.leftClickedPressed = True
 				self.savedMousePosition = QCursor.pos()
 				self.setCursor(Qt.CursorShape.BlankCursor)
-				widgetCenter = self.mapToGlobal(QPoint(int(self.width() / 2), int(self.height() / 2)))
-				QCursor.setPos(widgetCenter)
+				widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
 				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
+				QCursor.setPos(self.mapToGlobal(widgetCenter))
 			elif e.button() == Qt.MouseButton.RightButton:
 				self.doPicking = True
 		e.accept()
@@ -1838,8 +1838,7 @@ class Renderer(QOpenGLWidget):
 					widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
 					self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()], dtype=np.float32)
 					self.mouseCursorDifference = np.subtract(mouseCursorCurrentPosition, self.mouseCursorPreviousPosition)
-					widgetCenterGlobal = self.mapToGlobal(widgetCenter)
-					QCursor.setPos(widgetCenterGlobal)
+					QCursor.setPos(self.mapToGlobal(widgetCenter))
 		else:
 			if globalInfo.currentEntityID != -1:
 				mouseCursorCurrentPosition = np.array([e.pos().x(), self.height() - e.pos().y()], dtype=np.float32)
