@@ -707,8 +707,9 @@ class SignalEmitter(QObject):
 	removeEntityScriptableSignal = pyqtSignal(int)
 	changeEntityScriptableSignal = pyqtSignal(int, Scriptable)
 
+	toggleBackfaceCullingSignal = pyqtSignal(bool)
 	toggleCurrentEntityVisibilitySignal = pyqtSignal(bool)
-	changeCameraViewStateSignal = pyqtSignal(bool)
+	toggleCamerasVisibilitySignal = pyqtSignal(bool)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -777,29 +778,38 @@ class EditMenu(QMenu):
 
 class ViewMenu(QMenu):
 	def __init__(self):
+		self.backfaceCullingEnabled = False
 		self.showCameras = False
 		super().__init__("&View")
 		self.toggleCurrentEntityVisibilityAction = self.addAction("Toggle Current Entity Visibility", self.toggleCurrentEntityVisibility)
 		self.toggleCurrentEntityVisibilityAction.setShortcut("V")
 		self.toggleCurrentEntityVisibilityAction.setEnabled(False)
-		self.showHideCamerasAction = self.addAction("Show Cameras", self.showHideCameras)
-		self.showHideCamerasAction.setShortcut("C")
+		self.toggleBackfaceCullingAction = self.addAction("Enable Backface Culling", self.toggleBackfaceCulling)
+		self.toggleBackfaceCullingAction.setShortcut("F")
+		self.toggleCamerasVisibilityAction = self.addAction("Show Cameras", self.toggleCameraVisibility)
+		self.toggleCamerasVisibilityAction.setShortcut("C")
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Renderer" in config:
 				if "toggleCurrentEntityVisibility" in config["Renderer"]:
 					self.toggleCurrentEntityVisibilityAction.setShortcut(config["Renderer"]["toggleCurrentEntityVisibility"])
+				if "toggleBackfaceCulling" in config["Renderer"]:
+					self.toggleBackfaceCullingAction.setShortcut(config["Renderer"]["toggleBackfaceCulling"])
 				if "showHideCamerasKey" in config["Renderer"]:
-					self.showHideCamerasAction.setShortcut(config["Renderer"]["showHideCamerasKey"])
+					self.toggleCamerasVisibilityAction.setShortcut(config["Renderer"]["toggleCamerasVisibility"])
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
-		globalInfo.signalEmitter.changeCameraViewStateSignal.connect(self.onChangeCameraViewState)
+		globalInfo.signalEmitter.toggleBackfaceCullingSignal.connect(self.onBackfaceCullingToggled)
+		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.connect(self.onCamerasVisibilityToggled)
 
 	def toggleCurrentEntityVisibility(self):
 		globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible = not globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible
 		globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal.emit(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible)
 
-	def showHideCameras(self):
-		globalInfo.signalEmitter.changeCameraViewStateSignal.emit(not self.showCameras)
+	def toggleBackfaceCulling(self):
+		globalInfo.signalEmitter.toggleBackfaceCullingSignal.emit(not self.backfaceCullingEnabled)
+
+	def toggleCameraVisibility(self):
+		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.emit(not self.showCameras)
 
 	def onSelectEntity(self, entityID):
 		if entityID != -1:
@@ -807,9 +817,13 @@ class ViewMenu(QMenu):
 		else:
 			self.toggleCurrentEntityVisibilityAction.setEnabled(False)
 
-	def onChangeCameraViewState(self, cameraViewState):
-		self.showCameras = cameraViewState
-		self.showHideCamerasAction.setText("Hide Cameras" if self.showCameras else "Show Cameras")
+	def onBackfaceCullingToggled(self, backfaceCullingEnabled):
+		self.backfaceCullingEnabled = backfaceCullingEnabled
+		self.toggleBackfaceCullingAction.setText("Disable Backface Culling" if self.backfaceCullingEnabled else "Enable Backface Culling")
+
+	def onCamerasVisibilityToggled(self, showCameras):
+		self.showCameras = showCameras
+		self.toggleCamerasVisibilityAction.setText("Hide Cameras" if self.showCameras else "Show Cameras")
 
 class MathHelper():
 	@staticmethod
@@ -1092,8 +1106,11 @@ class Renderer(QOpenGLWidget):
 
 		self.gotResized = False
 
+		self.backfaceCullingEnabled = False
 		self.showCameras = False
-		globalInfo.signalEmitter.changeCameraViewStateSignal.connect(self.onChangeCameraViewState)
+
+		globalInfo.signalEmitter.toggleBackfaceCullingSignal.connect(self.onBackfaceCullingToggled)
+		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.connect(self.toggleCameraVisibility)
 
 	def initializeGL(self):
 		[fullscreenVertexShader, _] = OpenGLHelper.compileShader(gl.GL_VERTEX_SHADER, OpenGLHelper.fullscreenVertexShaderCode())
@@ -1437,6 +1454,11 @@ class Renderer(QOpenGLWidget):
 
 		self.updateCamera()
 
+		if self.backfaceCullingEnabled:
+			gl.glEnable(gl.GL_CULL_FACE)
+		else:
+			gl.glDisable(gl.GL_CULL_FACE)
+
 		gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.defaultFramebufferObject())
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 		gl.glEnable(gl.GL_DEPTH_TEST)
@@ -1492,6 +1514,8 @@ class Renderer(QOpenGLWidget):
 					gl.glUniform1i(gl.glGetUniformLocation(self.entityProgram, "doShading"), 0)
 
 					gl.glDrawElements(gl.GL_TRIANGLES, globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
+
+		gl.glDisable(gl.GL_CULL_FACE)
 
 		# Entities Cameras
 		if self.showCameras:
@@ -1881,8 +1905,11 @@ class Renderer(QOpenGLWidget):
 		super().resizeEvent(e)
 		self.gotResized = True
 
-	def onChangeCameraViewState(self, cameraViewState):
-		self.showCameras = cameraViewState
+	def onBackfaceCullingToggled(self, backfaceCullingEnabled):
+		self.backfaceCullingEnabled = backfaceCullingEnabled
+
+	def toggleCameraVisibility(self, showCameras):
+		self.showCameras = showCameras
 
 class CreateEntityCommand(QUndoCommand):
 	def __init__(self, name):
