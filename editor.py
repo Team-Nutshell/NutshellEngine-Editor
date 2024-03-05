@@ -567,7 +567,7 @@ class RendererResourceManager():
 							rendererMesh.texturePath = texturePath
 
 							if baseColorTexture.sampler is not None:
-								sampler = gltfData.images[gltfData.samplers[baseColorTexture.sampler].sampler]
+								sampler = gltfData.samplers[baseColorTexture.sampler]
 								if sampler.minFilter is not None:
 									if (sampler.minFilter == 9728) or (sampler.minFilter == 9984) or (sampler.minFilter == 9986): # Nearest
 										minFilter = gl.GL_NEAREST
