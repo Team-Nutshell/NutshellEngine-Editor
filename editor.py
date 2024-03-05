@@ -1846,6 +1846,7 @@ class Renderer(QOpenGLWidget):
 
 			horizontalSpeed = (1.0 if (self.mouseCursorDifference[0] == 0.0) else abs(self.mouseCursorDifference[0])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
 			verticalSpeed = (1.0 if (self.mouseCursorDifference[1] == 0.0) else abs(self.mouseCursorDifference[1])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
+			halfExtentSpeed = self.camera.cameraSpeed * 5.0 * (1.0 if (self.mouseScrollY == 0.0) else 2.0) * deltaTime
 
 			if self.cameraForwardKeyPressed or (self.mouseCursorDifference[1] < 0.0):
 				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * verticalSpeed)
@@ -1860,10 +1861,10 @@ class Renderer(QOpenGLWidget):
 				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * horizontalSpeed)
 
 			if self.cameraUpKeyPressed or (self.mouseScrollY < 0.0):
-				self.camera.orthographicHalfExtent += self.camera.cameraSpeed * 5.0 * deltaTime
+				self.camera.orthographicHalfExtent += halfExtentSpeed
 
 			if self.cameraDownKeyPressed or (self.mouseScrollY > 0.0):
-				self.camera.orthographicHalfExtent -= self.camera.cameraSpeed * 5.0 * deltaTime
+				self.camera.orthographicHalfExtent -= halfExtentSpeed
 				self.camera.orthographicHalfExtent = max(self.camera.orthographicHalfExtent, 0.01)
 
 			self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.orthographicPosition, np.add(self.camera.orthographicPosition, self.camera.orthographicDirection), self.camera.orthographicUp)
