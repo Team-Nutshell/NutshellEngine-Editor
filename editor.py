@@ -624,6 +624,7 @@ class GlobalInfo():
 		self.entityID = 0
 		self.currentScenePath = ""
 		self.workingDirectory = "."
+		self.copiedEntity = None
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Path" in config:
@@ -634,6 +635,12 @@ class GlobalInfo():
 	def findEntityById(self, entityID):
 		for i in range(len(self.entities)):
 			if self.entities[i].entityID == entityID:
+				return i
+		return -1
+
+	def findEntityByName(self, entityName):
+		for i in range(len(self.entities)):
+			if self.entities[i].name == entityName:
 				return i
 		return -1
 
@@ -774,10 +781,32 @@ class EditMenu(QMenu):
 		super().__init__("&Edit")
 		self.undoAction = globalInfo.undoStack.createUndoAction(self, "&Undo")
 		self.undoAction.setShortcut("Ctrl+Z")
+		self.addAction(self.undoAction)
 		self.redoAction = globalInfo.undoStack.createRedoAction(self, "&Redo")
 		self.redoAction.setShortcut("Ctrl+Y")
-		self.addAction(self.undoAction)
 		self.addAction(self.redoAction)
+		self.copyEntityAction = self.addAction("Copy Entity", self.copyEntity)
+		self.copyEntityAction.setShortcut("Ctrl+C")
+		self.copyEntityAction.setEnabled(False)
+		self.pasteEntityAction = self.addAction("Paste Entity", self.pasteEntity)
+		self.pasteEntityAction.setShortcut("Ctrl+V")
+		self.pasteEntityAction.setEnabled(False)
+		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
+
+	def copyEntity(self):
+		if globalInfo.currentEntityID != -1:
+			globalInfo.copiedEntity = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)])
+			self.pasteEntityAction.setEnabled(True)
+
+	def pasteEntity(self):
+		if globalInfo.copiedEntity != None:
+			globalInfo.undoStack.push(CopyEntityCommand(globalInfo.copiedEntity))
+
+	def onSelectEntity(self, entityID):
+		if entityID != -1:
+			self.copyEntityAction.setEnabled(True)
+		else:
+			self.copyEntityAction.setEnabled(False)
 
 class ViewMenu(QMenu):
 	def __init__(self):
@@ -2121,15 +2150,14 @@ class CreateEntityCommand(QUndoCommand):
 		self.entityID = -1
 
 	def undo(self):
-		del globalInfo.entities[self.index]
+		del globalInfo.entities[globalInfo.findEntityById(self.entityID)]
 		globalInfo.signalEmitter.destroyEntitySignal.emit(self.entityID)
 
 	def redo(self):
 		newEntity = Entity(self.entityName, self.entityID)
 		self.entityID = newEntity.entityID
 		globalInfo.entities.append(newEntity)
-		self.index = len(globalInfo.entities) - 1
-		globalInfo.signalEmitter.createEntitySignal.emit(newEntity.entityID)
+		globalInfo.signalEmitter.createEntitySignal.emit(self.entityID)
 
 class DestroyEntityCommand(QUndoCommand):
 	def __init__(self, entityID):
@@ -2145,6 +2173,31 @@ class DestroyEntityCommand(QUndoCommand):
 		self.index = globalInfo.findEntityById(self.destroyedEntity.entityID)
 		del globalInfo.entities[self.index]
 		globalInfo.signalEmitter.destroyEntitySignal.emit(self.destroyedEntity.entityID)
+
+class CopyEntityCommand(QUndoCommand):
+	def __init__(self, entity):
+		super().__init__()
+		self.copiedEntity = copy.deepcopy(entity)
+		entityNameIndex = 0
+		while globalInfo.findEntityByName(self.copiedEntity.name + "_" + str(entityNameIndex)) != -1:
+			entityNameIndex += 1
+		self.pastedEntityName = self.copiedEntity.name + "_" + str(entityNameIndex)
+		self.setText("Copy Entity " + entity.name + " to Entity " + self.pastedEntityName)
+
+	def undo(self):
+		del globalInfo.entities[globalInfo.findEntityById(self.pastedEntityID)]
+		globalInfo.signalEmitter.destroyEntitySignal.emit(self.pastedEntityID)
+
+	def redo(self):
+		pastedEntity = copy.deepcopy(self.copiedEntity)
+		pastedEntity.entityID = globalInfo.entityID
+		globalInfo.entityID += 1
+		pastedEntity.name = self.pastedEntityName
+		globalInfo.entities.append(pastedEntity)
+		self.pastedEntityID = pastedEntity.entityID
+		globalInfo.signalEmitter.createEntitySignal.emit(self.pastedEntityID)
+		globalInfo.currentEntityID = self.pastedEntityID
+		globalInfo.signalEmitter.selectEntitySignal.emit(self.pastedEntityID)
 
 class ClearSceneCommand(QUndoCommand):
 	def __init__(self):
