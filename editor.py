@@ -710,6 +710,9 @@ class SignalEmitter(QObject):
 	toggleBackfaceCullingSignal = pyqtSignal(bool)
 	toggleCurrentEntityVisibilitySignal = pyqtSignal(bool)
 	toggleCamerasVisibilitySignal = pyqtSignal(bool)
+	switchCameraProjectionSignal = pyqtSignal(bool)
+	resetCameraSignal = pyqtSignal()
+	orthographicCameraToAxisSignal = pyqtSignal(list)
 
 class NewMessageBox(QMessageBox):
 	def __init__(self):
@@ -780,6 +783,7 @@ class ViewMenu(QMenu):
 	def __init__(self):
 		self.backfaceCullingEnabled = False
 		self.showCameras = False
+		self.cameraProjectionOrthographic = False
 		super().__init__("&View")
 		self.toggleCurrentEntityVisibilityAction = self.addAction("Toggle Current Entity Visibility", self.toggleCurrentEntityVisibility)
 		self.toggleCurrentEntityVisibilityAction.setShortcut("V")
@@ -788,6 +792,23 @@ class ViewMenu(QMenu):
 		self.toggleBackfaceCullingAction.setShortcut("F")
 		self.toggleCamerasVisibilityAction = self.addAction("Show Cameras", self.toggleCameraVisibility)
 		self.toggleCamerasVisibilityAction.setShortcut("C")
+		self.addSeparator()
+		self.switchCameraProjectionAction = self.addAction("Switch Camera Projection to Orthographic", self.switchCameraProjection)
+		self.switchCameraProjectionAction.setShortcut("P")
+		self.resetCameraAction = self.addAction("Reset Camera", self.resetCamera)
+		self.resetCameraAction.setShortcut("0")
+		self.orthographicCameraToXMAction = self.addAction("Orthographic Camera X-", self.orthographicCameraToXM)
+		self.orthographicCameraToXMAction.setShortcut("4")
+		self.orthographicCameraToXPAction = self.addAction("Orthographic Camera X+", self.orthographicCameraToXP)
+		self.orthographicCameraToXPAction.setShortcut("6")
+		self.orthographicCameraToYMAction = self.addAction("Orthographic Camera Y-", self.orthographicCameraToYM)
+		self.orthographicCameraToYMAction.setShortcut("1")
+		self.orthographicCameraToYPAction = self.addAction("Orthographic Camera Y+", self.orthographicCameraToYP)
+		self.orthographicCameraToYPAction.setShortcut("7")
+		self.orthographicCameraToZMAction = self.addAction("Orthographic Camera Z-", self.orthographicCameraToZM)
+		self.orthographicCameraToZMAction.setShortcut("8")
+		self.orthographicCameraToZPAction = self.addAction("Orthographic Camera Z+", self.orthographicCameraToZP)
+		self.orthographicCameraToZPAction.setShortcut("2")
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Renderer" in config:
@@ -797,9 +818,26 @@ class ViewMenu(QMenu):
 					self.toggleBackfaceCullingAction.setShortcut(config["Renderer"]["toggleBackfaceCulling"])
 				if "showHideCamerasKey" in config["Renderer"]:
 					self.toggleCamerasVisibilityAction.setShortcut(config["Renderer"]["toggleCamerasVisibility"])
+				if "switchCameraProjection" in config["Renderer"]:
+					self.switchCameraProjectionAction.setShortcut(config["Renderer"]["switchCameraProjection"])
+				if "resetCamera" in config["Renderer"]:
+					self.resetCameraAction.setShortcut(config["Renderer"]["resetCamera"])
+				if "orthographicCameraToXM" in config["Renderer"]:
+					self.orthographicCameraToXMAction.setShortcut(config["Renderer"]["orthographicCameraToXM"])
+				if "orthographicCameraToXP" in config["Renderer"]:
+					self.orthographicCameraToXPAction.setShortcut(config["Renderer"]["orthographicCameraToXP"])
+				if "orthographicCameraToYM" in config["Renderer"]:
+					self.orthographicCameraToYMAction.setShortcut(config["Renderer"]["orthographicCameraToYM"])
+				if "orthographicCameraToYP" in config["Renderer"]:
+					self.orthographicCameraToYPAction.setShortcut(config["Renderer"]["orthographicCameraToYP"])
+				if "orthographicCameraToZM" in config["Renderer"]:
+					self.orthographicCameraToZMAction.setShortcut(config["Renderer"]["orthographicCameraToZM"])
+				if "orthographicCameraToZP" in config["Renderer"]:
+					self.orthographicCameraToZPAction.setShortcut(config["Renderer"]["orthographicCameraToZP"])
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.toggleBackfaceCullingSignal.connect(self.onBackfaceCullingToggled)
 		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.connect(self.onCamerasVisibilityToggled)
+		globalInfo.signalEmitter.switchCameraProjectionSignal.connect(self.onCameraProjectionSwitched)
 
 	def toggleCurrentEntityVisibility(self):
 		globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible = not globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].isVisible
@@ -810,6 +848,42 @@ class ViewMenu(QMenu):
 
 	def toggleCameraVisibility(self):
 		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.emit(not self.showCameras)
+
+	def switchCameraProjection(self):
+		globalInfo.signalEmitter.switchCameraProjectionSignal.emit(not self.cameraProjectionOrthographic)
+
+	def resetCamera(self):
+		globalInfo.signalEmitter.resetCameraSignal.emit()
+
+	def orthographicCameraToXM(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([-1.0, 0.0, 0.0])
+
+	def orthographicCameraToXP(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([1.0, 0.0, 0.0])
+
+	def orthographicCameraToYM(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([0.0, -1.0, 0.0])
+
+	def orthographicCameraToYP(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([0.0, 1.0, 0.0])
+
+	def orthographicCameraToZM(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([0.0, 0.0, -1.0])
+
+	def orthographicCameraToZP(self):
+		if not self.cameraProjectionOrthographic:
+			globalInfo.signalEmitter.switchCameraProjectionSignal.emit(True)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.emit([0.0, 0.0, 1.0])
 
 	def onSelectEntity(self, entityID):
 		if entityID != -1:
@@ -824,6 +898,10 @@ class ViewMenu(QMenu):
 	def onCamerasVisibilityToggled(self, showCameras):
 		self.showCameras = showCameras
 		self.toggleCamerasVisibilityAction.setText("Hide Cameras" if self.showCameras else "Show Cameras")
+
+	def onCameraProjectionSwitched(self, cameraProjectionOrthographic):
+		self.cameraProjectionOrthographic = cameraProjectionOrthographic
+		self.switchCameraProjectionAction.setText("Switch Camera Projection to Perspective" if self.showCameras else "Switch Camera Projection to Orthographic")
 
 class MathHelper():
 	@staticmethod
@@ -846,9 +924,9 @@ class MathHelper():
 		right = MathHelper.normalize(fXu)
 		realUp = np.cross(right, forward)
 		return np.array([right[0], realUp[0], -forward[0], 0.0,
-					right[1], realUp[1], -forward[1], 0.0,
-					right[2], realUp[2], -forward[2], 0.0,
-					-np.dot(right, fromPosition), -np.dot(realUp, fromPosition), np.dot(forward, fromPosition), 1.0], dtype=np.float32)
+			right[1], realUp[1], -forward[1], 0.0,
+			right[2], realUp[2], -forward[2], 0.0,
+			-np.dot(right, fromPosition), -np.dot(realUp, fromPosition), np.dot(forward, fromPosition), 1.0], dtype=np.float32)
 
 	@staticmethod
 	def perspectiveRH(fovY, aspectRatio, near, far):
@@ -856,16 +934,28 @@ class MathHelper():
 		farMnear = far - near
 		nearMfar = near - far
 		return np.array([1.0 / (aspectRatio * tanHalfFovY), 0.0, 0.0, 0.0,
-					0.0, 1.0 / tanHalfFovY, 0.0, 0.0,
-					0.0, 0.0, far / nearMfar, -1.0,
-					0.0, 0.0, -(far * near) / farMnear, 0.0], dtype=np.float32)
+			0.0, 1.0 / tanHalfFovY, 0.0, 0.0,
+			0.0, 0.0, far / nearMfar, -1.0,
+			0.0, 0.0, -(far * near) / farMnear, 0.0], dtype=np.float32)
+
+	@staticmethod
+	def orthoRH(left, right, top, bottom, near, far):
+		rightPleft = right + left
+		rightMleft = right - left
+		topPbottom = top + bottom
+		topMbottom = top - bottom
+		farMNear = far - near
+		return np.array([2.0 / rightMleft, 0.0, 0.0, 0.0,
+			0.0, 2.0 / topMbottom, 0.0, 0.0,
+			0.0, 0.0, -1.0 / farMNear, 0.0,
+			-(rightPleft / rightMleft), -(topPbottom / topMbottom), -near / farMNear, 1.0], dtype=np.float32)
 
 	@staticmethod
 	def translate(translation):
 		return np.array([1.0, 0.0, 0.0, 0.0,
-					0.0, 1.0, 0.0, 0.0,
-					0.0, 0.0, 1.0, 0.0,
-					translation[0], translation[1], translation[2], 1.0], dtype=np.float32)
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			translation[0], translation[1], translation[2], 1.0], dtype=np.float32)
 
 	@staticmethod
 	def rotate(angle, axis):
@@ -873,48 +963,48 @@ class MathHelper():
 		oMct = 1.0 - cosTheta
 		sinTheta = np.sin(angle)
 		return np.array([cosTheta + ((axis[0] * axis[0]) * oMct),
-		((axis[1] * axis[0]) * oMct) + (axis[2] * sinTheta),
-		((axis[2] * axis[0]) * oMct) - (axis[1] * sinTheta),
-		0.0,
-		((axis[0] * axis[1]) * oMct) - (axis[2] * sinTheta),
-		cosTheta + ((axis[1] * axis[1]) * oMct),
-		((axis[2] * axis[1]) * oMct) + (axis[0] * sinTheta),
-		0.0,
-		((axis[0] * axis[2]) * oMct) + (axis[1] * sinTheta),
-		((axis[1] * axis[2]) * oMct) - (axis[0] * sinTheta),
-		cosTheta + ((axis[2] * axis[2]) * oMct),
-		0.0,
-		0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+			((axis[1] * axis[0]) * oMct) + (axis[2] * sinTheta),
+			((axis[2] * axis[0]) * oMct) - (axis[1] * sinTheta),
+			0.0,
+			((axis[0] * axis[1]) * oMct) - (axis[2] * sinTheta),
+			cosTheta + ((axis[1] * axis[1]) * oMct),
+			((axis[2] * axis[1]) * oMct) + (axis[0] * sinTheta),
+			0.0,
+			((axis[0] * axis[2]) * oMct) + (axis[1] * sinTheta),
+			((axis[1] * axis[2]) * oMct) - (axis[0] * sinTheta),
+			cosTheta + ((axis[2] * axis[2]) * oMct),
+			0.0,
+			0.0, 0.0, 0.0, 1.0], dtype=np.float32)
 
 	@staticmethod
 	def scale(scaling):
 		return np.array([scaling[0], 0.0, 0.0, 0.0,
-				0.0, scaling[1], 0.0, 0.0,
-				0.0, 0.0, scaling[2], 0.0,
-				0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+			0.0, scaling[1], 0.0, 0.0,
+			0.0, 0.0, scaling[2], 0.0,
+			0.0, 0.0, 0.0, 1.0], dtype=np.float32)
 
 	@staticmethod
 	def mat4x4Mult(m1, m2):
 		return np.array([
-				m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3],
-				m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3],
-				m1[2] * m2[0] + m1[6] * m2[1] + m1[10] * m2[2] + m1[14] * m2[3],
-				m1[3] * m2[0] + m1[7] * m2[1] + m1[11] * m2[2] + m1[15] * m2[3],
+			m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3],
+			m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3],
+			m1[2] * m2[0] + m1[6] * m2[1] + m1[10] * m2[2] + m1[14] * m2[3],
+			m1[3] * m2[0] + m1[7] * m2[1] + m1[11] * m2[2] + m1[15] * m2[3],
 
-				m1[0] * m2[4] + m1[4] * m2[5] + m1[8] * m2[6] + m1[12] * m2[7],
-				m1[1] * m2[4] + m1[5] * m2[5] + m1[9] * m2[6] + m1[13] * m2[7],
-				m1[2] * m2[4] + m1[6] * m2[5] + m1[10] * m2[6] + m1[14] * m2[7],
-				m1[3] * m2[4] + m1[7] * m2[5] + m1[11] * m2[6] + m1[15] * m2[7],
+			m1[0] * m2[4] + m1[4] * m2[5] + m1[8] * m2[6] + m1[12] * m2[7],
+			m1[1] * m2[4] + m1[5] * m2[5] + m1[9] * m2[6] + m1[13] * m2[7],
+			m1[2] * m2[4] + m1[6] * m2[5] + m1[10] * m2[6] + m1[14] * m2[7],
+			m1[3] * m2[4] + m1[7] * m2[5] + m1[11] * m2[6] + m1[15] * m2[7],
 
-				m1[0] * m2[8] + m1[4] * m2[9] + m1[8] * m2[10] + m1[12] * m2[11],
-				m1[1] * m2[8] + m1[5] * m2[9] + m1[9] * m2[10] + m1[13] * m2[11],
-				m1[2] * m2[8] + m1[6] * m2[9] + m1[10] * m2[10] + m1[14] * m2[11],
-				m1[3] * m2[8] + m1[7] * m2[9] + m1[11] * m2[10] + m1[15] * m2[11],
+			m1[0] * m2[8] + m1[4] * m2[9] + m1[8] * m2[10] + m1[12] * m2[11],
+			m1[1] * m2[8] + m1[5] * m2[9] + m1[9] * m2[10] + m1[13] * m2[11],
+			m1[2] * m2[8] + m1[6] * m2[9] + m1[10] * m2[10] + m1[14] * m2[11],
+			m1[3] * m2[8] + m1[7] * m2[9] + m1[11] * m2[10] + m1[15] * m2[11],
 
-				m1[0] * m2[12] + m1[4] * m2[13] + m1[8] * m2[14] + m1[12] * m2[15],
-				m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15],
-				m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15],
-				m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15]], dtype=np.float32)
+			m1[0] * m2[12] + m1[4] * m2[13] + m1[8] * m2[14] + m1[12] * m2[15],
+			m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15],
+			m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15],
+			m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15]], dtype=np.float32)
 
 	@staticmethod
 	def mat4x4Vec4Mult(m, v):
@@ -995,18 +1085,36 @@ class OpenGLHelper():
 
 class RendererCamera():
 	def __init__(self):
-		self.position = np.array([0.0, 1.0, 1.0], dtype=np.float32)
-		self.direction = np.array([0.0, -1.0, -1.0], dtype=np.float32)
-		self.direction = MathHelper.normalize(self.direction)
+		self.perspectivePosition = np.array([0.0, 1.0, 1.0], dtype=np.float32)
+		self.perspectiveDirection = np.array([0.0, -1.0, -1.0], dtype=np.float32)
+		self.perspectiveDirection = MathHelper.normalize(self.perspectiveDirection)
+		self.perspectiveUp = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+
+		self.perspectiveYaw = np.rad2deg(np.arctan2(self.perspectiveDirection[2], self.perspectiveDirection[0]))
+		self.perspectivePitch = np.rad2deg(-np.arcsin(self.perspectiveDirection[1]))
+
+		self.orthographicPosition = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+		self.orthographicDirection = np.array([0.0, 0.0, -1.0], dtype=np.float32)
+		self.orthographicUp = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+		self.orthographicHalfExtent = 10.0
+
 		self.nearPlane = 0.01
-		self.farPlane = 100.0
-		self.cameraSpeed = 1.0
+		self.farPlane = 500.0
+
+		self.cameraSpeed = 2.0
 
 		self.viewMatrix = None
 		self.projectionMatrix = None
 		self.viewProjMatrix = None
 		self.invViewMatrix = None
 		self.invProjMatrix = None
+
+		self.basePerspectivePosition = np.copy(self.perspectivePosition)
+		self.basePerspectiveDirection = np.copy(self.perspectiveDirection)
+
+		self.baseOrthographicPosition = np.copy(self.orthographicPosition)
+		self.baseOrthographicDirection = np.copy(self.orthographicDirection)
+		self.baseOrthographicHalfExtent = self.orthographicHalfExtent
 
 class RendererModel():
 	def __init__(self):
@@ -1094,9 +1202,6 @@ class Renderer(QOpenGLWidget):
 		self.mouseCursorPreviousPosition = np.array(2, dtype=np.float32)
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 
-		self.cameraYaw = np.rad2deg(np.arctan2(self.camera.direction[2], self.camera.direction[0]))
-		self.cameraPitch = np.rad2deg(-np.arcsin(self.camera.direction[1]))
-
 		self.waitTimer = QTimer()
 		self.waitTimer.timeout.connect(self.update)
 
@@ -1108,9 +1213,13 @@ class Renderer(QOpenGLWidget):
 
 		self.backfaceCullingEnabled = False
 		self.showCameras = False
+		self.cameraProjectionOrthographic = False
 
 		globalInfo.signalEmitter.toggleBackfaceCullingSignal.connect(self.onBackfaceCullingToggled)
-		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.connect(self.toggleCameraVisibility)
+		globalInfo.signalEmitter.toggleCamerasVisibilitySignal.connect(self.onCamerasVisibilityToggled)
+		globalInfo.signalEmitter.switchCameraProjectionSignal.connect(self.onCameraProjectionSwitched)
+		globalInfo.signalEmitter.resetCameraSignal.connect(self.onCameraReset)
+		globalInfo.signalEmitter.orthographicCameraToAxisSignal.connect(self.onOrthographicCameraToAxisChanged)
 
 	def initializeGL(self):
 		[fullscreenVertexShader, _] = OpenGLHelper.compileShader(gl.GL_VERTEX_SHADER, OpenGLHelper.fullscreenVertexShaderCode())
@@ -1543,14 +1652,20 @@ class Renderer(QOpenGLWidget):
 						gl.glDrawElements(gl.GL_LINES, globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, gl.GL_UNSIGNED_INT, None)
 
 		# Grid
-		gl.glUseProgram(self.gridProgram)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "view"), 1, False, self.camera.viewMatrix)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "projection"), 1, False, self.camera.projectionMatrix)
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
-		gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "near"), self.camera.nearPlane)
-		gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "far"), self.camera.farPlane)
+		if not self.cameraProjectionOrthographic:
+			gl.glUseProgram(self.gridProgram)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "view"), 1, False, self.camera.viewMatrix)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "projection"), 1, False, self.camera.projectionMatrix)
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.gridProgram, "viewProj"), 1, False, self.camera.viewProjMatrix)
+			gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "near"), self.camera.nearPlane)
+			gl.glUniform1f(gl.glGetUniformLocation(self.gridProgram, "far"), self.camera.farPlane)
 
-		gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+			gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+
+		if self.backfaceCullingEnabled:
+			gl.glEnable(gl.GL_CULL_FACE)
+		else:
+			gl.glDisable(gl.GL_CULL_FACE)
 
 		# Picking
 		if self.doPicking:
@@ -1601,6 +1716,8 @@ class Renderer(QOpenGLWidget):
 			globalInfo.signalEmitter.selectEntitySignal.emit(globalInfo.currentEntityID)
 
 			self.doPicking = False
+
+		gl.glDisable(gl.GL_CULL_FACE)
 
 		# Outline
 		if globalInfo.currentEntityID != -1:
@@ -1680,36 +1797,65 @@ class Renderer(QOpenGLWidget):
 			return
 
 		deltaTime = self.waitTimer.interval() / 1000
-		self.cameraYaw = (self.cameraYaw + self.mouseCursorDifference[0]) % 360.0
-		self.cameraPitch = max(-89.0, min(89.0, self.cameraPitch + self.mouseCursorDifference[1]))
 
-		cameraYawRad = np.deg2rad(self.cameraYaw)
-		cameraPitchRad = np.deg2rad(self.cameraPitch)
+		if not self.cameraProjectionOrthographic:
+			self.camera.perspectiveYaw = (self.camera.perspectiveYaw + self.mouseCursorDifference[0]) % 360.0
+			self.camera.perspectivePitch = max(-89.0, min(89.0, self.camera.perspectivePitch + self.mouseCursorDifference[1]))
 
-		self.camera.direction = np.array([
-			np.cos(cameraPitchRad) * np.cos(cameraYawRad),
-			-np.sin(cameraPitchRad),
-			np.cos(cameraPitchRad) * np.sin(cameraYawRad)
-		])
-		self.camera.direction = MathHelper.normalize(self.camera.direction)
+			cameraYawRad = np.deg2rad(self.camera.perspectiveYaw)
+			cameraPitchRad = np.deg2rad(self.camera.perspectivePitch)
 
-		if self.cameraForwardKeyPressed:
-			self.camera.position = np.add(self.camera.position, self.camera.direction * self.camera.cameraSpeed * deltaTime)
-		if self.cameraBackwardKeyPressed:
-			self.camera.position = np.add(self.camera.position, self.camera.direction * -self.camera.cameraSpeed * deltaTime)
-		if self.cameraLeftKeyPressed:
-			t = MathHelper.normalize(np.array([-self.camera.direction[2], 0.0, self.camera.direction[0]]))
-			self.camera.position = np.add(self.camera.position, t * -self.camera.cameraSpeed * deltaTime)
-		if self.cameraRightKeyPressed:
-			t = MathHelper.normalize(np.array([-self.camera.direction[2], 0.0, self.camera.direction[0]]))
-			self.camera.position = np.add(self.camera.position, t * self.camera.cameraSpeed * deltaTime)
-		if self.cameraUpKeyPressed:
-			self.camera.position[1] += self.camera.cameraSpeed * deltaTime
-		if self.cameraDownKeyPressed:
-			self.camera.position[1] -= self.camera.cameraSpeed * deltaTime
+			self.camera.perspectiveDirection = np.array([
+				np.cos(cameraPitchRad) * np.cos(cameraYawRad),
+				-np.sin(cameraPitchRad),
+				np.cos(cameraPitchRad) * np.sin(cameraYawRad)
+			])
+			self.camera.perspectiveDirection = MathHelper.normalize(self.camera.perspectiveDirection)
 
-		self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.position, np.add(self.camera.position, self.camera.direction), [0.0, 1.0, 0.0])
-		self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
+			if self.cameraForwardKeyPressed:
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * self.camera.cameraSpeed * deltaTime)
+			if self.cameraBackwardKeyPressed:
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * -self.camera.cameraSpeed * deltaTime)
+			if self.cameraLeftKeyPressed:
+				t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * -self.camera.cameraSpeed * deltaTime)
+			if self.cameraRightKeyPressed:
+				t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * self.camera.cameraSpeed * deltaTime)
+			if self.cameraUpKeyPressed:
+				self.camera.perspectivePosition[1] += self.camera.cameraSpeed * deltaTime
+			if self.cameraDownKeyPressed:
+				self.camera.perspectivePosition[1] -= self.camera.cameraSpeed * deltaTime
+
+			self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.perspectivePosition, np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection), self.camera.perspectiveUp)
+			self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
+		else:
+			if self.cameraForwardKeyPressed:
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * self.camera.cameraSpeed * deltaTime)
+			if self.cameraBackwardKeyPressed:
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * -self.camera.cameraSpeed * deltaTime)
+			if self.cameraLeftKeyPressed:
+				if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
+					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
+				else:
+					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * -self.camera.cameraSpeed * deltaTime)
+			if self.cameraRightKeyPressed:
+				if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
+					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
+				else:
+					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * self.camera.cameraSpeed * deltaTime)
+			if self.cameraUpKeyPressed:
+				self.camera.orthographicHalfExtent -= self.camera.cameraSpeed * deltaTime
+				self.camera.orthographicHalfExtent = max(self.camera.orthographicHalfExtent, 0.01)
+			if self.cameraDownKeyPressed:
+				self.camera.orthographicHalfExtent += self.camera.cameraSpeed * deltaTime
+
+			self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.orthographicPosition, np.add(self.camera.orthographicPosition, self.camera.orthographicDirection), self.camera.orthographicUp)
+			orthographicHalfExtentWidth = self.camera.orthographicHalfExtent * (self.width() / self.height())
+			self.camera.projectionMatrix = MathHelper.orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, self.camera.orthographicHalfExtent, -self.camera.orthographicHalfExtent, self.camera.nearPlane, self.camera.farPlane)
+
 		self.camera.viewProjMatrix = MathHelper.mat4x4Mult(self.camera.projectionMatrix, self.camera.viewMatrix)
 		self.camera.invViewMatrix = np.linalg.inv(np.copy(self.camera.viewMatrix).reshape((4, 4)))
 		self.camera.invProjMatrix = np.linalg.inv(np.copy(self.camera.projectionMatrix).reshape((4, 4)))
@@ -1870,15 +2016,22 @@ class Renderer(QOpenGLWidget):
 					worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
 					worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
 					worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
-					cameraEntityDifference = np.subtract(self.entityMoveTransform.position, self.camera.position)
-					if (np.dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0) and (np.dot(cameraEntityDifference, cameraEntityDifference) != 0.0):
-						worldSpaceCursorDifferenceNormalized = MathHelper.normalize(worldSpaceCursorDifference)
-						worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
-						cameraEntityDifferenceLength = np.linalg.norm(cameraEntityDifference)
-						coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / self.camera.nearPlane
-						self.entityMoveTransform.position += worldSpaceCursorDifferenceNormalized * coefficient
+					if np.dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0:
+						if not self.cameraProjectionOrthographic:
+							cameraEntityDifference = np.subtract(self.entityMoveTransform.position, self.camera.perspectivePosition)
+							if np.dot(cameraEntityDifference, cameraEntityDifference) != 0.0:
+								worldSpaceCursorDifferenceNormalized = MathHelper.normalize(worldSpaceCursorDifference)
+								worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
+								cameraEntityDifferenceLength = np.linalg.norm(cameraEntityDifference)
+								coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / self.camera.nearPlane
+								self.entityMoveTransform.position += worldSpaceCursorDifferenceNormalized * coefficient
+						else:
+							self.entityMoveTransform.position += worldSpaceCursorDifference
 				elif self.rotateEntityKeyPressed:
-					rotationMatrix = MathHelper.rotate((mouseCursorCurrentPosition[0] - self.mouseCursorPreviousPosition[0]) / self.width(), self.camera.direction)
+					if not self.cameraProjectionOrthographic:
+						rotationMatrix = MathHelper.rotate((mouseCursorCurrentPosition[0] - self.mouseCursorPreviousPosition[0]) / self.width(), self.camera.perspectiveDirection)
+					else:
+						rotationMatrix = MathHelper.rotate((mouseCursorCurrentPosition[0] - self.mouseCursorPreviousPosition[0]) / self.width(), self.camera.orthographicDirection)
 					rotationAngles = np.array([np.rad2deg(np.arctan2(rotationMatrix[9], rotationMatrix[10])), np.rad2deg(np.arctan2(-rotationMatrix[8], np.sqrt((rotationMatrix[9] * rotationMatrix[9]) + (rotationMatrix[10] * rotationMatrix[10])))), np.rad2deg(np.arctan2(rotationMatrix[4], rotationMatrix[0]))], dtype=np.float32)
 					self.entityMoveTransform.rotation -= rotationAngles
 					self.entityMoveTransform.rotation %= 360.0
@@ -1886,9 +2039,14 @@ class Renderer(QOpenGLWidget):
 					worldSpaceCursorCurrentPosition = MathHelper.unproject(mouseCursorCurrentPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
 					worldSpaceCursorPreviousPosition = MathHelper.unproject(self.mouseCursorPreviousPosition, self.width(), self.height(), self.camera.invViewMatrix, self.camera.invProjMatrix)
 					worldSpaceCursorDifference = np.subtract(worldSpaceCursorCurrentPosition, worldSpaceCursorPreviousPosition)
-					worldSpaceCursorPreviousEntityDifference = np.subtract(worldSpaceCursorPreviousPosition, self.entityMoveTransform.position)
-					if np.dot(worldSpaceCursorPreviousEntityDifference, worldSpaceCursorPreviousEntityDifference) != 0.0:
-						self.entityMoveTransform.scale += ((np.linalg.norm(worldSpaceCursorDifference) * 1000.0) / np.linalg.norm(worldSpaceCursorPreviousEntityDifference)) * (1.0 if np.dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0 else -1.0)
+					if np.dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0:
+						worldSpaceCursorDifferenceLength = np.linalg.norm(worldSpaceCursorDifference)
+						worldSpaceCursorPreviousEntityDifference = np.subtract(worldSpaceCursorPreviousPosition, self.entityMoveTransform.position)
+						if np.dot(worldSpaceCursorPreviousEntityDifference, worldSpaceCursorPreviousEntityDifference) != 0.0:
+							scaleFactor = 1.0
+							if not self.cameraProjectionOrthographic:
+								scaleFactor = 1000.0
+							self.entityMoveTransform.scale += ((worldSpaceCursorDifferenceLength * scaleFactor) / np.linalg.norm(worldSpaceCursorPreviousEntityDifference)) * (1.0 if np.dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0 else -1.0)
 				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
 		e.accept()
 
@@ -1908,8 +2066,31 @@ class Renderer(QOpenGLWidget):
 	def onBackfaceCullingToggled(self, backfaceCullingEnabled):
 		self.backfaceCullingEnabled = backfaceCullingEnabled
 
-	def toggleCameraVisibility(self, showCameras):
+	def onCamerasVisibilityToggled(self, showCameras):
 		self.showCameras = showCameras
+
+	def onCameraProjectionSwitched(self, cameraProjectionOrthographic):
+		self.cameraProjectionOrthographic = cameraProjectionOrthographic
+
+	def onCameraReset(self):
+		if not self.cameraProjectionOrthographic:
+			self.camera.perspectivePosition = np.copy(self.camera.basePerspectivePosition)
+			self.camera.perspectiveDirection = np.copy(self.camera.basePerspectiveDirection)
+			self.camera.perspectiveYaw = np.rad2deg(np.arctan2(self.camera.perspectiveDirection[2], self.camera.perspectiveDirection[0]))
+			self.camera.perspectivePitch = np.rad2deg(-np.arcsin(self.camera.perspectiveDirection[1]))
+		else:
+			self.camera.orthographicPosition = np.copy(self.camera.baseOrthographicPosition)
+			self.camera.orthographicDirection = np.copy(self.camera.baseOrthographicDirection)
+			self.camera.orthographicHalfExtent = self.camera.baseOrthographicHalfExtent
+
+	def onOrthographicCameraToAxisChanged(self, axis):
+		self.cameraProjectionOrthographic = True
+		self.camera.orthographicPosition = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+		self.camera.orthographicDirection = np.array(axis, dtype=np.float32)
+		if (axis[1] ==  -1.0) or (axis[1] == 1.0):
+			self.camera.orthographicUp = np.array([0.0, 0.0, -1.0], dtype=np.float32)
+		else:
+			self.camera.orthographicUp = np.array([0.0, 1.0, 0.0], dtype=np.float32)
 
 class CreateEntityCommand(QUndoCommand):
 	def __init__(self, name):
