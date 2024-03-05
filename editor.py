@@ -1199,6 +1199,8 @@ class Renderer(QOpenGLWidget):
 
 		self.leftClickedPressed = False
 
+		self.mouseScrollY = 0.0
+
 		self.mouseCursorPreviousPosition = np.array(2, dtype=np.float32)
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
 
@@ -1857,12 +1859,12 @@ class Renderer(QOpenGLWidget):
 			if self.cameraRightKeyPressed or (self.mouseCursorDifference[0] > 0.0):
 				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * horizontalSpeed)
 
-			if self.cameraUpKeyPressed:
-				self.camera.orthographicHalfExtent -= self.camera.cameraSpeed * deltaTime
-				self.camera.orthographicHalfExtent = max(self.camera.orthographicHalfExtent, 0.01)
+			if self.cameraUpKeyPressed or (self.mouseScrollY < 0.0):
+				self.camera.orthographicHalfExtent += self.camera.cameraSpeed * 5.0 * deltaTime
 
-			if self.cameraDownKeyPressed:
-				self.camera.orthographicHalfExtent += self.camera.cameraSpeed * deltaTime
+			if self.cameraDownKeyPressed or (self.mouseScrollY > 0.0):
+				self.camera.orthographicHalfExtent -= self.camera.cameraSpeed * 5.0 * deltaTime
+				self.camera.orthographicHalfExtent = max(self.camera.orthographicHalfExtent, 0.01)
 
 			self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.orthographicPosition, np.add(self.camera.orthographicPosition, self.camera.orthographicDirection), self.camera.orthographicUp)
 			orthographicHalfExtentWidth = self.camera.orthographicHalfExtent * (self.width() / self.height())
@@ -1873,6 +1875,8 @@ class Renderer(QOpenGLWidget):
 		self.camera.invProjMatrix = np.linalg.inv(np.copy(self.camera.projectionMatrix).reshape((4, 4)))
 
 		self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
+
+		self.mouseScrollY = 0.0
 
 	def createPickingImages(self):
 		gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.pickingFramebuffer)
@@ -2060,6 +2064,10 @@ class Renderer(QOpenGLWidget):
 								scaleFactor = 1000.0
 							self.entityMoveTransform.scale += ((worldSpaceCursorDifferenceLength * scaleFactor) / np.linalg.norm(worldSpaceCursorPreviousEntityDifference)) * (1.0 if np.dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0 else -1.0)
 				self.mouseCursorPreviousPosition = mouseCursorCurrentPosition
+		e.accept()
+
+	def wheelEvent(self, e):
+		self.mouseScrollY = e.angleDelta().y() / 120.0
 		e.accept()
 
 	def focusOutEvent(self, e):
