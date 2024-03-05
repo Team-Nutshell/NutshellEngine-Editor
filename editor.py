@@ -1812,43 +1812,55 @@ class Renderer(QOpenGLWidget):
 			])
 			self.camera.perspectiveDirection = MathHelper.normalize(self.camera.perspectiveDirection)
 
+			t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
+
+			cameraSpeed = self.camera.cameraSpeed * deltaTime
+
 			if self.cameraForwardKeyPressed:
-				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * self.camera.cameraSpeed * deltaTime)
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * cameraSpeed)
+
 			if self.cameraBackwardKeyPressed:
-				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * -self.camera.cameraSpeed * deltaTime)
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection * -cameraSpeed)
+
 			if self.cameraLeftKeyPressed:
-				t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
-				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * -self.camera.cameraSpeed * deltaTime)
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * -cameraSpeed)
+
 			if self.cameraRightKeyPressed:
-				t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
-				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * self.camera.cameraSpeed * deltaTime)
+				self.camera.perspectivePosition = np.add(self.camera.perspectivePosition, t * cameraSpeed)
+
 			if self.cameraUpKeyPressed:
-				self.camera.perspectivePosition[1] += self.camera.cameraSpeed * deltaTime
+				self.camera.perspectivePosition[1] += cameraSpeed
+
 			if self.cameraDownKeyPressed:
-				self.camera.perspectivePosition[1] -= self.camera.cameraSpeed * deltaTime
+				self.camera.perspectivePosition[1] -= cameraSpeed
 
 			self.camera.viewMatrix = MathHelper.lookAtRH(self.camera.perspectivePosition, np.add(self.camera.perspectivePosition, self.camera.perspectiveDirection), self.camera.perspectiveUp)
 			self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
 		else:
-			if self.cameraForwardKeyPressed:
-				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * self.camera.cameraSpeed * deltaTime)
-			if self.cameraBackwardKeyPressed:
-				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * -self.camera.cameraSpeed * deltaTime)
-			if self.cameraLeftKeyPressed:
-				if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
-					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
-				else:
-					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
-				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * -self.camera.cameraSpeed * deltaTime)
-			if self.cameraRightKeyPressed:
-				if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
-					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
-				else:
-					t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
-				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * self.camera.cameraSpeed * deltaTime)
+			if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
+				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
+			else:
+				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
+
+			horizontalSpeed = (1.0 if (self.mouseCursorDifference[0] == 0.0) else abs(self.mouseCursorDifference[0])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
+			verticalSpeed = (1.0 if (self.mouseCursorDifference[1] == 0.0) else abs(self.mouseCursorDifference[1])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
+
+			if self.cameraForwardKeyPressed or (self.mouseCursorDifference[1] < 0.0):
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * verticalSpeed)
+
+			if self.cameraBackwardKeyPressed or (self.mouseCursorDifference[1] > 0.0):
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, self.camera.orthographicUp * -verticalSpeed)
+
+			if self.cameraLeftKeyPressed or (self.mouseCursorDifference[0] < 0.0):
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * -horizontalSpeed)
+
+			if self.cameraRightKeyPressed or (self.mouseCursorDifference[0] > 0.0):
+				self.camera.orthographicPosition = np.add(self.camera.orthographicPosition, t * horizontalSpeed)
+
 			if self.cameraUpKeyPressed:
 				self.camera.orthographicHalfExtent -= self.camera.cameraSpeed * deltaTime
 				self.camera.orthographicHalfExtent = max(self.camera.orthographicHalfExtent, 0.01)
+
 			if self.cameraDownKeyPressed:
 				self.camera.orthographicHalfExtent += self.camera.cameraSpeed * deltaTime
 
