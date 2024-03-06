@@ -673,6 +673,7 @@ class SceneManager():
 		globalInfo.currentScenePath = ""
 		globalInfo.window.setWindowTitle("NutshellEngine Editor")
 		globalInfo.undoStack.push(ClearSceneCommand())
+		globalInfo.signalEmitter.resetCameraSignal.emit()
 
 	@staticmethod
 	def openScene(filePath):
@@ -734,10 +735,10 @@ class SignalEmitter(QObject):
 	resetCameraSignal = pyqtSignal()
 	orthographicCameraToAxisSignal = pyqtSignal(list)
 
-class NewMessageBox(QMessageBox):
+class NewSceneMessageBox(QMessageBox):
 	def __init__(self):
 		super().__init__()
-		self.setWindowTitle("New...")
+		self.setWindowTitle("New Scene...")
 		self.setText("Do you want to create a new scene?\nAll changes not saved will be lost.")
 		self.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
 		ret = self.exec()
@@ -750,19 +751,19 @@ class NewMessageBox(QMessageBox):
 class FileMenu(QMenu):
 	def __init__(self):
 		super().__init__("&File")
-		self.newAction = self.addAction("New", self.new)
-		self.newAction.setShortcut("Ctrl+N")
-		self.openAction = self.addAction("Open...", self.open)
-		self.openAction.setShortcut("Ctrl+O")
-		self.openAction = self.addAction("Save", self.save)
-		self.openAction.setShortcut("Ctrl+S")
-		self.openAction = self.addAction("Save as...", self.saveAs)
-		self.openAction.setShortcut("Shift+Ctrl+S")
+		self.newSceneAction = self.addAction("New Scene", self.newScene)
+		self.newSceneAction.setShortcut("Ctrl+N")
+		self.openSceneAction = self.addAction("Open Scene...", self.openScene)
+		self.openSceneAction.setShortcut("Ctrl+O")
+		self.saveSceneAction = self.addAction("Save Scene", self.saveScene)
+		self.saveSceneAction.setShortcut("Ctrl+S")
+		self.saveSceneAsAction = self.addAction("Save Scene as...", self.saveSceneAs)
+		self.saveSceneAsAction.setShortcut("Shift+Ctrl+S")
 
-	def new(self):
-		NewMessageBox()
+	def newScene(self):
+		NewSceneMessageBox()
 
-	def open(self):
+	def openScene(self):
 		fileDialog = QFileDialog()
 		fileDialog.setWindowTitle("Open...")
 		fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)")
@@ -774,13 +775,13 @@ class FileMenu(QMenu):
 			SceneManager.openScene(file)
 		return file
 
-	def save(self):
+	def saveScene(self):
 		if globalInfo.currentScenePath == "":
-			self.saveAs()
+			self.saveSceneAs()
 		else:
 			SceneManager.saveScene(globalInfo.currentScenePath)
 
-	def saveAs(self):
+	def saveSceneAs(self):
 		fileDialog = QFileDialog()
 		fileDialog.setWindowTitle("Save as...")
 		fileDialog.setDefaultSuffix("ntsn")
