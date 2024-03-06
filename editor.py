@@ -1401,11 +1401,11 @@ class Renderer(QOpenGLWidget):
 			vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
 
 			if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
-				color.x = 1.0;
+				color.r = 1.0;
 			}
 
 			if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
-				color.z = 1.0;
+				color.b = 1.0;
 			}
 
 			return color;
