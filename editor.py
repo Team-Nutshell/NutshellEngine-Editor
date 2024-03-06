@@ -1143,6 +1143,7 @@ class RendererCamera():
 
 		self.baseOrthographicPosition = np.copy(self.orthographicPosition)
 		self.baseOrthographicDirection = np.copy(self.orthographicDirection)
+		self.baseOrthographicUp = np.copy(self.orthographicUp)
 		self.baseOrthographicHalfExtent = self.orthographicHalfExtent
 
 class RendererModel():
@@ -2131,6 +2132,7 @@ class Renderer(QOpenGLWidget):
 		else:
 			self.camera.orthographicPosition = np.copy(self.camera.baseOrthographicPosition)
 			self.camera.orthographicDirection = np.copy(self.camera.baseOrthographicDirection)
+			self.camera.orthographicUp = np.copy(self.camera.baseOrthographicUp)
 			self.camera.orthographicHalfExtent = self.camera.baseOrthographicHalfExtent
 
 	def onOrthographicCameraToAxisChanged(self, axis):
