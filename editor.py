@@ -102,9 +102,9 @@ class Renderable():
 	def toJson(self):
 		dictionary = {}
 		dictionary["modelPath"] = self.modelPath
-		if globalInfo.workingDirectory != "":
-			if self.modelPath.startswith(globalInfo.workingDirectory):
-				dictionary["modelPath"] = self.modelPath[len(globalInfo.workingDirectory) + 1:]
+		if globalInfo.projectDirectory != "":
+			if self.modelPath.startswith(globalInfo.projectDirectory):
+				dictionary["modelPath"] = self.modelPath[len(globalInfo.projectDirectory) + 1:]
 		return dictionary
 
 	def fromJson(self, jsonData):
@@ -256,7 +256,7 @@ class Entity():
 			self.components["renderable"].modelPath = os.path.normpath(self.components["renderable"].modelPath).replace("\\", "/")
 			if self.components["renderable"].modelPath != "":
 				if not os.path.isabs(self.components["renderable"].modelPath):
-					self.components["renderable"].modelPath = os.path.normpath(globalInfo.workingDirectory + "/" + self.components["renderable"].modelPath).replace("\\", "/")
+					self.components["renderable"].modelPath = os.path.normpath(globalInfo.projectDirectory + "/" + self.components["renderable"].modelPath).replace("\\", "/")
 				if os.path.exists(self.components["renderable"].modelPath):
 					globalInfo.rendererResourceManager.loadModel(self.components["renderable"].modelPath)
 				else:
@@ -325,7 +325,7 @@ class RendererResourceManager():
 					if "materialPath" in primitive:
 						materialPath = primitive["materialPath"]
 						materialData = None
-						with open(globalInfo.workingDirectory + "/" + materialPath, "r") as materialFile:
+						with open(globalInfo.projectDirectory + "/" + materialPath, "r") as materialFile:
 							try:
 								materialData = json.load(materialFile)
 							except:
@@ -336,7 +336,7 @@ class RendererResourceManager():
 							if "imagePath" in diffuseTexture:
 								rendererMesh.texturePath = diffuseTexture["imagePath"]
 								if not os.path.isabs(rendererMesh.texturePath):
-									rendererMesh.texturePath = os.path.normpath(globalInfo.workingDirectory + "/" + rendererMesh.texturePath).replace("\\", "/")
+									rendererMesh.texturePath = os.path.normpath(globalInfo.projectDirectory + "/" + rendererMesh.texturePath).replace("\\", "/")
 								textureWidth, textureHeight, texture = self.loadImage(rendererMesh.texturePath)
 
 								globalInfo.rendererResourceManager.textures[rendererMesh.texturePath] = gl.glGenTextures(1)
@@ -350,7 +350,7 @@ class RendererResourceManager():
 							if "imageSamplerPath" in diffuseTexture:
 								samplerPath = diffuseTexture["imageSamplerPath"]
 								samplerData = None
-								with open(globalInfo.workingDirectory + "/" + samplerPath, "r") as samplerFile:
+								with open(globalInfo.projectDirectory + "/" + samplerPath, "r") as samplerFile:
 									try:
 										samplerData = json.load(samplerFile)
 									except:
@@ -383,7 +383,7 @@ class RendererResourceManager():
 	def loadNtmh(self, meshPath):
 		rendererMesh = RendererMesh()
 		meshData = None
-		with open(globalInfo.workingDirectory + "/" + meshPath, "r") as meshFile:
+		with open(globalInfo.projectDirectory + "/" + meshPath, "r") as meshFile:
 			try:
 				meshData = json.load(meshFile)
 			except:
@@ -636,13 +636,13 @@ class GlobalInfo():
 		self.signalEmitter = None
 		self.entityID = 0
 		self.currentScenePath = ""
-		self.workingDirectory = "."
+		self.projectDirectory = "."
 		self.copiedEntity = None
 		config = configparser.ConfigParser()
 		if config.read("assets/options.ini") != []:
 			if "Path" in config:
-				if "workingDirectory" in config["Path"]:
-					self.workingDirectory = os.path.normpath(config["Path"]["workingDirectory"]).replace("\\", "/")
+				if "projectDirectory" in config["Path"]:
+					self.projectDirectory = os.path.normpath(config["Path"]["projectDirectory"]).replace("\\", "/")
 		self.rendererResourceManager = RendererResourceManager()
 
 	def findEntityById(self, entityID):
@@ -766,8 +766,8 @@ class FileMenu(QMenu):
 		fileDialog = QFileDialog()
 		fileDialog.setWindowTitle("Open...")
 		fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)")
-		if globalInfo.workingDirectory != "":
-			fileDialog.setDirectory(globalInfo.workingDirectory)
+		if globalInfo.projectDirectory != "":
+			fileDialog.setDirectory(globalInfo.projectDirectory)
 		file = None
 		if fileDialog.exec():
 			file = fileDialog.selectedFiles()[0]
@@ -943,7 +943,7 @@ class ViewMenu(QMenu):
 
 	def onCameraProjectionSwitched(self, cameraProjectionOrthographic):
 		self.cameraProjectionOrthographic = cameraProjectionOrthographic
-		self.switchCameraProjectionAction.setText("Switch Camera Projection to Perspective" if self.showCameras else "Switch Camera Projection to Orthographic")
+		self.switchCameraProjectionAction.setText("Switch Camera Projection to Perspective" if self.cameraProjectionOrthographic else "Switch Camera Projection to Orthographic")
 
 class MathHelper():
 	@staticmethod
@@ -2707,8 +2707,8 @@ class FileSelectorWidget(QWidget):
 		fileDialog.setWindowTitle(self.filePathButton.text())
 		if self.filePath != "":
 			fileDialog.setDirectory(self.filePath.rsplit("/", 1)[0])
-		elif globalInfo.workingDirectory != ".":
-			fileDialog.setDirectory(globalInfo.workingDirectory)
+		elif globalInfo.projectDirectory != ".":
+			fileDialog.setDirectory(globalInfo.projectDirectory)
 		if fileDialog.exec():
 			self.filePath = fileDialog.selectedFiles()[0]
 			self.filePathLabel.setText(self.filePath.rsplit("/")[-1])
@@ -3029,10 +3029,10 @@ class RenderableComponentWidget(QWidget):
 	def updateWidgets(self, renderable):
 		if renderable.modelPath != "":
 			modelPath = os.path.normpath(renderable.modelPath).replace("\\", "/")
-			if globalInfo.workingDirectory != ".":
+			if globalInfo.projectDirectory != ".":
 				if os.path.isabs(modelPath):
-					if modelPath.startswith(globalInfo.workingDirectory):
-						modelPath = modelPath[len(globalInfo.workingDirectory) + 1:]
+					if modelPath.startswith(globalInfo.projectDirectory):
+						modelPath = modelPath[len(globalInfo.projectDirectory) + 1:]
 			self.modelPathWidget.filePathLabel.setText(modelPath.rsplit("/")[-1])
 			self.modelPathWidget.filePathLabel.setToolTip(modelPath)
 		else:
