@@ -631,18 +631,13 @@ class GlobalInfo():
 		self.entities = []
 		self.currentEntityID = -1
 		self.devicePixelRatio = 1.0
-		self.window = None
+		self.mainWindow = None
 		self.undoStack = QUndoStack()
 		self.signalEmitter = None
 		self.entityID = 0
 		self.currentScenePath = ""
 		self.projectDirectory = "."
 		self.copiedEntity = None
-		config = configparser.ConfigParser()
-		if config.read("assets/options.ini") != []:
-			if "Path" in config:
-				if "projectDirectory" in config["Path"]:
-					self.projectDirectory = os.path.normpath(config["Path"]["projectDirectory"]).replace("\\", "/")
 		self.rendererResourceManager = RendererResourceManager()
 
 	def findEntityById(self, entityID):
@@ -671,7 +666,7 @@ class SceneManager():
 	@staticmethod
 	def newScene():
 		globalInfo.currentScenePath = ""
-		globalInfo.window.setWindowTitle("NutshellEngine Editor")
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine")
 		globalInfo.undoStack.push(ClearSceneCommand())
 		globalInfo.signalEmitter.resetCameraSignal.emit()
 
@@ -685,7 +680,7 @@ class SceneManager():
 				return
 		SceneManager.newScene()
 		globalInfo.currentScenePath = filePath
-		globalInfo.window.setWindowTitle("NutshellEngine Editor - " + filePath)
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + filePath)
 		if "entities" in sceneData:
 			entities = []
 			for entity in sceneData["entities"]:
@@ -698,7 +693,7 @@ class SceneManager():
 	@staticmethod
 	def saveScene(filePath):
 		globalInfo.currentScenePath = filePath
-		globalInfo.window.setWindowTitle("NutshellEngine Editor - " + filePath)
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + filePath)
 		with open(filePath, "w+", encoding="utf-8") as f:
 			json.dump(globalInfo.entitiesToJson(), f, ensure_ascii=False, indent=4)
 
@@ -2716,7 +2711,7 @@ class FileSelectorWidget(QWidget):
 			self.filePathLabel.setToolTip(self.filePath)
 			self.fileSelected.emit(self.filePath)
 
-class ComponentSeparatorLine(QFrame):
+class SeparatorLine(QFrame):
 	def __init__(self):
 		super().__init__()
 		self.setFrameShape(QFrame.Shape.HLine)
@@ -2745,7 +2740,7 @@ class TransformComponentWidget(QWidget):
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 		self.layout().setContentsMargins(0, 0, 0, 0)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.componentTitle = ComponentTitleWidget("Transform")
 		self.layout().addWidget(self.componentTitle)
 		self.positionWidget = Vector3Widget("Position")
@@ -2754,7 +2749,7 @@ class TransformComponentWidget(QWidget):
 		self.layout().addWidget(self.rotationWidget)
 		self.scaleWidget = Vector3Widget("Scale")
 		self.layout().addWidget(self.scaleWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.positionWidget.editingFinished.connect(self.onTransformUpdated)
 		self.rotationWidget.editingFinished.connect(self.onTransformUpdated)
 		self.scaleWidget.editingFinished.connect(self.onTransformUpdated)
@@ -2824,7 +2819,7 @@ class CameraComponentWidget(QWidget):
 		self.layout().addWidget(self.nearPlaneWidget)
 		self.farPlaneWidget = ScalarWidget("Far Plane")
 		self.layout().addWidget(self.farPlaneWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.forwardWidget.editingFinished.connect(self.onCameraVector3Updated)
 		self.upWidget.editingFinished.connect(self.onCameraVector3Updated)
 		self.fovWidget.editingFinished.connect(self.onCameraScalarUpdated)
@@ -2915,7 +2910,7 @@ class LightComponentWidget(QWidget):
 		self.layout().addWidget(self.directionWidget)
 		self.cutoffWidget = Vector2Widget("Cutoff")
 		self.layout().addWidget(self.cutoffWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.typeWidget.elementSelected.connect(self.onLightElementUpdated)
 		self.colorWidget.colorChanged.connect(self.onLightColorUpdated)
 		self.directionWidget.editingFinished.connect(self.onLightVector3Updated)
@@ -3020,8 +3015,8 @@ class RenderableComponentWidget(QWidget):
 		self.layout().addWidget(self.componentTitle)
 		self.modelPathWidget = FileSelectorWidget("No model path", "Select a model")
 		self.layout().addWidget(self.modelPathWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
-		self.modelPathWidget.fileSelected.connect(self.onRenderableUpdated)
+		self.layout().addWidget(SeparatorLine())
+		self.modelPathWidget.fileSelected.connect(self.onRenderableStringUpdated)
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.addEntityRenderableSignal.connect(self.onAddEntityRenderable)
 		globalInfo.signalEmitter.removeEntityRenderableSignal.connect(self.onRemoveEntityRenderable)
@@ -3064,11 +3059,13 @@ class RenderableComponentWidget(QWidget):
 			else:
 				self.hide()
 
-	def onRenderableUpdated(self, filePath):
+	def onRenderableStringUpdated(self, string):
 		newRenderable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["renderable"])
-		newRenderable.modelPath = os.path.normpath(os.path.abspath(filePath)).replace("\\", "/")
-		globalInfo.rendererResourceManager.loadModel(newRenderable.modelPath)
-		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRenderable))
+		sender = self.sender()
+		if sender == self.modelPathWidget:
+			newRenderable.modelPath = os.path.normpath(os.path.abspath(string)).replace("\\", "/")
+			globalInfo.rendererResourceManager.loadModel(newRenderable.modelPath)
+			globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newRenderable))
 
 class RigidbodyComponentWidget(QWidget):
 	def __init__(self):
@@ -3094,7 +3091,7 @@ class RigidbodyComponentWidget(QWidget):
 		self.layout().addWidget(self.staticFrictionWidget)
 		self.dynamicFrictionWidget = ScalarWidget("Dynamic Friction")
 		self.layout().addWidget(self.dynamicFrictionWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.isStaticWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
 		self.isAffectedByConstantsWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
 		self.lockRotationWidget.stateChanged.connect(self.onRigidbodyBooleanUpdated)
@@ -3195,7 +3192,7 @@ class CollidableComponentWidget(QWidget):
 		self.layout().addWidget(self.baseWidget)
 		self.tipWidget = Vector3Widget("Tip")
 		self.layout().addWidget(self.tipWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
+		self.layout().addWidget(SeparatorLine())
 		self.typeWidget.elementSelected.connect(self.onCollidableElementUpdated)
 		self.fromRenderableWidget.stateChanged.connect(self.onCollidableBooleanUpdated)
 		self.centerWidget.editingFinished.connect(self.onCollidableVector3Updated)
@@ -3341,8 +3338,8 @@ class ScriptableComponentWidget(QWidget):
 		self.layout().addWidget(self.componentTitle)
 		self.scriptPathWidget = FileSelectorWidget("No script selected", "Select a script")
 		self.layout().addWidget(self.scriptPathWidget)
-		self.layout().addWidget(ComponentSeparatorLine())
-		self.scriptPathWidget.fileSelected.connect(self.onScriptableUpdated)
+		self.layout().addWidget(SeparatorLine())
+		self.scriptPathWidget.fileSelected.connect(self.onScriptableStringUpdated)
 		globalInfo.signalEmitter.selectEntitySignal.connect(self.onSelectEntity)
 		globalInfo.signalEmitter.addEntityScriptableSignal.connect(self.onAddEntityScriptable)
 		globalInfo.signalEmitter.removeEntityScriptableSignal.connect(self.onRemoveEntityScriptable)
@@ -3378,21 +3375,23 @@ class ScriptableComponentWidget(QWidget):
 			else:
 				self.hide()
 
-	def onScriptableUpdated(self, filePath):
+	def onScriptableStringUpdated(self, filePath):
 		newScriptable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"])
-		with open(filePath, 'r') as f:
-			fileContent = f.read()
-			scriptName = re.search("NTSHENGN_SCRIPT(.*)", fileContent)
-			if scriptName != None:
-				newScriptable.scriptPath = filePath
-				newScriptable.scriptName = scriptName.group()[16:len(scriptName.group()) - 2].strip()
-				globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newScriptable))
-			else:
-				if globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName != "":
-					self.scriptPathWidget.filePathLabel.setText(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName)
+		sender = self.sender()
+		if sender == self.scriptPathWidget:
+			with open(filePath, 'r') as f:
+				fileContent = f.read()
+				scriptName = re.search("NTSHENGN_SCRIPT(.*)", fileContent)
+				if scriptName != None:
+					newScriptable.scriptPath = filePath
+					newScriptable.scriptName = scriptName.group()[16:len(scriptName.group()) - 2].strip()
+					globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newScriptable))
 				else:
-					self.scriptPathWidget.filePathLabel.setText("No script selected")
-				print(filePath + " is not a valid Script (missing NTSHENGN_SCRIPT(scriptName) macro")
+					if globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName != "":
+						self.scriptPathWidget.filePathLabel.setText(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["scriptable"].scriptName)
+					else:
+						self.scriptPathWidget.filePathLabel.setText("No script selected")
+					print(filePath + " is not a valid Script (missing NTSHENGN_SCRIPT(scriptName) macro")
 
 class AddComponentMenu(QMenu):
 	def __init__(self):
@@ -3567,14 +3566,14 @@ class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
 		self.resize(1280, 720)
-		self.setWindowTitle("NutshellEngine Editor")
+		self.setWindowTitle("NutshellEngine")
+		self.setWindowIcon(QIcon("assets/icon.png"))
 		self.main = QSplitter()
 		self.setCentralWidget(self.main)
 		self.createMenuBar()
 		self.createEntityPanel()
 		self.createRenderer()
 		self.createEntityInfoPanel()
-		self.show()
 
 	def createMenuBar(self):
 		menuBar = self.menuBar()
@@ -3597,15 +3596,151 @@ class MainWindow(QMainWindow):
 		self.entityInfoPanel = EntityInfoPanel()
 		self.main.addWidget(self.entityInfoPanel)
 
+class OpenProjectWidget(QWidget):
+	projectDirectorySelected = pyqtSignal(str)
+
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.directoryPathButton = QPushButton("Select a project directory")
+		self.layout().addWidget(self.directoryPathButton)
+		self.directoryPathButton.clicked.connect(self.onDirectoryPathButtonClicked)
+
+	def onDirectoryPathButtonClicked(self):
+		fileDialog = QFileDialog()
+		fileDialog.setWindowTitle(self.directoryPathButton.text())
+		fileDialog.setFileMode(QFileDialog.FileMode.Directory)
+		if fileDialog.exec():
+			self.projectDirectorySelected.emit(fileDialog.directory().path())
+
+class NewProjectDirectoryPathWidget(QWidget):
+	directorySelected = pyqtSignal(str)
+
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.layout().addWidget(QLabel("New project directory:"))
+		self.directoryPathButton = QPushButton("Select a project directory")
+		self.layout().addWidget(self.directoryPathButton)
+		self.directoryPathButton.clicked.connect(self.onDirectoryPathButtonClicked)
+
+	def onDirectoryPathButtonClicked(self):
+		fileDialog = QFileDialog()
+		fileDialog.setWindowTitle(self.directoryPathButton.text())
+		fileDialog.setFileMode(QFileDialog.FileMode.Directory)
+		if fileDialog.exec():
+			self.directoryPath = fileDialog.directory().path()
+			self.directoryPathButton.setText(self.directoryPath)
+			self.directorySelected.emit(self.directoryPath)
+
+class NewProjectNameWidget(QWidget):
+	textChanged = pyqtSignal(str)
+
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QHBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.layout().addWidget(QLabel("New project name:"))
+		self.projectNameLineEdit = QLineEdit()
+		self.layout().addWidget(self.projectNameLineEdit)
+		self.projectNameLineEdit.textChanged.connect(self.onTextChanged)
+
+	def onTextChanged(self):
+		self.textChanged.emit(self.projectNameLineEdit.text())
+
+class NewProjectWidget(QWidget):
+	newProjectButtonClicked = pyqtSignal(str)
+
+	def __init__(self):
+		super().__init__()
+		self.projectDirectoryPath = ""
+		self.projectName = ""
+		self.setLayout(QVBoxLayout())
+		self.layout().setContentsMargins(0, 0, 0, 0)
+		self.newProjectDirectoryPathWidget = NewProjectDirectoryPathWidget()
+		self.layout().addWidget(self.newProjectDirectoryPathWidget)
+		self.newProjectNameWidget = NewProjectNameWidget()
+		self.layout().addWidget(self.newProjectNameWidget)
+		self.projectPathLabel = QLabel()
+		self.layout().addWidget(self.projectPathLabel)
+		self.createNewProjectButton = QPushButton("Create new project")
+		self.createNewProjectButton.setEnabled(False)
+		self.layout().addWidget(self.createNewProjectButton)
+		self.createNewProjectButton.clicked.connect(self.onCreateNewProjectButtonClicked)
+		self.newProjectDirectoryPathWidget.directorySelected.connect(self.onDirectorySelected)
+		self.newProjectNameWidget.textChanged.connect(self.onTextChanged)
+
+	def onCreateNewProjectButtonClicked(self):
+		self.newProjectButtonClicked.emit(self.projectDirectoryPath + "/" + self.projectName)
+
+	def onDirectorySelected(self, directoryPath):
+		self.projectDirectoryPath = directoryPath
+		self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName)
+		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName)
+		if directoryExists:
+			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
+		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
+			self.createNewProjectButton.setEnabled(True)
+		else:
+			self.createNewProjectButton.setEnabled(False)
+
+	def onTextChanged(self, text):
+		self.projectName = text
+		if self.projectDirectoryPath != "":
+			self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName)
+		else:
+			self.projectPathLabel.setText("?/" + self.projectName + " (missing directory)")
+			return
+		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName)
+		if directoryExists:
+			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
+		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
+			self.createNewProjectButton.setEnabled(True)
+		else:
+			self.createNewProjectButton.setEnabled(False)
+
+class ProjectWindow(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.resize(550, 400)
+		self.setFixedSize(self.width(), self.height())
+		self.setWindowTitle("NutshellEngine")
+		self.setWindowIcon(QIcon("assets/icon.png"))
+		self.setLayout(QVBoxLayout())
+		self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
+		self.layout().addWidget(QLabel("<b>Open Project:</b>"))
+		self.openProjectWidget = OpenProjectWidget()
+		self.layout().addWidget(self.openProjectWidget)
+		self.layout().addWidget(SeparatorLine())
+		self.layout().addWidget(QLabel("<b>New Project:</b>"))
+		self.newProjectWidget = NewProjectWidget()
+		self.layout().addWidget(self.newProjectWidget)
+		self.openProjectWidget.projectDirectorySelected.connect(self.onProjectDirectorySelected)
+		self.newProjectWidget.newProjectButtonClicked.connect(self.onNewProjectButtonClicked)
+
+	def openMainWindow(self, projectDirectory):
+		globalInfo.projectDirectory = projectDirectory
+		globalInfo.mainWindow.show()
+		self.close()
+
+	def onProjectDirectorySelected(self, projectDirectory):
+		self.openMainWindow(projectDirectory)
+
+	def onNewProjectButtonClicked(self, projectDirectory):
+		os.mkdir(projectDirectory)
+		self.openMainWindow(projectDirectory)
+
 if __name__ == "__main__":
 	app = QApplication([])
 	app.setStyle("Fusion")
 
-	globalInfo.devicePixelRatio = app.devicePixelRatio()
 	globalInfo.signalEmitter = SignalEmitter()
+	globalInfo.devicePixelRatio = app.devicePixelRatio()
+	globalInfo.mainWindow = MainWindow()
 
-	window = MainWindow()
-	window.setWindowIcon(QIcon("assets/icon.png"))
-	globalInfo.window = window
+	projectWindow = ProjectWindow()
+	projectWindow.show()
 
 	app.exec()
