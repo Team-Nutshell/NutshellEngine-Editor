@@ -1240,7 +1240,7 @@ class Renderer(QOpenGLWidget):
 		self.rotateEntityKeyPressed = False
 		self.scaleEntityKeyPressed = False
 
-		self.leftClickedPressed = False
+		self.moveCameraButtonPressed = False
 
 		self.mouseScrollY = 0.0
 
@@ -1976,19 +1976,19 @@ class Renderer(QOpenGLWidget):
 		elif e.key() == self.cameraDownKey:
 			self.cameraDownKeyPressed = True
 		elif e.key() == self.translateEntityKey:
-			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
+			if (globalInfo.currentEntityID != -1) and (not self.moveCameraButtonPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.translateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
 		elif e.key() == self.rotateEntityKey:
-			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
+			if (globalInfo.currentEntityID != -1) and (not self.moveCameraButtonPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.rotateEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
 				self.mouseCursorPreviousPosition = np.array([cursorPos.x(), self.height() - cursorPos.y()], dtype=np.float32)
 		elif e.key() == self.scaleEntityKey:
-			if (globalInfo.currentEntityID != -1) and (not self.leftClickedPressed) and (not self.anyEntityTransformKeyPressed()):
+			if (globalInfo.currentEntityID != -1) and (not self.moveCameraButtonPressed) and (not self.anyEntityTransformKeyPressed()):
 				self.scaleEntityKeyPressed = True
 				self.entityMoveTransform = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["transform"])
 				cursorPos = self.mapFromGlobal(QCursor.pos())
@@ -2039,22 +2039,22 @@ class Renderer(QOpenGLWidget):
 
 	def mousePressEvent(self, e):
 		if not self.anyEntityTransformKeyPressed():
-			if e.button() == Qt.MouseButton.LeftButton:
-				self.leftClickedPressed = True
+			if e.button() == Qt.MouseButton.RightButton:
+				self.moveCameraButtonPressed = True
 				self.savedMousePosition = QCursor.pos()
 				self.setCursor(Qt.CursorShape.BlankCursor)
 				widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
 				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
 				QCursor.setPos(self.mapToGlobal(widgetCenter))
-			elif e.button() == Qt.MouseButton.RightButton:
+			elif e.button() == Qt.MouseButton.LeftButton:
 				self.doPicking = True
 		e.accept()
 
 	def mouseReleaseEvent(self, e):
 		if not self.anyEntityTransformKeyPressed():
-			if e.button() == Qt.MouseButton.LeftButton:
-				if self.leftClickedPressed:
-					self.leftClickedPressed = False
+			if e.button() == Qt.MouseButton.RightButton:
+				if self.moveCameraButtonPressed:
+					self.moveCameraButtonPressed = False
 					self.setCursor(Qt.CursorShape.ArrowCursor)
 					QCursor.setPos(self.savedMousePosition)
 					self.mouseCursorDifference = np.zeros(2, dtype=np.float32)
@@ -2062,8 +2062,8 @@ class Renderer(QOpenGLWidget):
 
 	def mouseMoveEvent(self, e):
 		if not self.anyEntityTransformKeyPressed():
-			if e.buttons() & Qt.MouseButton.LeftButton:
-				if self.leftClickedPressed:
+			if e.buttons() & Qt.MouseButton.RightButton:
+				if self.moveCameraButtonPressed:
 					mouseCursorCurrentPosition = np.array([e.pos().x(), e.pos().y()], dtype=np.float32)
 					widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
 					self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()], dtype=np.float32)
