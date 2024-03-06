@@ -2510,11 +2510,10 @@ class EntityPanel(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.resize(100, self.height())
-		self.setMinimumWidth(50)
 		self.setLayout(QVBoxLayout())
 		self.layout().setContentsMargins(2, 2, 0, 2)
-		self.entityList = EntityList()
 		self.layout().addWidget(QLabel("Entity List"))
+		self.entityList = EntityList()
 		self.layout().addWidget(self.entityList)
 
 class BooleanWidget(QWidget):
@@ -3538,7 +3537,6 @@ class EntityInfoPanel(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.resize(185, self.height())
-		self.setMinimumWidth(50)
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 		self.layout().setContentsMargins(0, 2, 2, 2)
