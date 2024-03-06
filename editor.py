@@ -162,15 +162,18 @@ class Collidable():
 		self.base = np.array([0.0, 0.0, 0.0], dtype=np.float32)
 		self.tip = np.array([0.0, 0.5, 0.0], dtype=np.float32)
 
+		self.fromRenderable = False
+
 	def toJson(self):
 		dictionary = {}
 		dictionary["type"] = self.type
-		dictionary["center"] = [float(self.center[0]), float(self.center[1]), float(self.center[2])]
-		dictionary["radius"] = self.radius
-		dictionary["halfExtent"] = [float(self.halfExtent[0]), float(self.halfExtent[1]), float(self.halfExtent[2])]
-		dictionary["rotation"] = [float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2])]
-		dictionary["base"] = [float(self.base[0]), float(self.base[1]), float(self.base[2])]
-		dictionary["tip"] = [float(self.tip[0]), float(self.tip[1]), float(self.tip[2])]
+		if not self.fromRenderable:
+			dictionary["center"] = [float(self.center[0]), float(self.center[1]), float(self.center[2])]
+			dictionary["radius"] = self.radius
+			dictionary["halfExtent"] = [float(self.halfExtent[0]), float(self.halfExtent[1]), float(self.halfExtent[2])]
+			dictionary["rotation"] = [float(self.rotation[0]), float(self.rotation[1]), float(self.rotation[2])]
+			dictionary["base"] = [float(self.base[0]), float(self.base[1]), float(self.base[2])]
+			dictionary["tip"] = [float(self.tip[0]), float(self.tip[1]), float(self.tip[2])]
 		return dictionary
 
 	def fromJson(self, jsonData):
@@ -188,6 +191,16 @@ class Collidable():
 			self.base = jsonData["base"]
 		if "tip" in jsonData:
 			self.tip = jsonData["tip"]
+
+		if self.type == "Box":
+			if ("center" not in jsonData) and ("halfExtent" not in jsonData) and ("rotation" not in jsonData):
+				self.fromRenderable = True
+		elif self.type == "Sphere":
+			if ("center" not in jsonData) and ("radius" not in jsonData):
+				self.fromRenderable = True
+		elif self.type == "Capsule":
+			if ("radius" not in jsonData) and ("base" not in jsonData) and ("tip" not in jsonData):
+				self.fromRenderable = True
 
 class Scriptable():
 	def __init__(self):
@@ -3168,9 +3181,11 @@ class CollidableComponentWidget(QWidget):
 		self.layout().addWidget(self.componentTitle)
 		self.typeWidget = ComboBoxWidget("Type", ["Box", "Sphere", "Capsule"])
 		self.layout().addWidget(self.typeWidget)
+		self.fromRenderableWidget = BooleanWidget("From Renderable")
+		self.layout().addWidget(self.fromRenderableWidget)
 		self.centerWidget = Vector3Widget("Center")
 		self.layout().addWidget(self.centerWidget)
-		self.radiusWidget = ScalarWidget("Center")
+		self.radiusWidget = ScalarWidget("Radius")
 		self.layout().addWidget(self.radiusWidget)
 		self.halfExtentWidget = Vector3Widget("Half Extent")
 		self.layout().addWidget(self.halfExtentWidget)
@@ -3182,6 +3197,7 @@ class CollidableComponentWidget(QWidget):
 		self.layout().addWidget(self.tipWidget)
 		self.layout().addWidget(ComponentSeparatorLine())
 		self.typeWidget.elementSelected.connect(self.onCollidableElementUpdated)
+		self.fromRenderableWidget.stateChanged.connect(self.onCollidableBooleanUpdated)
 		self.centerWidget.editingFinished.connect(self.onCollidableVector3Updated)
 		self.radiusWidget.editingFinished.connect(self.onCollidableScalarUpdated)
 		self.halfExtentWidget.editingFinished.connect(self.onCollidableVector3Updated)
@@ -3196,19 +3212,21 @@ class CollidableComponentWidget(QWidget):
 	def updateWidgets(self, collidable):
 		with QSignalBlocker(self.typeWidget.comboBox) as signalBlocker:
 			self.typeWidget.comboBox.setCurrentText(collidable.type)
+		with QSignalBlocker(self.fromRenderableWidget.checkBox) as signalBlocker:
+			self.fromRenderableWidget.checkBox.setChecked(collidable.fromRenderable)
 		self.centerWidget.xLineEdit.setText(format(collidable.center[0], ".3f"))
 		self.centerWidget.yLineEdit.setText(format(collidable.center[1], ".3f"))
 		self.centerWidget.zLineEdit.setText(format(collidable.center[2], ".3f"))
 		self.centerWidget.previousX = collidable.center[0]
 		self.centerWidget.previousY = collidable.center[1]
 		self.centerWidget.previousZ = collidable.center[2]
-		if (collidable.type == "Box") or (collidable.type == "Sphere"):
+		if ((collidable.type == "Box") or (collidable.type == "Sphere")) and (not collidable.fromRenderable):
 			self.centerWidget.setEnabled(True)
 		else:
 			self.centerWidget.setEnabled(False)
 		self.radiusWidget.valueLineEdit.setText(format(collidable.radius, ".3f"))
 		self.radiusWidget.previousValue = collidable.radius
-		if (collidable.type == "Sphere") or (collidable.type == "Capsule"):
+		if ((collidable.type == "Sphere") or (collidable.type == "Capsule")) and (not collidable.fromRenderable):
 			self.radiusWidget.setEnabled(True)
 		else:
 			self.radiusWidget.setEnabled(False)
@@ -3218,7 +3236,7 @@ class CollidableComponentWidget(QWidget):
 		self.halfExtentWidget.previousX = collidable.halfExtent[0]
 		self.halfExtentWidget.previousY = collidable.halfExtent[1]
 		self.halfExtentWidget.previousZ = collidable.halfExtent[2]
-		if collidable.type == "Box":
+		if (collidable.type == "Box") and (not collidable.fromRenderable):
 			self.halfExtentWidget.setEnabled(True)
 		else:
 			self.halfExtentWidget.setEnabled(False)
@@ -3228,7 +3246,7 @@ class CollidableComponentWidget(QWidget):
 		self.rotationWidget.previousX = collidable.rotation[0]
 		self.rotationWidget.previousY = collidable.rotation[1]
 		self.rotationWidget.previousZ = collidable.rotation[2]
-		if collidable.type == "Box":
+		if (collidable.type == "Box") and (not collidable.fromRenderable):
 			self.rotationWidget.setEnabled(True)
 		else:
 			self.rotationWidget.setEnabled(False)
@@ -3238,7 +3256,7 @@ class CollidableComponentWidget(QWidget):
 		self.baseWidget.previousX = collidable.base[0]
 		self.baseWidget.previousY = collidable.base[1]
 		self.baseWidget.previousZ = collidable.base[2]
-		if collidable.type == "Capsule":
+		if (collidable.type == "Capsule") and (not collidable.fromRenderable):
 			self.baseWidget.setEnabled(True)
 		else:
 			self.baseWidget.setEnabled(False)
@@ -3248,7 +3266,7 @@ class CollidableComponentWidget(QWidget):
 		self.tipWidget.previousX = collidable.tip[0]
 		self.tipWidget.previousY = collidable.tip[1]
 		self.tipWidget.previousZ = collidable.tip[2]
-		if collidable.type == "Capsule":
+		if (collidable.type == "Capsule") and (not collidable.fromRenderable):
 			self.tipWidget.setEnabled(True)
 		else:
 			self.tipWidget.setEnabled(False)
@@ -3276,6 +3294,13 @@ class CollidableComponentWidget(QWidget):
 				self.updateWidgets(collidable)
 			else:
 				self.hide()
+
+	def onCollidableBooleanUpdated(self, boolean):
+		newCollidable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["collidable"])
+		sender = self.sender()
+		if sender == self.fromRenderableWidget:
+			newCollidable.fromRenderable = boolean
+		globalInfo.undoStack.push(ChangeComponentEntityCommand(globalInfo.currentEntityID, newCollidable))
 
 	def onCollidableElementUpdated(self, element):
 		newCollidable = copy.deepcopy(globalInfo.entities[globalInfo.findEntityById(globalInfo.currentEntityID)].components["collidable"])
