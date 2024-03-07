@@ -3566,8 +3566,8 @@ class EntityInfoPanel(QWidget):
 class AssetList(QListWidget):
 	def __init__(self):
 		super().__init__()
-		self.assetsDirectory = globalInfo.projectDirectory + "/assets/"
-		self.currentFolder = "./"
+		self.assetsDirectory = os.path.normpath(globalInfo.projectDirectory + "/assets/").replace("\\", "/")
+		self.currentDirectory = self.assetsDirectory
 		self.setWrapping(True)
 		self.setAcceptDrops(True)
 		sizePolicy = QSizePolicy()
@@ -3582,23 +3582,27 @@ class AssetList(QListWidget):
 				else:
 					self.addItem(element)
 		self.directoryWatcher = QFileSystemWatcher()
-		self.directoryWatcher.addPath(self.assetsDirectory)
+		self.directoryWatcher.addPath(self.currentDirectory)
+		self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 		self.currentTextChanged.connect(self.onCurrentTextChanged)
 		self.directoryWatcher.directoryChanged.connect(self.onDirectoryChanged)
 
-	def onCurrentTextChanged(self, element):
-		previousFolder = self.currentFolder
-		self.currentFolder += element
-		if not os.path.isdir(self.assetsDirectory + self.currentFolder):
-			return
-		with QSignalBlocker(self) as signalBlocker:
-			self.clear()
-		if os.path.exists(self.assetsDirectory + self.currentFolder):
-			self.directoryWatcher.removePath(self.assetsDirectory + previousFolder)
-			self.directoryWatcher.addPath(self.assetsDirectory + self.currentFolder)
-			elementsInDirectory = os.listdir(self.assetsDirectory + self.currentFolder)
+	def onCurrentTextChanged(self, selectedElementText):
+		selectedElementPath = os.path.normpath(self.currentDirectory + "/" + selectedElementText).replace("\\", "/")
+		if os.path.exists(selectedElementPath):
+			if not os.path.isdir(selectedElementPath):
+				return
+			self.currentDirectory = selectedElementPath
+			if len(self.directoryWatcher.directories()) != 0:
+				self.directoryWatcher.removePaths(self.directoryWatcher.directories())
+			self.directoryWatcher.addPath(self.currentDirectory)
+			with QSignalBlocker(self) as signalBlocker:
+				self.clear()
+			if self.currentDirectory != self.assetsDirectory:
+				self.addItem("../")
+			elementsInDirectory = os.listdir(self.currentDirectory)
 			for element in elementsInDirectory:
-				if os.path.isdir(self.assetsDirectory + self.currentFolder + element):
+				if os.path.isdir(self.currentDirectory + "/" + element):
 					self.addItem(element + "/")
 				else:
 					self.addItem(element)
@@ -3613,6 +3617,16 @@ class AssetList(QListWidget):
 					self.addItem(element + "/")
 				else:
 					self.addItem(element)
+
+	def onItemDoubleClicked(self, item):
+		extension = item.text().rsplit(".")[-1]
+		if extension == "ntsn":
+			SceneManager.openScene(self.currentDirectory + "/" + item.text())
+
+	def mouseMoveEvent(self, e):
+		if e.buttons() & Qt.MouseButton.LeftButton:
+			return
+		e.accept()
 
 	def dragEnterEvent(self, e):
 		if e.mimeData().hasUrls():
