@@ -1,9 +1,9 @@
 import copy
 import ctypes
 import OpenGL.GL as gl
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer, QFileSystemWatcher
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy, QPushButton, QComboBox, QColorDialog
-from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette, QPixmap
+from PyQt6.QtGui import QDragEnterEvent, QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette, QPixmap
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
 from PIL import Image
@@ -13,6 +13,7 @@ import configparser
 import json
 import re
 import os
+import shutil
 
 class Transform():
 	def __init__(self):
@@ -3562,18 +3563,103 @@ class EntityInfoPanel(QWidget):
 			self.componentScrollArea.hide()
 			self.entityInfoPersistence.hide()
 
+class AssetList(QListWidget):
+	def __init__(self):
+		super().__init__()
+		self.assetsDirectory = globalInfo.projectDirectory + "/assets/"
+		self.currentFolder = "./"
+		self.setWrapping(True)
+		self.setAcceptDrops(True)
+		sizePolicy = QSizePolicy()
+		sizePolicy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
+		sizePolicy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
+		self.setSizePolicy(sizePolicy)
+		if os.path.exists(self.assetsDirectory):
+			elementsInDirectory = os.listdir(self.assetsDirectory)
+			for element in elementsInDirectory:
+				if os.path.isdir(self.assetsDirectory + element):
+					self.addItem(element + "/")
+				else:
+					self.addItem(element)
+		self.directoryWatcher = QFileSystemWatcher()
+		self.directoryWatcher.addPath(self.assetsDirectory)
+		self.currentTextChanged.connect(self.onCurrentTextChanged)
+		self.directoryWatcher.directoryChanged.connect(self.onDirectoryChanged)
+
+	def onCurrentTextChanged(self, element):
+		previousFolder = self.currentFolder
+		self.currentFolder += element
+		if not os.path.isdir(self.assetsDirectory + self.currentFolder):
+			return
+		with QSignalBlocker(self) as signalBlocker:
+			self.clear()
+		if os.path.exists(self.assetsDirectory + self.currentFolder):
+			self.directoryWatcher.removePath(self.assetsDirectory + previousFolder)
+			self.directoryWatcher.addPath(self.assetsDirectory + self.currentFolder)
+			elementsInDirectory = os.listdir(self.assetsDirectory + self.currentFolder)
+			for element in elementsInDirectory:
+				if os.path.isdir(self.assetsDirectory + self.currentFolder + element):
+					self.addItem(element + "/")
+				else:
+					self.addItem(element)
+
+	def onDirectoryChanged(self, directoryPath):
+		with QSignalBlocker(self) as signalBlocker:
+			self.clear()
+		if os.path.exists(directoryPath):
+			elementsInDirectory = os.listdir(directoryPath)
+			for element in elementsInDirectory:
+				if os.path.isdir(element):
+					self.addItem(element + "/")
+				else:
+					self.addItem(element)
+
+	def dragEnterEvent(self, e):
+		if e.mimeData().hasUrls():
+			e.acceptProposedAction()
+
+	def dragMoveEvent(self, e):
+		if e.mimeData().hasUrls():
+			e.acceptProposedAction()
+
+	def dropEvent(self, e):
+		sources = e.mimeData().urls()
+		destination = self.assetsDirectory + self.currentFolder
+		for source in sources:
+			if os.path.isfile(source.toLocalFile()):
+				shutil.copy(source.toLocalFile(), destination)
+
+class ResourcePanel(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.setLayout(QVBoxLayout())
+		self.layout().setContentsMargins(2, 2, 2, 2)
+		self.layout().addWidget(QLabel("Assets"))
+		self.assetList = AssetList()
+		self.layout().addWidget(self.assetList)
+
 class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
 		self.resize(1280, 720)
 		self.setWindowTitle("NutshellEngine")
 		self.setWindowIcon(QIcon("assets/icon.png"))
-		self.main = QSplitter()
+		self.main = QWidget()
+		self.horizontalSplitter = QSplitter()
+		self.horizontalSplitter.setOrientation(Qt.Orientation.Horizontal)
 		self.setCentralWidget(self.main)
 		self.createMenuBar()
 		self.createEntityPanel()
 		self.createRenderer()
 		self.createEntityInfoPanel()
+		self.verticalSplitter = QSplitter()
+		self.verticalSplitter.setOrientation(Qt.Orientation.Vertical)
+		self.verticalSplitter.addWidget(self.horizontalSplitter)
+		self.main.setLayout(QVBoxLayout())
+		self.main.layout().setContentsMargins(0, 0, 0, 0)
+		self.main.layout().addWidget(self.verticalSplitter)
+		self.createResourcePanel()
+		self.verticalSplitter.setSizes([520, 200])
 
 	def createMenuBar(self):
 		menuBar = self.menuBar()
@@ -3586,15 +3672,19 @@ class MainWindow(QMainWindow):
 
 	def createEntityPanel(self):
 		self.entityPanel = EntityPanel()
-		self.main.addWidget(self.entityPanel)
+		self.horizontalSplitter.addWidget(self.entityPanel)
 
 	def createRenderer(self):
 		self.renderer = Renderer()
-		self.main.addWidget(self.renderer)
+		self.horizontalSplitter.addWidget(self.renderer)
 
 	def createEntityInfoPanel(self):
 		self.entityInfoPanel = EntityInfoPanel()
-		self.main.addWidget(self.entityInfoPanel)
+		self.horizontalSplitter.addWidget(self.entityInfoPanel)
+
+	def createResourcePanel(self):
+		self.resourcePanel = ResourcePanel()
+		self.verticalSplitter.addWidget(self.resourcePanel)
 
 class OpenProjectWidget(QWidget):
 	projectDirectorySelected = pyqtSignal(str)
@@ -3727,6 +3817,7 @@ class ProjectWindow(QWidget):
 		logoPixmap = QPixmap("assets/logo.png")
 		self.logoLabel.setPixmap(logoPixmap.scaled(self.width() - 20, self.height(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 		self.layout().addWidget(self.logoLabel)
+		self.layout().addWidget(SeparatorLine())
 		self.layout().addWidget(QLabel("<b>Open Project:</b>"))
 		self.openProjectWidget = OpenProjectWidget()
 		self.layout().addWidget(self.openProjectWidget)
@@ -3745,6 +3836,7 @@ class ProjectWindow(QWidget):
 		if "Project" in config:
 			if "name" in config["Project"]:
 				globalInfo.projectName = config["Project"]["name"]
+		globalInfo.mainWindow = MainWindow()
 		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + globalInfo.projectName)
 		globalInfo.mainWindow.show()
 		self.close()
@@ -3767,7 +3859,6 @@ if __name__ == "__main__":
 
 	globalInfo.signalEmitter = SignalEmitter()
 	globalInfo.devicePixelRatio = app.devicePixelRatio()
-	globalInfo.mainWindow = MainWindow()
 
 	projectWindow = ProjectWindow()
 	projectWindow.show()
