@@ -537,27 +537,27 @@ class RendererResourceManager():
 						if accessor.componentType == 5120: # Byte
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 1)
 							indexData = attributeData[offset:offset+1]
-							indices = np.append(indices, np.array(struct.unpack("<b", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<b", indexData), dtype=np.uint32))
 						elif accessor.componentType == 5121: # Unsigned Byte
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 1)
 							indexData = attributeData[offset:offset+1]
-							indices = np.append(indices, np.array(struct.unpack("<B", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<B", indexData), dtype=np.uint32))
 						elif accessor.componentType == 5122: # Short
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 2)
 							indexData = attributeData[offset:offset+2]
-							indices = np.append(indices, np.array(struct.unpack("<h", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<h", indexData), dtype=np.uint32))
 						elif accessor.componentType == 5123: # Unsigned Short
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 2)
 							indexData = attributeData[offset:offset+2]
-							indices = np.append(indices, np.array(struct.unpack("<H", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<H", indexData), dtype=np.uint32))
 						elif accessor.componentType == 5125: # Unsigned Int
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 4)
 							indexData = attributeData[offset:offset+4]
-							indices = np.append(indices, np.array(struct.unpack("<I", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<I", indexData), dtype=np.uint32))
 						elif accessor.componentType == 5126: # Float
 							offset = accessor.byteOffset + bufferView.byteOffset + (indexIndex * 4)
 							indexData = attributeData[offset:offset+4]
-							indices = np.append(indices, np.array(struct.unpack("<f", indexData), np.uint32))
+							indices = np.append(indices, np.array(struct.unpack("<f", indexData), dtype=np.uint32))
 				else:
 					indices = np.arange(vertexCount, dtype=np.uint32)
 
@@ -1849,11 +1849,10 @@ class Renderer(QOpenGLWidget):
 			self.camera.perspectiveDirection = np.array([
 				np.cos(cameraPitchRad) * np.cos(cameraYawRad),
 				-np.sin(cameraPitchRad),
-				np.cos(cameraPitchRad) * np.sin(cameraYawRad)
-			])
+				np.cos(cameraPitchRad) * np.sin(cameraYawRad)], dtype=np.float32)
 			self.camera.perspectiveDirection = MathHelper.normalize(self.camera.perspectiveDirection)
 
-			t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]]))
+			t = MathHelper.normalize(np.array([-self.camera.perspectiveDirection[2], 0.0, self.camera.perspectiveDirection[0]], dtype=np.float32))
 
 			cameraSpeed = self.camera.cameraSpeed * deltaTime
 
@@ -1879,9 +1878,9 @@ class Renderer(QOpenGLWidget):
 			self.camera.projectionMatrix = MathHelper.perspectiveRH(np.deg2rad(45.0), self.width() / self.height(), self.camera.nearPlane, self.camera.farPlane)
 		else:
 			if (self.camera.orthographicDirection[1] == 1.0) or (self.camera.orthographicDirection[1] == -1.0):
-				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]]))
+				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[1], 0.0, self.camera.orthographicDirection[0]], dtype=np.float32))
 			else:
-				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]]))
+				t = MathHelper.normalize(np.array([-self.camera.orthographicDirection[2], 0.0, self.camera.orthographicDirection[0]], dtype=np.float32))
 
 			horizontalSpeed = (1.0 if (self.mouseCursorDifference[0] == 0.0) else abs(self.mouseCursorDifference[0])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
 			verticalSpeed = (1.0 if (self.mouseCursorDifference[1] == 0.0) else abs(self.mouseCursorDifference[1])) * self.camera.orthographicHalfExtent * self.camera.cameraSpeed * deltaTime
@@ -2040,7 +2039,7 @@ class Renderer(QOpenGLWidget):
 				self.savedMousePosition = QCursor.pos()
 				self.setCursor(Qt.CursorShape.BlankCursor)
 				widgetCenter = QPoint(int(self.width() / 2), int(self.height() / 2))
-				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()])
+				self.mouseCursorPreviousPosition = np.array([widgetCenter.x(), widgetCenter.y()], dtype=np.float32)
 				QCursor.setPos(self.mapToGlobal(widgetCenter))
 			elif e.button() == Qt.MouseButton.LeftButton:
 				self.doPicking = True
