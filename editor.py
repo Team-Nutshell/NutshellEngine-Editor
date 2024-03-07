@@ -3662,7 +3662,7 @@ class NewProjectWidget(QWidget):
 		self.layout().addWidget(self.newProjectDirectoryPathWidget)
 		self.newProjectNameWidget = NewProjectNameWidget()
 		self.layout().addWidget(self.newProjectNameWidget)
-		self.projectPathLabel = QLabel()
+		self.projectPathLabel = QLabel("?/? (missing directory and project name)")
 		self.layout().addWidget(self.projectPathLabel)
 		self.createNewProjectButton = QPushButton("Create new project")
 		self.createNewProjectButton.setEnabled(False)
@@ -3672,12 +3672,17 @@ class NewProjectWidget(QWidget):
 		self.newProjectNameWidget.textChanged.connect(self.onTextChanged)
 
 	def onCreateNewProjectButtonClicked(self):
-		self.newProjectButtonClicked.emit(self.projectDirectoryPath + "/" + self.projectName)
+		self.newProjectButtonClicked.emit(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
 
 	def onDirectorySelected(self, directoryPath):
 		self.projectDirectoryPath = directoryPath
-		self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName)
-		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName)
+		if self.projectName != "":
+			self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
+		else:
+			self.projectPathLabel.setText(self.projectDirectoryPath + "/? (missing project name)")
+			self.createNewProjectButton.setEnabled(False)
+			return
+		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
 		if directoryExists:
 			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
 		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
@@ -3688,11 +3693,19 @@ class NewProjectWidget(QWidget):
 	def onTextChanged(self, text):
 		self.projectName = text
 		if self.projectDirectoryPath != "":
-			self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName)
+			if self.projectName != "":
+				self.projectPathLabel.setText(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
+			else:
+				self.projectPathLabel.setText(self.projectDirectoryPath + "/? (missing project name)")
+				self.createNewProjectButton.setEnabled(False)
+				return
 		else:
-			self.projectPathLabel.setText("?/" + self.projectName + " (missing directory)")
+			if self.projectName != "":
+				self.projectPathLabel.setText("?/" + self.projectName.replace(" ", "_") + " (missing directory)")
+			else:
+				self.projectPathLabel.setText("?/? (missing directory and project name)")
 			return
-		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName)
+		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
 		if directoryExists:
 			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
 		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
