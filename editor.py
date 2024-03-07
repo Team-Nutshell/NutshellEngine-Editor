@@ -637,6 +637,7 @@ class GlobalInfo():
 		self.entityID = 0
 		self.currentScenePath = ""
 		self.projectDirectory = "."
+		self.projectName = ""
 		self.copiedEntity = None
 		self.rendererResourceManager = RendererResourceManager()
 
@@ -666,7 +667,7 @@ class SceneManager():
 	@staticmethod
 	def newScene():
 		globalInfo.currentScenePath = ""
-		globalInfo.mainWindow.setWindowTitle("NutshellEngine")
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + globalInfo.projectName)
 		globalInfo.undoStack.push(ClearSceneCommand())
 		globalInfo.signalEmitter.resetCameraSignal.emit()
 
@@ -680,7 +681,7 @@ class SceneManager():
 				return
 		SceneManager.newScene()
 		globalInfo.currentScenePath = filePath
-		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + filePath)
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + globalInfo.projectName + " - " + filePath)
 		if "entities" in sceneData:
 			entities = []
 			for entity in sceneData["entities"]:
@@ -693,7 +694,7 @@ class SceneManager():
 	@staticmethod
 	def saveScene(filePath):
 		globalInfo.currentScenePath = filePath
-		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + filePath)
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + globalInfo.projectName + " - " + filePath)
 		with open(filePath, "w+", encoding="utf-8") as f:
 			json.dump(globalInfo.entitiesToJson(), f, ensure_ascii=False, indent=4)
 
@@ -3611,7 +3612,7 @@ class OpenProjectWidget(QWidget):
 		fileDialog.setWindowTitle(self.directoryPathButton.text())
 		fileDialog.setFileMode(QFileDialog.FileMode.Directory)
 		if fileDialog.exec():
-			self.projectDirectorySelected.emit(fileDialog.directory().path())
+			self.projectDirectorySelected.emit(os.path.normpath(fileDialog.directory().path()).replace("\\", "/"))
 
 class NewProjectDirectoryPathWidget(QWidget):
 	directorySelected = pyqtSignal(str)
@@ -3630,7 +3631,7 @@ class NewProjectDirectoryPathWidget(QWidget):
 		fileDialog.setWindowTitle(self.directoryPathButton.text())
 		fileDialog.setFileMode(QFileDialog.FileMode.Directory)
 		if fileDialog.exec():
-			self.directoryPath = fileDialog.directory().path()
+			self.directoryPath = os.path.normpath(fileDialog.directory().path()).replace("\\", "/")
 			self.directoryPathButton.setText(self.directoryPath)
 			self.directorySelected.emit(self.directoryPath)
 
@@ -3650,7 +3651,7 @@ class NewProjectNameWidget(QWidget):
 		self.textChanged.emit(self.projectNameLineEdit.text())
 
 class NewProjectWidget(QWidget):
-	newProjectButtonClicked = pyqtSignal(str)
+	newProjectButtonClicked = pyqtSignal(str, str)
 
 	def __init__(self):
 		super().__init__()
@@ -3672,7 +3673,7 @@ class NewProjectWidget(QWidget):
 		self.newProjectNameWidget.textChanged.connect(self.onTextChanged)
 
 	def onCreateNewProjectButtonClicked(self):
-		self.newProjectButtonClicked.emit(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
+		self.newProjectButtonClicked.emit(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"), self.projectName)
 
 	def onDirectorySelected(self, directoryPath):
 		self.projectDirectoryPath = directoryPath
@@ -3738,14 +3739,26 @@ class ProjectWindow(QWidget):
 
 	def openMainWindow(self, projectDirectory):
 		globalInfo.projectDirectory = projectDirectory
+		config = configparser.ConfigParser()
+		config.read(projectDirectory + "/project.ntpj")
+		globalInfo.projectName = projectDirectory.rsplit("/")[-1]
+		if "Project" in config:
+			if "name" in config["Project"]:
+				globalInfo.projectName = config["Project"]["name"]
+		globalInfo.mainWindow.setWindowTitle("NutshellEngine - " + globalInfo.projectName)
 		globalInfo.mainWindow.show()
 		self.close()
 
 	def onProjectDirectorySelected(self, projectDirectory):
 		self.openMainWindow(projectDirectory)
 
-	def onNewProjectButtonClicked(self, projectDirectory):
+	def onNewProjectButtonClicked(self, projectDirectory, projectName):
 		os.mkdir(projectDirectory)
+		config = configparser.ConfigParser()
+		config["Project"] = {}
+		config["Project"]["name"] = projectName
+		with open(projectDirectory + "/project.ntpj", "w") as projectConfigFile:
+			config.write(projectConfigFile)
 		self.openMainWindow(projectDirectory)
 
 if __name__ == "__main__":
