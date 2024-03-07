@@ -3,7 +3,7 @@ import ctypes
 import OpenGL.GL as gl
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QSignalBlocker, QLocale, QPoint, QTimer
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QHBoxLayout, QVBoxLayout, QMenu, QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QLineEdit, QCheckBox, QScrollArea, QFrame, QSplitter, QSizePolicy, QPushButton, QComboBox, QColorDialog
-from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette
+from PyQt6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QResizeEvent, QUndoStack, QUndoCommand, QCursor, QIcon, QDoubleValidator, QKeySequence, QColor, QPalette, QPixmap
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 import numpy as np
 from PIL import Image
@@ -3722,6 +3722,10 @@ class ProjectWindow(QWidget):
 		self.setWindowIcon(QIcon("assets/icon.png"))
 		self.setLayout(QVBoxLayout())
 		self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
+		self.logoLabel = QLabel()
+		logoPixmap = QPixmap("assets/logo.png")
+		self.logoLabel.setPixmap(logoPixmap.scaled(self.width() - 20, self.height(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+		self.layout().addWidget(self.logoLabel)
 		self.layout().addWidget(QLabel("<b>Open Project:</b>"))
 		self.openProjectWidget = OpenProjectWidget()
 		self.layout().addWidget(self.openProjectWidget)
