@@ -3685,7 +3685,7 @@ class NewProjectWidget(QWidget):
 		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
 		if directoryExists:
 			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
-		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
+		if ((self.projectDirectoryPath != "") and (self.projectName != "")) and not directoryExists:
 			self.createNewProjectButton.setEnabled(True)
 		else:
 			self.createNewProjectButton.setEnabled(False)
@@ -3708,7 +3708,7 @@ class NewProjectWidget(QWidget):
 		directoryExists = os.path.exists(self.projectDirectoryPath + "/" + self.projectName.replace(" ", "_"))
 		if directoryExists:
 			self.projectPathLabel.setText(self.projectPathLabel.text() + " (directory already exists)")
-		if ((self.projectDirectoryPath != "") and (self.projectPathLabel != "")) and not directoryExists:
+		if ((self.projectDirectoryPath != "") and (self.projectName != "")) and not directoryExists:
 			self.createNewProjectButton.setEnabled(True)
 		else:
 			self.createNewProjectButton.setEnabled(False)
