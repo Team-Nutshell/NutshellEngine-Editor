@@ -1,5 +1,26 @@
 #pragma once
+#include "component.h"
+#include <string>
 
-struct Scriptable {
+struct Scriptable : public Component {
+	Scriptable() : Component(ComponentType::Scriptable) {}
 
+	std::string scriptPath = "";
+	std::string scriptName = "";
+
+	nlohmann::json toJson() const {
+		nlohmann::json j;
+		j["scriptName"] = scriptName;
+
+		return j;
+	}
+
+	static Scriptable fromJson(const nlohmann::json& j) {
+		Scriptable scriptable;
+		if (j.contains("scriptName")) {
+			scriptable.scriptName = j["scriptName"];
+		}
+
+		return scriptable;
+	}
 };

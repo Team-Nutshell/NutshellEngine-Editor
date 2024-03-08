@@ -16,6 +16,7 @@ set(EXTERNAL_HEADERS
 set(COMMON_COMPONENTS_HEADERS
 	src/common/components/camera.h
 	src/common/components/collidable.h
+	src/common/components/component.h
 	src/common/components/light.h
 	src/common/components/renderable.h
 	src/common/components/rigidbody.h
@@ -33,11 +34,22 @@ set(RENDERER_SOURCES
 set(RENDERER_HEADERS
 	src/renderer/renderer_resource_manager.h)
 
+set(UNDO_COMMANDS_SOURCES
+	src/undo_commands/create_entity_command.cpp
+	src/undo_commands/destroy_entity_command.cpp
+	src/undo_commands/copy_entity_command.cpp)
+set(UNDO_COMMANDS_HEADERS
+	src/undo_commands/create_entity_command.h
+	src/undo_commands/destroy_entity_command.h
+	src/undo_commands/copy_entity_command.h)
+
 set(WIDGET_SOURCES
 	src/widgets/boolean_widget.cpp
+	src/widgets/color_picker_widget.cpp
 	src/widgets/combo_box_widget.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/file_menu.cpp
+	src/widgets/file_selector_widget.cpp
 	src/widgets/main_window.cpp
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
@@ -51,9 +63,11 @@ set(WIDGET_SOURCES
 	src/widgets/view_menu.cpp)
 set(WIDGET_HEADERS
 	src/widgets/boolean_widget.h
+	src/widgets/color_picker_widget.h
 	src/widgets/combo_box_widget.h
 	src/widgets/edit_menu.h
 	src/widgets/file_menu.h
+	src/widgets/file_selector_widget.h
 	src/widgets/main_window.h
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
@@ -68,11 +82,13 @@ set(WIDGET_HEADERS
 
 set(SOURCES
 	${RENDERER_SOURCES}
+	${UNDO_COMMANDS_SOURCES}
 	${WIDGET_SOURCES})
 set(HEADERS
 	${EXTERNAL_HEADERS}
 	${COMMON_HEADERS}
 	${RENDERER_HEADERS}
+	${UNDO_COMMANDS_HEADERS}
 	${WIDGET_HEADERS})
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES} ${HEADERS})

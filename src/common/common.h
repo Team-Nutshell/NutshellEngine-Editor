@@ -5,7 +5,7 @@
 #include "../../external/nml/include/nml.h"
 #include <QUndoStack>
 #include <memory>
-#include <vector>
+#include <unordered_map>
 #include <algorithm>
 #include <string>
 #include <cstdint>
@@ -13,7 +13,7 @@
 struct GlobalInfo {
 	std::string projectDirectory = "";
 	std::string projectName = "";
-	std::vector<Entity> entities;
+	std::unordered_map<EntityID, Entity> entities;
 	EntityID currentEntityID = NO_ENTITY;
 	EntityID globalEntityID = 0;
 	EntityID copiedEntityID = NO_ENTITY;
@@ -24,39 +24,13 @@ struct GlobalInfo {
 	SignalEmitter signalEmitter;
 	RendererResourceManager rendererResourceManager;
 
-	uint32_t findEntityById(EntityID entityID) {
-		std::vector<Entity>::const_iterator it = std::find_if(entities.begin(), entities.end(), [this, entityID](const Entity& entity) {
-			return entity.entityID == entityID;
-			});
-		
-		if (it == entities.end()) {
-			return NO_ENTITY;
-		}
-		
-		return std::distance(entities.cbegin(), it);
-	}
-
-	uint32_t findCurrentEntity() {
-		std::vector<Entity>::const_iterator it = std::find_if(entities.begin(), entities.end(), [this](const Entity& entity) {
-			return entity.entityID == currentEntityID;
-			});
-
-		if (it == entities.end()) {
-			return NO_ENTITY;
+	EntityID findEntityByName(const std::string& entityName) {
+		for (const auto& entity : entities) {
+			if (entity.second.name == entityName) {
+				return entity.first;
+			}
 		}
 
-		return std::distance(entities.cbegin(), it);
-	}
-
-	uint32_t findEntityByName(const std::string& entityName) {
-		std::vector<Entity>::const_iterator it = std::find_if(entities.begin(), entities.end(), [this, entityName](const Entity& entity) {
-			return entity.name == entityName;
-			});
-
-		if (it == entities.end()) {
-			return NO_ENTITY;
-		}
-
-		return std::distance(entities.cbegin(), it);
+		return NO_ENTITY;
 	}
 };

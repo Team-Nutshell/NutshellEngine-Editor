@@ -35,8 +35,8 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 }
 
 void ViewMenu::toggleCurrentEntityVisibility() {
-	m_globalInfo.entities[m_globalInfo.findCurrentEntity()].isVisible = !m_globalInfo.entities[m_globalInfo.findCurrentEntity()].isVisible;
-	emit m_globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal(m_globalInfo.entities[m_globalInfo.findCurrentEntity()].isVisible);
+	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = !m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible;
+	emit m_globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal(m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible);
 }
 
 void ViewMenu::toggleBackfaceCulling() {
@@ -107,7 +107,7 @@ void ViewMenu::onSelectEntity() {
 }
 
 void ViewMenu::onCurrentEntityVisibilityToggled(bool isEntityVisible) {
-	m_globalInfo.entities[m_globalInfo.findCurrentEntity()].isVisible = isEntityVisible;
+	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = isEntityVisible;
 	m_toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
 }
 
