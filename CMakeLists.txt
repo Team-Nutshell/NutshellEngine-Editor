@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
 add_subdirectory(external/nml)
 
 set(EXTERNAL_HEADERS
@@ -27,6 +27,7 @@ set(COMMON_HEADERS
 	${COMMON_COMPONENTS_HEADERS}
 	src/common/common.h
 	src/common/entity.h
+	src/common/scene_manager.h
 	src/common/signal_emitter.h)
 
 set(RENDERER_SOURCES
@@ -61,6 +62,7 @@ set(WIDGET_SOURCES
 	src/widgets/boolean_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/combo_box_widget.cpp
+	src/widgets/component_title_widget.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/file_menu.cpp
 	src/widgets/file_selector_widget.cpp
@@ -68,6 +70,7 @@ set(WIDGET_SOURCES
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
 	src/widgets/new_project_widget.cpp
+	src/widgets/new_scene_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/project_window.cpp
 	src/widgets/scalar_widget.cpp
@@ -79,6 +82,7 @@ set(WIDGET_HEADERS
 	src/widgets/boolean_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/combo_box_widget.h
+	src/widgets/component_title_widget.h
 	src/widgets/edit_menu.h
 	src/widgets/file_menu.h
 	src/widgets/file_selector_widget.h
@@ -86,6 +90,7 @@ set(WIDGET_HEADERS
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
 	src/widgets/new_project_widget.h
+	src/widgets/new_scene_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/project_window.h
 	src/widgets/scalar_widget.h

@@ -1,4 +1,5 @@
 #include "edit_menu.h"
+#include "../undo_commands/copy_entity_command.h"
 #include <QKeySequence>
 
 EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalInfo) {
@@ -26,7 +27,9 @@ void EditMenu::copyEntity() {
 }
 
 void EditMenu::pasteEntity() {
-
+	if (m_globalInfo.copiedEntityID != NO_ENTITY) {
+		m_globalInfo.undoStack->push(new CopyEntityCommand(m_globalInfo, m_globalInfo.copiedEntityID));
+	}
 }
 
 void EditMenu::onSelectEntity() {

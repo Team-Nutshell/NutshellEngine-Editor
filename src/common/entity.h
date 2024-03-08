@@ -33,7 +33,7 @@ struct Entity {
 
 	bool isVisible = true;
 
-	nlohmann::json toJson() {
+	nlohmann::json toJson() const {
 		nlohmann::json j;
 		j["name"] = name;
 		j["isPersistent"] = isPersistent;
