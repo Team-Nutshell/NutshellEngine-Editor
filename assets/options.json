@@ -1,0 +1,24 @@
+{
+    "renderer": {
+        "cameraForwardKey": "W",
+        "cameraBackwardKey": "S",
+        "cameraLeftKey": "A",
+        "cameraRightKey": "D",
+        "cameraUpKey": "Space",
+        "cameraDownKey": "Shift",
+        "switchCameraProjection": "P",
+        "resetCamera": "0",
+        "orthographicCameraToXM": "4",
+        "orthographicCameraToXP": "6",
+        "orthographicCameraToYM": "1",
+        "orthographicCameraToYP": "7",
+        "orthographicCameraToZM": "8",
+        "orthographicCameraToZP": "2",
+        "translateEntityKey": "T",
+        "rotateEntityKey": "R",
+        "scaleEntityKey": "E",
+        "toggleCurrentEntityVisibility": "V",
+        "toggleBackfaceCulling": "F",
+        "toggleCamerasVisibility": "C"
+    }
+}

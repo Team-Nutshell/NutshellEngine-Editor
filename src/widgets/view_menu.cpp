@@ -1,5 +1,7 @@
 #include "view_menu.h"
+#include "../../external/nlohmann/json.hpp"
 #include <QKeySequence>
+#include <fstream>
 
 ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalInfo) {
 	m_toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
@@ -26,6 +28,57 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	m_orthographicCameraToZMAction->setShortcut(QKeySequence::fromString("8"));
 	m_orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
 	m_orthographicCameraToZPAction->setShortcut(QKeySequence::fromString("2"));
+
+	std::fstream optionsFile("assets/options.json", std::ios::in);
+	if (optionsFile.is_open()) {
+		if (!nlohmann::json::accept(optionsFile)) {
+			std::cout << "\"assets/options.json\" is not a valid JSON file." << std::endl;
+			return;
+		}
+	}
+	else {
+		std::cout << "\"assets/options.json\" cannot be opened." << std::endl;
+		return;
+	}
+
+	optionsFile = std::fstream("assets/options.json", std::ios::in);
+	nlohmann::json j = nlohmann::json::parse(optionsFile);
+
+	if (j.contains("renderer")) {
+		if (j["renderer"].contains("toggleCurrentEntityVisibility")) {
+			m_toggleCurrentEntityVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCurrentEntityVisibility"]));
+		}
+		if (j["renderer"].contains("toggleBackfaceCulling")) {
+			m_toggleBackfaceCullingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleBackfaceCulling"]));
+		}
+		if (j["renderer"].contains("toggleCamerasVisibility")) {
+			m_toggleCamerasVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCamerasVisibility"]));
+		}
+		if (j["renderer"].contains("switchCameraProjection")) {
+			m_switchCameraProjectionAction->setShortcut(QString::fromStdString(j["renderer"]["switchCameraProjection"]));
+		}
+		if (j["renderer"].contains("resetCamera")) {
+			m_resetCameraAction->setShortcut(QString::fromStdString(j["renderer"]["resetCamera"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToXM")) {
+			m_orthographicCameraToXMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToXM"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToXP")) {
+			m_orthographicCameraToXPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToXP"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToYM")) {
+			m_orthographicCameraToYMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToYM"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToYP")) {
+			m_orthographicCameraToYPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToYP"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToZM")) {
+			m_orthographicCameraToZMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToZM"]));
+		}
+		if (j["renderer"].contains("orthographicCameraToZP")) {
+			m_orthographicCameraToZPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToZP"]));
+		}
+	}
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
