@@ -12,18 +12,18 @@ public:
 	Vector2Widget(GlobalInfo& globalInfo, const std::string& name);
 
 signals:
-	void editingFinished(const nml::vec2&);
+	void valueChanged(const nml::vec2&);
 
 private slots:
 	void onEditingFinished();
 
 private:
 	GlobalInfo& m_globalInfo;
-	
-	nml::vec2 m_value = nml::vec2(0.0f);
 
 public:
 	std::unique_ptr<QLabel> nameLabel;
 	std::unique_ptr<QLineEdit> xLineEdit;
 	std::unique_ptr<QLineEdit> yLineEdit;
+
+	nml::vec2 value = nml::vec2(0.0f);
 };

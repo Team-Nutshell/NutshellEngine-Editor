@@ -29,8 +29,8 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name): m
 
 void Vector2Widget::onEditingFinished() {
 	nml::vec2 newValue = nml::vec2(atof(xLineEdit->text().toStdString().c_str()), atof(yLineEdit->text().toStdString().c_str()));
-	if (m_value != newValue) {
-		m_value = newValue;
-		emit editingFinished(m_value);
+	if (value != newValue) {
+		value = newValue;
+		emit valueChanged(value);
 	}
 }

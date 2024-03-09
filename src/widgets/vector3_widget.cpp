@@ -34,8 +34,8 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m
 
 void Vector3Widget::onEditingFinished() {
 	nml::vec3 newValue = nml::vec3(atof(xLineEdit->text().toStdString().c_str()), atof(yLineEdit->text().toStdString().c_str()), atof(zLineEdit->text().toStdString().c_str()));
-	if (m_value != newValue) {
-		m_value = newValue;
-		emit editingFinished(m_value);
+	if (value != newValue) {
+		value = newValue;
+		emit valueChanged(value);
 	}
 }

@@ -30,5 +30,4 @@ private:
 	std::string m_assetsDirectory;
 	std::string m_currentDirectory;
 	QFileSystemWatcher m_directoryWatcher;
-	bool m_firstSelection = true;
 };

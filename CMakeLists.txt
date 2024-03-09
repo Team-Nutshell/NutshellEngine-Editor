@@ -59,10 +59,16 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/remove_entity_component_command.h)
 
 set(WIDGET_SOURCES
+	src/widgets/add_component_button.cpp
+	src/widgets/add_component_menu.cpp
 	src/widgets/asset_list.cpp
 	src/widgets/boolean_widget.cpp
+	src/widgets/camera_component_widget.cpp
 	src/widgets/color_picker_widget.cpp
+	src/widgets/collidable_component_widget.cpp
 	src/widgets/combo_box_widget.cpp
+	src/widgets/component_list.cpp
+	src/widgets/component_scroll_area.cpp
 	src/widgets/component_title_widget.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/entity_list.cpp
@@ -71,6 +77,7 @@ set(WIDGET_SOURCES
 	src/widgets/entity_panel.cpp
 	src/widgets/file_menu.cpp
 	src/widgets/file_selector_widget.cpp
+	src/widgets/light_component_widget.cpp
 	src/widgets/main_window.cpp
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
@@ -78,17 +85,27 @@ set(WIDGET_SOURCES
 	src/widgets/new_scene_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/project_window.cpp
+	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
+	src/widgets/rigidbody_component_widget.cpp
 	src/widgets/scalar_widget.cpp
+	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
+	src/widgets/transform_component_widget.cpp
 	src/widgets/vector2_widget.cpp
 	src/widgets/vector3_widget.cpp
 	src/widgets/view_menu.cpp)
 set(WIDGET_HEADERS
+	src/widgets/add_component_button.h
+	src/widgets/add_component_menu.h
 	src/widgets/asset_list.h
 	src/widgets/boolean_widget.h
+	src/widgets/camera_component_widget.h
 	src/widgets/color_picker_widget.h
+	src/widgets/collidable_component_widget.h
 	src/widgets/combo_box_widget.h
+	src/widgets/component_list.h
+	src/widgets/component_scroll_area.h
 	src/widgets/component_title_widget.h
 	src/widgets/edit_menu.h
 	src/widgets/entity_list.h
@@ -97,6 +114,7 @@ set(WIDGET_HEADERS
 	src/widgets/entity_panel.h
 	src/widgets/file_menu.h
 	src/widgets/file_selector_widget.h
+	src/widgets/light_component_widget.h
 	src/widgets/main_window.h
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
@@ -104,9 +122,13 @@ set(WIDGET_HEADERS
 	src/widgets/new_scene_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/project_window.h
+	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
+	src/widgets/rigidbody_component_widget.h
 	src/widgets/scalar_widget.h
+	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
+	src/widgets/transform_component_widget.h
 	src/widgets/vector2_widget.h
 	src/widgets/vector3_widget.h
 	src/widgets/view_menu.h)

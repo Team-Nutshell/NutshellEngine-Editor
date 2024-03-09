@@ -19,9 +19,9 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	nml::vec4 m_color;
-
 public:
 	std::unique_ptr<QLabel> nameLabel;
 	std::unique_ptr<QPushButton> colorButton;
+
+	nml::vec4 color;
 };

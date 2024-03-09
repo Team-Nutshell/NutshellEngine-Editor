@@ -13,6 +13,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setWrapping(true);
 	setAcceptDrops(true);
+	setResizeMode(QListWidget::Adjust);
 
 	QSizePolicy sizePolicy;
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
@@ -51,11 +52,6 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 }
 
 void AssetList::onCurrentTextChanged(const QString& currentText) {
-	if (m_firstSelection) {
-		m_firstSelection = false;
-		return;
-	}
-
 	std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + currentText.toStdString()).string();
 	std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
 

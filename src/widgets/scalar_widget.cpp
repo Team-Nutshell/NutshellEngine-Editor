@@ -23,8 +23,8 @@ ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_g
 
 void ScalarWidget::onEditingFinished() {
 	float newValue = atof(valueLineEdit->text().toStdString().c_str());
-	if (m_value != newValue) {
-		m_value = newValue;
-		emit editingFinished(m_value);
+	if (value != newValue) {
+		value = newValue;
+		emit valueChanged(value);
 	}
 }
