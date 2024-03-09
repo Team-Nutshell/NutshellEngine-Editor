@@ -34,6 +34,8 @@ void MainWindow::createMenuBar() {
 }
 
 void MainWindow::createEntityPanel() {
+	m_entityPanel = std::make_unique<EntityPanel>(m_globalInfo);
+	m_horizontalSplitter->addWidget(m_entityPanel.get());
 }
 
 void MainWindow::createRendererPanel() {
@@ -43,4 +45,6 @@ void MainWindow::createEntityInfoPanel() {
 }
 
 void MainWindow::createResourcePanel() {
+	m_resourcePanel = std::make_unique<ResourcePanel>(m_globalInfo);
+	m_verticalSplitter->addWidget(m_resourcePanel.get());
 }

@@ -59,11 +59,16 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/remove_entity_component_command.h)
 
 set(WIDGET_SOURCES
+	src/widgets/asset_list.cpp
 	src/widgets/boolean_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/combo_box_widget.cpp
 	src/widgets/component_title_widget.cpp
 	src/widgets/edit_menu.cpp
+	src/widgets/entity_list.cpp
+	src/widgets/entity_list_item.cpp
+	src/widgets/entity_list_menu.cpp
+	src/widgets/entity_panel.cpp
 	src/widgets/file_menu.cpp
 	src/widgets/file_selector_widget.cpp
 	src/widgets/main_window.cpp
@@ -73,17 +78,23 @@ set(WIDGET_SOURCES
 	src/widgets/new_scene_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/project_window.cpp
+	src/widgets/resource_panel.cpp
 	src/widgets/scalar_widget.cpp
 	src/widgets/separator_line.cpp
 	src/widgets/vector2_widget.cpp
 	src/widgets/vector3_widget.cpp
 	src/widgets/view_menu.cpp)
 set(WIDGET_HEADERS
+	src/widgets/asset_list.h
 	src/widgets/boolean_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/combo_box_widget.h
 	src/widgets/component_title_widget.h
 	src/widgets/edit_menu.h
+	src/widgets/entity_list.h
+	src/widgets/entity_list_item.h
+	src/widgets/entity_list_menu.h
+	src/widgets/entity_panel.h
 	src/widgets/file_menu.h
 	src/widgets/file_selector_widget.h
 	src/widgets/main_window.h
@@ -93,6 +104,7 @@ set(WIDGET_HEADERS
 	src/widgets/new_scene_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/project_window.h
+	src/widgets/resource_panel.h
 	src/widgets/scalar_widget.h
 	src/widgets/separator_line.h
 	src/widgets/vector2_widget.h
@@ -121,7 +133,9 @@ target_link_libraries(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
-		external/nml)
+		external/cgltf
+		external/nml
+		external/stb)
 
 target_compile_options(${PROJECT_NAME}
 	PRIVATE
