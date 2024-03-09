@@ -13,7 +13,7 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setCentralWidget(m_mainWidget.get());
 	createMenuBar();
 	createEntityPanel();
-	createRendererPanel();
+	createRenderer();
 	createEntityInfoPanel();
 	m_verticalSplitter = std::make_unique<QSplitter>();
 	m_verticalSplitter->setOrientation(Qt::Orientation::Vertical);
@@ -38,7 +38,9 @@ void MainWindow::createEntityPanel() {
 	m_horizontalSplitter->addWidget(m_entityPanel.get());
 }
 
-void MainWindow::createRendererPanel() {
+void MainWindow::createRenderer() {
+	m_renderer = std::make_unique<Renderer>(m_globalInfo);
+	m_horizontalSplitter->addWidget(m_renderer.get());
 }
 
 void MainWindow::createEntityInfoPanel() {

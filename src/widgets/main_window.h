@@ -4,6 +4,7 @@
 #include "edit_menu.h"
 #include "view_menu.h"
 #include "entity_panel.h"
+#include "../renderer/renderer.h"
 #include "entity_info_panel.h"
 #include "resource_panel.h"
 #include <QMainWindow>
@@ -19,7 +20,7 @@ public:
 private:
 	void createMenuBar();
 	void createEntityPanel();
-	void createRendererPanel();
+	void createRenderer();
 	void createEntityInfoPanel();
 	void createResourcePanel();
 
@@ -30,6 +31,7 @@ private:
 	std::unique_ptr<QSplitter> m_horizontalSplitter;
 	std::unique_ptr<QSplitter> m_verticalSplitter;
 	std::unique_ptr<EntityPanel> m_entityPanel;
+	std::unique_ptr<Renderer> m_renderer;
 	std::unique_ptr<EntityInfoPanel> m_entityInfoPanel;
 	std::unique_ptr<ResourcePanel> m_resourcePanel;
 	std::unique_ptr<FileMenu> m_fileMenu;

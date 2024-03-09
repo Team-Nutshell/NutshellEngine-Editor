@@ -24,7 +24,7 @@ private:
 private slots:
 	void onSelectEntity();
 	void onCurrentEntityVisibilityToggled(bool isEntityVisible);
-	void onBackfaceCullingToggled(bool backfaceCulling);
+	void onBackfaceCullingToggled(bool backfaceCullingEnabled);
 	void onCameraVisibilityToggled(bool showCameras);
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 

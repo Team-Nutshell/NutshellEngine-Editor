@@ -7,6 +7,10 @@
 #include <algorithm>
 
 AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
+		std::cout << "Missing \"assets\" directory." << std::endl;
+		return;
+	}
 	m_assetsDirectory = std::filesystem::canonical(m_globalInfo.projectDirectory + "/assets/").string();
 	std::replace(m_assetsDirectory.begin(), m_assetsDirectory.end(), '\\', '/');
 	m_currentDirectory = m_assetsDirectory;
@@ -52,10 +56,10 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 }
 
 void AssetList::onCurrentTextChanged(const QString& currentText) {
-	std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + currentText.toStdString()).string();
-	std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
-
-	if (std::filesystem::exists(selectedElementPath)) {
+	if (std::filesystem::exists(m_currentDirectory + "/" + currentText.toStdString())) {
+		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + currentText.toStdString()).string();
+		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
+	
 		if (!std::filesystem::is_directory(selectedElementPath)) {
 			return;
 		}
