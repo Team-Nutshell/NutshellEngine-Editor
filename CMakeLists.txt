@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
 add_subdirectory(external/nml)
 
 set(EXTERNAL_HEADERS
@@ -31,8 +31,13 @@ set(COMMON_HEADERS
 	src/common/signal_emitter.h)
 
 set(RENDERER_SOURCES
+	src/renderer/renderer.cpp
 	src/renderer/renderer_resource_manager.cpp)
 set(RENDERER_HEADERS
+	src/renderer/renderer.h
+	src/renderer/renderer_camera.h
+	src/renderer/renderer_mesh.h
+	src/renderer/renderer_model.h
 	src/renderer/renderer_resource_manager.h)
 
 set(UNDO_COMMANDS_SOURCES
@@ -157,6 +162,8 @@ target_link_libraries(${PROJECT_NAME}
 		Qt6::Core
 		Qt6::Gui
 		Qt6::Widgets
+		Qt6::OpenGL
+		Qt6::OpenGLWidgets
 		nml)
 
 target_include_directories(${PROJECT_NAME}
