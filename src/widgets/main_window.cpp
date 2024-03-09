@@ -42,6 +42,8 @@ void MainWindow::createRendererPanel() {
 }
 
 void MainWindow::createEntityInfoPanel() {
+	m_entityInfoPanel = std::make_unique<EntityInfoPanel>(m_globalInfo);
+	m_horizontalSplitter->addWidget(m_entityInfoPanel.get());
 }
 
 void MainWindow::createResourcePanel() {

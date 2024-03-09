@@ -11,6 +11,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Collidable"));
 	std::vector<std::string> elements = { "Box", "Sphere", "Capsule" };
 	typeWidget = std::make_unique<ComboBoxWidget>(m_globalInfo, "Type", elements);
 	layout()->addWidget(typeWidget.get());
@@ -28,6 +29,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(baseWidget.get());
 	tipWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Tip");
 	layout()->addWidget(tipWidget.get());
+	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
 	connect(typeWidget.get(), &ComboBoxWidget::elementSelected, this, &CollidableComponentWidget::onElementUpdated);
 	connect(centerWidget.get(), &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
@@ -64,7 +66,7 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	}
 	radiusWidget->value = collidable.radius;
 	radiusWidget->valueLineEdit->setText(QString::number(collidable.radius, 'g', 3));
-	if (((collidable.type == "Sphere") || (collidable.type == "Radius")) && !collidable.fromRenderable) {
+	if (((collidable.type == "Sphere") || (collidable.type == "Capsule")) && !collidable.fromRenderable) {
 		radiusWidget->setEnabled(true);
 	}
 	else {

@@ -11,6 +11,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Renderable"));
 	modelPathWidget = std::make_unique<FileSelectorWidget>(m_globalInfo, "No model selected", "Select a model");
 	layout()->addWidget(modelPathWidget.get());
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
@@ -24,7 +25,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 
 void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	if (renderable.modelPath != "") {
-		std::string modelPath = std::filesystem::canonical(renderable.modelPath).string();
+		std::string modelPath = renderable.modelPath;
 		std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 		if (m_globalInfo.projectDirectory != "") {
 			if (std::filesystem::path(modelPath).is_absolute()) {

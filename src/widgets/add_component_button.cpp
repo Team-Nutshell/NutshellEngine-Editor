@@ -1,4 +1,5 @@
 #include "add_component_button.h"
+#include <QCursor>
 
 AddComponentButton::AddComponentButton(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setText("Add Component");
@@ -49,4 +50,6 @@ void AddComponentButton::onClick() {
 	else {
 		menu->addScriptableComponentAction->setEnabled(false);
 	}
+
+	menu->popup(QCursor::pos());
 }

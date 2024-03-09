@@ -12,6 +12,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Scriptable"));
 	scriptPathWidget = std::make_unique<FileSelectorWidget>(m_globalInfo, "No script selected", "Select a script");
 	layout()->addWidget(scriptPathWidget.get());
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
@@ -73,10 +74,10 @@ void ScriptableComponentWidget::onStringUpdated(const std::string& string) {
 			size_t scriptNameStartPos = scriptContent.find("NTSHENGN_SCRIPT(");
 			if (scriptNameStartPos != std::string::npos) {
 				scriptNameStartPos += 16;
-				size_t scriptNameEndPos = scriptContent.substr(scriptNameStartPos).find(")");
-				if (scriptNameEndPos != std::string::npos) {
+				size_t scriptNameLength = scriptContent.substr(scriptNameStartPos).find(")");
+				if (scriptNameLength != std::string::npos) {
 					newScriptable.scriptPath = string;
-					newScriptable.scriptName = scriptContent.substr(scriptNameStartPos, scriptNameEndPos - scriptNameStartPos);
+					newScriptable.scriptName = scriptContent.substr(scriptNameStartPos, scriptNameLength);
 				}
 			}
 			else {

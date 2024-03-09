@@ -9,6 +9,7 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Rigidbody"));
 	isStaticWidget = std::make_unique<BooleanWidget>(m_globalInfo, "Is Static");
 	layout()->addWidget(isStaticWidget.get());
 	isAffectedByConstantsWidget = std::make_unique<BooleanWidget>(m_globalInfo, "Is Affected By Constants");
@@ -25,6 +26,7 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(staticFrictionWidget.get());
 	dynamicFrictionWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Dynamic Friction");
 	layout()->addWidget(dynamicFrictionWidget.get());
+	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
 	connect(isStaticWidget.get(), &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
 	connect(isAffectedByConstantsWidget.get(), &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);

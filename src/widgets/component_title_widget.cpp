@@ -11,6 +11,7 @@ ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::st
 	if (name != "Transform") {
 		removeWidgetButton = std::make_unique<QPushButton>("X");
 		removeWidgetButton->setFixedWidth(20);
+		layout()->addWidget(removeWidgetButton.get());
 		
 		connect(removeWidgetButton.get(), &QPushButton::clicked, this, &ComponentTitleWidget::onClick);
 	}

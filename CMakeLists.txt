@@ -71,6 +71,9 @@ set(WIDGET_SOURCES
 	src/widgets/component_scroll_area.cpp
 	src/widgets/component_title_widget.cpp
 	src/widgets/edit_menu.cpp
+	src/widgets/entity_info_name_widget.cpp
+	src/widgets/entity_info_panel.cpp
+	src/widgets/entity_info_persistence_widget.cpp
 	src/widgets/entity_list.cpp
 	src/widgets/entity_list_item.cpp
 	src/widgets/entity_list_menu.cpp
@@ -108,6 +111,9 @@ set(WIDGET_HEADERS
 	src/widgets/component_scroll_area.h
 	src/widgets/component_title_widget.h
 	src/widgets/edit_menu.h
+	src/widgets/entity_info_name_widget.h
+	src/widgets/entity_info_panel.h
+	src/widgets/entity_info_persistence_widget.h
 	src/widgets/entity_list.h
 	src/widgets/entity_list_item.h
 	src/widgets/entity_list_menu.h
