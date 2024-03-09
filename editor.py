@@ -3638,7 +3638,7 @@ class AssetList(QListWidget):
 
 	def dropEvent(self, e):
 		sources = e.mimeData().urls()
-		destination = self.assetsDirectory + self.currentFolder
+		destination = self.currentDirectory
 		for source in sources:
 			if os.path.isfile(source.toLocalFile()):
 				shutil.copy(source.toLocalFile(), destination)
