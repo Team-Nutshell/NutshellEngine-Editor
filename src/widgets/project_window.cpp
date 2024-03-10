@@ -54,6 +54,7 @@ void ProjectWindow::onProjectDirectorySelected(const std::string& projectDirecto
 
 void ProjectWindow::openMainWindow(const std::string& projectDirectory, const std::string& projectName) {
 	m_globalInfo.projectDirectory = projectDirectory;
+	m_globalInfo.rendererResourceManager.projectDirectory = projectDirectory;
 	m_globalInfo.projectName = projectName;
 	m_globalInfo.mainWindow = new MainWindow(m_globalInfo);
 	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow);

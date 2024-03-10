@@ -62,4 +62,6 @@ public:
 
 	std::unordered_map<std::string, ModelToGPU> modelsToGPU;
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
+
+	std::string projectDirectory = "";
 };

@@ -9,6 +9,7 @@
 #include "../../external/nlohmann/json.hpp"
 #include <numeric>
 #include <algorithm>
+#include <fstream>
 
 void RendererResourceManager::loadModel(const std::string& modelPath, const std::string& name) {
 	size_t lastDot = modelPath.rfind('.');
@@ -42,29 +43,71 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::string& name) {
 	ModelToGPU model;
 
-	nlohmann::json j = nlohmann::json::parse(modelPath);
+	std::fstream modelFile(modelPath, std::ios::in);
+	if (modelFile.is_open()) {
+		if (!nlohmann::json::accept(modelFile)) {
+			std::cout << "\"" << modelPath + "\" is not a valid JSON file." << std::endl;
+			return;
+		}
+	}
+	else {
+		std::cout << "\"" << modelPath + "\" cannot be opened." << std::endl;
+		return;
+	}
+
+	modelFile = std::fstream(modelPath, std::ios::in);
+
+	nlohmann::json j = nlohmann::json::parse(modelFile);
 
 	if (j.contains("primitives")) {
 		for (size_t i = 0; i < j["primitives"].size(); i++) {
-			if (j["primitives"].contains("meshPath")) {
-				MeshToGPU mesh = loadNtmh(j["primitives"]["meshPath"]);
+			if (j["primitives"][i].contains("meshPath")) {
+				MeshToGPU mesh = loadNtmh(projectDirectory + "/" + std::string(j["primitives"][i]["meshPath"]));
 				if (!mesh.vertices.empty()) {
 					model.meshes.push_back(mesh);
 				}
 
-				if (j["primitives"].contains("materialPath")) {
-					std::string materialPath = j["primitives"]["materialPath"];
-					nlohmann::json jmtl = nlohmann::json::parse(materialPath);
+				if (j["primitives"][i].contains("materialPath")) {
+					std::string materialPath = projectDirectory + "/" + std::string(j["primitives"][i]["materialPath"]);
+					std::fstream materialFile(materialPath, std::ios::in);
+					if (materialFile.is_open()) {
+						if (!nlohmann::json::accept(materialFile)) {
+							std::cout << "\"" << materialPath + "\" is not a valid JSON file." << std::endl;
+							return;
+						}
+					}
+					else {
+						std::cout << "\"" << materialPath + "\" cannot be opened." << std::endl;
+						return;
+					}
+
+					materialFile = std::fstream(materialPath, std::ios::in);
+
+					nlohmann::json jmtl = nlohmann::json::parse(materialFile);
 
 					if (jmtl.contains("diffuseTexture")) {
 						if (jmtl["diffuseTexture"].contains("imagePath")) {
 							model.meshes.back().texturePath = jmtl["diffuseTexture"]["imagePath"];
-							loadImage(model.meshes.back().texturePath, name);
+							loadImage(projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imagePath"]), model.meshes.back().texturePath);
 						}
 
 						if (jmtl["diffuseTexture"].contains("imageSamplerPath")) {
-							std::string samplerPath = jmtl["diffuseTexture"]["imageSamplerPath"];
-							nlohmann::json jsmplr = nlohmann::json::parse(samplerPath);
+							std::string samplerPath = projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imageSamplerPath"]);
+							std::fstream samplerFile(samplerPath, std::ios::in);
+							if (samplerFile.is_open()) {
+								if (!nlohmann::json::accept(samplerFile)) {
+									std::cout << "\"" << samplerPath + "\" is not a valid JSON file." << std::endl;
+									return;
+								}
+							}
+							else {
+								std::cout << "\"" << samplerPath + "\" cannot be opened." << std::endl;
+								return;
+							}
+
+							samplerFile = std::fstream(samplerPath, std::ios::in);
+
+							nlohmann::json jsmplr = nlohmann::json::parse(samplerFile);
 
 							ImageToGPU& image = imagesToGPU[jmtl["diffuseTexture"]["imagePath"]];
 							if (jsmplr.contains("minFilter")) {
@@ -117,26 +160,40 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::string& meshPath) {
 	MeshToGPU mesh;
 
-	nlohmann::json j = nlohmann::json::parse(meshPath);
+	std::fstream meshFile(meshPath, std::ios::in);
+	if (meshFile.is_open()) {
+		if (!nlohmann::json::accept(meshFile)) {
+			std::cout << "\"" << meshPath + "\" is not a valid JSON file." << std::endl;
+			return mesh;
+		}
+	}
+	else {
+		std::cout << "\"" << meshPath + "\" cannot be opened." << std::endl;
+		return mesh;
+	}
+
+	meshFile = std::fstream(meshPath, std::ios::in);
+
+	nlohmann::json j = nlohmann::json::parse(meshFile);
 
 	if (j.contains("vertices")) {
 		mesh.vertices.resize(j["vertices"].size() * 8);
 		for (size_t i = 0; i < j["vertices"].size(); i++) {
 			if (j["vertices"][i].contains("position")) {
-				mesh.vertices[(j * 8) + 0] = j["vertices"][i]["position"][0];
-				mesh.vertices[(j * 8) + 1] = j["vertices"][i]["position"][1];
-				mesh.vertices[(j * 8) + 2] = j["vertices"][i]["position"][2];
+				mesh.vertices[(i * 8) + 0] = j["vertices"][i]["position"][0];
+				mesh.vertices[(i * 8) + 1] = j["vertices"][i]["position"][1];
+				mesh.vertices[(i * 8) + 2] = j["vertices"][i]["position"][2];
 			}
 
 			if (j["vertices"][i].contains("normal")) {
-				mesh.vertices[(j * 8) + 3] = j["vertices"][i]["normal"][0];
-				mesh.vertices[(j * 8) + 4] = j["vertices"][i]["normal"][1];
-				mesh.vertices[(j * 8) + 5] = j["vertices"][i]["normal"][2];
+				mesh.vertices[(i * 8) + 3] = j["vertices"][i]["normal"][0];
+				mesh.vertices[(i * 8) + 4] = j["vertices"][i]["normal"][1];
+				mesh.vertices[(i * 8) + 5] = j["vertices"][i]["normal"][2];
 			}
 
 			if (j["vertices"][i].contains("uv")) {
-				mesh.vertices[(j * 8) + 6] = j["vertices"][i]["uv"][0];
-				mesh.vertices[(j * 8) + 7] = j["vertices"][i]["uv"][1];
+				mesh.vertices[(i * 8) + 6] = j["vertices"][i]["uv"][0];
+				mesh.vertices[(i * 8) + 7] = j["vertices"][i]["uv"][1];
 			}
 		}
 	}
@@ -158,18 +215,32 @@ RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::
 void RendererResourceManager::loadNtim(const std::string& imagePath, const std::string& name) {
 	ImageToGPU image;
 
-	nlohmann::json j = nlohmann::json::parse(imagePath);
+	std::fstream imageFile(imagePath, std::ios::in);
+	if (imageFile.is_open()) {
+		if (!nlohmann::json::accept(imageFile)) {
+			std::cout << "\"" << imagePath + "\" is not a valid JSON file." << std::endl;
+			return;
+		}
+	}
+	else {
+		std::cout << "\"" << imagePath + "\" cannot be opened." << std::endl;
+		return;
+	}
+
+	imageFile = std::fstream(imagePath, std::ios::in);
+
+	nlohmann::json j = nlohmann::json::parse(imageFile);
 
 	if (j.contains("width")) {
 		image.width = static_cast<uint32_t>(j["width"]);
 	}
 
 	if (j.contains("height")) {
-		image.width = static_cast<uint32_t>(j["height"]);
+		image.height = static_cast<uint32_t>(j["height"]);
 	}
 
 	if (j.contains("data")) {
-		for (size_t i = 0; i < j["data"]; i++) {
+		for (size_t i = 0; i < j["data"].size(); i++) {
 			image.data.push_back(static_cast<uint8_t>(j["data"][i]));
 		}
 	}
