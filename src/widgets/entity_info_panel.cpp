@@ -3,7 +3,7 @@
 #include <QLabel>
 
 EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	resize(180, height());
+	resize(190, height());
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);

@@ -17,6 +17,7 @@ ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_g
 	valueLineEdit = std::make_unique<QLineEdit>("0.0");
 	valueLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(valueLineEdit.get());
+	layout()->setAlignment(valueLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 
 	connect(valueLineEdit.get(), &QLineEdit::editingFinished, this, &ScalarWidget::onEditingFinished);
 }

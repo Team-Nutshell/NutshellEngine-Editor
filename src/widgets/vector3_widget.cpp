@@ -18,14 +18,17 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m
 	xLineEdit = std::make_unique<QLineEdit>("0.0");
 	xLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(xLineEdit.get());
+	layout()->setAlignment(xLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("y:"));
 	yLineEdit = std::make_unique<QLineEdit>("0.0");
 	yLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(yLineEdit.get());
+	layout()->setAlignment(yLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("z:"));
 	zLineEdit = std::make_unique<QLineEdit>("0.0");
 	zLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(zLineEdit.get());
+	layout()->setAlignment(zLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 
 	connect(xLineEdit.get(), &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
 	connect(yLineEdit.get(), &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);

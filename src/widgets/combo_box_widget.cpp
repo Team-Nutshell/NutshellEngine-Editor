@@ -11,6 +11,7 @@ ComboBoxWidget::ComboBoxWidget(GlobalInfo& globalInfo, const std::string& name, 
 		comboBox->addItem(QString::fromStdString(element));
 	}
 	layout()->addWidget(comboBox.get());
+	layout()->setAlignment(comboBox.get(), Qt::AlignmentFlag::AlignRight);
 	
 	connect(comboBox.get(), &QComboBox::currentTextChanged, this, &ComboBoxWidget::onElementSelected);
 }

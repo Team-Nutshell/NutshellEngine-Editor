@@ -18,10 +18,12 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name): m
 	xLineEdit = std::make_unique<QLineEdit>("0.0");
 	xLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(xLineEdit.get());
+	layout()->setAlignment(xLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("y:"));
 	yLineEdit = std::make_unique<QLineEdit>("0.0");
 	yLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(yLineEdit.get());
+	layout()->setAlignment(yLineEdit.get(), Qt::AlignmentFlag::AlignRight);
 
 	connect(xLineEdit.get(), &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
 	connect(yLineEdit.get(), &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);

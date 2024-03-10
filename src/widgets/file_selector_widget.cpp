@@ -10,6 +10,7 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 	layout()->addWidget(filePathLabel.get());
 	filePathButton = std::make_unique<QPushButton>(QString::fromStdString(buttonText));
 	layout()->addWidget(filePathButton.get());
+	layout()->setAlignment(filePathButton.get(), Qt::AlignmentFlag::AlignRight);
 
 	connect(filePathButton.get(), &QPushButton::clicked, this, &FileSelectorWidget::onFilePathButtonClicked);
 }

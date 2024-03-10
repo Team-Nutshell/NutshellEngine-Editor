@@ -18,6 +18,7 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 	colorButton->setPalette(colorButtonPalette);
 	colorButton->update();
 	layout()->addWidget(colorButton.get());
+	layout()->setAlignment(colorButton.get(), Qt::AlignmentFlag::AlignRight);
 
 	connect(colorButton.get(), &QPushButton::clicked, this, &ColorPickerWidget::onColorButtonClicked);
 }

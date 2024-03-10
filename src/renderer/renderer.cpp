@@ -135,12 +135,12 @@ void Renderer::initializeGL() {
 	in vec2 fragUV;
 
 	uniform sampler2D textureSampler;
-	uniform bool doShading;
+	uniform bool enableShading;
 
 	out vec4 outColor;
 
 	void main() {
-		if (doShading) {
+		if (enableShading) {
 			outColor = vec4(texture(textureSampler, fragUV).rgb * dot(vec3(0.0, 1.0, 0.0), fragNormal), 1.0);
 		}
 		else {
@@ -505,7 +505,7 @@ void Renderer::paintGL() {
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.texturePath]);
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "textureSampler"), 0);
 
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "doShading"), 0);
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}

@@ -8,6 +8,7 @@ BooleanWidget::BooleanWidget(GlobalInfo& globalInfo, const std::string& name): m
 	layout()->addWidget(nameLabel.get());
 	checkBox = std::make_unique<QCheckBox>();
 	layout()->addWidget(checkBox.get());
+	layout()->setAlignment(checkBox.get(), Qt::AlignmentFlag::AlignRight);
 	
 	connect(checkBox.get(), &QCheckBox::stateChanged, this, &BooleanWidget::onStateChanged);
 }
