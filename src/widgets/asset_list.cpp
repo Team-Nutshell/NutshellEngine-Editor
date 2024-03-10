@@ -100,10 +100,16 @@ void AssetList::onDirectoryChanged(const QString& path) {
 
 	std::string directoryPath = std::filesystem::canonical(path.toStdString()).string();
 	std::replace(directoryPath.begin(), directoryPath.end(), '\\', '/');
+
+	if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
+		addItem("../");
+	}
+
 	if (std::filesystem::exists(directoryPath)) {
 		for (const auto& entry : std::filesystem::directory_iterator(path.toStdString())) {
 			std::string entryPath = entry.path().string();
 			std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
+
 			if (std::filesystem::is_directory(entry)) {
 				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
 			}

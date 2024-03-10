@@ -78,7 +78,13 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 void RenderableComponentWidget::onStringUpdated(const std::string& string) {
 	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 	if (sender() == modelPathWidget.get()) {
-		newRenderable.modelPath = string;
+		std::string modelPath = newRenderable.modelPath;
+		modelPath = std::filesystem::canonical(std::filesystem::absolute(string)).string();
+		std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
+		if (modelPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
+			newRenderable.modelPath = modelPath.substr(m_globalInfo.projectDirectory.size() + 1);
+		}
+		m_globalInfo.rendererResourceManager.loadModel(modelPath, newRenderable.modelPath);
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Renderable", &newRenderable));
 }

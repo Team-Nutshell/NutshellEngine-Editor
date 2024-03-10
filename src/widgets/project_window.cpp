@@ -36,7 +36,7 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 	nlohmann::json j;
 	j["projectName"] = projectName;
 	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
-	projectFile << j.dump();
+	projectFile << j.dump(1, '\t');
 	openMainWindow(projectDirectory, projectName);
 }
 

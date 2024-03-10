@@ -42,6 +42,15 @@ struct SceneManager {
 				Entity newEntity = Entity::fromJson(j["entities"][i]);
 				newEntity.entityID = globalInfo.globalEntityID++;
 				entities[newEntity.entityID] = newEntity;
+				if (newEntity.renderable && (newEntity.renderable->modelPath != "")) {
+					std::string fullModelPath = newEntity.renderable->modelPath;
+					std::filesystem::path path(fullModelPath);
+					if (!path.is_absolute()) {
+						fullModelPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullModelPath).string();
+					}
+					std::replace(fullModelPath.begin(), fullModelPath.end(), '\\', '/');
+					globalInfo.rendererResourceManager.loadModel(fullModelPath, newEntity.renderable->modelPath);
+				}
 			}
 			if (!entities.empty()) {
 				globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, entities));
@@ -58,6 +67,6 @@ struct SceneManager {
 		for (const auto& entity : globalInfo.entities) {
 			j["entities"].push_back(entity.second.toJson());
 		}
-		sceneFile << j.dump();
+		sceneFile << j.dump(1, '\t');
 	}
 };

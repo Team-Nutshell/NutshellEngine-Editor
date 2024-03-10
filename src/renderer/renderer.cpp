@@ -450,6 +450,8 @@ void Renderer::paintGL() {
 		m_gotResized = false;
 	}
 
+	loadResourcesToGPU();
+
 	updateCamera();
 
 	if (m_backfaceCullingEnabled) {
@@ -883,10 +885,10 @@ void Renderer::updateCamera() {
 	else {
 		nml::vec3 t;
 		if ((m_camera.orthographicDirection.y == 1.0f) || (m_camera.orthographicDirection.y == -1.0f)) {
-			t = nml::normalize(nml::vec3(-m_camera.perspectiveDirection.y, 0.0f, m_camera.perspectiveDirection.x));
+			t = nml::normalize(nml::vec3(-m_camera.orthographicDirection.y, 0.0f, m_camera.orthographicDirection.x));
 		}
 		else {
-			t = nml::normalize(nml::vec3(-m_camera.perspectiveDirection.z, 0.0f, m_camera.perspectiveDirection.x));
+			t = nml::normalize(nml::vec3(-m_camera.orthographicDirection.z, 0.0f, m_camera.orthographicDirection.x));
 		}
 
 		float horizontalSpeed = m_camera.orthographicHalfExtent * m_camera.speed * deltaTime * ((m_mouseCursorDifference.x == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.x));
@@ -894,10 +896,10 @@ void Renderer::updateCamera() {
 		float halfExtentSpeed = m_camera.speed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
 
 		if (m_cameraForwardKeyPressed || (m_mouseCursorDifference.y < 0.0f)) {
-			m_camera.orthographicPosition -= m_camera.orthographicUp * verticalSpeed;
+			m_camera.orthographicPosition += m_camera.orthographicUp * verticalSpeed;
 		}
 		if (m_cameraBackwardKeyPressed || (m_mouseCursorDifference.y > 0.0f)) {
-			m_camera.orthographicPosition += m_camera.orthographicUp * verticalSpeed;
+			m_camera.orthographicPosition -= m_camera.orthographicUp * verticalSpeed;
 		}
 		if (m_cameraLeftKeyPressed || (m_mouseCursorDifference.x < 0.0f)) {
 			m_camera.orthographicPosition -= t * horizontalSpeed;
@@ -915,7 +917,7 @@ void Renderer::updateCamera() {
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.orthographicPosition, m_camera.orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, m_camera.orthographicHalfExtent, -m_camera.orthographicHalfExtent, m_camera.nearPlane, m_camera.farPlane);
+		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_camera.nearPlane, m_camera.farPlane);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
@@ -925,6 +927,73 @@ void Renderer::updateCamera() {
 	m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
 
 	m_mouseScrollY = 0.0f;
+}
+
+void Renderer::loadResourcesToGPU() {
+	for (const auto& modelToGPU : m_globalInfo.rendererResourceManager.modelsToGPU) {
+		RendererModel newRendererModel;
+		for (const auto& meshToGPU : modelToGPU.second.meshes) {
+			RendererMesh newRendererMesh;
+			gl.glGenBuffers(1, &newRendererMesh.vertexBuffer);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, newRendererMesh.vertexBuffer);
+			gl.glBufferData(GL_ARRAY_BUFFER, meshToGPU.vertices.size() * sizeof(float), meshToGPU.vertices.data(), GL_STATIC_DRAW);
+			
+			gl.glGenBuffers(1, &newRendererMesh.indexBuffer);
+			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newRendererMesh.indexBuffer);
+			gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToGPU.indices.size() * sizeof(uint32_t), meshToGPU.indices.data(), GL_STATIC_DRAW);
+
+			newRendererMesh.indexCount = static_cast<uint32_t>(meshToGPU.indices.size());
+
+			newRendererMesh.texturePath = meshToGPU.texturePath;
+
+			newRendererModel.meshes.push_back(newRendererMesh);
+		}
+
+		m_globalInfo.rendererResourceManager.models[modelToGPU.first] = newRendererModel;
+	}
+	m_globalInfo.rendererResourceManager.modelsToGPU.clear();
+
+	for (const auto& imageToGPU : m_globalInfo.rendererResourceManager.imagesToGPU) {
+		m_globalInfo.rendererResourceManager.textures[imageToGPU.first] = 0;
+		uint32_t* texture = &m_globalInfo.rendererResourceManager.textures[imageToGPU.first];
+		gl.glGenTextures(1, texture);
+		gl.glBindTexture(GL_TEXTURE_2D, *texture);
+		gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
+		if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		}
+		else if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Linear) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+
+		if (imageToGPU.second.magFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
+		else if (imageToGPU.second.magFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Linear) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+
+		if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::ClampToEdge) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		}
+		else if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::Repeat) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		}
+		else if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::MirroredRepeat) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+		}
+
+		if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::ClampToEdge) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		}
+		else if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::Repeat) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		}
+		else if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::MirroredRepeat) {
+			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+		}
+	}
+	m_globalInfo.rendererResourceManager.imagesToGPU.clear();
 }
 
 nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix) {

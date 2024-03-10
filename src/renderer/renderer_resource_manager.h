@@ -2,7 +2,6 @@
 #include "../renderer/renderer_model.h"
 #include "../../external/nml/include/nml.h"
 #include "../../external/cgltf/cgltf.h"
-#include <qopengl.h>
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -11,17 +10,56 @@
 
 class RendererResourceManager {
 public:
-	void loadModel(const std::string& modelPath);
-	void loadImage(const std::string& imagePath);
+	struct MeshToGPU {
+		std::vector<float> vertices;
+		std::vector<uint32_t> indices;
+		std::string texturePath;
+	};
+
+	struct ModelToGPU {
+		std::vector<MeshToGPU> meshes;
+	};
+
+	struct ImageToGPU {
+		enum class SamplerFilter {
+			Nearest,
+			Linear
+		};
+
+		enum class SamplerWrap {
+			ClampToEdge,
+			Repeat,
+			MirroredRepeat
+		};
+
+		uint32_t width = 0;
+		uint32_t height = 0;
+
+		SamplerFilter minFilter = SamplerFilter::Nearest;
+		SamplerFilter magFilter = SamplerFilter::Nearest;
+		SamplerWrap wrapS = SamplerWrap::ClampToEdge;
+		SamplerWrap wrapT = SamplerWrap::ClampToEdge;
+
+		std::vector<uint8_t> data;
+	};
+
+public:
+	void loadModel(const std::string& modelPath, const std::string& name);
+	void loadImage(const std::string& imagePath, const std::string& name);
 
 private:
-	RendererModel loadNtmd(const std::string& modelPath);
-	RendererMesh loadNtmh(const std::string& modelPath);
-	std::tuple<uint32_t, uint32_t, std::vector<uint8_t>> loadNtim(const std::string& modelPath);
-	RendererModel loadGltf(const std::string& modelPath);
-	void loadGltfNode(const std::string& modelPath, RendererModel& rendererModel, nml::mat4 modelMatrix, cgltf_node* node);
+	void loadNtmd(const std::string& modelPath, const std::string& name);
+	MeshToGPU loadNtmh(const std::string& meshPath);
+	void loadNtim(const std::string& imagePath, const std::string& name);
+	void loadGltf(const std::string& modelPath, const std::string& name);
+	void loadGltfNode(const std::string& modelPath, ModelToGPU& rendererModel, nml::mat4 modelMatrix, cgltf_node* node);
+	void loadImageStb(const std::string& imagePath, const std::string& name);
+	void loadImageFromMemory(void* data, size_t size, const std::string& name);
 
 public:
 	std::unordered_map<std::string, RendererModel> models;
-	std::unordered_map<std::string, int> textures;
+	std::unordered_map<std::string, uint32_t> textures;
+
+	std::unordered_map<std::string, ModelToGPU> modelsToGPU;
+	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
 };
