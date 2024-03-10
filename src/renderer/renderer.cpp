@@ -813,6 +813,7 @@ void Renderer::createPickingImages() {
 	gl.glGenRenderbuffers(1, &m_pickingDepthImage);
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_pickingDepthImage);
 	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
+	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_pickingDepthImage);
 }
 
 void Renderer::createOutlineSoloImages() {
@@ -830,6 +831,7 @@ void Renderer::createOutlineSoloImages() {
 	gl.glGenRenderbuffers(1, &m_outlineSoloDepthImage);
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_outlineSoloDepthImage);
 	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
+	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_outlineSoloDepthImage);
 }
 
 bool Renderer::anyEntityTransformKeyPressed() {
