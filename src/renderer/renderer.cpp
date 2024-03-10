@@ -477,11 +477,11 @@ void Renderer::paintGL() {
 		if (entity.second.isVisible) {
 			nml::mat4 modelMatrix;
 			if ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-				nml::mat4 rotationMatrix = nml::rotate(m_entityMoveTransform->rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
+				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 				modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
 			}
 			else {
-				nml::mat4 rotationMatrix = nml::rotate(entity.second.transform.rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(entity.second.transform.rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(entity.second.transform.rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
+				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.second.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 				modelMatrix = nml::translate(entity.second.transform.position) * rotationMatrix * nml::scale(entity.second.transform.scale);
 			}
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "model"), 1, false, modelMatrix.data());
@@ -610,11 +610,11 @@ void Renderer::paintGL() {
 			if (entity.second.isVisible) {
 				nml::mat4 modelMatrix;
 				if ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-					nml::mat4 rotationMatrix = nml::rotate(m_entityMoveTransform->rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
 				}
 				else {
-					nml::mat4 rotationMatrix = nml::rotate(entity.second.transform.rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(entity.second.transform.rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(entity.second.transform.rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.second.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					modelMatrix = nml::translate(entity.second.transform.position) * rotationMatrix * nml::scale(entity.second.transform.scale);
 				}
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
@@ -665,78 +665,77 @@ void Renderer::paintGL() {
 	// Outline
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		const Entity& entity = m_globalInfo.entities[m_globalInfo.currentEntityID];
-		if (entity.isVisible) {
-			// Outline Solo
-			gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
-			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			gl.glEnable(GL_DEPTH_TEST);
-			gl.glDepthFunc(GL_LESS);
-			gl.glDepthMask(GL_TRUE);
-			gl.glDisable(GL_BLEND);
 
-			gl.glUseProgram(m_outlineSoloProgram);
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+		// Outline Solo
+		gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
+		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gl.glEnable(GL_DEPTH_TEST);
+		gl.glDepthFunc(GL_LESS);
+		gl.glDepthMask(GL_TRUE);
+		gl.glDisable(GL_BLEND);
 
-			// Entity
-			nml::mat4 modelMatrix;
-			if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-				nml::mat4 rotationMatrix = nml::rotate(m_entityMoveTransform->rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(m_entityMoveTransform->rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
-				modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
-			}
-			else {
-				nml::mat4 rotationMatrix = nml::rotate(entity.transform.rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(entity.transform.rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(entity.transform.rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
-				modelMatrix = nml::translate(entity.transform.position) * rotationMatrix * nml::scale(entity.transform.scale);
-			}
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
+		gl.glUseProgram(m_outlineSoloProgram);
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-			if (entity.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
-				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.models[entity.renderable->modelPath];
-				for (const auto& entityMesh : entityModel.meshes) {
-					gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
+		// Entity
+		nml::mat4 modelMatrix;
+		if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
+			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
+		}
+		else {
+			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			modelMatrix = nml::translate(entity.transform.position) * rotationMatrix * nml::scale(entity.transform.scale);
+		}
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 
-					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
-				}
-			}
-			else {
-				RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0];
-				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
+		if (entity.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
+			const RendererModel& entityModel = m_globalInfo.rendererResourceManager.models[entity.renderable->modelPath];
+			for (const auto& entityMesh : entityModel.meshes) {
+				gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 				gl.glEnableVertexAttribArray(positionPos);
 				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
-				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
+				gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
+		}
+		else {
+			RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0];
+			gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
+			GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+			gl.glEnableVertexAttribArray(positionPos);
+			gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
-			// Entity Camera
-			if (m_showCameras) {
-				if (entity.camera) {
-					nml::mat4 entityCameraViewMatrix;
-					nml::mat4 entityCameraRotation;
-					if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-						entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.camera->forward, entity.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
-					else {
-						entityCameraViewMatrix = nml::lookAtRH(entity.transform.position, entity.transform.position + entity.camera->forward, entity.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
-					nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
-					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
+			gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
+		}
 
-					gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 12, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
-
-					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
+		// Entity Camera
+		if (m_showCameras) {
+			if (entity.camera) {
+				nml::mat4 entityCameraViewMatrix;
+				nml::mat4 entityCameraRotation;
+				if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
+					entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.camera->forward, entity.camera->up);
+					entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 				}
+				else {
+					entityCameraViewMatrix = nml::lookAtRH(entity.transform.position, entity.transform.position + entity.camera->forward, entity.camera->up);
+					entityCameraRotation = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+				}
+				nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
+				nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
+
+				gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
+				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+				gl.glEnableVertexAttribArray(positionPos);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 12, (void*)0);
+				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
+
+				gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
 			}
 		}
 
