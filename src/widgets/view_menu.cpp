@@ -11,6 +11,8 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	m_toggleBackfaceCullingAction->setShortcut(QKeySequence::fromString("F"));
 	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCameraVisibility);
 	m_toggleCamerasVisibilityAction->setShortcut(QKeySequence::fromString("C"));
+	m_toggleLightingAction = addAction("Enable Lighting", this, &ViewMenu::toggleLighting);
+	m_toggleLightingAction->setShortcut(QKeySequence::fromString("L"));
 	addSeparator();
 	m_switchCameraProjectionAction = addAction("Switch Camera Projection to Orthographic", this, &ViewMenu::switchCameraProjection);
 	m_switchCameraProjectionAction->setShortcut(QKeySequence::fromString("P"));
@@ -28,6 +30,13 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	m_orthographicCameraToZMAction->setShortcut(QKeySequence::fromString("8"));
 	m_orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
 	m_orthographicCameraToZPAction->setShortcut(QKeySequence::fromString("2"));
+
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCameraVisibilityToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &ViewMenu::onLightingToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &ViewMenu::onCameraProjectionSwitched);
 
 	std::fstream optionsFile("assets/options.json", std::ios::in);
 	if (optionsFile.is_open()) {
@@ -54,6 +63,9 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 		if (j["renderer"].contains("toggleCamerasVisibility")) {
 			m_toggleCamerasVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCamerasVisibility"]));
 		}
+		if (j["renderer"].contains("toggleLighting")) {
+			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleLighting"]));
+		}
 		if (j["renderer"].contains("switchCameraProjection")) {
 			m_switchCameraProjectionAction->setShortcut(QString::fromStdString(j["renderer"]["switchCameraProjection"]));
 		}
@@ -79,12 +91,6 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 			m_orthographicCameraToZPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToZP"]));
 		}
 	}
-
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCameraVisibilityToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &ViewMenu::onCameraProjectionSwitched);
 }
 
 void ViewMenu::toggleCurrentEntityVisibility() {
@@ -98,6 +104,10 @@ void ViewMenu::toggleBackfaceCulling() {
 
 void ViewMenu::toggleCameraVisibility() {
 	emit m_globalInfo.signalEmitter.toggleCamerasVisibilitySignal(!m_showCameras);
+}
+
+void ViewMenu::toggleLighting() {
+	emit m_globalInfo.signalEmitter.toggleLightingSignal(!m_lightingEnabled);
 }
 
 void ViewMenu::switchCameraProjection() {
@@ -172,6 +182,11 @@ void ViewMenu::onBackfaceCullingToggled(bool backfaceCulling) {
 void ViewMenu::onCameraVisibilityToggled(bool showCameras) {
 	m_showCameras = showCameras;
 	m_toggleCamerasVisibilityAction->setText(m_showCameras ? "Hide Cameras" : "Show Cameras");
+}
+
+void ViewMenu::onLightingToggled(bool lightingEnabled) {
+	m_lightingEnabled = lightingEnabled;
+	m_toggleLightingAction->setText(m_lightingEnabled ? "Disable Lighting" : "Enable Lighting");
 }
 
 void ViewMenu::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {

@@ -10,6 +10,14 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 	setMouseTracking(true);
 
+	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &Renderer::onLightingToggled);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &Renderer::onCameraProjectionSwitched);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
+
 	std::fstream optionsFile("assets/options.json", std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
@@ -81,13 +89,6 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 			}
 		}
 	}
-
-	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &Renderer::onCameraProjectionSwitched);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
 }
 
 void Renderer::initializeGL() {
@@ -473,6 +474,8 @@ void Renderer::paintGL() {
 	gl.glUseProgram(m_entityProgram);
 	gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
+
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.isVisible) {
 			nml::mat4 modelMatrix;
@@ -504,8 +507,6 @@ void Renderer::paintGL() {
 					gl.glActiveTexture(GL_TEXTURE0);
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.texturePath]);
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "textureSampler"), 0);
-
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1012,6 +1013,10 @@ void Renderer::onBackfaceCullingToggled(bool backfaceCullingEnabled) {
 
 void Renderer::onCamerasVisibilityToggled(bool showCameras) {
 	m_showCameras = showCameras;
+}
+
+void Renderer::onLightingToggled(bool lightingEnabled) {
+	m_lightingEnabled = lightingEnabled;
 }
 
 void Renderer::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {

@@ -43,6 +43,7 @@ signals:
 	void toggleBackfaceCullingSignal(bool);
 	void toggleCurrentEntityVisibilitySignal(bool);
 	void toggleCamerasVisibilitySignal(bool);
+	void toggleLightingSignal(bool);
 	void switchCameraProjectionSignal(bool);
 	void resetCameraSignal();
 	void orthographicCameraToAxisSignal(const nml::vec3&);

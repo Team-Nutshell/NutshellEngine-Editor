@@ -12,6 +12,7 @@ private:
 	void toggleCurrentEntityVisibility();
 	void toggleBackfaceCulling();
 	void toggleCameraVisibility();
+	void toggleLighting();
 	void switchCameraProjection();
 	void resetCamera();
 	void orthographicCameraToXM();
@@ -26,6 +27,7 @@ private slots:
 	void onCurrentEntityVisibilityToggled(bool isEntityVisible);
 	void onBackfaceCullingToggled(bool backfaceCullingEnabled);
 	void onCameraVisibilityToggled(bool showCameras);
+	void onLightingToggled(bool lightingEnabled);
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 
 private:
@@ -34,6 +36,7 @@ private:
 	QAction* m_toggleCurrentEntityVisibilityAction;
 	QAction* m_toggleBackfaceCullingAction;
 	QAction* m_toggleCamerasVisibilityAction;
+	QAction* m_toggleLightingAction;
 	QAction* m_switchCameraProjectionAction;
 	QAction* m_resetCameraAction;
 	QAction* m_orthographicCameraToXMAction;
@@ -45,5 +48,6 @@ private:
 
 	bool m_backfaceCullingEnabled = false;
 	bool m_showCameras = false;
+	bool m_lightingEnabled = false;
 	bool m_cameraProjectionOrthographic = false;
 };

@@ -19,6 +19,7 @@
         "scaleEntityKey": "E",
         "toggleCurrentEntityVisibility": "V",
         "toggleBackfaceCulling": "F",
-        "toggleCamerasVisibility": "C"
+        "toggleCamerasVisibility": "C",
+        "toggleLighting": "L"
     }
 }

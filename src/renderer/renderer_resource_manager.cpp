@@ -354,7 +354,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				positionCursor += (positionStride / sizeof(float));
 
 				if (normalCount != 0) {
-					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(position + positionCursor), 0.0f)));
+					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(normal + normalCursor), 0.0f)));
 					primitive.vertices[(j * 8) + 3] = vertexNormal.x;
 					primitive.vertices[(j * 8) + 4] = vertexNormal.y;
 					primitive.vertices[(j * 8) + 5] = vertexNormal.z;
