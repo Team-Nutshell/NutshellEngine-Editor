@@ -27,9 +27,11 @@ private:
 
 	void createPickingImages();
 	void createOutlineSoloImages();
+	void createLightBuffer();
 
 	bool anyEntityTransformKeyPressed();
 	void updateCamera();
+	void updateLights();
 
 	void loadResourcesToGPU();
 
@@ -113,6 +115,8 @@ private:
 	GLuint m_outlineSoloFramebuffer;
 	GLuint m_outlineSoloImage;
 	GLuint m_outlineSoloDepthImage;
+
+	GLuint m_lightBuffer;
 
 	QOpenGLFunctions gl;
 	QOpenGLExtraFunctions glex;

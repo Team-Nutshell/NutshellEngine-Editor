@@ -76,7 +76,7 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	halfExtentWidget->xLineEdit->setText(QString::number(collidable.halfExtent.x, 'g', 3));
 	halfExtentWidget->yLineEdit->setText(QString::number(collidable.halfExtent.y, 'g', 3));
 	halfExtentWidget->zLineEdit->setText(QString::number(collidable.halfExtent.z, 'g', 3));
-	if (collidable.type == "Box" && !collidable.fromRenderable) {
+	if ((collidable.type == "Box") && !collidable.fromRenderable) {
 		halfExtentWidget->setEnabled(true);
 	}
 	else {
@@ -86,7 +86,7 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	rotationWidget->xLineEdit->setText(QString::number(collidable.rotation.x, 'g', 3));
 	rotationWidget->yLineEdit->setText(QString::number(collidable.rotation.y, 'g', 3));
 	rotationWidget->zLineEdit->setText(QString::number(collidable.rotation.z, 'g', 3));
-	if (collidable.type == "Box" && !collidable.fromRenderable) {
+	if ((collidable.type == "Box") && !collidable.fromRenderable) {
 		rotationWidget->setEnabled(true);
 	}
 	else {
@@ -96,7 +96,7 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	baseWidget->xLineEdit->setText(QString::number(collidable.base.x, 'g', 3));
 	baseWidget->yLineEdit->setText(QString::number(collidable.base.y, 'g', 3));
 	baseWidget->zLineEdit->setText(QString::number(collidable.base.z, 'g', 3));
-	if (collidable.type == "Capsule" && !collidable.fromRenderable) {
+	if ((collidable.type == "Capsule") && !collidable.fromRenderable) {
 		baseWidget->setEnabled(true);
 	}
 	else {
@@ -106,7 +106,7 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	tipWidget->xLineEdit->setText(QString::number(collidable.tip.x, 'g', 3));
 	tipWidget->yLineEdit->setText(QString::number(collidable.tip.y, 'g', 3));
 	tipWidget->zLineEdit->setText(QString::number(collidable.tip.z, 'g', 3));
-	if (collidable.type == "Capsule" && !collidable.fromRenderable) {
+	if ((collidable.type == "Capsule") && !collidable.fromRenderable) {
 		tipWidget->setEnabled(true);
 	}
 	else {

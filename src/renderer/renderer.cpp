@@ -5,6 +5,8 @@
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <fstream>
+#include <array>
+#include <cstdint>
 
 Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setFocusPolicy(Qt::FocusPolicy::ClickFocus);
@@ -118,13 +120,15 @@ void Renderer::initializeGL() {
 	uniform mat4 viewProj;
 	uniform mat4 model;
 
+	out vec3 fragPosition;
 	out vec3 fragNormal;
 	out vec2 fragUV;
 
 	void main() {
+		fragPosition = vec3(model * vec4(position, 1.0));
 		fragNormal = (model * vec4(normal, 0.0)).xyz;
 		fragUV = uv;
-		gl_Position = viewProj * model * vec4(position, 1.0);
+		gl_Position = viewProj * vec4(fragPosition, 1.0);
 	}
 	)GLSL";
 	GLuint entityVertexShader = compileShader(GL_VERTEX_SHADER, entityVertexShaderCode);
@@ -132,20 +136,70 @@ void Renderer::initializeGL() {
 	std::string entityFragmentShaderCode = R"GLSL(
 	#version 460
 
+	struct Light {
+		vec3 position;
+		vec3 direction;
+		vec3 color;
+		vec2 cutoff;
+	};
+
+	in vec3 fragPosition;
 	in vec3 fragNormal;
 	in vec2 fragUV;
 
 	uniform sampler2D textureSampler;
 	uniform bool enableShading;
+	restrict readonly buffer LightBuffer {
+		uvec3 count;
+		Light info[];
+	} lights;
 
 	out vec4 outColor;
 
 	void main() {
+		vec3 textureSample = texture(textureSampler, fragUV).rgb;
+		outColor = vec4(0.0, 0.0, 0.0, 1.0);
+
 		if (enableShading) {
-			outColor = vec4(texture(textureSampler, fragUV).rgb * dot(vec3(0.0, 1.0, 0.0), fragNormal), 1.0);
+			uint lightIndex = 0;
+
+			// Directional Lights
+			for (uint i = 0; i < lights.count.x; i++) {
+				vec3 l = -lights.info[lightIndex].direction;
+
+				outColor += vec4(textureSample * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
+
+				lightIndex++;
+			}
+
+			// Point Lights
+			for (uint i = 0; i < lights.count.y; i++) {
+				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
+				float distance = length(lights.info[lightIndex].position - fragPosition);
+				float attenuation = 1.0 / (distance * distance);
+				vec3 radiance = lights.info[lightIndex].color * attenuation;
+
+				outColor += vec4(textureSample * radiance * dot(l, fragNormal), 0.0);
+
+				lightIndex++;
+			}
+
+			// Spot Lights
+			for (uint i = 0; i < lights.count.z; i++) {
+				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
+				float theta = dot(l, -lights.info[lightIndex].direction);
+				float epsilon = cos(lights.info[lightIndex].cutoff.y) - cos(lights.info[lightIndex].cutoff.x);
+				float intensity = clamp((theta - cos(lights.info[lightIndex].cutoff.x)) / epsilon, 0.0, 1.0);
+				intensity = 1.0 - intensity;
+				vec3 radiance = lights.info[lightIndex].color * intensity;
+
+				outColor += vec4(textureSample * radiance * dot(l, fragNormal), 0.0);
+
+				lightIndex++;
+			}
 		}
 		else {
-			outColor = vec4(texture(textureSampler, fragUV).rgb, 1.0);
+			outColor = vec4(textureSample, 1.0);
 		}
 	}
 	)GLSL";
@@ -439,6 +493,9 @@ void Renderer::initializeGL() {
 
 	m_globalInfo.rendererResourceManager.models["cameraFrustumCube"] = cameraFrustumCubeModel;
 
+	// Light
+	createLightBuffer();
+
 	// Start render
 	m_waitTimer.start(16);
 }
@@ -476,17 +533,16 @@ void Renderer::paintGL() {
 
 	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
 
+	if (m_lightingEnabled) {
+		updateLights();
+	}
+
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.isVisible) {
-			nml::mat4 modelMatrix;
-			if ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-				modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
-			}
-			else {
-				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.second.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-				modelMatrix = nml::translate(entity.second.transform.position) * rotationMatrix * nml::scale(entity.second.transform.scale);
-			}
+			const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "model"), 1, false, modelMatrix.data());
 
 			if (entity.second.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
@@ -552,16 +608,9 @@ void Renderer::paintGL() {
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
 				if (entity.second.camera) {
-					nml::mat4 entityCameraViewMatrix;
-					nml::mat4 entityCameraRotation;
-					if ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-						entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.second.camera->forward, entity.second.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
-					else {
-						entityCameraViewMatrix = nml::lookAtRH(entity.second.transform.position, entity.second.transform.position + entity.second.camera->forward, entity.second.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(entity.second.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
+					const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.second.camera->forward, entity.second.camera->up);
+					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), 16.0f / 9.0f, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
@@ -609,15 +658,9 @@ void Renderer::paintGL() {
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
-				nml::mat4 modelMatrix;
-				if ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
-				}
-				else {
-					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.second.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.second.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					modelMatrix = nml::translate(entity.second.transform.position) * rotationMatrix * nml::scale(entity.second.transform.scale);
-				}
+				const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+				nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
 				glex.glUniform1ui(gl.glGetUniformLocation(m_pickingProgram, "entityID"), entity.second.entityID);
@@ -679,15 +722,9 @@ void Renderer::paintGL() {
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
 		// Entity
-		nml::mat4 modelMatrix;
-		if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-			modelMatrix = nml::translate(m_entityMoveTransform->position) * rotationMatrix * nml::scale(m_entityMoveTransform->scale);
-		}
-		else {
-			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-			modelMatrix = nml::translate(entity.transform.position) * rotationMatrix * nml::scale(entity.transform.scale);
-		}
+		const Transform& transform = ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.transform;
+		nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+		nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 
 		if (entity.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
@@ -767,10 +804,11 @@ GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode)
 	if (params != GL_TRUE) {
 		GLsizei maxlength;
 		gl.glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxlength);
-		GLchar* infolog = NULL;
+		std::vector<GLchar> infolog;
+		infolog.reserve(maxlength);
 		int length;
-		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog);
-		std::cout << "Error while compiling shader :" << std::string(infolog, length) << std::endl;
+		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog.data());
+		std::cout << "Error while compiling shader :" << std::string(infolog.data(), length) << std::endl;
 		return 0xFFFFFFFF;
 	}
 
@@ -787,10 +825,10 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 	if (params != GL_TRUE) {
 		GLsizei maxlength;
 		gl.glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxlength);
-		GLchar* infolog = NULL;
+		std::vector<GLchar> infolog;
 		int length;
-		gl.glGetProgramInfoLog(program, maxlength, &length, infolog);
-		std::cout << "Error while linking program :" << std::string(infolog, length) << std::endl;
+		gl.glGetProgramInfoLog(program, maxlength, &length, infolog.data());
+		std::cout << "Error while linking program :" << std::string(infolog.data(), length) << std::endl;
 		gl.glDetachShader(program, vertexShader);
 		gl.glDetachShader(program, fragmentShader);
 		return 0xFFFFFFFF;
@@ -833,6 +871,12 @@ void Renderer::createOutlineSoloImages() {
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_outlineSoloDepthImage);
 	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_outlineSoloDepthImage);
+}
+
+void Renderer::createLightBuffer() {
+	gl.glGenBuffers(1, &m_lightBuffer);
+	gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_lightBuffer);
+	gl.glBufferData(GL_SHADER_STORAGE_BUFFER, 32768, NULL, GL_DYNAMIC_DRAW);
 }
 
 bool Renderer::anyEntityTransformKeyPressed() {
@@ -929,6 +973,71 @@ void Renderer::updateCamera() {
 	m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
 
 	m_mouseScrollY = 0.0f;
+}
+
+void Renderer::updateLights() {
+	gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_lightBuffer);
+	glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, glex.glGetProgramResourceIndex(m_entityProgram, GL_SHADER_STORAGE_BLOCK, "LightBuffer"), m_lightBuffer);
+
+	std::array<uint32_t, 4> lightsCount = { 0, 0, 0, 0 };
+	std::vector<nml::vec4> directionalLightsInfos;
+	std::vector<nml::vec4> pointLightsInfos;
+	std::vector<nml::vec4> spotLightsInfos;
+
+	for (const auto& entity : m_globalInfo.entities) {
+		if (entity.second.light) {
+			const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+			const Light& light = entity.second.light.value();
+
+			if (light.type == "Directional") {
+				lightsCount[0]++;
+
+				const nml::vec3 baseLightDirection = nml::normalize(light.direction);
+				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
+				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
+				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
+					std::cos(baseDirectionPitch + transform.rotation.x) * std::cos(baseDirectionYaw + transform.rotation.y),
+					-std::sin(baseDirectionPitch + transform.rotation.x),
+					std::cos(baseDirectionPitch + transform.rotation.x) * std::sin(baseDirectionYaw + transform.rotation.y)
+				));
+
+				directionalLightsInfos.push_back(nml::vec4());
+				directionalLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
+				directionalLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				directionalLightsInfos.push_back(nml::vec4());
+			}
+			else if (light.type == "Point") {
+				lightsCount[1]++;
+
+				pointLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
+				pointLightsInfos.push_back(nml::vec4());
+				pointLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				pointLightsInfos.push_back(nml::vec4());
+			}
+			else if (light.type == "Spot") {
+				lightsCount[2]++;
+
+				const nml::vec3 baseLightDirection = nml::normalize(light.direction);
+				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
+				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
+				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
+					std::cos(baseDirectionPitch + transform.rotation.x) * std::cos(baseDirectionYaw + transform.rotation.y),
+					-std::sin(baseDirectionPitch + transform.rotation.x),
+					std::cos(baseDirectionPitch + transform.rotation.x) * std::sin(baseDirectionYaw + transform.rotation.y)
+				));
+
+				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
+				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
+				spotLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), 0.0f, 0.0f));
+			}
+		}
+	}
+
+	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 4 * sizeof(uint32_t), lightsCount.data());
+	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t), directionalLightsInfos.size() * sizeof(nml::vec4), directionalLightsInfos.data());
+	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.data());
+	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4) + pointLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.data());
 }
 
 void Renderer::loadResourcesToGPU() {

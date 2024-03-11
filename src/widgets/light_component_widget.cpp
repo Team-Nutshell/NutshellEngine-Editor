@@ -50,9 +50,21 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	directionWidget->xLineEdit->setText(QString::number(light.direction.x, 'g', 3));
 	directionWidget->yLineEdit->setText(QString::number(light.direction.y, 'g', 3));
 	directionWidget->zLineEdit->setText(QString::number(light.direction.z, 'g', 3));
+	if ((light.type == "Directional") || (light.type == "Spot")) {
+		directionWidget->setEnabled(true);
+	}
+	else {
+		directionWidget->setEnabled(false);
+	}
 	cutoffWidget->value = light.cutoff;
 	cutoffWidget->xLineEdit->setText(QString::number(light.cutoff.x, 'g', 3));
 	cutoffWidget->yLineEdit->setText(QString::number(light.cutoff.y, 'g', 3));
+	if (light.type == "Spot") {
+		cutoffWidget->setEnabled(true);
+	}
+	else {
+		cutoffWidget->setEnabled(false);
+	}
 }
 
 void LightComponentWidget::onSelectEntity() {
