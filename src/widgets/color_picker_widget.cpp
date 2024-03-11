@@ -24,10 +24,15 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 }
 
 void ColorPickerWidget::onColorButtonClicked() {
-	QColor newColor = QColorDialog::getColor(QColor::fromRgbF(color.x, color.y, color.z, color.w), nullptr, "Select a color");
-	nml::vec4 newColorToVec4 = nml::vec4(newColor.redF(), newColor.greenF(), newColor.blueF(), newColor.alphaF());
-	if (color != newColorToVec4) {
-		color = newColorToVec4;
-		emit colorChanged(color);
+	QColorDialog colorDialog;
+	colorDialog.setCurrentColor(QColor::fromRgbF(color.x, color.y, color.z, color.w));
+	colorDialog.setWindowTitle("Select a color");
+	if (colorDialog.exec()) {
+		QColor newColor = colorDialog.currentColor();
+		nml::vec4 newColorToVec4 = nml::vec4(newColor.redF(), newColor.greenF(), newColor.blueF(), newColor.alphaF());
+		if (color != newColorToVec4) {
+			color = newColorToVec4;
+			emit colorChanged(color);
+		}
 	}
 }
