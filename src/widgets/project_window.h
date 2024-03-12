@@ -4,7 +4,6 @@
 #include "new_project_widget.h"
 #include <QWidget>
 #include <QLabel>
-#include <memory>
 
 class ProjectWindow : public QWidget {
 	Q_OBJECT
@@ -21,8 +20,8 @@ private:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<QLabel> m_logoLabel;
-	std::unique_ptr<QPixmap> m_logoPixmap;
-	std::unique_ptr<OpenProjectWidget> m_openProjectWidget;
-	std::unique_ptr<NewProjectWidget> m_newProjectWidget;
+	QLabel* m_logoLabel;
+	QPixmap* m_logoPixmap;
+	OpenProjectWidget* m_openProjectWidget;
+	NewProjectWidget* m_newProjectWidget;
 };

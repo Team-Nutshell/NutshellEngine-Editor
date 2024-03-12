@@ -10,32 +10,32 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Rigidbody"));
-	isStaticWidget = std::make_unique<BooleanWidget>(m_globalInfo, "Is Static");
-	layout()->addWidget(isStaticWidget.get());
-	isAffectedByConstantsWidget = std::make_unique<BooleanWidget>(m_globalInfo, "Is Affected By Constants");
-	layout()->addWidget(isAffectedByConstantsWidget.get());
-	lockRotationWidget = std::make_unique<BooleanWidget>(m_globalInfo, "Lock Rotation");
-	layout()->addWidget(lockRotationWidget.get());
-	massWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Mass");
-	layout()->addWidget(massWidget.get());
-	inertiaWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Inertia");
-	layout()->addWidget(inertiaWidget.get());
-	restitutionWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Restitution");
-	layout()->addWidget(restitutionWidget.get());
-	staticFrictionWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Static Friction");
-	layout()->addWidget(staticFrictionWidget.get());
-	dynamicFrictionWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Dynamic Friction");
-	layout()->addWidget(dynamicFrictionWidget.get());
+	isStaticWidget = new BooleanWidget(m_globalInfo, "Is Static");
+	layout()->addWidget(isStaticWidget);
+	isAffectedByConstantsWidget = new BooleanWidget(m_globalInfo, "Is Affected By Constants");
+	layout()->addWidget(isAffectedByConstantsWidget);
+	lockRotationWidget = new BooleanWidget(m_globalInfo, "Lock Rotation");
+	layout()->addWidget(lockRotationWidget);
+	massWidget = new ScalarWidget(m_globalInfo, "Mass");
+	layout()->addWidget(massWidget);
+	inertiaWidget = new ScalarWidget(m_globalInfo, "Inertia");
+	layout()->addWidget(inertiaWidget);
+	restitutionWidget = new ScalarWidget(m_globalInfo, "Restitution");
+	layout()->addWidget(restitutionWidget);
+	staticFrictionWidget = new ScalarWidget(m_globalInfo, "Static Friction");
+	layout()->addWidget(staticFrictionWidget);
+	dynamicFrictionWidget = new ScalarWidget(m_globalInfo, "Dynamic Friction");
+	layout()->addWidget(dynamicFrictionWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(isStaticWidget.get(), &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(isAffectedByConstantsWidget.get(), &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(lockRotationWidget.get(), &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(massWidget.get(), &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(inertiaWidget.get(), &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(restitutionWidget.get(), &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(staticFrictionWidget.get(), &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(dynamicFrictionWidget.get(), &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(isStaticWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
+	connect(isAffectedByConstantsWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
+	connect(lockRotationWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
+	connect(massWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(inertiaWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(restitutionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(staticFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(dynamicFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RigidbodyComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRigidbodySignal, this, &RigidbodyComponentWidget::onAddEntityRigidbody);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onRemoveEntityRigidbody);
@@ -44,15 +44,15 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 
 void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
 	{
-		const QSignalBlocker signalBlocker(isStaticWidget->checkBox.get());
+		const QSignalBlocker signalBlocker(isStaticWidget->checkBox);
 		isStaticWidget->checkBox->setChecked(rigidbody.isStatic);
 	}
 	{
-		const QSignalBlocker signalBlocker(isAffectedByConstantsWidget->checkBox.get());
+		const QSignalBlocker signalBlocker(isAffectedByConstantsWidget->checkBox);
 		isAffectedByConstantsWidget->checkBox->setChecked(rigidbody.isAffectedByConstants);
 	}
 	{
-		const QSignalBlocker signalBlocker(lockRotationWidget->checkBox.get());
+		const QSignalBlocker signalBlocker(lockRotationWidget->checkBox);
 		lockRotationWidget->checkBox->setChecked(rigidbody.lockRotation);
 	}
 	massWidget->value = rigidbody.mass;
@@ -101,13 +101,13 @@ void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const 
 
 void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-	if (sender() == isStaticWidget.get()) {
+	if (sender() == isStaticWidget) {
 		newRigidbody.isStatic = boolean;
 	}
-	else if (sender() == isAffectedByConstantsWidget.get()) {
+	else if (sender() == isAffectedByConstantsWidget) {
 		newRigidbody.isAffectedByConstants = boolean;
 	}
-	else if (sender() == lockRotationWidget.get()) {
+	else if (sender() == lockRotationWidget) {
 		newRigidbody.lockRotation = boolean;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));
@@ -115,19 +115,19 @@ void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
 
 void RigidbodyComponentWidget::onScalarUpdated(float value) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-	if (sender() == massWidget.get()) {
+	if (sender() == massWidget) {
 		newRigidbody.mass = value;
 	}
-	else if (sender() == inertiaWidget.get()) {
+	else if (sender() == inertiaWidget) {
 		newRigidbody.inertia = value;
 	}
-	else if (sender() == restitutionWidget.get()) {
+	else if (sender() == restitutionWidget) {
 		newRigidbody.restitution = value;
 	}
-	else if (sender() == staticFrictionWidget.get()) {
+	else if (sender() == staticFrictionWidget) {
 		newRigidbody.staticFriction = value;
 	}
-	else if (sender() == dynamicFrictionWidget.get()) {
+	else if (sender() == dynamicFrictionWidget) {
 		newRigidbody.dynamicFriction = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));

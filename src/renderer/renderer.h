@@ -17,6 +17,7 @@ class Renderer : public QOpenGLWidget {
 	Q_OBJECT
 public:
 	Renderer(GlobalInfo& globalInfo);
+	~Renderer();
 
 	void initializeGL();
 	void paintGL();

@@ -9,11 +9,11 @@ ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::st
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	if (name != "Transform") {
-		removeWidgetButton = std::make_unique<QPushButton>("X");
+		removeWidgetButton = new QPushButton("X");
 		removeWidgetButton->setFixedWidth(20);
-		layout()->addWidget(removeWidgetButton.get());
+		layout()->addWidget(removeWidgetButton);
 		
-		connect(removeWidgetButton.get(), &QPushButton::clicked, this, &ComponentTitleWidget::onClick);
+		connect(removeWidgetButton, &QPushButton::clicked, this, &ComponentTitleWidget::onClick);
 	}
 	layout()->addWidget(new QLabel("<b>" + QString::fromStdString(name) + "</b>"));
 }

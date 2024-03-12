@@ -6,10 +6,10 @@ NewProjectNameWidget::NewProjectNameWidget(GlobalInfo& globalInfo): m_globalInfo
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new QLabel("New project name:"));
-	m_projectNameLineEdit = std::make_unique<QLineEdit>();
-	layout()->addWidget(m_projectNameLineEdit.get());
+	m_projectNameLineEdit = new QLineEdit();
+	layout()->addWidget(m_projectNameLineEdit);
 
-	connect(m_projectNameLineEdit.get(), &QLineEdit::textChanged, this, &NewProjectNameWidget::onTextChanged);
+	connect(m_projectNameLineEdit, &QLineEdit::textChanged, this, &NewProjectNameWidget::onTextChanged);
 }
 
 void NewProjectNameWidget::onTextChanged() {

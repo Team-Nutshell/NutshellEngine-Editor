@@ -12,11 +12,11 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Renderable"));
-	modelPathWidget = std::make_unique<FileSelectorWidget>(m_globalInfo, "No model selected", "Select a model");
-	layout()->addWidget(modelPathWidget.get());
+	modelPathWidget = new FileSelectorWidget(m_globalInfo, "No model selected", "Select a model");
+	layout()->addWidget(modelPathWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(modelPathWidget.get(), &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onStringUpdated);
+	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onStringUpdated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onAddEntityRenderable);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onRemoveEntityRenderable);
@@ -77,7 +77,7 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 
 void RenderableComponentWidget::onStringUpdated(const std::string& string) {
 	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
-	if (sender() == modelPathWidget.get()) {
+	if (sender() == modelPathWidget) {
 		std::string modelPath = newRenderable.modelPath;
 		modelPath = std::filesystem::canonical(std::filesystem::absolute(string)).string();
 		std::replace(modelPath.begin(), modelPath.end(), '\\', '/');

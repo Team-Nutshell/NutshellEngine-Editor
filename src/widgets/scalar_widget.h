@@ -4,7 +4,6 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <string>
-#include <memory>
 
 class ScalarWidget : public QWidget {
 	Q_OBJECT
@@ -21,8 +20,8 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<QLabel> nameLabel;
-	std::unique_ptr<QLineEdit> valueLineEdit;
+	QLabel* nameLabel;
+	QLineEdit* valueLineEdit;
 
 	float value = 0.0f;
 };

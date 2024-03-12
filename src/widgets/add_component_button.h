@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include "add_component_menu.h"
 #include <QPushButton>
-#include <memory>
 
 class AddComponentButton : public QPushButton {
 	Q_OBJECT
@@ -15,5 +14,5 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<AddComponentMenu> menu;
+	AddComponentMenu* menu;
 };

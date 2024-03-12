@@ -6,7 +6,6 @@
 #include <QPoint>
 #include <QKeyEvent>
 #include <string>
-#include <memory>
 
 class EntityList : public QListWidget {
 	Q_OBJECT
@@ -30,5 +29,5 @@ private slots:
 	void keyPressEvent(QKeyEvent* event);
 
 public:
-	std::unique_ptr<EntityListMenu> menu;
+	EntityListMenu* menu;
 };

@@ -93,6 +93,49 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	}
 }
 
+Renderer::~Renderer() {
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
+	gl.glDeleteBuffers(1, &m_lightBuffer);
+
+	for (const auto& model : m_globalInfo.rendererResourceManager.models) {
+		if ((model.first == "defaultCube") || (model.first == "cameraFrustumCube")) {
+			continue;
+		}
+		for (const auto& mesh : model.second.meshes) {
+			gl.glDeleteBuffers(1, &mesh.vertexBuffer);
+			gl.glDeleteBuffers(1, &mesh.indexBuffer);
+		}
+	}
+
+	gl.glDeleteTextures(1, &m_pickingImage);
+	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
+	gl.glDeleteTextures(1, &m_outlineSoloImage);
+	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
+	gl.glDeleteTextures(1, &m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"]);
+	gl.glDeleteTextures(1, &m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"]);
+
+	for (const auto& texture : m_globalInfo.rendererResourceManager.textures) {
+		if ((texture.first == "defaultDiffuseTexture") || (texture.first == "defaultEmissiveTexture")) {
+			continue;
+		}
+
+		gl.glDeleteTextures(1, &texture.second);
+	}
+
+	gl.glDeleteFramebuffers(1, &m_pickingFramebuffer);
+	gl.glDeleteFramebuffers(1, &m_outlineSoloFramebuffer);
+
+	gl.glDeleteProgram(m_entityProgram);
+	gl.glDeleteProgram(m_cameraFrustumProgram);
+	gl.glDeleteProgram(m_gridProgram);
+	gl.glDeleteProgram(m_pickingProgram);
+	gl.glDeleteProgram(m_outlineSoloProgram);
+	gl.glDeleteProgram(m_outlineProgram);
+}
+
 void Renderer::initializeGL() {
 	gl.initializeOpenGLFunctions();
 	glex.initializeOpenGLFunctions();
@@ -147,7 +190,8 @@ void Renderer::initializeGL() {
 	in vec3 fragNormal;
 	in vec2 fragUV;
 
-	uniform sampler2D textureSampler;
+	uniform sampler2D diffuseTextureSampler;
+	uniform sampler2D emissiveTextureSampler;
 	uniform bool enableShading;
 	restrict readonly buffer LightBuffer {
 		uvec3 count;
@@ -157,7 +201,8 @@ void Renderer::initializeGL() {
 	out vec4 outColor;
 
 	void main() {
-		vec3 textureSample = texture(textureSampler, fragUV).rgb;
+		vec3 diffuseTextureSample = texture(diffuseTextureSampler, fragUV).rgb;
+		vec3 emissiveTextureSample = texture(emissiveTextureSampler, fragUV).rgb;
 		outColor = vec4(0.0, 0.0, 0.0, 1.0);
 
 		if (enableShading) {
@@ -167,7 +212,7 @@ void Renderer::initializeGL() {
 			for (uint i = 0; i < lights.count.x; i++) {
 				vec3 l = -lights.info[lightIndex].direction;
 
-				outColor += vec4(textureSample * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
@@ -179,7 +224,7 @@ void Renderer::initializeGL() {
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = lights.info[lightIndex].color * attenuation;
 
-				outColor += vec4(textureSample * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample * radiance * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
@@ -193,14 +238,16 @@ void Renderer::initializeGL() {
 				intensity = 1.0 - intensity;
 				vec3 radiance = lights.info[lightIndex].color * intensity;
 
-				outColor += vec4(textureSample * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample * radiance * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
 		}
 		else {
-			outColor = vec4(textureSample, 1.0);
+			outColor = vec4(diffuseTextureSample, 1.0);
 		}
+
+		outColor += vec4(emissiveTextureSample, 0.0);
 	}
 	)GLSL";
 	GLuint entityFragmentShader = compileShader(GL_FRAGMENT_SHADER, entityFragmentShaderCode);
@@ -455,25 +502,38 @@ void Renderer::initializeGL() {
 	defaultCubeMesh.vertexBuffer = defaultCubeVertexBuffer;
 	defaultCubeMesh.indexBuffer = cubeTriangleIndexBuffer;
 	defaultCubeMesh.indexCount = static_cast<GLuint>(cubeTriangleIndices.size());
-	defaultCubeMesh.texturePath = "defaultTexture";
+	defaultCubeMesh.diffuseTexturePath = "defaultDiffuseTexture";
+	defaultCubeMesh.emissiveTexturePath = "defaultEmissiveTexture";
 
 	RendererModel defaultCubeModel;
 	defaultCubeModel.meshes.push_back(defaultCubeMesh);
 
 	m_globalInfo.rendererResourceManager.models["defaultCube"] = defaultCubeModel;
 
-	// Default texture
-	GLuint defaultTexture;
-	gl.glGenTextures(1, &defaultTexture);
-	std::vector<uint8_t> textureData = { 145, 99, 65, 255, 208, 194, 175, 255, 208, 194, 175, 255, 145, 99, 65, 255 };
-	gl.glBindTexture(GL_TEXTURE_2D, defaultTexture);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData.data());
+	// Default textures
+	GLuint defaultDiffuseTexture;
+	gl.glGenTextures(1, &defaultDiffuseTexture);
+	std::vector<uint8_t> diffuseTextureData = { 145, 99, 65, 255, 208, 194, 175, 255, 208, 194, 175, 255, 145, 99, 65, 255 };
+	gl.glBindTexture(GL_TEXTURE_2D, defaultDiffuseTexture);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, diffuseTextureData.data());
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	m_globalInfo.rendererResourceManager.textures["defaultTexture"] = defaultTexture;
+	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
+
+	GLuint defaultEmissiveTexture;
+	gl.glGenTextures(1, &defaultEmissiveTexture);
+	std::vector<uint8_t> emissiveTextureData = { 0, 0, 0, 255 };
+	gl.glBindTexture(GL_TEXTURE_2D, defaultEmissiveTexture);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveTextureData.data());
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"] = defaultEmissiveTexture;
 
 	// Frustum cube
 	GLuint cameraFrustumCubeVertexBuffer;
@@ -486,7 +546,8 @@ void Renderer::initializeGL() {
 	cameraFrustumCubeMesh.vertexBuffer = cameraFrustumCubeVertexBuffer;
 	cameraFrustumCubeMesh.indexBuffer = cubeLineIndexBuffer;
 	cameraFrustumCubeMesh.indexCount = static_cast<GLuint>(cubeLineIndices.size());
-	cameraFrustumCubeMesh.texturePath = "defaultTexture";
+	cameraFrustumCubeMesh.diffuseTexturePath = "defaultDiffuseTexture";
+	cameraFrustumCubeMesh.emissiveTexturePath = "defaultEmissiveTexture";
 
 	RendererModel cameraFrustumCubeModel;
 	cameraFrustumCubeModel.meshes.push_back(cameraFrustumCubeMesh);
@@ -561,8 +622,12 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
 					gl.glActiveTexture(GL_TEXTURE0);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.texturePath]);
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "textureSampler"), 0);
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.diffuseTexturePath]);
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+
+					gl.glActiveTexture(GL_TEXTURE1);
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.emissiveTexturePath]);
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -582,8 +647,12 @@ void Renderer::paintGL() {
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 				gl.glActiveTexture(GL_TEXTURE0);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.texturePath]);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "textureSampler"), 0);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.diffuseTexturePath]);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+
+				gl.glActiveTexture(GL_TEXTURE1);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.emissiveTexturePath]);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "doShading"), 0);
 
@@ -1055,7 +1124,8 @@ void Renderer::loadResourcesToGPU() {
 
 			newRendererMesh.indexCount = static_cast<uint32_t>(meshToGPU.indices.size());
 
-			newRendererMesh.texturePath = meshToGPU.texturePath;
+			newRendererMesh.diffuseTexturePath = meshToGPU.diffuseTexturePath;
+			newRendererMesh.emissiveTexturePath = meshToGPU.emissiveTexturePath;
 
 			newRendererModel.meshes.push_back(newRendererMesh);
 		}

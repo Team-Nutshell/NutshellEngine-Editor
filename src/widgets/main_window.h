@@ -10,7 +10,6 @@
 #include <QMainWindow>
 #include <QWidget>
 #include <QSplitter>
-#include <memory>
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -27,14 +26,14 @@ private:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<QWidget> m_mainWidget;
-	std::unique_ptr<QSplitter> m_horizontalSplitter;
-	std::unique_ptr<QSplitter> m_verticalSplitter;
-	std::unique_ptr<EntityPanel> m_entityPanel;
-	std::unique_ptr<Renderer> m_renderer;
-	std::unique_ptr<EntityInfoPanel> m_entityInfoPanel;
-	std::unique_ptr<ResourcePanel> m_resourcePanel;
-	std::unique_ptr<FileMenu> m_fileMenu;
-	std::unique_ptr<EditMenu> m_editMenu;
-	std::unique_ptr<ViewMenu> m_viewMenu;
+	QWidget* m_mainWidget;
+	QSplitter* m_horizontalSplitter;
+	QSplitter* m_verticalSplitter;
+	EntityPanel* m_entityPanel;
+	Renderer* m_renderer;
+	EntityInfoPanel* m_entityInfoPanel;
+	ResourcePanel* m_resourcePanel;
+	FileMenu* m_fileMenu;
+	EditMenu* m_editMenu;
+	ViewMenu* m_viewMenu;
 };

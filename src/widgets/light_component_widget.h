@@ -5,7 +5,6 @@
 #include "vector3_widget.h"
 #include "vector2_widget.h"
 #include <QWidget>
-#include <memory>
 
 class LightComponentWidget : public QWidget {
 	Q_OBJECT
@@ -29,8 +28,8 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<ComboBoxWidget> typeWidget;
-	std::unique_ptr<ColorPickerWidget> colorWidget;
-	std::unique_ptr<Vector3Widget> directionWidget;
-	std::unique_ptr<Vector2Widget> cutoffWidget;
+	ComboBoxWidget* typeWidget;
+	ColorPickerWidget* colorWidget;
+	Vector3Widget* directionWidget;
+	Vector2Widget* cutoffWidget;
 };

@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include <QWidget>
 #include <QLineEdit>
-#include <memory>
 
 class NewProjectNameWidget : public QWidget {
 	Q_OBJECT
@@ -18,5 +17,5 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<QLineEdit> m_projectNameLineEdit;
+	QLineEdit* m_projectNameLineEdit;
 };

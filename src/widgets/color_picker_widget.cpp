@@ -7,9 +7,9 @@
 ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& name, const nml::vec4& defaultColor) : m_globalInfo(globalInfo), color(defaultColor) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	nameLabel = std::make_unique<QLabel>(QString::fromStdString(name));
-	layout()->addWidget(nameLabel.get());
-	colorButton = std::make_unique<QPushButton>();
+	nameLabel = new QLabel(QString::fromStdString(name));
+	layout()->addWidget(nameLabel);
+	colorButton = new QPushButton();
 	colorButton->setText("(" + QString::number(color.x, 'g', 2) + ", " + QString::number(color.y, 'g', 2) + ", " + QString::number(color.z, 'g', 2) + ", 1.00)");
 	QPalette colorButtonPalette = colorButton->palette();
 	colorButtonPalette.setColor(QPalette::ColorRole::Button, QColor::fromRgbF(color.x, color.y, color.z));
@@ -17,10 +17,10 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 	colorButton->setAutoFillBackground(true);
 	colorButton->setPalette(colorButtonPalette);
 	colorButton->update();
-	layout()->addWidget(colorButton.get());
-	layout()->setAlignment(colorButton.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(colorButton);
+	layout()->setAlignment(colorButton, Qt::AlignmentFlag::AlignRight);
 
-	connect(colorButton.get(), &QPushButton::clicked, this, &ColorPickerWidget::onColorButtonClicked);
+	connect(colorButton, &QPushButton::clicked, this, &ColorPickerWidget::onColorButtonClicked);
 }
 
 void ColorPickerWidget::onColorButtonClicked() {

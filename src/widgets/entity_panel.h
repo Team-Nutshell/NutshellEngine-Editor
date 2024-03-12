@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include "entity_list.h"
 #include <QWidget>
-#include <memory>
 
 class EntityPanel : public QWidget {
 	Q_OBJECT
@@ -13,5 +12,5 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<EntityList> entityList;
+	EntityList* entityList;
 };

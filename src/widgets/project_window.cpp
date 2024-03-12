@@ -14,21 +14,21 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
-	m_logoLabel = std::make_unique<QLabel>();
-	m_logoPixmap = std::make_unique<QPixmap>("assets/logo.png");
+	m_logoLabel = new QLabel();
+	m_logoPixmap = new QPixmap("assets/logo.png");
 	m_logoLabel->setPixmap(m_logoPixmap->scaled(width() - 20, height(), Qt::AspectRatioMode::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation));
-	layout()->addWidget(m_logoLabel.get());
+	layout()->addWidget(m_logoLabel);
 	layout()->addWidget(new SeparatorLine(globalInfo));
 	layout()->addWidget(new QLabel("<b>Open Project:</b>"));
-	m_openProjectWidget = std::make_unique<OpenProjectWidget>(m_globalInfo);
-	layout()->addWidget(m_openProjectWidget.get());
+	m_openProjectWidget = new OpenProjectWidget(m_globalInfo);
+	layout()->addWidget(m_openProjectWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
 	layout()->addWidget(new QLabel("<b>New Project:</b>"));
-	m_newProjectWidget = std::make_unique<NewProjectWidget>(m_globalInfo);
-	layout()->addWidget(m_newProjectWidget.get());
+	m_newProjectWidget = new NewProjectWidget(m_globalInfo);
+	layout()->addWidget(m_newProjectWidget);
 
-	connect(m_openProjectWidget.get(), &OpenProjectWidget::projectDirectorySelected, this, &ProjectWindow::onProjectDirectorySelected);
-	connect(m_newProjectWidget.get(), &NewProjectWidget::newProjectButtonClicked, this, &ProjectWindow::onNewProjectButtonClicked);
+	connect(m_openProjectWidget, &OpenProjectWidget::projectDirectorySelected, this, &ProjectWindow::onProjectDirectorySelected);
+	connect(m_newProjectWidget, &NewProjectWidget::newProjectButtonClicked, this, &ProjectWindow::onNewProjectButtonClicked);
 }
 
 void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirectory, const std::string& projectName) {

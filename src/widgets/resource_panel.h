@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include "asset_list.h"
 #include <QWidget>
-#include <memory>
 
 class ResourcePanel : public QWidget {
 	Q_OBJECT
@@ -13,5 +12,5 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<AssetList> assetList;
+	AssetList* assetList;
 };

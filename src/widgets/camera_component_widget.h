@@ -3,7 +3,6 @@
 #include "vector3_widget.h"
 #include "scalar_widget.h"
 #include <QWidget>
-#include <memory>
 
 class CameraComponentWidget : public QWidget {
 	Q_OBJECT
@@ -25,9 +24,9 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<Vector3Widget> forwardWidget;
-	std::unique_ptr<Vector3Widget> upWidget;
-	std::unique_ptr<ScalarWidget> fovWidget;
-	std::unique_ptr<ScalarWidget> nearPlaneWidget;
-	std::unique_ptr<ScalarWidget> farPlaneWidget;
+	Vector3Widget* forwardWidget;
+	Vector3Widget* upWidget;
+	ScalarWidget* fovWidget;
+	ScalarWidget* nearPlaneWidget;
+	ScalarWidget* farPlaneWidget;
 };

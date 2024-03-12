@@ -13,20 +13,20 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Light"));
 	std::vector<std::string> elementList = { "Directional", "Point", "Spot" };
-	typeWidget = std::make_unique<ComboBoxWidget>(m_globalInfo, "Type", elementList);
-	layout()->addWidget(typeWidget.get());
-	colorWidget = std::make_unique<ColorPickerWidget>(m_globalInfo, "Color", nml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	layout()->addWidget(colorWidget.get());
-	directionWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Direction");
-	layout()->addWidget(directionWidget.get());
-	cutoffWidget = std::make_unique<Vector2Widget>(m_globalInfo, "Cutoff");
-	layout()->addWidget(cutoffWidget.get());
+	typeWidget = new ComboBoxWidget(m_globalInfo, "Type", elementList);
+	layout()->addWidget(typeWidget);
+	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	layout()->addWidget(colorWidget);
+	directionWidget = new Vector3Widget(m_globalInfo, "Direction");
+	layout()->addWidget(directionWidget);
+	cutoffWidget = new Vector2Widget(m_globalInfo, "Cutoff");
+	layout()->addWidget(cutoffWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(typeWidget.get(), &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementUpdated);
-	connect(colorWidget.get(), &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorUpdated);
-	connect(directionWidget.get(), &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Updated);
-	connect(cutoffWidget.get(), &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Updated);
+	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementUpdated);
+	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorUpdated);
+	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Updated);
+	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Updated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onAddEntityLight);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onRemoveEntityLight);
@@ -35,7 +35,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 
 void LightComponentWidget::updateWidgets(const Light& light) {
 	{
-		const QSignalBlocker signalBlocker(typeWidget->comboBox.get());
+		const QSignalBlocker signalBlocker(typeWidget->comboBox);
 		typeWidget->comboBox->setCurrentText(QString::fromStdString(light.type));
 	}
 	colorWidget->colorButton->setText("(" + QString::number(light.color.x, 'g', 2) + ", " + QString::number(light.color.y, 'g', 2) + ", " + QString::number(light.color.z, 'g', 2) + ", 1.00)");
@@ -101,7 +101,7 @@ void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& l
 
 void LightComponentWidget::onElementUpdated(const std::string& element) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-	if (sender() == typeWidget.get()) {
+	if (sender() == typeWidget) {
 		newLight.type = element;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
@@ -109,7 +109,7 @@ void LightComponentWidget::onElementUpdated(const std::string& element) {
 
 void LightComponentWidget::onColorUpdated(const nml::vec4& color) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-	if (sender() == colorWidget.get()) {
+	if (sender() == colorWidget) {
 		newLight.color = color;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
@@ -117,7 +117,7 @@ void LightComponentWidget::onColorUpdated(const nml::vec4& color) {
 
 void LightComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-	if (sender() == directionWidget.get()) {
+	if (sender() == directionWidget) {
 		newLight.direction = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
@@ -125,7 +125,7 @@ void LightComponentWidget::onVec3Updated(const nml::vec3& value) {
 
 void LightComponentWidget::onVec2Updated(const nml::vec2& value) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-	if (sender() == cutoffWidget.get()) {
+	if (sender() == cutoffWidget) {
 		newLight.cutoff = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));

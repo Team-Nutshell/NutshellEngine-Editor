@@ -9,15 +9,15 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 2, 2, 2);
 	layout()->addWidget(new QLabel("Entity Info"));
-	m_entityInfoNameWidget = std::make_unique<EntityInfoNameWidget>(m_globalInfo);
+	m_entityInfoNameWidget = new EntityInfoNameWidget(m_globalInfo);
 	m_entityInfoNameWidget->hide();
-	layout()->addWidget(m_entityInfoNameWidget.get());
-	m_entityInfoPersistenceWidget = std::make_unique<EntityInfoPersistenceWidget>(m_globalInfo);
+	layout()->addWidget(m_entityInfoNameWidget);
+	m_entityInfoPersistenceWidget = new EntityInfoPersistenceWidget(m_globalInfo);
 	m_entityInfoPersistenceWidget->hide();
-	layout()->addWidget(m_entityInfoPersistenceWidget.get());
-	m_componentScrollArea = std::make_unique<ComponentScrollArea>(m_globalInfo);
+	layout()->addWidget(m_entityInfoPersistenceWidget);
+	m_componentScrollArea = new ComponentScrollArea(m_globalInfo);
 	m_componentScrollArea->hide();
-	layout()->addWidget(m_componentScrollArea.get());
+	layout()->addWidget(m_componentScrollArea);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::onSelectEntity);
 }

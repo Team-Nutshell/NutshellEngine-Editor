@@ -4,7 +4,6 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <string>
-#include <memory>
 
 class BooleanWidget : public QWidget {
 	Q_OBJECT
@@ -21,6 +20,6 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<QLabel> nameLabel;
-	std::unique_ptr<QCheckBox> checkBox;
+	QLabel* nameLabel;
+	QCheckBox* checkBox;
 };

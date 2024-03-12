@@ -7,5 +7,6 @@ struct RendererMesh {
 	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
 	GLuint indexCount = 0;
-	std::string texturePath = "defaultTexture";
+	std::string diffuseTexturePath = "defaultDiffuseTexture";
+	std::string emissiveTexturePath = "defaultEmissiveTexture";
 };

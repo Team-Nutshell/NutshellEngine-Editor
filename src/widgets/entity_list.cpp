@@ -10,7 +10,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
 	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Expanding);
 	setSizePolicy(sizePolicy);
-	menu = std::make_unique<EntityListMenu>(m_globalInfo);
+	menu = new EntityListMenu(m_globalInfo);
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 	
 	connect(this, &QListWidget::customContextMenuRequested, this, &EntityList::showMenu);

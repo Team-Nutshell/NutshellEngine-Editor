@@ -8,11 +8,11 @@ EntityInfoPersistenceWidget::EntityInfoPersistenceWidget(GlobalInfo& globalInfo)
 	setLayout(new QHBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignLeft);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	m_persistenceCheckBox = std::make_unique<QCheckBox>();
-	layout()->addWidget(m_persistenceCheckBox.get());
+	m_persistenceCheckBox = new QCheckBox();
+	layout()->addWidget(m_persistenceCheckBox);
 	layout()->addWidget(new QLabel("Is Persistent"));
 
-	connect(m_persistenceCheckBox.get(), &QCheckBox::stateChanged, this, &EntityInfoPersistenceWidget::onStateChanged);
+	connect(m_persistenceCheckBox, &QCheckBox::stateChanged, this, &EntityInfoPersistenceWidget::onStateChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPersistenceWidget::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityInfoPersistenceWidget::onChangeEntityPersistence);
 }
@@ -20,7 +20,7 @@ EntityInfoPersistenceWidget::EntityInfoPersistenceWidget(GlobalInfo& globalInfo)
 void EntityInfoPersistenceWidget::onSelectEntity() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		{
-			const QSignalBlocker signalBlocker(m_persistenceCheckBox.get());
+			const QSignalBlocker signalBlocker(m_persistenceCheckBox);
 			m_persistenceCheckBox->setChecked(m_globalInfo.entities[m_globalInfo.currentEntityID].isPersistent);
 		}
 	}
@@ -33,7 +33,7 @@ void EntityInfoPersistenceWidget::onStateChanged(int state) {
 void EntityInfoPersistenceWidget::onChangeEntityPersistence(EntityID entityID, bool isPersistent) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		{
-			const QSignalBlocker signalBlocker(m_persistenceCheckBox.get());
+			const QSignalBlocker signalBlocker(m_persistenceCheckBox);
 			m_persistenceCheckBox->setChecked(isPersistent);
 		}
 	}

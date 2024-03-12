@@ -12,14 +12,14 @@ ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_g
 
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	nameLabel = std::make_unique<QLabel>(QString::fromStdString(name));
-	layout()->addWidget(nameLabel.get());
-	valueLineEdit = std::make_unique<QLineEdit>("0.0");
+	nameLabel = new QLabel(QString::fromStdString(name));
+	layout()->addWidget(nameLabel);
+	valueLineEdit = new QLineEdit("0.0");
 	valueLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(valueLineEdit.get());
-	layout()->setAlignment(valueLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(valueLineEdit);
+	layout()->setAlignment(valueLineEdit, Qt::AlignmentFlag::AlignRight);
 
-	connect(valueLineEdit.get(), &QLineEdit::editingFinished, this, &ScalarWidget::onEditingFinished);
+	connect(valueLineEdit, &QLineEdit::editingFinished, this, &ScalarWidget::onEditingFinished);
 }
 
 void ScalarWidget::onEditingFinished() {

@@ -12,21 +12,21 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name): m
 
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	nameLabel = std::make_unique<QLabel>(QString::fromStdString(name));
-	layout()->addWidget(nameLabel.get());
+	nameLabel = new QLabel(QString::fromStdString(name));
+	layout()->addWidget(nameLabel);
 	layout()->addWidget(new QLabel("x:"));
-	xLineEdit = std::make_unique<QLineEdit>("0.0");
+	xLineEdit = new QLineEdit("0.0");
 	xLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(xLineEdit.get());
-	layout()->setAlignment(xLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(xLineEdit);
+	layout()->setAlignment(xLineEdit, Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("y:"));
-	yLineEdit = std::make_unique<QLineEdit>("0.0");
+	yLineEdit = new QLineEdit("0.0");
 	yLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(yLineEdit.get());
-	layout()->setAlignment(yLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(yLineEdit);
+	layout()->setAlignment(yLineEdit, Qt::AlignmentFlag::AlignRight);
 
-	connect(xLineEdit.get(), &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
-	connect(yLineEdit.get(), &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
+	connect(xLineEdit, &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
+	connect(yLineEdit, &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
 }
 
 void Vector2Widget::onEditingFinished() {

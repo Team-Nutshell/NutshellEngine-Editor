@@ -10,17 +10,17 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Transform"));
-	positionWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Position");
-	layout()->addWidget(positionWidget.get());
-	rotationWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Rotation");
-	layout()->addWidget(rotationWidget.get());
-	scaleWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Scale");
-	layout()->addWidget(scaleWidget.get());
+	positionWidget = new Vector3Widget(m_globalInfo, "Position");
+	layout()->addWidget(positionWidget);
+	rotationWidget = new Vector3Widget(m_globalInfo, "Rotation");
+	layout()->addWidget(rotationWidget);
+	scaleWidget = new Vector3Widget(m_globalInfo, "Scale");
+	layout()->addWidget(scaleWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(positionWidget.get(), &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
-	connect(rotationWidget.get(), &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
-	connect(scaleWidget.get(), &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
+	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
+	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
+	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onChangeEntityTransform);
 }
@@ -60,13 +60,13 @@ void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const 
 
 void TransformComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-	if (sender() == positionWidget.get()) {
+	if (sender() == positionWidget) {
 		newTransform.position = value;
 	}
-	else if (sender() == rotationWidget.get()) {
+	else if (sender() == rotationWidget) {
 		newTransform.rotation = value;
 	}
-	else if (sender() == scaleWidget.get()) {
+	else if (sender() == scaleWidget) {
 		newTransform.scale = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &newTransform));

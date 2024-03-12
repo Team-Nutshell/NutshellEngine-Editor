@@ -5,19 +5,19 @@
 NewProjectWidget::NewProjectWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	m_newProjectDirectoryPathWidget = std::make_unique<NewProjectDirectoryPathWidget>(m_globalInfo);
-	layout()->addWidget(m_newProjectDirectoryPathWidget.get());
-	m_newProjectNameWidget = std::make_unique<NewProjectNameWidget>(m_globalInfo);
-	layout()->addWidget(m_newProjectNameWidget.get());
-	m_projectPathLabel = std::make_unique<QLabel>("?/? (missing directory and project name)");
-	layout()->addWidget(m_projectPathLabel.get());
-	m_createNewProjectButton = std::make_unique<QPushButton>("Create new project");
+	m_newProjectDirectoryPathWidget = new NewProjectDirectoryPathWidget(m_globalInfo);
+	layout()->addWidget(m_newProjectDirectoryPathWidget);
+	m_newProjectNameWidget = new NewProjectNameWidget(m_globalInfo);
+	layout()->addWidget(m_newProjectNameWidget);
+	m_projectPathLabel = new QLabel("?/? (missing directory and project name)");
+	layout()->addWidget(m_projectPathLabel);
+	m_createNewProjectButton = new QPushButton("Create new project");
 	m_createNewProjectButton->setEnabled(false);
-	layout()->addWidget(m_createNewProjectButton.get());
+	layout()->addWidget(m_createNewProjectButton);
 
-	connect(m_createNewProjectButton.get(), &QPushButton::clicked, this, &NewProjectWidget::onCreateNewProjectButtonClicked);
-	connect(m_newProjectDirectoryPathWidget.get(), &NewProjectDirectoryPathWidget::newProjectDirectorySelected, this, &NewProjectWidget::onDirectorySelected);
-	connect(m_newProjectNameWidget.get(), &NewProjectNameWidget::textChanged, this, &NewProjectWidget::onTextChanged);
+	connect(m_createNewProjectButton, &QPushButton::clicked, this, &NewProjectWidget::onCreateNewProjectButtonClicked);
+	connect(m_newProjectDirectoryPathWidget, &NewProjectDirectoryPathWidget::newProjectDirectorySelected, this, &NewProjectWidget::onDirectorySelected);
+	connect(m_newProjectNameWidget, &NewProjectNameWidget::textChanged, this, &NewProjectWidget::onTextChanged);
 }
 
 void NewProjectWidget::onCreateNewProjectButtonClicked() {

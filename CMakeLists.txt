@@ -85,6 +85,7 @@ set(WIDGET_SOURCES
 	src/widgets/entity_panel.cpp
 	src/widgets/file_menu.cpp
 	src/widgets/file_selector_widget.cpp
+	src/widgets/image_viewer.cpp
 	src/widgets/light_component_widget.cpp
 	src/widgets/main_window.cpp
 	src/widgets/new_project_directory_path_widget.cpp
@@ -125,6 +126,7 @@ set(WIDGET_HEADERS
 	src/widgets/entity_panel.h
 	src/widgets/file_menu.h
 	src/widgets/file_selector_widget.h
+	src/widgets/image_viewer.h
 	src/widgets/light_component_widget.h
 	src/widgets/main_window.h
 	src/widgets/new_project_directory_path_widget.h

@@ -4,7 +4,6 @@
 #include "entity_info_persistence_widget.h"
 #include "component_scroll_area.h"
 #include <QWidget>
-#include <memory>
 
 class EntityInfoPanel : public QWidget {
 	Q_OBJECT
@@ -17,7 +16,7 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<EntityInfoNameWidget> m_entityInfoNameWidget;
-	std::unique_ptr<EntityInfoPersistenceWidget> m_entityInfoPersistenceWidget;
-	std::unique_ptr<ComponentScrollArea> m_componentScrollArea;
+	EntityInfoNameWidget* m_entityInfoNameWidget;
+	EntityInfoPersistenceWidget* m_entityInfoPersistenceWidget;
+	ComponentScrollArea* m_componentScrollArea;
 };

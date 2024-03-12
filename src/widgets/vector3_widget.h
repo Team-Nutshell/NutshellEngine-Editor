@@ -4,7 +4,6 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <string>
-#include <memory>
 
 class Vector3Widget : public QWidget {
 	Q_OBJECT
@@ -21,10 +20,10 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<QLabel> nameLabel;
-	std::unique_ptr<QLineEdit> xLineEdit;
-	std::unique_ptr<QLineEdit> yLineEdit;
-	std::unique_ptr<QLineEdit> zLineEdit;
+	QLabel* nameLabel;
+	QLineEdit* xLineEdit;
+	QLineEdit* yLineEdit;
+	QLineEdit* zLineEdit;
 
 	nml::vec3 value = nml::vec3(0.0f);
 };

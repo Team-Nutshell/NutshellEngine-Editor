@@ -4,7 +4,6 @@
 #include <QLabel>
 #include <QPushButton>
 #include <string>
-#include <memory>
 
 class FileSelectorWidget : public QWidget {
 	Q_OBJECT
@@ -23,6 +22,6 @@ private:
 	std::string m_filePath = "";
 
 public:
-	std::unique_ptr<QLabel> filePathLabel;
-	std::unique_ptr<QPushButton> filePathButton;
+	QLabel* filePathLabel;
+	QPushButton* filePathButton;
 };

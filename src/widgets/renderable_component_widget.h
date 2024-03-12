@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include "file_selector_widget.h"
 #include <QWidget>
-#include <memory>
 
 class RenderableComponentWidget : public QWidget {
 	Q_OBJECT
@@ -23,5 +22,5 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<FileSelectorWidget> modelPathWidget;
+	FileSelectorWidget* modelPathWidget;
 };

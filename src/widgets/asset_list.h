@@ -6,7 +6,6 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
-#include <memory>
 #include <string>
 
 class AssetList : public QListWidget {

@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include <QMenu>
 #include <QAction>
-#include <memory>
 
 class EntityListMenu : public QMenu {
 	Q_OBJECT

@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QFileDialog>
-#include <memory>
 
 class OpenProjectWidget : public QWidget {
 	Q_OBJECT
@@ -19,5 +18,5 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<QPushButton> m_directoryPathButton;
+	QPushButton* m_directoryPathButton;
 };

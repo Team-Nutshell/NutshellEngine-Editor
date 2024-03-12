@@ -12,27 +12,27 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m
 
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	nameLabel = std::make_unique<QLabel>(QString::fromStdString(name));
-	layout()->addWidget(nameLabel.get());
+	nameLabel = new QLabel(QString::fromStdString(name));
+	layout()->addWidget(nameLabel);
 	layout()->addWidget(new QLabel("x:"));
-	xLineEdit = std::make_unique<QLineEdit>("0.0");
+	xLineEdit = new QLineEdit("0.0");
 	xLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(xLineEdit.get());
-	layout()->setAlignment(xLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(xLineEdit);
+	layout()->setAlignment(xLineEdit, Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("y:"));
-	yLineEdit = std::make_unique<QLineEdit>("0.0");
+	yLineEdit = new QLineEdit("0.0");
 	yLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(yLineEdit.get());
-	layout()->setAlignment(yLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(yLineEdit);
+	layout()->setAlignment(yLineEdit, Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(new QLabel("z:"));
-	zLineEdit = std::make_unique<QLineEdit>("0.0");
+	zLineEdit = new QLineEdit("0.0");
 	zLineEdit->setValidator(doubleValidator);
-	layout()->addWidget(zLineEdit.get());
-	layout()->setAlignment(zLineEdit.get(), Qt::AlignmentFlag::AlignRight);
+	layout()->addWidget(zLineEdit);
+	layout()->setAlignment(zLineEdit, Qt::AlignmentFlag::AlignRight);
 
-	connect(xLineEdit.get(), &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
-	connect(yLineEdit.get(), &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
-	connect(zLineEdit.get(), &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
+	connect(xLineEdit, &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
+	connect(yLineEdit, &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
+	connect(zLineEdit, &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
 }
 
 void Vector3Widget::onEditingFinished() {

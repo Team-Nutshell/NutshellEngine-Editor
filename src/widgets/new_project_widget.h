@@ -22,10 +22,10 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<NewProjectDirectoryPathWidget> m_newProjectDirectoryPathWidget;
-	std::unique_ptr<NewProjectNameWidget> m_newProjectNameWidget;
-	std::unique_ptr<QLabel> m_projectPathLabel;
-	std::unique_ptr<QPushButton> m_createNewProjectButton;
+	NewProjectDirectoryPathWidget* m_newProjectDirectoryPathWidget;
+	NewProjectNameWidget* m_newProjectNameWidget;
+	QLabel* m_projectPathLabel;
+	QPushButton* m_createNewProjectButton;
 
 	std::string m_projectDirectoryPath = "";
 	std::string m_projectName = "";

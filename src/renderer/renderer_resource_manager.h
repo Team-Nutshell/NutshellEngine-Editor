@@ -13,7 +13,8 @@ public:
 	struct MeshToGPU {
 		std::vector<float> vertices;
 		std::vector<uint32_t> indices;
-		std::string texturePath;
+		std::string diffuseTexturePath;
+		std::string emissiveTexturePath;
 	};
 
 	struct ModelToGPU {

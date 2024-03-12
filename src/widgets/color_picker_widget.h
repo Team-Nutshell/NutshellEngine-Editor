@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
-#include <memory>
 
 class ColorPickerWidget : public QWidget {
 	Q_OBJECT
@@ -20,8 +19,8 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<QLabel> nameLabel;
-	std::unique_ptr<QPushButton> colorButton;
+	QLabel* nameLabel;
+	QPushButton* colorButton;
 
 	nml::vec4 color;
 };

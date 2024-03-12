@@ -3,7 +3,7 @@
 
 AddComponentButton::AddComponentButton(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setText("Add Component");
-	menu = std::make_unique<AddComponentMenu>(m_globalInfo);
+	menu = new AddComponentMenu(m_globalInfo);
 
 	connect(this, &QPushButton::clicked, this, &AddComponentButton::onClick);
 }

@@ -6,13 +6,13 @@
 FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	filePathLabel = std::make_unique<QLabel>(QString::fromStdString(noFileText));
-	layout()->addWidget(filePathLabel.get());
-	filePathButton = std::make_unique<QPushButton>(QString::fromStdString(buttonText));
-	layout()->addWidget(filePathButton.get());
-	layout()->setAlignment(filePathButton.get(), Qt::AlignmentFlag::AlignRight);
+	filePathLabel = new QLabel(QString::fromStdString(noFileText));
+	layout()->addWidget(filePathLabel);
+	filePathButton = new QPushButton(QString::fromStdString(buttonText));
+	layout()->addWidget(filePathButton);
+	layout()->setAlignment(filePathButton, Qt::AlignmentFlag::AlignRight);
 
-	connect(filePathButton.get(), &QPushButton::clicked, this, &FileSelectorWidget::onFilePathButtonClicked);
+	connect(filePathButton, &QPushButton::clicked, this, &FileSelectorWidget::onFilePathButtonClicked);
 }
 
 void FileSelectorWidget::onFilePathButtonClicked() {

@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QPushButton>
 #include <string>
-#include <memory>
 
 class ComponentTitleWidget : public QWidget {
 	Q_OBJECT
@@ -19,5 +18,5 @@ private:
 	std::string m_name;
 
 public:
-	std::unique_ptr<QPushButton> removeWidgetButton;
+	QPushButton* removeWidgetButton;
 };

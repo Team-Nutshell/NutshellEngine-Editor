@@ -2,6 +2,6 @@
 
 ComponentScrollArea::ComponentScrollArea(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setWidgetResizable(true);
-	componentList = std::make_unique<ComponentList>(m_globalInfo);
-	setWidget(componentList.get());
+	componentList = new ComponentList(m_globalInfo);
+	setWidget(componentList);
 }

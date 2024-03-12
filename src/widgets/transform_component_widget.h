@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include "vector3_widget.h"
 #include <QWidget>
-#include <memory>
 
 class TransformComponentWidget : public QWidget {
 	Q_OBJECT
@@ -21,7 +20,7 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<Vector3Widget> positionWidget;
-	std::unique_ptr<Vector3Widget> rotationWidget;
-	std::unique_ptr<Vector3Widget> scaleWidget;
+	Vector3Widget* positionWidget;
+	Vector3Widget* rotationWidget;
+	Vector3Widget* scaleWidget;
 };

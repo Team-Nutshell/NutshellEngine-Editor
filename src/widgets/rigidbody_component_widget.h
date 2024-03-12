@@ -3,7 +3,6 @@
 #include "boolean_widget.h"
 #include "scalar_widget.h"
 #include <QWidget>
-#include <memory>
 
 class RigidbodyComponentWidget : public QWidget {
 	Q_OBJECT
@@ -25,12 +24,12 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<BooleanWidget> isStaticWidget;
-	std::unique_ptr<BooleanWidget> isAffectedByConstantsWidget;
-	std::unique_ptr<BooleanWidget> lockRotationWidget;
-	std::unique_ptr<ScalarWidget> massWidget;
-	std::unique_ptr<ScalarWidget> inertiaWidget;
-	std::unique_ptr<ScalarWidget> restitutionWidget;
-	std::unique_ptr<ScalarWidget> staticFrictionWidget;
-	std::unique_ptr<ScalarWidget> dynamicFrictionWidget;
+	BooleanWidget* isStaticWidget;
+	BooleanWidget* isAffectedByConstantsWidget;
+	BooleanWidget* lockRotationWidget;
+	ScalarWidget* massWidget;
+	ScalarWidget* inertiaWidget;
+	ScalarWidget* restitutionWidget;
+	ScalarWidget* staticFrictionWidget;
+	ScalarWidget* dynamicFrictionWidget;
 };

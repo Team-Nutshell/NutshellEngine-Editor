@@ -9,23 +9,23 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Camera"));
-	forwardWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Forward");
-	layout()->addWidget(forwardWidget.get());
-	upWidget = std::make_unique<Vector3Widget>(m_globalInfo, "Up");
-	layout()->addWidget(upWidget.get());
-	fovWidget = std::make_unique<ScalarWidget>(m_globalInfo, "FOV");
-	layout()->addWidget(fovWidget.get());
-	nearPlaneWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Near Plane");
-	layout()->addWidget(nearPlaneWidget.get());
-	farPlaneWidget = std::make_unique<ScalarWidget>(m_globalInfo, "Far Plane");
-	layout()->addWidget(farPlaneWidget.get());
+	forwardWidget = new Vector3Widget(m_globalInfo, "Forward");
+	layout()->addWidget(forwardWidget);
+	upWidget = new Vector3Widget(m_globalInfo, "Up");
+	layout()->addWidget(upWidget);
+	fovWidget = new ScalarWidget(m_globalInfo, "FOV");
+	layout()->addWidget(fovWidget);
+	nearPlaneWidget = new ScalarWidget(m_globalInfo, "Near Plane");
+	layout()->addWidget(nearPlaneWidget);
+	farPlaneWidget = new ScalarWidget(m_globalInfo, "Far Plane");
+	layout()->addWidget(farPlaneWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(forwardWidget.get(), &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
-	connect(upWidget.get(), &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
-	connect(fovWidget.get(), &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
-	connect(nearPlaneWidget.get(), &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
-	connect(farPlaneWidget.get(), &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
+	connect(forwardWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
+	connect(upWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
+	connect(fovWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
+	connect(nearPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
+	connect(farPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CameraComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCameraSignal, this, &CameraComponentWidget::onAddEntityCamera);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCameraSignal, this, &CameraComponentWidget::onRemoveEntityCamera);
@@ -83,10 +83,10 @@ void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera
 
 void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
-	if (sender() == forwardWidget.get()) {
+	if (sender() == forwardWidget) {
 		newCamera.forward = value;
 	}
-	else if (sender() == upWidget.get()) {
+	else if (sender() == upWidget) {
 		newCamera.up = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));
@@ -94,13 +94,13 @@ void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
 
 void CameraComponentWidget::onScalarUpdated(float value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
-	if (sender() == fovWidget.get()) {
+	if (sender() == fovWidget) {
 		newCamera.fov = value;
 	}
-	else if (sender() == nearPlaneWidget.get()) {
+	else if (sender() == nearPlaneWidget) {
 		newCamera.nearPlane = value;
 	}
-	else if (sender() == farPlaneWidget.get()) {
+	else if (sender() == farPlaneWidget) {
 		newCamera.farPlane = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));

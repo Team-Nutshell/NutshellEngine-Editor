@@ -5,7 +5,6 @@
 #include <QComboBox>
 #include <string>
 #include <vector>
-#include <memory>
 
 class ComboBoxWidget : public QWidget {
 	Q_OBJECT
@@ -22,6 +21,6 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<QLabel> nameLabel;
-	std::unique_ptr<QComboBox> comboBox;
+	QLabel* nameLabel;
+	QComboBox* comboBox;
 };

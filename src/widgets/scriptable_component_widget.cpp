@@ -13,11 +13,11 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Scriptable"));
-	scriptPathWidget = std::make_unique<FileSelectorWidget>(m_globalInfo, "No script selected", "Select a script");
-	layout()->addWidget(scriptPathWidget.get());
+	scriptPathWidget = new FileSelectorWidget(m_globalInfo, "No script selected", "Select a script");
+	layout()->addWidget(scriptPathWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(scriptPathWidget.get(), &FileSelectorWidget::fileSelected, this, &ScriptableComponentWidget::onStringUpdated);
+	connect(scriptPathWidget, &FileSelectorWidget::fileSelected, this, &ScriptableComponentWidget::onStringUpdated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ScriptableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityScriptableSignal, this, &ScriptableComponentWidget::onAddEntityScriptable);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityScriptableSignal, this, &ScriptableComponentWidget::onRemoveEntityScriptable);
@@ -67,7 +67,7 @@ void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, cons
 
 void ScriptableComponentWidget::onStringUpdated(const std::string& string) {
 	Scriptable newScriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
-	if (sender() == scriptPathWidget.get()) {
+	if (sender() == scriptPathWidget) {
 		std::fstream scriptFile(string, std::ios::in);
 		if (scriptFile.is_open()) {
 			std::string scriptContent((std::istreambuf_iterator<char>(scriptFile)), std::istreambuf_iterator<char>());

@@ -5,7 +5,6 @@
 #include "vector3_widget.h"
 #include "scalar_widget.h"
 #include <QWidget>
-#include <memory>
 
 class CollidableComponentWidget : public QWidget {
 	Q_OBJECT
@@ -29,12 +28,12 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	std::unique_ptr<ComboBoxWidget> typeWidget;
-	std::unique_ptr<BooleanWidget> fromRenderableWidget;
-	std::unique_ptr<Vector3Widget> centerWidget;
-	std::unique_ptr<ScalarWidget> radiusWidget;
-	std::unique_ptr<Vector3Widget> halfExtentWidget;
-	std::unique_ptr<Vector3Widget> rotationWidget;
-	std::unique_ptr<Vector3Widget> baseWidget;
-	std::unique_ptr<Vector3Widget> tipWidget;
+	ComboBoxWidget* typeWidget;
+	BooleanWidget* fromRenderableWidget;
+	Vector3Widget* centerWidget;
+	ScalarWidget* radiusWidget;
+	Vector3Widget* halfExtentWidget;
+	Vector3Widget* rotationWidget;
+	Vector3Widget* baseWidget;
+	Vector3Widget* tipWidget;
 };

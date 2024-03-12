@@ -2,7 +2,6 @@
 #include "../common/common.h"
 #include <QWidget>
 #include <QCheckBox>
-#include <memory>
 
 class EntityInfoPersistenceWidget : public QWidget {
 	Q_OBJECT
@@ -17,5 +16,5 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unique_ptr<QCheckBox> m_persistenceCheckBox;
+	QCheckBox* m_persistenceCheckBox;
 };

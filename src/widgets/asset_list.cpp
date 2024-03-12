@@ -1,5 +1,6 @@
 #include "asset_list.h"
 #include "../common/scene_manager.h"
+#include "image_viewer.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QMimeData>
@@ -51,6 +52,11 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 
 		if (extension == "ntsn") {
 			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + itemText);
+		}
+		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png")) {
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemText);
+			imageViewer->setAttribute(Qt::WA_DeleteOnClose);
+			imageViewer->show();
 		}
 	}
 }
