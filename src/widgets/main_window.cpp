@@ -4,7 +4,7 @@
 
 MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(1280, 720);
-	setWindowTitle(QString("NutshellEngine - ") + QString::fromStdString(globalInfo.projectName));
+	setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 

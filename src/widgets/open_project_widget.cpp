@@ -11,12 +11,12 @@ OpenProjectWidget::OpenProjectWidget(GlobalInfo& globalInfo): m_globalInfo(globa
 }
 
 void OpenProjectWidget::onDirectoryPathButtonClicked() {
-	std::unique_ptr<QFileDialog> fileDialog = std::make_unique<QFileDialog>();
-	fileDialog->setWindowTitle(m_directoryPathButton->text());
-	fileDialog->setFileMode(QFileDialog::FileMode::Directory);
+	QFileDialog fileDialog = QFileDialog();
+	fileDialog.setWindowTitle("NutshellEngine - " + m_directoryPathButton->text());
+	fileDialog.setFileMode(QFileDialog::FileMode::Directory);
 
-	if (fileDialog->exec()) {
-		std::string projectDirectoryPath = std::filesystem::canonical(fileDialog->directory().path().toStdString()).string();
+	if (fileDialog.exec()) {
+		std::string projectDirectoryPath = std::filesystem::canonical(fileDialog.directory().path().toStdString()).string();
 		std::replace(projectDirectoryPath.begin(), projectDirectoryPath.end(), '\\', '/');
 		emit projectDirectorySelected(projectDirectoryPath);
 	}

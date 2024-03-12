@@ -1,7 +1,8 @@
 #pragma once
 #include "../common/common.h"
-#include "file_selector_widget.h"
+#include "combo_box_widget.h"
 #include <QWidget>
+#include <QFileSystemWatcher>
 
 class ScriptableComponentWidget : public QWidget {
 	Q_OBJECT
@@ -16,11 +17,14 @@ private slots:
 	void onAddEntityScriptable(EntityID entityID);
 	void onRemoveEntityScriptable(EntityID entityID);
 	void onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable);
-	void onStringUpdated(const std::string& string);
+	void onElementUpdated(const std::string& element);
+	void onDirectoryChanged(const QString& path);
 
 private:
 	GlobalInfo& m_globalInfo;
 
+	QFileSystemWatcher m_scriptsDirectoryWatcher;
+
 public:
-	FileSelectorWidget* scriptPathWidget;
+	ComboBoxWidget* scriptNameWidget;
 };

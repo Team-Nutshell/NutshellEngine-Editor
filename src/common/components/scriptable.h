@@ -5,12 +5,13 @@
 struct Scriptable : public Component {
 	Scriptable() : Component(ComponentType::Scriptable) {}
 
-	std::string scriptPath = "";
 	std::string scriptName = "";
 
 	nlohmann::json toJson() const {
 		nlohmann::json j;
-		j["scriptName"] = scriptName;
+		if (scriptName != "") {
+			j["scriptName"] = scriptName;
+		}
 
 		return j;
 	}

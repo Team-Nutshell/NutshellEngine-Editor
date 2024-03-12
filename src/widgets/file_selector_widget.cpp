@@ -17,7 +17,8 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 
 void FileSelectorWidget::onFilePathButtonClicked() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle(filePathButton->text());
+	fileDialog.setWindowTitle("NutshellEngine - " + filePathButton->text());
+	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	std::string filePathDirectory = m_filePath.substr(0, m_filePath.rfind('/'));
 	if (m_filePath != "") {
 		fileDialog.setDirectory(QString::fromStdString(filePathDirectory));

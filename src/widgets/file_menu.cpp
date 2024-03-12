@@ -21,7 +21,8 @@ void FileMenu::newScene() {
 
 void FileMenu::openScene() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle("Open Scene...");
+	fileDialog.setWindowTitle("NutshellEngine - Open Scene...");
+	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)");
 	if (m_globalInfo.projectDirectory != "") {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
@@ -44,7 +45,7 @@ void FileMenu::saveScene() {
 
 void FileMenu::saveSceneAs() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle("Save Scene as...");
+	fileDialog.setWindowTitle("NutshellEngine - Save Scene as...");
 	fileDialog.setDefaultSuffix("ntsn");
 	if (fileDialog.exec()) {
 		std::string filePath = fileDialog.selectedFiles()[0].toStdString();

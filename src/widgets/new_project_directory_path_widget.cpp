@@ -13,12 +13,13 @@ NewProjectDirectoryPathWidget::NewProjectDirectoryPathWidget(GlobalInfo& globalI
 }
 
 void NewProjectDirectoryPathWidget::onDirectoryPathButtonClicked() {
-	std::unique_ptr<QFileDialog> fileDialog = std::make_unique<QFileDialog>();
-	fileDialog->setWindowTitle(m_directoryPathButton->text());
-	fileDialog->setFileMode(QFileDialog::FileMode::Directory);
+	QFileDialog fileDialog = QFileDialog();
+	fileDialog.setWindowTitle("NutshellEngine - " + m_directoryPathButton->text());
+	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
+	fileDialog.setFileMode(QFileDialog::FileMode::Directory);
 
-	if (fileDialog->exec()) {
-		std::string directoryPath = std::filesystem::canonical(fileDialog->directory().path().toStdString()).string();
+	if (fileDialog.exec()) {
+		std::string directoryPath = std::filesystem::canonical(fileDialog.directory().path().toStdString()).string();
 		m_directoryPathButton->setText(QString::fromStdString(directoryPath));
 		emit newProjectDirectorySelected(directoryPath);
 	}

@@ -26,7 +26,8 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 void ColorPickerWidget::onColorButtonClicked() {
 	QColorDialog colorDialog;
 	colorDialog.setCurrentColor(QColor::fromRgbF(color.x, color.y, color.z, color.w));
-	colorDialog.setWindowTitle("Select a color");
+	colorDialog.setWindowTitle("NutshellEngine - Select a color");
+	colorDialog.setWindowIcon(QIcon("assets/icon.png"));
 	if (colorDialog.exec()) {
 		QColor newColor = colorDialog.currentColor();
 		nml::vec4 newColorToVec4 = nml::vec4(newColor.redF(), newColor.greenF(), newColor.blueF(), newColor.alphaF());

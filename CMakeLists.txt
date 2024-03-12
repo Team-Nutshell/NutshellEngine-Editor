@@ -92,6 +92,7 @@ set(WIDGET_SOURCES
 	src/widgets/new_project_name_widget.cpp
 	src/widgets/new_project_widget.cpp
 	src/widgets/new_scene_message_box.cpp
+	src/widgets/new_script_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/project_window.cpp
 	src/widgets/renderable_component_widget.cpp
@@ -133,6 +134,7 @@ set(WIDGET_HEADERS
 	src/widgets/new_project_name_widget.h
 	src/widgets/new_project_widget.h
 	src/widgets/new_scene_message_box.h
+	src/widgets/new_script_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/project_window.h
 	src/widgets/renderable_component_widget.h
