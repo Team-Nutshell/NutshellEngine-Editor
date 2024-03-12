@@ -8,12 +8,12 @@
 class ImageViewer : public QWidget {
 	Q_OBJECT
 public:
-	ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath);
+	ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath, const QImage& image);
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	QPixmap m_image;
+	QPixmap m_pixmap;
 
 public:
 	QLabel* imageLabel;

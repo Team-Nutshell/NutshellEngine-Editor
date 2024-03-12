@@ -1,15 +1,19 @@
 #include "image_viewer.h"
 #include <QVBoxLayout>
+#include <QImage>
+#include <fstream>
 
-ImageViewer::ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath) : m_globalInfo(globalInfo) {
+ImageViewer::ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath, const QImage& image) : m_globalInfo(globalInfo) {
 	setWindowTitle("NutshellEngine - Image Viewer - " + QString::fromStdString(imagePath));
 	setWindowIcon(QIcon("assets/icon.png"));
-
-	m_image = QPixmap(QString::fromStdString(imagePath));
-	setFixedSize(m_image.width() + 20, m_image.height() + 20);
+	setAttribute(Qt::WA_DeleteOnClose);
+	
+	m_pixmap = QPixmap();
+	m_pixmap.convertFromImage(image);
+	setFixedSize(m_pixmap.width() + 20, m_pixmap.height() + 20);
 
 	setLayout(new QVBoxLayout());
 	imageLabel = new QLabel();
-	imageLabel->setPixmap(m_image);
+	imageLabel->setPixmap(m_pixmap);
 	layout()->addWidget(imageLabel);
 }

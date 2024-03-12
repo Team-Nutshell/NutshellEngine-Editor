@@ -46,12 +46,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 	std::fstream modelFile(modelPath, std::ios::in);
 	if (modelFile.is_open()) {
 		if (!nlohmann::json::accept(modelFile)) {
-			std::cout << "\"" << modelPath + "\" is not a valid JSON file." << std::endl;
+			std::cout << "\"" << modelPath << "\" is not a valid JSON file." << std::endl;
 			return;
 		}
 	}
 	else {
-		std::cout << "\"" << modelPath + "\" cannot be opened." << std::endl;
+		std::cout << "\"" << modelPath << "\" cannot be opened." << std::endl;
 		return;
 	}
 
@@ -72,12 +72,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 					std::fstream materialFile(materialPath, std::ios::in);
 					if (materialFile.is_open()) {
 						if (!nlohmann::json::accept(materialFile)) {
-							std::cout << "\"" << materialPath + "\" is not a valid JSON file." << std::endl;
+							std::cout << "\"" << materialPath << "\" is not a valid JSON file." << std::endl;
 							return;
 						}
 					}
 					else {
-						std::cout << "\"" << materialPath + "\" cannot be opened." << std::endl;
+						std::cout << "\"" << materialPath << "\" cannot be opened." << std::endl;
 						return;
 					}
 
@@ -96,12 +96,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 							std::fstream samplerFile(samplerPath, std::ios::in);
 							if (samplerFile.is_open()) {
 								if (!nlohmann::json::accept(samplerFile)) {
-									std::cout << "\"" << samplerPath + "\" is not a valid JSON file." << std::endl;
+									std::cout << "\"" << samplerPath << "\" is not a valid JSON file." << std::endl;
 									return;
 								}
 							}
 							else {
-								std::cout << "\"" << samplerPath + "\" cannot be opened." << std::endl;
+								std::cout << "\"" << samplerPath << "\" cannot be opened." << std::endl;
 								return;
 							}
 
@@ -159,12 +159,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 							std::fstream samplerFile(samplerPath, std::ios::in);
 							if (samplerFile.is_open()) {
 								if (!nlohmann::json::accept(samplerFile)) {
-									std::cout << "\"" << samplerPath + "\" is not a valid JSON file." << std::endl;
+									std::cout << "\"" << samplerPath << "\" is not a valid JSON file." << std::endl;
 									return;
 								}
 							}
 							else {
-								std::cout << "\"" << samplerPath + "\" cannot be opened." << std::endl;
+								std::cout << "\"" << samplerPath << "\" cannot be opened." << std::endl;
 								return;
 							}
 
@@ -226,12 +226,12 @@ RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::
 	std::fstream meshFile(meshPath, std::ios::in);
 	if (meshFile.is_open()) {
 		if (!nlohmann::json::accept(meshFile)) {
-			std::cout << "\"" << meshPath + "\" is not a valid JSON file." << std::endl;
+			std::cout << "\"" << meshPath << "\" is not a valid JSON file." << std::endl;
 			return mesh;
 		}
 	}
 	else {
-		std::cout << "\"" << meshPath + "\" cannot be opened." << std::endl;
+		std::cout << "\"" << meshPath << "\" cannot be opened." << std::endl;
 		return mesh;
 	}
 
@@ -281,12 +281,12 @@ void RendererResourceManager::loadNtim(const std::string& imagePath, const std::
 	std::fstream imageFile(imagePath, std::ios::in);
 	if (imageFile.is_open()) {
 		if (!nlohmann::json::accept(imageFile)) {
-			std::cout << "\"" << imagePath + "\" is not a valid JSON file." << std::endl;
+			std::cout << "\"" << imagePath << "\" is not a valid JSON file." << std::endl;
 			return;
 		}
 	}
 	else {
-		std::cout << "\"" << imagePath + "\" cannot be opened." << std::endl;
+		std::cout << "\"" << imagePath << "\" cannot be opened." << std::endl;
 		return;
 	}
 

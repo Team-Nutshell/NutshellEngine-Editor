@@ -4,6 +4,7 @@
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QMimeData>
+#include <QImage>
 #include <filesystem>
 #include <algorithm>
 
@@ -45,17 +46,55 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
-	std::string itemText = item->text().toStdString();
-	size_t lastDot = itemText.rfind('.');
+	std::string itemFileName = item->text().toStdString();
+	size_t lastDot = itemFileName.rfind('.');
 	if (lastDot != std::string::npos) {
-		std::string extension = itemText.substr(lastDot + 1);
+		std::string extension = itemFileName.substr(lastDot + 1);
 
 		if (extension == "ntsn") {
-			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + itemText);
+			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + itemFileName);
 		}
 		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png")) {
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemText);
-			imageViewer->setAttribute(Qt::WA_DeleteOnClose);
+			QImage image = QImage(QString::fromStdString(m_currentDirectory) + "/" + QString::fromStdString(itemFileName));
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemFileName, image);
+			imageViewer->show();
+		}
+		else if (extension == "ntim") {
+			int width = 1;
+			int height = 1;
+			std::vector<uint8_t> pixelData;
+
+			std::fstream imageFile(m_currentDirectory + "/" + itemFileName, std::ios::in);
+			if (imageFile.is_open()) {
+				if (!nlohmann::json::accept(imageFile)) {
+					std::cout << "\"" << m_currentDirectory + "/" + itemFileName << "\" is not a valid JSON file." << std::endl;
+					return;
+				}
+			}
+			else {
+				std::cout << "\"" << m_currentDirectory + "/" + itemFileName << "\" cannot be opened." << std::endl;
+				return;
+			}
+
+			imageFile = std::fstream(m_currentDirectory + "/" + itemFileName, std::ios::in);
+
+			nlohmann::json j = nlohmann::json::parse(imageFile);
+
+			if (j.contains("width")) {
+				width = static_cast<uint32_t>(j["width"]);
+			}
+
+			if (j.contains("height")) {
+				height = static_cast<uint32_t>(j["height"]);
+			}
+
+			if (j.contains("data")) {
+				for (size_t i = 0; i < j["data"].size(); i++) {
+					pixelData.push_back(static_cast<uint8_t>(j["data"][i]));
+				}
+			}
+			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemFileName, image);
 			imageViewer->show();
 		}
 	}
