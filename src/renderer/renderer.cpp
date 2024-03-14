@@ -169,7 +169,7 @@ void Renderer::initializeGL() {
 
 	void main() {
 		fragPosition = vec3(model * vec4(position, 1.0));
-		fragNormal = (model * vec4(normal, 0.0)).xyz;
+		fragNormal = normalize((model * vec4(normal, 0.0)).xyz);
 		fragUV = uv;
 		gl_Position = viewProj * vec4(fragPosition, 1.0);
 	}
