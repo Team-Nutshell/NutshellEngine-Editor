@@ -9,9 +9,7 @@ struct Scriptable : public Component {
 
 	nlohmann::json toJson() const {
 		nlohmann::json j;
-		if (scriptName != "") {
-			j["scriptName"] = scriptName;
-		}
+		j["scriptName"] = scriptName;
 
 		return j;
 	}
