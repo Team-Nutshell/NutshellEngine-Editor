@@ -34,19 +34,19 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 
 void CameraComponentWidget::updateWidgets(const Camera& camera) {
 	forwardWidget->value = camera.forward;
-	forwardWidget->xLineEdit->setText(QString::number(camera.forward.x, 'g', 3));
-	forwardWidget->yLineEdit->setText(QString::number(camera.forward.y, 'g', 3));
-	forwardWidget->zLineEdit->setText(QString::number(camera.forward.z, 'g', 3));
+	forwardWidget->xLineEdit->setText(QString::number(camera.forward.x, 'f', 3));
+	forwardWidget->yLineEdit->setText(QString::number(camera.forward.y, 'f', 3));
+	forwardWidget->zLineEdit->setText(QString::number(camera.forward.z, 'f', 3));
 	upWidget->value = camera.up;
-	upWidget->xLineEdit->setText(QString::number(camera.up.x, 'g', 3));
-	upWidget->yLineEdit->setText(QString::number(camera.up.y, 'g', 3));
-	upWidget->zLineEdit->setText(QString::number(camera.up.z, 'g', 3));
+	upWidget->xLineEdit->setText(QString::number(camera.up.x, 'f', 3));
+	upWidget->yLineEdit->setText(QString::number(camera.up.y, 'f', 3));
+	upWidget->zLineEdit->setText(QString::number(camera.up.z, 'f', 3));
 	fovWidget->value = camera.fov;
-	fovWidget->valueLineEdit->setText(QString::number(camera.fov, 'g', 3));
+	fovWidget->valueLineEdit->setText(QString::number(camera.fov, 'f', 3));
 	nearPlaneWidget->value = camera.nearPlane;
-	nearPlaneWidget->valueLineEdit->setText(QString::number(camera.nearPlane, 'g', 3));
+	nearPlaneWidget->valueLineEdit->setText(QString::number(camera.nearPlane, 'f', 3));
 	farPlaneWidget->value = camera.farPlane;
-	farPlaneWidget->valueLineEdit->setText(QString::number(camera.farPlane, 'g', 3));
+	farPlaneWidget->valueLineEdit->setText(QString::number(camera.farPlane, 'f', 3));
 }
 
 void CameraComponentWidget::onSelectEntity() {

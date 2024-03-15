@@ -56,15 +56,15 @@ void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
 		lockRotationWidget->checkBox->setChecked(rigidbody.lockRotation);
 	}
 	massWidget->value = rigidbody.mass;
-	massWidget->valueLineEdit->setText(QString::number(rigidbody.mass, 'g', 3));
+	massWidget->valueLineEdit->setText(QString::number(rigidbody.mass, 'f', 3));
 	inertiaWidget->value = rigidbody.mass;
-	inertiaWidget->valueLineEdit->setText(QString::number(rigidbody.inertia, 'g', 3));
+	inertiaWidget->valueLineEdit->setText(QString::number(rigidbody.inertia, 'f', 3));
 	restitutionWidget->value = rigidbody.restitution;
-	restitutionWidget->valueLineEdit->setText(QString::number(rigidbody.restitution, 'g', 3));
+	restitutionWidget->valueLineEdit->setText(QString::number(rigidbody.restitution, 'f', 3));
 	staticFrictionWidget->value = rigidbody.staticFriction;
-	staticFrictionWidget->valueLineEdit->setText(QString::number(rigidbody.staticFriction, 'g', 3));
+	staticFrictionWidget->valueLineEdit->setText(QString::number(rigidbody.staticFriction, 'f', 3));
 	dynamicFrictionWidget->value = rigidbody.dynamicFriction;
-	dynamicFrictionWidget->valueLineEdit->setText(QString::number(rigidbody.dynamicFriction, 'g', 3));
+	dynamicFrictionWidget->valueLineEdit->setText(QString::number(rigidbody.dynamicFriction, 'f', 3));
 }
 
 void RigidbodyComponentWidget::onSelectEntity() {

@@ -10,7 +10,7 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 	nameLabel = new QLabel(QString::fromStdString(name));
 	layout()->addWidget(nameLabel);
 	colorButton = new QPushButton();
-	colorButton->setText("(" + QString::number(color.x, 'g', 2) + ", " + QString::number(color.y, 'g', 2) + ", " + QString::number(color.z, 'g', 2) + ", 1.00)");
+	colorButton->setText("(" + QString::number(color.x, 'f', 2) + ", " + QString::number(color.y, 'f', 2) + ", " + QString::number(color.z, 'f', 2) + ", 1.00)");
 	QPalette colorButtonPalette = colorButton->palette();
 	colorButtonPalette.setColor(QPalette::ColorRole::Button, QColor::fromRgbF(color.x, color.y, color.z));
 	colorButtonPalette.setColor(QPalette::ColorRole::ButtonText, QColor::fromRgbF(1.0f - std::clamp(color.x, 0.0f, 1.0f), 1.0f - std::clamp(color.y, 0.0f, 1.0f), 1.0f - std::clamp(color.z, 0.0f, 1.0f)));
