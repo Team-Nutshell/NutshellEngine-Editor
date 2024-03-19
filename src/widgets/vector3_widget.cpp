@@ -2,7 +2,7 @@
 #include <QHBoxLayout>
 #include <QLocale>
 #include <QDoubleValidator>
-#include <stdlib.h>
+#include <cstdlib>
 
 Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
 	QLocale useDotLocale = QLocale(QLocale::Language::English, QLocale::Country::UnitedStates);
@@ -36,7 +36,7 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m
 }
 
 void Vector3Widget::onEditingFinished() {
-	nml::vec3 newValue = nml::vec3(atof(xLineEdit->text().toStdString().c_str()), atof(yLineEdit->text().toStdString().c_str()), atof(zLineEdit->text().toStdString().c_str()));
+	nml::vec3 newValue = nml::vec3(std::atof(xLineEdit->text().toStdString().c_str()), std::atof(yLineEdit->text().toStdString().c_str()), std::atof(zLineEdit->text().toStdString().c_str()));
 	if (value != newValue) {
 		value = newValue;
 		emit valueChanged(value);

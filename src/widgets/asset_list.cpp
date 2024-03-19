@@ -1,6 +1,7 @@
 #include "asset_list.h"
 #include "../common/scene_manager.h"
 #include "image_viewer.h"
+#include "options_file_widget.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QMimeData>
@@ -96,6 +97,10 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemFileName, image);
 			imageViewer->show();
+		}
+		else if (extension == "ntop") {
+			OptionsFileWidget* optionsFileWidget = new OptionsFileWidget(m_globalInfo, m_currentDirectory + "/" + itemFileName);
+			optionsFileWidget->show();
 		}
 	}
 }

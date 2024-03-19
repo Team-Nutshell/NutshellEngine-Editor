@@ -19,9 +19,9 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::string m_filePath = "";
-
 public:
 	QLabel* filePathLabel;
 	QPushButton* filePathButton;
+
+	std::string filePath = "";
 };

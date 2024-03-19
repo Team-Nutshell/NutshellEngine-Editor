@@ -86,6 +86,7 @@ set(WIDGET_SOURCES
 	src/widgets/file_menu.cpp
 	src/widgets/file_selector_widget.cpp
 	src/widgets/image_viewer.cpp
+	src/widgets/integer_widget.cpp
 	src/widgets/light_component_widget.cpp
 	src/widgets/main_window.cpp
 	src/widgets/new_project_directory_path_widget.cpp
@@ -94,6 +95,7 @@ set(WIDGET_SOURCES
 	src/widgets/new_scene_message_box.cpp
 	src/widgets/new_script_message_box.cpp
 	src/widgets/open_project_widget.cpp
+	src/widgets/options_file_widget.cpp
 	src/widgets/project_window.cpp
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
@@ -101,6 +103,7 @@ set(WIDGET_SOURCES
 	src/widgets/scalar_widget.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
+	src/widgets/string_widget.cpp
 	src/widgets/transform_component_widget.cpp
 	src/widgets/vector2_widget.cpp
 	src/widgets/vector3_widget.cpp
@@ -128,6 +131,7 @@ set(WIDGET_HEADERS
 	src/widgets/file_menu.h
 	src/widgets/file_selector_widget.h
 	src/widgets/image_viewer.h
+	src/widgets/integer_widget.h
 	src/widgets/light_component_widget.h
 	src/widgets/main_window.h
 	src/widgets/new_project_directory_path_widget.h
@@ -136,6 +140,7 @@ set(WIDGET_HEADERS
 	src/widgets/new_scene_message_box.h
 	src/widgets/new_script_message_box.h
 	src/widgets/open_project_widget.h
+	src/widgets/options_file_widget.h
 	src/widgets/project_window.h
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
@@ -143,6 +148,7 @@ set(WIDGET_HEADERS
 	src/widgets/scalar_widget.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
+	src/widgets/string_widget.h
 	src/widgets/transform_component_widget.h
 	src/widgets/vector2_widget.h
 	src/widgets/vector3_widget.h

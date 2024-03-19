@@ -2,7 +2,7 @@
 #include <QHBoxLayout>
 #include <QLocale>
 #include <QDoubleValidator>
-#include <stdlib.h>
+#include <cstdlib>
 
 ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
 	QLocale useDotLocale = QLocale(QLocale::Language::English, QLocale::Country::UnitedStates);
@@ -23,7 +23,7 @@ ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_g
 }
 
 void ScalarWidget::onEditingFinished() {
-	float newValue = atof(valueLineEdit->text().toStdString().c_str());
+	float newValue = std::atof(valueLineEdit->text().toStdString().c_str());
 	if (value != newValue) {
 		value = newValue;
 		emit valueChanged(value);

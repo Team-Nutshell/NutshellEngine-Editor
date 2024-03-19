@@ -19,8 +19,8 @@ void FileSelectorWidget::onFilePathButtonClicked() {
 	QFileDialog fileDialog = QFileDialog();
 	fileDialog.setWindowTitle("NutshellEngine - " + filePathButton->text());
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
-	std::string filePathDirectory = m_filePath.substr(0, m_filePath.rfind('/'));
-	if (m_filePath != "") {
+	std::string filePathDirectory = filePath.substr(0, filePath.rfind('/'));
+	if (filePath != "") {
 		fileDialog.setDirectory(QString::fromStdString(filePathDirectory));
 	}
 	else if (m_globalInfo.projectDirectory != "") {
@@ -28,9 +28,9 @@ void FileSelectorWidget::onFilePathButtonClicked() {
 	}
 
 	if (fileDialog.exec()) {
-		m_filePath = fileDialog.selectedFiles()[0].toStdString();
-		filePathLabel->setText(QString::fromStdString(m_filePath.substr(m_filePath.rfind('/') + 1)));
-		filePathLabel->setToolTip(QString::fromStdString(m_filePath));
-		emit fileSelected(m_filePath);
+		filePath = fileDialog.selectedFiles()[0].toStdString();
+		filePathLabel->setText(QString::fromStdString(filePath.substr(filePath.rfind('/') + 1)));
+		filePathLabel->setToolTip(QString::fromStdString(filePath));
+		emit fileSelected(filePath);
 	}
 }
