@@ -33,6 +33,7 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
 
 void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirectory, const std::string& projectName) {
 	std::filesystem::create_directory(projectDirectory);
+	std::filesystem::create_directory(projectDirectory + "/assets");
 	nlohmann::json j;
 	j["projectName"] = projectName;
 	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);

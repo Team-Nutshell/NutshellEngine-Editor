@@ -1065,9 +1065,9 @@ void Renderer::updateLights() {
 				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
 				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
 				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-					std::cos(baseDirectionPitch + transform.rotation.x) * std::cos(baseDirectionYaw + transform.rotation.y),
-					-std::sin(baseDirectionPitch + transform.rotation.x),
-					std::cos(baseDirectionPitch + transform.rotation.x) * std::sin(baseDirectionYaw + transform.rotation.y)
+					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
+					-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
+					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
 				));
 
 				directionalLightsInfos.push_back(nml::vec4());
@@ -1090,9 +1090,9 @@ void Renderer::updateLights() {
 				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
 				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
 				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-					std::cos(baseDirectionPitch + transform.rotation.x) * std::cos(baseDirectionYaw + transform.rotation.y),
-					-std::sin(baseDirectionPitch + transform.rotation.x),
-					std::cos(baseDirectionPitch + transform.rotation.x) * std::sin(baseDirectionYaw + transform.rotation.y)
+					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
+					-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
+					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
 				));
 
 				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));

@@ -47,6 +47,9 @@ void FileMenu::saveSceneAs() {
 	QFileDialog fileDialog = QFileDialog();
 	fileDialog.setWindowTitle("NutshellEngine - Save Scene as...");
 	fileDialog.setDefaultSuffix("ntsn");
+	if (m_globalInfo.projectDirectory != "") {
+		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
+	}
 	if (fileDialog.exec()) {
 		std::string filePath = fileDialog.selectedFiles()[0].toStdString();
 		SceneManager::saveScene(m_globalInfo, filePath);
