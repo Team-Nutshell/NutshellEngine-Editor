@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <algorithm>
 
-FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText) : m_globalInfo(globalInfo) {
+FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText, const std::string& defaultPath) : m_globalInfo(globalInfo), m_defaultPath(defaultPath) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	filePathLabel = new QLabel(QString::fromStdString(noFileText));
@@ -21,10 +21,15 @@ void FileSelectorWidget::onFilePathButtonClicked() {
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	std::string filePathDirectory = filePath.substr(0, filePath.rfind('/'));
 	if (filePath != "") {
-		fileDialog.setDirectory(QString::fromStdString(filePathDirectory));
+		if (std::filesystem::path(filePath).is_absolute()) {
+			fileDialog.setDirectory(QString::fromStdString(filePathDirectory));
+		}
+		else {
+			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/" + filePathDirectory));
+		}
 	}
-	else if (m_globalInfo.projectDirectory != "") {
-		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
+	else {
+		fileDialog.setDirectory(QString::fromStdString(m_defaultPath));
 	}
 
 	if (fileDialog.exec()) {

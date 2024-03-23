@@ -19,11 +19,11 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	setLayout(new QVBoxLayout());
 	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
 	layout()->addWidget(windowTitleWidget);
-	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "No window icon selected", "Select a window icon");
+	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "No window icon selected", "Select a window icon", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(windowIconImageWidget);
 	maxFPSWidget = new IntegerWidget(m_globalInfo, "Max FPS");
 	layout()->addWidget(maxFPSWidget);
-	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "No first scene selected", "Select a first scene");
+	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "No first scene selected", "Select a first scene", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(firstSceneWidget);
 	startProfilingWidget = new BooleanWidget(m_globalInfo, "Start Profiling");
 	layout()->addWidget(startProfilingWidget);

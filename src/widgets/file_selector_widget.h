@@ -8,7 +8,7 @@
 class FileSelectorWidget : public QWidget {
 	Q_OBJECT
 public:
-	FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText);
+	FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText, const std::string& defaultPath);
 
 signals:
 	void fileSelected(const std::string&);
@@ -18,6 +18,8 @@ private slots:
 
 private:
 	GlobalInfo& m_globalInfo;
+
+	std::string m_defaultPath = "";
 
 public:
 	QLabel* filePathLabel;
