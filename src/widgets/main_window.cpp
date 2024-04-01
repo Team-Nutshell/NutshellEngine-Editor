@@ -20,6 +20,7 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	m_verticalSplitter->setOrientation(Qt::Orientation::Vertical);
 	m_verticalSplitter->addWidget(m_horizontalSplitter);
 	m_mainWidget->setLayout(new QVBoxLayout());
+	m_mainWidget->layout()->setContentsMargins(0, 0, 0, 0);
 	m_mainWidget->layout()->addWidget(m_verticalSplitter);
 	createResourcePanel();
 	m_verticalSplitter->setSizes({ 520, 200 });

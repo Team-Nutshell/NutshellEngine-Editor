@@ -7,6 +7,7 @@
 #include <cmath>
 
 OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath) : m_globalInfo(globalInfo), m_optionsFilePath(optionsFilePath) {
+	resize(640, 360);
 	setWindowTitle("NutshellEngine - Options File - " + QString::fromStdString(optionsFilePath));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
@@ -17,6 +18,7 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
 
 	setLayout(new QVBoxLayout());
+	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
 	layout()->addWidget(windowTitleWidget);
 	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "No window icon selected", "Select a window icon", m_globalInfo.projectDirectory + "/assets");
