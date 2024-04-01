@@ -1426,13 +1426,13 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
 				if (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) {
 					float worldSpaceCursorDifferenceLength = worldSpaceCursorDifference.length();
-					nml::vec3 worldSpaceCursorPreviousEntityDifference = worldSpaceCursorPreviousPosition - m_entityMoveTransform->position;
-					if (nml::dot(worldSpaceCursorPreviousEntityDifference, worldSpaceCursorPreviousEntityDifference) != 0.0f) {
-						float scaleFactor = 1.0f;
+					nml::vec3 worldSpaceCursorCurrentEntityDifference = worldSpaceCursorCurrentPosition - m_entityMoveTransform->position;
+					if (nml::dot(worldSpaceCursorCurrentEntityDifference, worldSpaceCursorCurrentEntityDifference) != 0.0f) {
+						float scaleFactor = 10.0f;
 						if (!m_camera.useOrthographicProjection) {
 							scaleFactor = 1000.0f;
 						}
-						m_entityMoveTransform->scale += ((worldSpaceCursorDifferenceLength * scaleFactor) / worldSpaceCursorPreviousEntityDifference.length()) * ((nml::dot(worldSpaceCursorDifference, worldSpaceCursorPreviousEntityDifference) > 0.0) ? 1.0f : -1.0f);
+						m_entityMoveTransform->scale += ((worldSpaceCursorDifferenceLength * scaleFactor) / worldSpaceCursorCurrentEntityDifference.length()) * ((nml::dot(worldSpaceCursorDifference, worldSpaceCursorCurrentEntityDifference) > 0.0) ? 1.0f : -1.0f);
 					}
 				}
 			}
