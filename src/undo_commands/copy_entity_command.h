@@ -5,7 +5,7 @@
 
 class CopyEntityCommand : public QUndoCommand {
 public:
-	CopyEntityCommand(GlobalInfo& globalInfo, EntityID entityID);
+	CopyEntityCommand(GlobalInfo& globalInfo, Entity entity);
 
 	void undo();
 	void redo();

@@ -21,14 +21,14 @@ EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalI
 
 void EditMenu::copyEntity() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_globalInfo.copiedEntityID = m_globalInfo.currentEntityID;
+		m_globalInfo.copiedEntity = m_globalInfo.entities[m_globalInfo.currentEntityID];
 		m_pasteEntityAction->setEnabled(true);
 	}
 }
 
 void EditMenu::pasteEntity() {
-	if (m_globalInfo.copiedEntityID != NO_ENTITY) {
-		m_globalInfo.undoStack->push(new CopyEntityCommand(m_globalInfo, m_globalInfo.copiedEntityID));
+	if (m_globalInfo.copiedEntity) {
+		m_globalInfo.undoStack->push(new CopyEntityCommand(m_globalInfo, m_globalInfo.copiedEntity.value()));
 	}
 }
 

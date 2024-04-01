@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <string>
+#include <optional>
 #include <cstdint>
 
 struct GlobalInfo {
@@ -16,7 +17,7 @@ struct GlobalInfo {
 	std::unordered_map<EntityID, Entity> entities;
 	EntityID currentEntityID = NO_ENTITY;
 	EntityID globalEntityID = 0;
-	EntityID copiedEntityID = NO_ENTITY;
+	std::optional<Entity> copiedEntity;
 	std::string currentScenePath = "";
 	float devicePixelRatio = 1.0f;
 	void* mainWindow;

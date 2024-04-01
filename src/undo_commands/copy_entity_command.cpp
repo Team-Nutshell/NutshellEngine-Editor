@@ -1,10 +1,15 @@
 #include "copy_entity_command.h"
 
-CopyEntityCommand::CopyEntityCommand(GlobalInfo& globalInfo, EntityID entityID) : m_globalInfo(globalInfo) {
-	m_copiedEntity = m_globalInfo.entities[entityID];
+CopyEntityCommand::CopyEntityCommand(GlobalInfo& globalInfo, Entity entity) : m_globalInfo(globalInfo) {
+	m_copiedEntity = entity;
 	uint32_t entityNameIndex = 0;
-	while (m_globalInfo.findEntityByName(m_copiedEntity.name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
-		entityNameIndex++;
+	if (m_globalInfo.findEntityByName(m_copiedEntity.name) == NO_ENTITY) {
+		m_passedEntityName = m_copiedEntity.name;
+	}
+	else {
+		while (m_globalInfo.findEntityByName(m_copiedEntity.name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
+			entityNameIndex++;
+		}
 	}
 	m_passedEntityName = m_copiedEntity.name + "_" + std::to_string(entityNameIndex);
 	setText("Copy Entity " + QString::fromStdString(m_copiedEntity.name) + " to Entity " + QString::fromStdString(m_passedEntityName));
