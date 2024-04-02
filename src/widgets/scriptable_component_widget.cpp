@@ -19,7 +19,9 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	scriptEntries.push_back("No script selected");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
 		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
-			if (entry.path().string().find("generate_scriptable_factory.py") != std::string::npos) {
+			if ((entry.path().string().find("generate_script_manager.py") != std::string::npos) ||
+				(entry.path().string().find("ntshengn_script_manager.h") != std::string::npos) ||
+				(entry.path().string().find("ntshengn_script_manager.cpp") != std::string::npos)) {
 				continue;
 			}
 
