@@ -19,9 +19,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	scriptEntries.push_back("No script selected");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
 		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
-			if ((entry.path().string().find("generate_script_manager.py") != std::string::npos) ||
-				(entry.path().string().find("ntshengn_script_manager.h") != std::string::npos) ||
-				(entry.path().string().find("ntshengn_script_manager.cpp") != std::string::npos)) {
+			if (entry.is_directory()) {
 				continue;
 			}
 
@@ -130,7 +128,7 @@ void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
 					}
 
 					std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + scriptName + ".h", std::ios::out | std::ios::trunc);
-					newScriptFile << "#pragma once\n#include \"../Core/scripting/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << scriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << scriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(double dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
+					newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << scriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << scriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(double dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
 				
 					newScriptable.scriptName = scriptName;
 				}

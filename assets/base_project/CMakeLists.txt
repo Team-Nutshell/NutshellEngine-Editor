@@ -33,15 +33,15 @@ else()
 endif()
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SCRIPTS_DIRECTORY "scripts")
 file(GLOB_RECURSE SCRIPTS "${SCRIPTS_DIRECTORY}/*.h")
 message(STATUS ${SCRIPTS})
 
 set(SCRIPT_MANAGER
-	${SCRIPTS_DIRECTORY}/ntshengn_script_manager.h
-	${SCRIPTS_DIRECTORY}/ntshengn_script_manager.cpp)
+	${SCRIPTS_DIRECTORY}/script_manager/ntshengn_script_manager.h
+	${SCRIPTS_DIRECTORY}/script_manager/ntshengn_script_manager.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SCRIPT_MANAGER} ${SCRIPTS})
 
@@ -52,8 +52,8 @@ target_link_libraries(${PROJECT_NAME}
 
 target_compile_options(${PROJECT_NAME}
 	PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Werror>)
+		$<$<CXX_COMPILER_ID:MSVC>:/W4>
+		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>)
 
 target_compile_definitions(${PROJECT_NAME}
 	PRIVATE
@@ -86,8 +86,8 @@ elseif(NOT NTSHENGN_INSTALL_SCRIPTS_PATH STREQUAL "NtshEngn_InstallScripts_NOTFO
 endif()
 
 add_custom_target(GenerateScriptManager
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR}
-	COMMENT "Generate ${SCRIPTS_DIRECTORY}/ntshengn_script_manager.cpp.")
+	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_DIRECTORY}/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR}
+	COMMENT "Generate ${SCRIPTS_DIRECTORY}/script_manager/ntshengn_script_manager.cpp.")
 
 add_custom_target(CopyAssets
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/assets
@@ -95,3 +95,16 @@ add_custom_target(CopyAssets
 
 add_dependencies(${PROJECT_NAME} GenerateScriptManager)
 add_dependencies(${PROJECT_NAME} CopyAssets)
+
+set(NTSHENGN_EXECUTABLE_PATH "NtshEngn_Executable_NOTFOUND" CACHE FILEPATH "Path to NutshellEngine\'s executable to launch the application.")
+if(EXISTS ${NTSHENGN_EXECUTABLE_PATH} AND NOT IS_DIRECTORY ${NTSHENGN_EXECUTABLE_PATH})
+	message(STATUS "Found NutshellEngine\'s executable at ${NTSHENGN_EXECUTABLE_PATH}")
+	message(STATUS get_filename_component(${NTSHENGN_EXECUTABLE_PATH} DIRECTORY))
+	get_filename_component(NTSHENGN_EXECUTABLE_DIRECTORY ${NTSHENGN_EXECUTABLE_PATH} DIRECTORY)
+	add_custom_target(ExecuteApplication
+		COMMAND ${NTSHENGN_EXECUTABLE_PATH}
+		WORKING_DIRECTORY ${NTSHENGN_EXECUTABLE_DIRECTORY}
+		COMMENT "Executing the application.")
+elseif(NOT NTSHENGN_EXECUTABLE_PATH STREQUAL "NtshEngn_Executable_NOTFOUND" OR IS_DIRECTORY ${NTSHENGN_EXECUTABLE_PATH})
+	message(WARNING "NutshellEngine\'s executable could not be found at ${NTSHENGN_EXECUTABLE_PATH} or path is not a file.")
+endif()

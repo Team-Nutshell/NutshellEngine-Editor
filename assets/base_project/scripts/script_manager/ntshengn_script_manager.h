@@ -1,5 +1,5 @@
 #pragma once
-#include "../Common/script/ntshengn_script_manager_interface.h"
+#include "../../Common/script/ntshengn_script_manager_interface.h"
 
 #if defined(NTSHENGN_OS_WINDOWS)
 #if defined(NutshellEngineScriptManager_EXPORTS)
