@@ -13,6 +13,9 @@ class AssetList : public QListWidget {
 public:
 	AssetList(GlobalInfo& globalInfo);
 
+signals:
+	void directoryChanged(const std::string& directory);
+
 private slots:
 	void onItemDoubleClicked(QListWidgetItem* item);
 	void onCurrentTextChanged(const QString& currentText);

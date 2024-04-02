@@ -6,6 +6,7 @@
 #include <QIcon>
 #include <QPixmap>
 #include <fstream>
+#include <algorithm>
 
 ProjectWindow::ProjectWindow(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
 	setFixedSize(550, 400);
@@ -33,11 +34,19 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
 
 void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirectory, const std::string& projectName) {
 	std::filesystem::create_directory(projectDirectory);
-	std::filesystem::create_directory(projectDirectory + "/assets");
+	std::filesystem::copy("assets/base_project", projectDirectory, std::filesystem::copy_options::recursive);
+
+	std::fstream optionsFile(projectDirectory + "/assets/options/options.ntop", std::ios::out | std::ios::trunc);
+	if (optionsFile.is_open()) {
+		const std::string optionsFileContent = "{\n\t\"windowTitle\": \"" + projectName + "\"\n}";
+		optionsFile << optionsFileContent;
+	}
+
 	nlohmann::json j;
 	j["projectName"] = projectName;
 	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
 	projectFile << j.dump(1, '\t');
+
 	openMainWindow(projectDirectory, projectName);
 }
 
@@ -50,6 +59,7 @@ void ProjectWindow::onProjectDirectorySelected(const std::string& projectDirecto
 			projectName = j["projectName"];
 		}
 	}
+
 	openMainWindow(projectDirectory, projectName);
 }
 

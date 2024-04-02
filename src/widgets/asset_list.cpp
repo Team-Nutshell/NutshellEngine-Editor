@@ -11,7 +11,6 @@
 
 AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
-		std::cout << "Missing \"assets\" directory." << std::endl;
 		return;
 	}
 	m_assetsDirectory = std::filesystem::canonical(m_globalInfo.projectDirectory + "/assets/").string();
@@ -139,6 +138,8 @@ void AssetList::onCurrentTextChanged(const QString& currentText) {
 				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
 			}
 		}
+
+		emit directoryChanged(m_currentDirectory.substr(m_globalInfo.projectDirectory.size() + 1));
 	}
 }
 
@@ -168,6 +169,8 @@ void AssetList::onDirectoryChanged(const QString& path) {
 			}
 		}
 	}
+
+	emit directoryChanged(directoryPath.substr(m_globalInfo.projectDirectory.size() + 1));
 }
 
 void AssetList::mouseMoveEvent(QMouseEvent* event) {
