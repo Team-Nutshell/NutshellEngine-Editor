@@ -101,7 +101,7 @@ add_dependencies(${PROJECT_NAME} CopyAssets)
 set(NTSHENGN_EXECUTABLE_PATH "NtshEngn_Executable_NOTFOUND" CACHE FILEPATH "Path to NutshellEngine\'s executable to launch the application.")
 if(EXISTS ${NTSHENGN_EXECUTABLE_PATH} AND NOT IS_DIRECTORY ${NTSHENGN_EXECUTABLE_PATH})
 	message(STATUS "Found NutshellEngine\'s executable at ${NTSHENGN_EXECUTABLE_PATH}")
-	message(STATUS get_filename_component(${NTSHENGN_EXECUTABLE_PATH} DIRECTORY))
+	get_filename_component(NTSHENGN_EXECUTABLE_DIRECTORY ${NTSHENGN_EXECUTABLE_PATH} DIRECTORY)
 	add_custom_target(ExecuteApplication
 		COMMAND ${NTSHENGN_EXECUTABLE_PATH}
 		WORKING_DIRECTORY ${NTSHENGN_EXECUTABLE_DIRECTORY}
