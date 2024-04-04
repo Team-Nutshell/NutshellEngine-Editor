@@ -15,6 +15,7 @@ public:
 		std::vector<uint32_t> indices;
 		std::string diffuseTexturePath;
 		std::string emissiveTexturePath;
+		float alphaCutoff = 0.0f;
 	};
 
 	struct ModelToGPU {

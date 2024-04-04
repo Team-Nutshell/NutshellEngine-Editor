@@ -46,10 +46,14 @@ struct SceneManager {
 					std::string fullModelPath = newEntity.renderable->modelPath;
 					std::filesystem::path path(fullModelPath);
 					if (!path.is_absolute()) {
-						fullModelPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullModelPath).string();
+						if (std::filesystem::exists(globalInfo.projectDirectory + "/" + fullModelPath)) {
+							fullModelPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullModelPath).string();
+						}
 					}
 					std::replace(fullModelPath.begin(), fullModelPath.end(), '\\', '/');
-					globalInfo.rendererResourceManager.loadModel(fullModelPath, newEntity.renderable->modelPath);
+					if (std::filesystem::exists(fullModelPath)) {
+						globalInfo.rendererResourceManager.loadModel(fullModelPath, newEntity.renderable->modelPath);
+					}
 				}
 			}
 			if (!entities.empty()) {

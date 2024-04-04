@@ -192,6 +192,7 @@ void Renderer::initializeGL() {
 
 	uniform sampler2D diffuseTextureSampler;
 	uniform sampler2D emissiveTextureSampler;
+	uniform float alphaCutoff;
 	uniform bool enableShading;
 	restrict readonly buffer LightBuffer {
 		uvec3 count;
@@ -201,7 +202,10 @@ void Renderer::initializeGL() {
 	out vec4 outColor;
 
 	void main() {
-		vec3 diffuseTextureSample = texture(diffuseTextureSampler, fragUV).rgb;
+		vec4 diffuseTextureSample = texture(diffuseTextureSampler, fragUV);
+		if (diffuseTextureSample.a < alphaCutoff) {
+			discard;
+		}
 		vec3 emissiveTextureSample = texture(emissiveTextureSampler, fragUV).rgb;
 		outColor = vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -212,7 +216,7 @@ void Renderer::initializeGL() {
 			for (uint i = 0; i < lights.count.x; i++) {
 				vec3 l = -lights.info[lightIndex].direction;
 
-				outColor += vec4(diffuseTextureSample * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
@@ -224,7 +228,7 @@ void Renderer::initializeGL() {
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = lights.info[lightIndex].color * attenuation;
 
-				outColor += vec4(diffuseTextureSample * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * radiance * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
@@ -238,13 +242,13 @@ void Renderer::initializeGL() {
 				intensity = 1.0 - intensity;
 				vec3 radiance = lights.info[lightIndex].color * intensity;
 
-				outColor += vec4(diffuseTextureSample * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * radiance * dot(l, fragNormal), 0.0);
 
 				lightIndex++;
 			}
 		}
 		else {
-			outColor = vec4(diffuseTextureSample, 1.0);
+			outColor = vec4(diffuseTextureSample.rgb, 1.0);
 		}
 
 		outColor += vec4(emissiveTextureSample, 0.0);
@@ -628,6 +632,8 @@ void Renderer::paintGL() {
 					gl.glActiveTexture(GL_TEXTURE1);
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.emissiveTexturePath]);
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+
+					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMesh.alphaCutoff);
 
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1126,6 +1132,8 @@ void Renderer::loadResourcesToGPU() {
 
 			newRendererMesh.diffuseTexturePath = meshToGPU.diffuseTexturePath;
 			newRendererMesh.emissiveTexturePath = meshToGPU.emissiveTexturePath;
+
+			newRendererMesh.alphaCutoff = meshToGPU.alphaCutoff;
 
 			newRendererModel.meshes.push_back(newRendererMesh);
 		}

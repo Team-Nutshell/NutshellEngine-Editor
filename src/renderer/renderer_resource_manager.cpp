@@ -690,6 +690,11 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 
 					primitive.emissiveTexturePath = mapKey;
 				}
+
+				// Alpha cutoff
+				if (primitiveMaterial->alpha_mode == cgltf_alpha_mode_mask) {
+					primitive.alphaCutoff = primitiveMaterial->alpha_cutoff;
+				}
 			}
 
 			rendererModel.meshes.push_back(primitive);
