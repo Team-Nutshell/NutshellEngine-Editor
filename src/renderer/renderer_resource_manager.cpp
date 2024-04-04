@@ -522,65 +522,67 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 					cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
 					if (baseColorTexture != NULL) {
 						cgltf_image* baseColorImage = baseColorTexture->image;
-						std::string imageURI = baseColorImage->uri;
+						if (baseColorImage->uri) {
+							std::string imageURI = baseColorImage->uri;
 
-						size_t base64Pos = imageURI.find(";base64,");
-						if (base64Pos != std::string::npos) {
-							cgltf_options options = {};
+							size_t base64Pos = imageURI.find(";base64,");
+							if (base64Pos != std::string::npos) {
+								cgltf_options options = {};
 
-							const std::string uriBase64 = imageURI.substr(base64Pos + 8);
-							const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
-							std::vector<uint8_t> decodedData(decodedDataSize);
-							cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
-							if (result == cgltf_result_success) {
-								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+								const std::string uriBase64 = imageURI.substr(base64Pos + 8);
+								const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
+								std::vector<uint8_t> decodedData(decodedDataSize);
+								cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
+								if (result == cgltf_result_success) {
+									loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+								}
+								else {
+									std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+								}
 							}
 							else {
-								std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+								std::string modelDirectory = modelPath;
+								size_t lastSlashPos = modelDirectory.rfind("/");
+								if (lastSlashPos != std::string::npos) {
+									modelDirectory = modelDirectory.substr(0, lastSlashPos);
+								}
+								loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
+								imageURI = modelDirectory + "/" + imageURI;
 							}
+
+							ImageToGPU& image = imagesToGPU[imageURI];
+							if (baseColorTexture->sampler != NULL) {
+								if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
+									image.minFilter = ImageToGPU::SamplerFilter::Nearest;
+								}
+								else {
+									image.minFilter = ImageToGPU::SamplerFilter::Linear;
+								}
+
+								if ((baseColorTexture->sampler->mag_filter == 9728) || (baseColorTexture->sampler->mag_filter == 9984) || (baseColorTexture->sampler->mag_filter == 9986)) {
+									image.magFilter = ImageToGPU::SamplerFilter::Nearest;
+								}
+								else {
+									image.magFilter = ImageToGPU::SamplerFilter::Linear;
+								}
+
+								if (baseColorTexture->sampler->wrap_s == 10497) {
+									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
+								}
+								else if (baseColorTexture->sampler->wrap_s == 33648) {
+									image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
+								}
+
+								if (baseColorTexture->sampler->wrap_t == 10497) {
+									image.wrapT = ImageToGPU::SamplerWrap::Repeat;
+								}
+								else if (baseColorTexture->sampler->wrap_t == 33648) {
+									image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
+								}
+							}
+
+							primitive.diffuseTexturePath = imageURI;
 						}
-						else {
-							std::string modelDirectory = modelPath;
-							size_t lastSlashPos = modelDirectory.rfind("/");
-							if (lastSlashPos != std::string::npos) {
-								modelDirectory = modelDirectory.substr(0, lastSlashPos);
-							}
-							loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
-							imageURI = modelDirectory + "/" + imageURI;
-						}
-
-						ImageToGPU& image = imagesToGPU[imageURI];
-						if (baseColorTexture->sampler != NULL) {
-							if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
-								image.minFilter = ImageToGPU::SamplerFilter::Nearest;
-							}
-							else {
-								image.minFilter = ImageToGPU::SamplerFilter::Linear;
-							}
-
-							if ((baseColorTexture->sampler->mag_filter == 9728) || (baseColorTexture->sampler->mag_filter == 9984) || (baseColorTexture->sampler->mag_filter == 9986)) {
-								image.magFilter = ImageToGPU::SamplerFilter::Nearest;
-							}
-							else {
-								image.magFilter = ImageToGPU::SamplerFilter::Linear;
-							}
-
-							if (baseColorTexture->sampler->wrap_s == 10497) {
-								image.wrapS = ImageToGPU::SamplerWrap::Repeat;
-							}
-							else if (baseColorTexture->sampler->wrap_s == 33648) {
-								image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
-							}
-
-							if (baseColorTexture->sampler->wrap_t == 10497) {
-								image.wrapT = ImageToGPU::SamplerWrap::Repeat;
-							}
-							else if (baseColorTexture->sampler->wrap_t == 33648) {
-								image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
-							}
-						}
-
-						primitive.diffuseTexturePath = imageURI;
 					}
 					else if (baseColorFactor != NULL) {
 						std::string mapKey = "srgb" + std::to_string(baseColorFactor[0]) + std::to_string(baseColorFactor[1]) + std::to_string(baseColorFactor[2]) + std::to_string(baseColorFactor[3]);
@@ -608,65 +610,67 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				cgltf_float* emissiveFactor = primitiveMaterial->emissive_factor;
 				if (emissiveTexture != NULL) {
 					cgltf_image* emissiveImage = emissiveTexture->image;
-					std::string imageURI = emissiveImage->uri;
+					if (emissiveImage->uri) {
+						std::string imageURI = emissiveImage->uri;
 
-					size_t base64Pos = imageURI.find(";base64,");
-					if (base64Pos != std::string::npos) {
-						cgltf_options options = {};
+						size_t base64Pos = imageURI.find(";base64,");
+						if (base64Pos != std::string::npos) {
+							cgltf_options options = {};
 
-						const std::string uriBase64 = imageURI.substr(base64Pos + 8);
-						const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
-						std::vector<uint8_t> decodedData(decodedDataSize);
-						cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
-						if (result == cgltf_result_success) {
-							loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+							const std::string uriBase64 = imageURI.substr(base64Pos + 8);
+							const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
+							std::vector<uint8_t> decodedData(decodedDataSize);
+							cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
+							if (result == cgltf_result_success) {
+								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+							}
+							else {
+								std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+							}
 						}
 						else {
-							std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+							std::string modelDirectory = modelPath;
+							size_t lastSlashPos = modelDirectory.rfind("/");
+							if (lastSlashPos != std::string::npos) {
+								modelDirectory = modelDirectory.substr(0, lastSlashPos);
+							}
+							loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
+							imageURI = modelDirectory + "/" + imageURI;
 						}
+
+						ImageToGPU& image = imagesToGPU[imageURI];
+						if (emissiveTexture->sampler != NULL) {
+							if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
+								image.minFilter = ImageToGPU::SamplerFilter::Nearest;
+							}
+							else {
+								image.minFilter = ImageToGPU::SamplerFilter::Linear;
+							}
+
+							if ((emissiveTexture->sampler->mag_filter == 9728) || (emissiveTexture->sampler->mag_filter == 9984) || (emissiveTexture->sampler->mag_filter == 9986)) {
+								image.magFilter = ImageToGPU::SamplerFilter::Nearest;
+							}
+							else {
+								image.magFilter = ImageToGPU::SamplerFilter::Linear;
+							}
+
+							if (emissiveTexture->sampler->wrap_s == 10497) {
+								image.wrapS = ImageToGPU::SamplerWrap::Repeat;
+							}
+							else if (emissiveTexture->sampler->wrap_s == 33648) {
+								image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
+							}
+
+							if (emissiveTexture->sampler->wrap_t == 10497) {
+								image.wrapT = ImageToGPU::SamplerWrap::Repeat;
+							}
+							else if (emissiveTexture->sampler->wrap_t == 33648) {
+								image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
+							}
+						}
+
+						primitive.emissiveTexturePath = imageURI;
 					}
-					else {
-						std::string modelDirectory = modelPath;
-						size_t lastSlashPos = modelDirectory.rfind("/");
-						if (lastSlashPos != std::string::npos) {
-							modelDirectory = modelDirectory.substr(0, lastSlashPos);
-						}
-						loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
-						imageURI = modelDirectory + "/" + imageURI;
-					}
-
-					ImageToGPU& image = imagesToGPU[imageURI];
-					if (emissiveTexture->sampler != NULL) {
-						if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
-							image.minFilter = ImageToGPU::SamplerFilter::Nearest;
-						}
-						else {
-							image.minFilter = ImageToGPU::SamplerFilter::Linear;
-						}
-
-						if ((emissiveTexture->sampler->mag_filter == 9728) || (emissiveTexture->sampler->mag_filter == 9984) || (emissiveTexture->sampler->mag_filter == 9986)) {
-							image.magFilter = ImageToGPU::SamplerFilter::Nearest;
-						}
-						else {
-							image.magFilter = ImageToGPU::SamplerFilter::Linear;
-						}
-
-						if (emissiveTexture->sampler->wrap_s == 10497) {
-							image.wrapS = ImageToGPU::SamplerWrap::Repeat;
-						}
-						else if (emissiveTexture->sampler->wrap_s == 33648) {
-							image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
-						}
-
-						if (emissiveTexture->sampler->wrap_t == 10497) {
-							image.wrapT = ImageToGPU::SamplerWrap::Repeat;
-						}
-						else if (emissiveTexture->sampler->wrap_t == 33648) {
-							image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
-						}
-					}
-
-					primitive.emissiveTexturePath = imageURI;
 				}
 				else if (emissiveFactor != NULL) {
 					std::string mapKey = "srgb" + std::to_string(emissiveFactor[0]) + std::to_string(emissiveFactor[1]) + std::to_string(emissiveFactor[2]) + std::to_string(emissiveFactor[3]);
