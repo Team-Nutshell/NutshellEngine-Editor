@@ -10,8 +10,8 @@ CopyEntityCommand::CopyEntityCommand(GlobalInfo& globalInfo, Entity entity) : m_
 		while (m_globalInfo.findEntityByName(m_copiedEntity.name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
 			entityNameIndex++;
 		}
+		m_passedEntityName = m_copiedEntity.name + "_" + std::to_string(entityNameIndex);
 	}
-	m_passedEntityName = m_copiedEntity.name + "_" + std::to_string(entityNameIndex);
 	setText("Copy Entity " + QString::fromStdString(m_copiedEntity.name) + " to Entity " + QString::fromStdString(m_passedEntityName));
 }
 
