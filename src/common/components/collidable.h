@@ -20,12 +20,20 @@ struct Collidable : public Component {
 		nlohmann::json j;
 		j["type"] = type;
 		if (!fromRenderable) {
-			j["center"] = { center.x, center.y, center.z };
-			j["radius"] = radius;
-			j["halfExtent"] = { halfExtent.x, halfExtent.y, halfExtent.z };
-			j["rotation"] = { rotation.x, rotation.y, rotation.z };
-			j["base"] = { base.x, base.y, base.z };
-			j["tip"] = { tip.x, tip.y, tip.z };
+			if ((type == "Box") || (type == "Sphere")) {
+				j["center"] = { center.x, center.y, center.z };
+			}
+			if ((type == "Sphere") || (type == "Capsule")) {
+				j["radius"] = radius;
+			}
+			if (type == "Box") {
+				j["halfExtent"] = { halfExtent.x, halfExtent.y, halfExtent.z };
+				j["rotation"] = { rotation.x, rotation.y, rotation.z };
+			}
+			if (type == "Capsule") {
+				j["base"] = { base.x, base.y, base.z };
+				j["tip"] = { tip.x, tip.y, tip.z };
+			}
 		}
 
 		return j;
