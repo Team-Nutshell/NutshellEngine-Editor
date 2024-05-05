@@ -41,12 +41,12 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	std::fstream optionsFile("assets/options.json", std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
-			std::cout << "\"assets/options.json\" is not a valid JSON file." << std::endl;
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		std::cout << "\"assets/options.json\" cannot be opened." << std::endl;
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
 		return;
 	}
 

@@ -20,12 +20,12 @@ struct SceneManager {
 		std::fstream sceneFile(sceneFilePath, std::ios::in);
 		if (sceneFile.is_open()) {
 			if (!nlohmann::json::accept(sceneFile)) {
-				std::cout << "\"" << sceneFilePath << "\" is not a valid JSON file." << std::endl;
+				globalInfo.logger.addLog(LogLevel::Warning, "\"" + sceneFilePath + "\" is not a valid JSON file.");
 				return;
 			}
 		}
 		else {
-			std::cout << "\"" << sceneFilePath << "\" cannot be opened." << std::endl;
+			globalInfo.logger.addLog(LogLevel::Warning, "\"" + sceneFilePath + "\" cannot be opened.");
 			return;
 		}
 		

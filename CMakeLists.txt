@@ -36,8 +36,12 @@ set(COMMON_HEADERS
 	${COMMON_COMPONENTS_HEADERS}
 	src/common/common.h
 	src/common/entity.h
+	src/common/logger.h
 	src/common/scene_manager.h
 	src/common/signal_emitter.h)
+
+set(COMMON_SOURCES
+	src/common/logger.cpp)
 
 set(RENDERER_SOURCES
 	src/renderer/renderer.cpp
@@ -97,6 +101,7 @@ set(WIDGET_SOURCES
 	src/widgets/image_viewer.cpp
 	src/widgets/integer_widget.cpp
 	src/widgets/light_component_widget.cpp
+	src/widgets/log_bar.cpp
 	src/widgets/main_window.cpp
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
@@ -142,6 +147,7 @@ set(WIDGET_HEADERS
 	src/widgets/image_viewer.h
 	src/widgets/integer_widget.h
 	src/widgets/light_component_widget.h
+	src/widgets/log_bar.h
 	src/widgets/main_window.h
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
@@ -164,6 +170,7 @@ set(WIDGET_HEADERS
 	src/widgets/view_menu.h)
 
 set(SOURCES
+	${COMMON_SOURCES}
 	${RENDERER_SOURCES}
 	${UNDO_COMMANDS_SOURCES}
 	${WIDGET_SOURCES})

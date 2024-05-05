@@ -23,12 +23,12 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	std::fstream optionsFile("assets/options.json", std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
-			std::cout << "\"assets/options.json\" is not a valid JSON file." << std::endl;
+			globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		std::cout << "\"assets/options.json\" cannot be opened." << std::endl;
+		globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
 		return;
 	}
 
@@ -883,7 +883,7 @@ GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode)
 		infolog.reserve(maxlength);
 		int length;
 		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog.data());
-		std::cout << "Error while compiling shader :" << std::string(infolog.data(), length) << std::endl;
+		m_globalInfo.logger.addLog(LogLevel::Error, "Error while compiling shader :" + std::string(infolog.data(), length));
 		return 0xFFFFFFFF;
 	}
 
@@ -903,7 +903,7 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 		std::vector<GLchar> infolog;
 		int length;
 		gl.glGetProgramInfoLog(program, maxlength, &length, infolog.data());
-		std::cout << "Error while linking program :" << std::string(infolog.data(), length) << std::endl;
+		m_globalInfo.logger.addLog(LogLevel::Error, "Error while linking program :" + std::string(infolog.data(), length));
 		gl.glDetachShader(program, vertexShader);
 		gl.glDetachShader(program, fragmentShader);
 		return 0xFFFFFFFF;

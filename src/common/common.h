@@ -1,5 +1,6 @@
 #pragma once
 #include "entity.h"
+#include "logger.h"
 #include "signal_emitter.h"
 #include "../renderer/renderer_resource_manager.h"
 #include "../../external/nml/include/nml.h"
@@ -23,7 +24,8 @@ struct GlobalInfo {
 	void* mainWindow;
 	std::unique_ptr<QUndoStack> undoStack;
 	SignalEmitter signalEmitter;
-	RendererResourceManager rendererResourceManager;
+	Logger logger;
+	RendererResourceManager rendererResourceManager = RendererResourceManager(&logger);
 
 	EntityID findEntityByName(const std::string& entityName) {
 		for (const auto& entity : entities) {

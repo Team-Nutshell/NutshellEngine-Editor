@@ -3,7 +3,7 @@
 
 ResourcePanel::ResourcePanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
-	layout()->setContentsMargins(2, 2, 2, 2);
+	layout()->setContentsMargins(2, 2, 2, 0);
 	assetsLabel = new QLabel("Assets");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		assetsLabel->setText("Assets (<i>assets/</i>)");

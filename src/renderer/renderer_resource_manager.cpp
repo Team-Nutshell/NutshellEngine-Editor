@@ -1,4 +1,5 @@
 #include "renderer_resource_manager.h"
+#include "../common/logger.h"
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #define CGLTF_IMPLEMENTATION
@@ -11,6 +12,8 @@
 #include <algorithm>
 #include <fstream>
 
+RendererResourceManager::RendererResourceManager(Logger* passLogger) : logger(passLogger) {}
+
 void RendererResourceManager::loadModel(const std::string& modelPath, const std::string& name) {
 	size_t lastDot = modelPath.rfind('.');
 	if (lastDot != std::string::npos) {
@@ -22,7 +25,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 			loadNtmd(modelPath, name);
 		}
 		else {
-			std::cout << "Model file extension \"." << extension << "\" is not supported." << std::endl;
+			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported.");
 		}
 	}
 }
@@ -46,12 +49,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 	std::fstream modelFile(modelPath, std::ios::in);
 	if (modelFile.is_open()) {
 		if (!nlohmann::json::accept(modelFile)) {
-			std::cout << "\"" << modelPath << "\" is not a valid JSON file." << std::endl;
+			logger->addLog(LogLevel::Warning, "\"" + modelPath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		std::cout << "\"" << modelPath << "\" cannot be opened." << std::endl;
+		logger->addLog(LogLevel::Warning, "\"" + modelPath + "\" cannot be opened.");
 		return;
 	}
 
@@ -72,12 +75,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 					std::fstream materialFile(materialPath, std::ios::in);
 					if (materialFile.is_open()) {
 						if (!nlohmann::json::accept(materialFile)) {
-							std::cout << "\"" << materialPath << "\" is not a valid JSON file." << std::endl;
+							logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" is not a valid JSON file.");
 							return;
 						}
 					}
 					else {
-						std::cout << "\"" << materialPath << "\" cannot be opened." << std::endl;
+						logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" cannot be opened.");
 						return;
 					}
 
@@ -96,12 +99,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 							std::fstream samplerFile(samplerPath, std::ios::in);
 							if (samplerFile.is_open()) {
 								if (!nlohmann::json::accept(samplerFile)) {
-									std::cout << "\"" << samplerPath << "\" is not a valid JSON file." << std::endl;
+									logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
 									return;
 								}
 							}
 							else {
-								std::cout << "\"" << samplerPath << "\" cannot be opened." << std::endl;
+								logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
 								return;
 							}
 
@@ -159,12 +162,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 							std::fstream samplerFile(samplerPath, std::ios::in);
 							if (samplerFile.is_open()) {
 								if (!nlohmann::json::accept(samplerFile)) {
-									std::cout << "\"" << samplerPath << "\" is not a valid JSON file." << std::endl;
+									logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
 									return;
 								}
 							}
 							else {
-								std::cout << "\"" << samplerPath << "\" cannot be opened." << std::endl;
+								logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
 								return;
 							}
 
@@ -226,12 +229,12 @@ RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::
 	std::fstream meshFile(meshPath, std::ios::in);
 	if (meshFile.is_open()) {
 		if (!nlohmann::json::accept(meshFile)) {
-			std::cout << "\"" << meshPath << "\" is not a valid JSON file." << std::endl;
+			logger->addLog(LogLevel::Warning, "\"" + meshPath + "\" is not a valid JSON file.");
 			return mesh;
 		}
 	}
 	else {
-		std::cout << "\"" << meshPath << "\" cannot be opened." << std::endl;
+		logger->addLog(LogLevel::Warning, "\"" + meshPath + "\" cannot be opened.");
 		return mesh;
 	}
 
@@ -281,12 +284,12 @@ void RendererResourceManager::loadNtim(const std::string& imagePath, const std::
 	std::fstream imageFile(imagePath, std::ios::in);
 	if (imageFile.is_open()) {
 		if (!nlohmann::json::accept(imageFile)) {
-			std::cout << "\"" << imagePath << "\" is not a valid JSON file." << std::endl;
+			logger->addLog(LogLevel::Warning, "\"" + imagePath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		std::cout << "\"" << imagePath << "\" cannot be opened." << std::endl;
+		logger->addLog(LogLevel::Warning, "\"" + imagePath + "\" cannot be opened.");
 		return;
 	}
 
@@ -322,7 +325,7 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, const std::
 		result = cgltf_load_buffers(&options, data, modelPath.c_str());
 
 		if (result != cgltf_result_success) {
-			std::cout << "Could not load buffers for model file \"" << modelPath << "\"." << std::endl;
+			logger->addLog(LogLevel::Warning, "Could not load buffers for model file \"" + modelPath + "\".");
 		}
 		else {
 			cgltf_scene* scene = data->scene;
@@ -501,7 +504,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				}
 
 				default:
-					std::cout << "Index component type invalid for model file \"" << modelPath << "\"." << std::endl;
+					logger->addLog(LogLevel::Warning, "Index component type invalid for model file \"" + modelPath + "\".");
 				}
 			}
 			else {
@@ -537,7 +540,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 									loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 								}
 								else {
-									std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+									logger->addLog(LogLevel::Warning, "Invalid Base64 data when loading glTF embedded texture for model file \"" + modelPath + "\" (base color texture).");
 								}
 							}
 							else {
@@ -625,7 +628,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 							}
 							else {
-								std::cout << "Invalid Base64 data when loading glTF embedded texture for model file \"" << modelPath << "\" (base color texture)." << std::endl;
+								logger->addLog(LogLevel::Warning, "Invalid Base64 data when loading glTF embedded texture for model file \"" + modelPath + "\" (base color texture).");
 							}
 						}
 						else {
@@ -713,7 +716,7 @@ void RendererResourceManager::loadImageStb(const std::string& imagePath, const s
 
 	stbi_uc* pixels = stbi_load(imagePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
 	if (!pixels) {
-		std::cout << "Could not load image \"" << imagePath << "\"." << std::endl;
+		logger->addLog(LogLevel::Warning, "Could not load image \"" + imagePath + "\".");
 		return;
 	}
 
@@ -734,7 +737,7 @@ void RendererResourceManager::loadImageFromMemory(void* data, size_t size, const
 
 	stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(data), static_cast<int>(size), &width, &height, &texChannels, STBI_rgb_alpha);
 	if (!pixels) {
-		std::cout << "Could not load image from memory." << std::endl;
+		logger->addLog(LogLevel::Warning, "Could not load image from memory.");
 		return;
 	}
 

@@ -4,10 +4,12 @@
 #include "edit_menu.h"
 #include "view_menu.h"
 #include "entity_panel.h"
+#include "log_bar.h"
 #include "../renderer/renderer.h"
 #include "entity_info_panel.h"
 #include "resource_panel.h"
 #include <QMainWindow>
+#include <QVBoxLayout>
 #include <QWidget>
 #include <QSplitter>
 
@@ -22,6 +24,7 @@ private:
 	void createRenderer();
 	void createEntityInfoPanel();
 	void createResourcePanel();
+	void createLogBar();
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -33,6 +36,7 @@ private:
 	Renderer* m_renderer;
 	EntityInfoPanel* m_entityInfoPanel;
 	ResourcePanel* m_resourcePanel;
+	LogBar* m_logBar;
 	FileMenu* m_fileMenu;
 	EditMenu* m_editMenu;
 	ViewMenu* m_viewMenu;

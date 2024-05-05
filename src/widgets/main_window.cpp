@@ -1,4 +1,5 @@
 #include "main_window.h"
+#include "separator_line.h"
 #include <QVBoxLayout>
 #include <QMenuBar>
 
@@ -24,6 +25,7 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	m_mainWidget->layout()->addWidget(m_verticalSplitter);
 	createResourcePanel();
 	m_verticalSplitter->setSizes({ 520, 200 });
+	createLogBar();
 }
 
 void MainWindow::createMenuBar() {
@@ -53,4 +55,10 @@ void MainWindow::createEntityInfoPanel() {
 void MainWindow::createResourcePanel() {
 	m_resourcePanel = new ResourcePanel(m_globalInfo);
 	m_verticalSplitter->addWidget(m_resourcePanel);
+}
+
+void MainWindow::createLogBar() {
+	m_logBar = new LogBar(m_globalInfo);
+	m_mainWidget->layout()->addWidget(m_logBar);
+	m_globalInfo.logger.logBar = m_logBar;
 }

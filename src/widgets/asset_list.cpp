@@ -67,12 +67,12 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 			std::fstream imageFile(m_currentDirectory + "/" + itemFileName, std::ios::in);
 			if (imageFile.is_open()) {
 				if (!nlohmann::json::accept(imageFile)) {
-					std::cout << "\"" << m_currentDirectory + "/" + itemFileName << "\" is not a valid JSON file." << std::endl;
+					m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + itemFileName + "\" is not a valid JSON file.");
 					return;
 				}
 			}
 			else {
-				std::cout << "\"" << m_currentDirectory + "/" + itemFileName << "\" cannot be opened." << std::endl;
+				m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + itemFileName + "\" cannot be opened.");
 				return;
 			}
 

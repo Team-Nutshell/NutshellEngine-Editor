@@ -8,6 +8,8 @@
 #include <tuple>
 #include <cstdint>
 
+class Logger;
+
 class RendererResourceManager {
 public:
 	struct MeshToGPU {
@@ -46,6 +48,9 @@ public:
 	};
 
 public:
+	RendererResourceManager(Logger* passLogger);
+
+public:
 	void loadModel(const std::string& modelPath, const std::string& name);
 	void loadImage(const std::string& imagePath, const std::string& name);
 
@@ -66,4 +71,6 @@ public:
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
 
 	std::string projectDirectory = "";
+
+	Logger* logger;
 };

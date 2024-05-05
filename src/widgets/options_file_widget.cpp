@@ -33,12 +33,12 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	std::fstream optionsFile(optionsFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
-			std::cout << "\"" << optionsFilePath << "\" is not a valid JSON file." << std::endl;
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + optionsFilePath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		std::cout << "\"" << optionsFilePath << "\" cannot be opened." << std::endl;
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + optionsFilePath + "\" cannot be opened.");
 		return;
 	}
 
