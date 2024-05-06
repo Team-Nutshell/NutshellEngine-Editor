@@ -596,8 +596,6 @@ void Renderer::paintGL() {
 	gl.glUseProgram(m_entityProgram);
 	gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
-
 	if (m_lightingEnabled) {
 		updateLights();
 	}
@@ -635,6 +633,8 @@ void Renderer::paintGL() {
 
 					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMesh.alphaCutoff);
 
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
+
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 			}
@@ -660,7 +660,7 @@ void Renderer::paintGL() {
 				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.emissiveTexturePath]);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "doShading"), 0);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
 				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}

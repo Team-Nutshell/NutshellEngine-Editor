@@ -25,7 +25,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 			loadNtmd(modelPath, name);
 		}
 		else {
-			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported.");
+			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported by the editor.");
 		}
 	}
 }
