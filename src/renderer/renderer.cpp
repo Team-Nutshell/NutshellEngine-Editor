@@ -1148,11 +1148,22 @@ void Renderer::loadResourcesToGPU() {
 		gl.glGenTextures(1, texture);
 		gl.glBindTexture(GL_TEXTURE_2D, *texture);
 		gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
+		gl.glGenerateMipmap(GL_TEXTURE_2D);
 		if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			if (imageToGPU.second.mipmapFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
+				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+			}
+			else {
+				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+			}
 		}
 		else if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Linear) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			if (imageToGPU.second.mipmapFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
+				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			}
+			else {
+				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			}
 		}
 
 		if (imageToGPU.second.magFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {

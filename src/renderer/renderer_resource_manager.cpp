@@ -128,6 +128,13 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 									image.magFilter = ImageToGPU::SamplerFilter::Linear;
 								}
 
+								if (jsmplr["mipmapFilter"] == "Nearest") {
+									image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
+								}
+								else if (jsmplr["mipmapFilter"] == "Linear") {
+									image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
+								}
+
 								if (jsmplr["addressModeU"] == "Repeat") {
 									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
 								}
@@ -569,6 +576,13 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 									image.magFilter = ImageToGPU::SamplerFilter::Linear;
 								}
 
+								if ((baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9985)) {
+									image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
+								}
+								else {
+									image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
+								}
+
 								if (baseColorTexture->sampler->wrap_s == 10497) {
 									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
 								}
@@ -655,6 +669,13 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 							}
 							else {
 								image.magFilter = ImageToGPU::SamplerFilter::Linear;
+							}
+
+							if ((emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9985)) {
+								image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
+							}
+							else {
+								image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
 							}
 
 							if (emissiveTexture->sampler->wrap_s == 10497) {

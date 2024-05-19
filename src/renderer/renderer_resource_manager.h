@@ -41,6 +41,7 @@ public:
 
 		SamplerFilter minFilter = SamplerFilter::Nearest;
 		SamplerFilter magFilter = SamplerFilter::Nearest;
+		SamplerFilter mipmapFilter = SamplerFilter::Nearest;
 		SamplerWrap wrapS = SamplerWrap::ClampToEdge;
 		SamplerWrap wrapT = SamplerWrap::ClampToEdge;
 
