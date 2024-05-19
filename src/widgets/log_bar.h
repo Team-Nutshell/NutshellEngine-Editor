@@ -1,10 +1,9 @@
 #pragma once
 #include "../common/common.h"
-#include <QWidget>
 #include <QLabel>
 #include <string>
 
-class LogBar : public QWidget {
+class LogBar : public QLabel {
 	Q_OBJECT
 public:
 	LogBar(GlobalInfo& globalInfo);
@@ -13,7 +12,4 @@ public:
 
 private:
 	GlobalInfo& m_globalInfo;
-
-public:
-	QLabel* lastLogLabel;
 };
