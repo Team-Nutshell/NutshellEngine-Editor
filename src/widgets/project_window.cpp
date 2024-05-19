@@ -69,6 +69,7 @@ void ProjectWindow::openMainWindow(const std::string& projectDirectory, const st
 	m_globalInfo.projectName = projectName;
 	m_globalInfo.mainWindow = new MainWindow(m_globalInfo);
 	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow);
+	m_globalInfo.logger.addLog(LogLevel::Info, "Opened project " + projectName + ".");
 	mainWindow->show();
 	close();
 }

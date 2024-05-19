@@ -80,6 +80,7 @@ set(WIDGET_SOURCES
 	src/widgets/add_component_button.cpp
 	src/widgets/add_component_menu.cpp
 	src/widgets/asset_list.cpp
+	src/widgets/build_bar.cpp
 	src/widgets/boolean_widget.cpp
 	src/widgets/camera_component_widget.cpp
 	src/widgets/color_picker_widget.cpp
@@ -126,6 +127,7 @@ set(WIDGET_HEADERS
 	src/widgets/add_component_button.h
 	src/widgets/add_component_menu.h
 	src/widgets/asset_list.h
+	src/widgets/build_bar.h
 	src/widgets/boolean_widget.h
 	src/widgets/camera_component_widget.h
 	src/widgets/color_picker_widget.h

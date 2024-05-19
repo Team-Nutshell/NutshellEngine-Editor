@@ -10,18 +10,19 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAttribute(Qt::WA_DeleteOnClose);
 
 	m_mainWidget = new QWidget();
+	m_mainWidget->setLayout(new QVBoxLayout());
+	m_mainWidget->layout()->setContentsMargins(0, 0, 0, 0);
 	m_horizontalSplitter = new QSplitter();
 	m_horizontalSplitter->setOrientation(Qt::Orientation::Horizontal);
 	setCentralWidget(m_mainWidget);
 	createMenuBar();
+	createBuildBar();
 	createEntityPanel();
 	createRenderer();
 	createEntityInfoPanel();
 	m_verticalSplitter = new QSplitter();
 	m_verticalSplitter->setOrientation(Qt::Orientation::Vertical);
 	m_verticalSplitter->addWidget(m_horizontalSplitter);
-	m_mainWidget->setLayout(new QVBoxLayout());
-	m_mainWidget->layout()->setContentsMargins(0, 0, 0, 0);
 	m_mainWidget->layout()->addWidget(m_verticalSplitter);
 	createResourcePanel();
 	m_verticalSplitter->setSizes({ 520, 200 });
@@ -35,6 +36,11 @@ void MainWindow::createMenuBar() {
 	menuBar()->addMenu(m_editMenu);
 	m_viewMenu = new ViewMenu(m_globalInfo);
 	menuBar()->addMenu(m_viewMenu);
+}
+
+void MainWindow::createBuildBar() {
+	m_buildBar = new BuildBar(m_globalInfo);
+	m_mainWidget->layout()->addWidget(m_buildBar);
 }
 
 void MainWindow::createEntityPanel() {

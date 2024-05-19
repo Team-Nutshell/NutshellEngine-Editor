@@ -1,5 +1,4 @@
 #include "log_bar.h"
-#include <QVBoxLayout>
 
 LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAlignment(Qt::AlignmentFlag::AlignVCenter);
