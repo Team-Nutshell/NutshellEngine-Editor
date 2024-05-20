@@ -9,6 +9,7 @@ EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalI
 	m_redoAction = m_globalInfo.undoStack->createRedoAction(this, "&Redo");
 	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
 	addAction(m_redoAction);
+	addSeparator();
 	m_copyEntityAction = addAction("Copy Entity", this, &EditMenu::copyEntity);
 	m_copyEntityAction->setShortcut(QKeySequence::fromString("Ctrl+C"));
 	m_copyEntityAction->setEnabled(false);
