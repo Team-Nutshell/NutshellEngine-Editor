@@ -7,4 +7,11 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
 	buildButton = new QPushButton("Build");
 	layout()->addWidget(buildButton);
+
+	if (globalInfo.compilerPath.empty()) {
+		buildButton->setEnabled(false);
+	}
+	else {
+		buildButton->setEnabled(true);
+	}
 }
