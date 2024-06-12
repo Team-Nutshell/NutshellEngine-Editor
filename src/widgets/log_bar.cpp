@@ -1,4 +1,5 @@
 #include "log_bar.h"
+#include "logs_widget.h"
 
 LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAlignment(Qt::AlignmentFlag::AlignVCenter);
@@ -21,4 +22,12 @@ void LogBar::updateLastLog(const Log& log) {
 
 	std::string fullLog = "<i>" + time + "</i> - " + std::get<2>(log);
 	setText(QString::fromStdString(fullLog));
+}
+
+void LogBar::mousePressEvent(QMouseEvent* event) {
+	if (event->button() == Qt::MouseButton::LeftButton) {
+		LogsWidget* logsWidget = new LogsWidget(m_globalInfo);
+		logsWidget->show();
+	}
+	event->accept();
 }

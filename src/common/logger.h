@@ -18,6 +18,8 @@ class Logger {
 public:
 	void addLog(LogLevel logLevel, const std::string& logMessage);
 
+	const std::vector<Log>& getLogs();
+
 private:
 	std::vector<Log> m_logs;
 

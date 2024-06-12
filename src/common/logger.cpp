@@ -7,3 +7,7 @@ void Logger::addLog(LogLevel logLevel, const std::string& logMessage) {
 		 logBar->updateLastLog(m_logs.back());
 	 }
 }
+
+const std::vector<Log>& Logger::getLogs() {
+	return m_logs;
+}
