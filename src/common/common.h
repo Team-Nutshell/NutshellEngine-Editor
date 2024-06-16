@@ -32,8 +32,6 @@ struct GlobalInfo {
 	Logger logger;
 	RendererResourceManager rendererResourceManager = RendererResourceManager(&logger);
 
-	std::string compilerPath = "";
-
 	EntityID findEntityByName(const std::string& entityName) {
 		for (const auto& entity : entities) {
 			if (entity.second.name == entityName) {

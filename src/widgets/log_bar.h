@@ -9,7 +9,7 @@ class LogBar : public QLabel {
 public:
 	LogBar(GlobalInfo& globalInfo);
 
-	void updateLastLog(const Log& log);
+	void updateLastLog();
 
 private slots:
 	void mousePressEvent(QMouseEvent* event);

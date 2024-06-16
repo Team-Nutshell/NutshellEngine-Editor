@@ -13,6 +13,7 @@ enum class LogLevel {
 typedef std::tuple<std::time_t, LogLevel, std::string> Log;
 
 class LogBar;
+class LogsWidget;
 
 class Logger {
 public:
@@ -25,4 +26,5 @@ private:
 
 public:
 	LogBar* logBar{ nullptr };
+	LogsWidget* logsWidget{ nullptr };
 };

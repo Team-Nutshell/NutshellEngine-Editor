@@ -5,7 +5,8 @@ LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAlignment(Qt::AlignmentFlag::AlignVCenter);
 }
 
-void LogBar::updateLastLog(const Log& log) {
+void LogBar::updateLastLog() {
+	const Log& log = m_globalInfo.logger.getLogs().back();
 	std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
 	time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
 
@@ -28,6 +29,8 @@ void LogBar::mousePressEvent(QMouseEvent* event) {
 	if (event->button() == Qt::MouseButton::LeftButton) {
 		LogsWidget* logsWidget = new LogsWidget(m_globalInfo);
 		logsWidget->show();
+
+		m_globalInfo.logger.logsWidget = logsWidget;
 	}
 	event->accept();
 }

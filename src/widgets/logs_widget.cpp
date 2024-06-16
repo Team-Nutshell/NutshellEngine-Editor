@@ -6,6 +6,15 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 
+	updateLogs();
+}
+
+LogsWidget::~LogsWidget() {
+	m_globalInfo.logger.logsWidget = nullptr;
+}
+
+void LogsWidget::updateLogs() {
+	clear();
 	const std::vector<Log> logs = m_globalInfo.logger.getLogs();
 	for (const auto& log : logs) {
 		std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
@@ -24,7 +33,7 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 		}
 
 		std::string fullLog = time + " - " + std::get<2>(log);
-		
+
 		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(fullLog));
 		item->setForeground(color);
 		addItem(item);
