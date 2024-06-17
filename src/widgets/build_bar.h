@@ -1,5 +1,6 @@
 #pragma once
 #include "../common/common.h"
+#include "combo_box_widget.h"
 #include <QWidget>
 #include <QPushButton>
 
@@ -9,8 +10,12 @@ public:
 	BuildBar(GlobalInfo& globalInfo);
 
 private:
+	void launchBuild();
+
+private:
 	GlobalInfo& m_globalInfo;
 
 public:
 	QPushButton* buildButton;
+	ComboBoxWidget* buildTypeComboBox;
 };
