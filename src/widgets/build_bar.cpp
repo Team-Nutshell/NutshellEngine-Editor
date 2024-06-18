@@ -53,6 +53,9 @@ void BuildBar::launchBuild() {
 	if (!std::filesystem::exists("editor_build")) {
 		std::filesystem::create_directory("editor_build");
 	}
+
+	// Set current path
+	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path("editor_build");
 
 #if defined(NTSHENGN_OS_WINDOWS)
@@ -114,6 +117,9 @@ void BuildBar::launchBuild() {
 		CloseHandle(pipeRead);
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
 
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
 		return;
 	}
 	CloseHandle(pipeRead);
@@ -169,11 +175,109 @@ void BuildBar::launchBuild() {
 		CloseHandle(pipeRead);
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
 
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
 		return;
 	}
 
 	CloseHandle(pipeRead);
 #elif defined(NTSHENGN_OS_LINUX)
 #endif
-	std::filesystem::current_path("..");
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
+
+	// Run
+	run();
+}
+
+void BuildBar::run() {
+	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Running the application.");
+
+	if (!std::filesystem::exists("editor_build")) {
+		std::filesystem::create_directory("editor_build");
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] There is no build to run.");
+
+		return;
+	}
+
+	// Copy runtime
+	std::filesystem::copy("assets/runtime/" + buildType, "editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
+	// Set current path
+	const std::string previousCurrentPath = std::filesystem::current_path().string();
+	std::filesystem::current_path("editor_build");
+
+#if defined(NTSHENGN_OS_WINDOWS)
+	HANDLE pipeRead = NULL;
+	HANDLE pipeWrite = NULL;
+	DWORD exitCode;
+
+	SECURITY_ATTRIBUTES securityAttributes;
+	ZeroMemory(&securityAttributes, sizeof(SECURITY_ATTRIBUTES));
+	securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+	securityAttributes.bInheritHandle = TRUE;
+	securityAttributes.lpSecurityDescriptor = NULL;
+
+	CreatePipe(&pipeRead, &pipeWrite, &securityAttributes, 0);
+	SetHandleInformation(pipeRead, HANDLE_FLAG_INHERIT, 0);
+
+	STARTUPINFOA startupInfo;
+	ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.hStdOutput = pipeWrite;
+	startupInfo.hStdError = pipeWrite;
+	startupInfo.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+	startupInfo.wShowWindow = SW_SHOW;
+
+	PROCESS_INFORMATION processInformation;
+	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
+
+	std::filesystem::current_path(buildType);
+	const std::string runCommand = "NutshellEngine.exe";
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Launching application with command: " + runCommand);
+	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
+		CloseHandle(pipeWrite);
+
+		std::string stdOutput = "[Run] Application Logs:\n";
+		CHAR stdoutBuffer[4096];
+		DWORD bytesRead;
+		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
+			stdOutput += std::string(stdoutBuffer, bytesRead);
+		}
+
+		m_globalInfo.logger.addLog(LogLevel::Info, stdOutput);
+
+		WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+		GetExitCodeProcess(processInformation.hProcess, &exitCode);
+
+		CloseHandle(processInformation.hProcess);
+		CloseHandle(processInformation.hThread);
+
+		if (exitCode == 0) {
+			m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Successfully closed the application.");
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Error when closing the application.");
+		}
+	}
+	else {
+		CloseHandle(pipeWrite);
+		CloseHandle(pipeRead);
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot find NutshellEngine\'s runtime executable.");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
+		return;
+	}
+	CloseHandle(pipeRead);
+#elif defined(NTSHENGN_OS_LINUX)
+#endif
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
 }

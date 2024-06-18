@@ -11,6 +11,7 @@ public:
 
 private:
 	void launchBuild();
+	void run();
 
 private:
 	GlobalInfo& m_globalInfo;
