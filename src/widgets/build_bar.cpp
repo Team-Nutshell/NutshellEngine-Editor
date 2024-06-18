@@ -1,7 +1,9 @@
 #include "build_bar.h"
 #include <QHBoxLayout>
 #include <fstream>
+#include <sstream>
 #include <filesystem>
+#include <regex>
 #if defined(NTSHENGN_OS_WINDOWS)
 #include <windows.h>
 #elif defined(NTSHENGN_OS_LINUX)
@@ -21,6 +23,11 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void BuildBar::launchBuild() {
+	build();
+	run();
+}
+
+void BuildBar::build() {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build.");
 
@@ -187,9 +194,6 @@ void BuildBar::launchBuild() {
 
 	// Reset current path
 	std::filesystem::current_path(previousCurrentPath);
-
-	// Run
-	run();
 }
 
 void BuildBar::run() {
@@ -209,6 +213,8 @@ void BuildBar::run() {
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path("editor_build");
+
+	const std::regex syntaxSugarRegex(R"(\x1B\[[0-9]*?m)");
 
 #if defined(NTSHENGN_OS_WINDOWS)
 	HANDLE pipeRead = NULL;
@@ -248,7 +254,10 @@ void BuildBar::run() {
 			stdOutput += std::string(stdoutBuffer, bytesRead);
 		}
 
-		m_globalInfo.logger.addLog(LogLevel::Info, stdOutput);
+		std::stringstream syntaxSugarRegexResult;
+		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), stdOutput.begin(), stdOutput.end(), syntaxSugarRegex, "");
+
+		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
 

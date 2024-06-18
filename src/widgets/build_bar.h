@@ -11,6 +11,8 @@ public:
 
 private:
 	void launchBuild();
+
+	void build();
 	void run();
 
 private:
