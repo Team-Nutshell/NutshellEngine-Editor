@@ -585,6 +585,7 @@ void Renderer::paintGL() {
 	}
 
 	gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+	gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl.glEnable(GL_DEPTH_TEST);
 	gl.glDepthFunc(GL_LESS);
@@ -787,6 +788,7 @@ void Renderer::paintGL() {
 
 		// Outline Solo
 		gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gl.glEnable(GL_DEPTH_TEST);
 		gl.glDepthFunc(GL_LESS);
