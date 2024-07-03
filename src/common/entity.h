@@ -2,7 +2,6 @@
 #include "components/component.h"
 #include "components/camera.h"
 #include "components/collidable.h"
-#include "components/component.h "
 #include "components/light.h"
 #include "components/renderable.h"
 #include "components/rigidbody.h"

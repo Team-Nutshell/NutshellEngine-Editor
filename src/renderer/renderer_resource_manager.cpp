@@ -1,10 +1,14 @@
 #include "renderer_resource_manager.h"
 #include "../common/logger.h"
+#if defined(NTSHENGN_COMPILER_MSVC)
 #pragma warning(push)
 #pragma warning(disable : 4996)
+#endif
 #define CGLTF_IMPLEMENTATION
 #include "../../external/cgltf/cgltf.h"
+#if defined(NTSHENGN_COMPILER_MSVC)
 #pragma warning(pop)
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 #include "../../external/nlohmann/json.hpp"
