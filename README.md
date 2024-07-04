@@ -1,4 +1,4 @@
 # NutshellEngine-Editor
-![Editor](https://i.imgur.com/7HIHRgS.png)
+![Editor](https://i.imgur.com/Bo5zhPv.png)
 
 Editor for NutshellEngine.
