@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <thread>
 #include <regex>
 #if defined(NTSHENGN_OS_WINDOWS)
 #include <windows.h>
@@ -23,11 +24,21 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void BuildBar::launchBuild() {
-	build();
-	run();
+	if (m_isBuilding) {
+		return;
+	}
+
+	std::thread buildThread([this]() {
+		m_isBuilding = true;
+		if (build()) {
+			run();
+		}
+		m_isBuilding = false;
+	});
+	buildThread.detach();
 }
 
-void BuildBar::build() {
+bool BuildBar::build() {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build.");
 
@@ -38,13 +49,15 @@ void BuildBar::build() {
 		if (!nlohmann::json::accept(optionsFile)) {
 			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
 			buildButton->setEnabled(false);
-			return;
+
+			return false;
 		}
 	}
 	else {
 		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
 		buildButton->setEnabled(false);
-		return;
+
+		return false;
 	}
 
 	optionsFile = std::fstream("assets/options.json", std::ios::in);
@@ -93,17 +106,16 @@ void BuildBar::build() {
 
 	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
+	bool cMakeSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		std::string stdOutput = "[Build] CMake Logs:\n";
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
 		CHAR stdoutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			stdOutput += std::string(stdoutBuffer, bytesRead);
+			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdoutBuffer, bytesRead));
 		}
-
-		m_globalInfo.logger.addLog(LogLevel::Info, stdOutput);
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
 
@@ -117,6 +129,8 @@ void BuildBar::build() {
 		}
 		else {
 			m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error with the project\'s CMakeLists.txt.");
+
+			cMakeSuccess = false;
 		}
 	}
 	else {
@@ -124,11 +138,16 @@ void BuildBar::build() {
 		CloseHandle(pipeRead);
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
 
+		cMakeSuccess = false;
+	}
+
+	if (!cMakeSuccess) {
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
 
-		return;
+		return cMakeSuccess;
 	}
+
 	CloseHandle(pipeRead);
 
 	// Build
@@ -151,17 +170,16 @@ void BuildBar::build() {
 
 	const std::string cMakeBuildCommand = cMakePath + " --build . --config " + buildType;
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
+	bool buildSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		std::string stdOutput = "[Build] Build logs:\n";
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
 		CHAR stdoutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			stdOutput += std::string(stdoutBuffer, bytesRead);
+			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdoutBuffer, bytesRead));
 		}
-
-		m_globalInfo.logger.addLog(LogLevel::Info, stdOutput);
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
 
@@ -175,6 +193,8 @@ void BuildBar::build() {
 		}
 		else {
 			m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error while building the project.");
+
+			buildSuccess = false;
 		}
 	}
 	else {
@@ -182,10 +202,7 @@ void BuildBar::build() {
 		CloseHandle(pipeRead);
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
 
-		// Reset current path
-		std::filesystem::current_path(previousCurrentPath);
-
-		return;
+		buildSuccess = false;
 	}
 
 	CloseHandle(pipeRead);
@@ -194,6 +211,8 @@ void BuildBar::build() {
 
 	// Reset current path
 	std::filesystem::current_path(previousCurrentPath);
+
+	return buildSuccess;
 }
 
 void BuildBar::run() {
@@ -247,17 +266,17 @@ void BuildBar::run() {
 	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		std::string stdOutput = "[Run] Application Logs:\n";
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Application Logs:");
 		CHAR stdoutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			stdOutput += std::string(stdoutBuffer, bytesRead);
+			std::string log = std::string(stdoutBuffer, bytesRead);
+
+			std::stringstream syntaxSugarRegexResult;
+			std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
+
+			m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
 		}
-
-		std::stringstream syntaxSugarRegexResult;
-		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), stdOutput.begin(), stdOutput.end(), syntaxSugarRegex, "");
-
-		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
 

@@ -12,11 +12,13 @@ public:
 private:
 	void launchBuild();
 
-	void build();
+	bool build();
 	void run();
 
 private:
 	GlobalInfo& m_globalInfo;
+	
+	bool m_isBuilding = false;
 
 public:
 	QPushButton* buildButton;

@@ -1,10 +1,8 @@
 #pragma once
 #include "../common/common.h"
-#include <QWidget>
-#include <QScrollArea>
-#include <QListWidget>
+#include <QTableWidget>
 
-class LogsWidget : public QListWidget {
+class LogsWidget : public QTableWidget {
 	Q_OBJECT
 public:
 	LogsWidget(GlobalInfo& globalInfo);
@@ -15,4 +13,6 @@ public:
 
 private:
 	GlobalInfo& m_globalInfo;
+
+	size_t currentLog = 0;
 };
