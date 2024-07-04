@@ -25,7 +25,10 @@ void LogBar::paintEvent(QPaintEvent* event) {
 	std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
 	time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
 
-	std::string fullLog = time + " - " + std::get<2>(log);
+	std::string logString = std::get<2>(log);
+	logString.erase(std::remove(logString.begin(), logString.end(), '\n'), logString.end());
+
+	std::string fullLog = time + " - " + logString;
 	setText(QString::fromStdString(fullLog));
 
 	LogLevel logLevel = std::get<1>(log);

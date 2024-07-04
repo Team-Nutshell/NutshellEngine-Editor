@@ -1,4 +1,5 @@
 #include "logs_widget.h"
+#include <QScrollBar>
 
 LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(1280, 720);
@@ -38,6 +39,9 @@ void LogsWidget::updateLogs() {
 			level = "Error";
 		}
 
+		std::string logString = std::get<2>(logs[i]);
+		logString.erase(std::remove(logString.begin(), logString.end(), '\n'), logString.end());
+
 		insertRow(rowCount());
 		QTableWidgetItem* timeItem = new QTableWidgetItem(QString::fromStdString(time));
 		timeItem->setFlags(timeItem->flags() & ~Qt::ItemIsEditable);
@@ -45,9 +49,10 @@ void LogsWidget::updateLogs() {
 		QTableWidgetItem* levelItem = new QTableWidgetItem(QString::fromStdString(level));
 		levelItem->setFlags(levelItem->flags() & ~Qt::ItemIsEditable);
 		setItem(rowCount() - 1, 1, levelItem);
-		QTableWidgetItem* logItem = new QTableWidgetItem(QString::fromStdString(std::get<2>(logs[i])));
+		QTableWidgetItem* logItem = new QTableWidgetItem(QString::fromStdString(logString));
 		logItem->setFlags(logItem->flags() & ~Qt::ItemIsEditable);
 		setItem(rowCount() - 1, 2, logItem);
 	}
 	currentLog += logs.size() - currentLog;
+	verticalScrollBar()->setSliderPosition(verticalScrollBar()->maximum());
 }
