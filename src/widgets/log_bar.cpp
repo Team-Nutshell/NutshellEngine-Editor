@@ -1,11 +1,24 @@
 #include "log_bar.h"
 #include "logs_widget.h"
-#include "main_window.h"
-#include <QPainter>
-#include <QFontMetrics>
 
 LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAlignment(Qt::AlignmentFlag::AlignVCenter);
+	QSizePolicy sizePolicy;
+	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
+	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Fixed);
+	setSizePolicy(sizePolicy);
+}
+
+void LogBar::updateLog() {
+	const Log& log = m_globalInfo.logger.getLogs().back();
+	std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
+	time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
+
+	std::string logString = std::get<2>(log);
+	logString.erase(std::remove(logString.begin(), logString.end(), '\n'), logString.end());
+
+	std::string fullLog = time + " - " + logString;
+	setText(QString::fromStdString(fullLog));
 }
 
 void LogBar::mousePressEvent(QMouseEvent* event) {
@@ -19,17 +32,7 @@ void LogBar::mousePressEvent(QMouseEvent* event) {
 }
 
 void LogBar::paintEvent(QPaintEvent* event) {
-	(void)event;
-		
 	const Log& log = m_globalInfo.logger.getLogs().back();
-	std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
-	time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
-
-	std::string logString = std::get<2>(log);
-	logString.erase(std::remove(logString.begin(), logString.end(), '\n'), logString.end());
-
-	std::string fullLog = time + " - " + logString;
-	setText(QString::fromStdString(fullLog));
 
 	LogLevel logLevel = std::get<1>(log);
 	if (logLevel == LogLevel::Info) {
@@ -42,10 +45,5 @@ void LogBar::paintEvent(QPaintEvent* event) {
 		setStyleSheet("color: rgba(225, 25, 0, 255)");
 	}
 
-	QPainter painter(this);
-	QFontMetrics fontMetrics(font());
-	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow);
-	QString elidedText = fontMetrics.elidedText(text(), Qt::ElideRight, mainWindow->width());
-
-	painter.drawText(rect(), alignment(), elidedText);
+	QLabel::paintEvent(event);
 }

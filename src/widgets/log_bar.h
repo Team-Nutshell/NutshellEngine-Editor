@@ -10,6 +10,8 @@ class LogBar : public QLabel {
 public:
 	LogBar(GlobalInfo& globalInfo);
 
+	void updateLog();
+
 private slots:
 	void mousePressEvent(QMouseEvent* event);
 
