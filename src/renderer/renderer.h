@@ -91,6 +91,8 @@ private:
 
 	nml::vec2 m_savedMousePosition = nml::vec2(0.0f, 0.0f);
 
+	bool m_mouseMoveFlag = false;
+
 	QTimer m_waitTimer;
 
 	bool m_doPicking = false;

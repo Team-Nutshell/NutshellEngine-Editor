@@ -562,7 +562,8 @@ void Renderer::initializeGL() {
 	createLightBuffer();
 
 	// Start render
-	m_waitTimer.start(16);
+	m_waitTimer.setInterval(16);
+	m_waitTimer.start();
 }
 
 void Renderer::paintGL() {
@@ -1368,10 +1369,8 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 		if (event->button() == Qt::RightButton) {
 			m_moveCameraButtonPressed = true;
 			m_savedMousePosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
+			m_mouseCursorPreviousPosition = m_savedMousePosition;
 			setCursor(Qt::CursorShape::BlankCursor);
-			nml::vec2 widgetCenter = nml::vec2(std::floor(static_cast<float>(width()) / 2.0f), std::floor(static_cast<float>(height()) / 2.0f));
-			m_mouseCursorPreviousPosition = widgetCenter;
-			QCursor::setPos(mapToGlobal(QPoint(static_cast<int>(widgetCenter.x), static_cast<int>(widgetCenter.y))));
 		}
 		else if (event->button() == Qt::LeftButton) {
 			m_doPicking = true;
@@ -1387,6 +1386,7 @@ void Renderer::mouseReleaseEvent(QMouseEvent* event) {
 				m_moveCameraButtonPressed = false;
 				setCursor(Qt::CursorShape::ArrowCursor);
 				QCursor::setPos(static_cast<int>(m_savedMousePosition.x), static_cast<int>(m_savedMousePosition.y));
+				m_mouseCursorPreviousPosition = nml::vec2(0.0f, 0.0f);
 				m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
 			}
 		}
@@ -1398,11 +1398,15 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 	if (!anyEntityTransformKeyPressed()) {
 		if (event->buttons() & Qt::RightButton) {
 			if (m_moveCameraButtonPressed) {
-				nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
-				nml::vec2 widgetCenter = nml::vec2(std::floor(static_cast<float>(width()) / 2.0f), std::floor(static_cast<float>(height()) / 2.0f));
-				m_mouseCursorPreviousPosition = widgetCenter;
-				m_mouseCursorDifference = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
-				QCursor::setPos(mapToGlobal(QPoint(static_cast<int>(widgetCenter.x), static_cast<int>(widgetCenter.y))));
+				if (!m_mouseMoveFlag) {
+					nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
+					m_mouseCursorDifference = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
+					m_mouseMoveFlag = true;
+					QCursor::setPos(static_cast<int>(m_savedMousePosition.x), static_cast<int>(m_savedMousePosition.y));
+				}
+				else {
+					m_mouseMoveFlag = false;
+				}
 			}
 		}
 	}
