@@ -64,7 +64,7 @@ bool BuildBar::build() {
 	nlohmann::json j = nlohmann::json::parse(optionsFile);
 
 	if (j.contains("build")) {
-		if (j["build"].contains("cmakePath")) {
+		if (j["build"].contains("cMakePath")) {
 			cMakePath = j["build"]["cMakePath"];
 			std::replace(cMakePath.begin(), cMakePath.end(), '\\', '/');
 		}
