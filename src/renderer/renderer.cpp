@@ -16,6 +16,7 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &Renderer::onLightingToggled);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCollidersVisibilitySignal, this, &Renderer::onCollidersVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &Renderer::onCameraProjectionSwitched);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
@@ -1218,6 +1219,10 @@ void Renderer::onCamerasVisibilityToggled(bool showCameras) {
 
 void Renderer::onLightingToggled(bool lightingEnabled) {
 	m_lightingEnabled = lightingEnabled;
+}
+
+void Renderer::onCollidersVisibilityToggled(bool showColliders) {
+	m_showColliders = showColliders;
 }
 
 void Renderer::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {

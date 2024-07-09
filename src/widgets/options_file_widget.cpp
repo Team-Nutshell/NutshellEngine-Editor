@@ -75,6 +75,18 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 			startProfilingWidget->checkBox->setChecked(startProfiling);
 		}
 	}
+
+	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsFileWidget::valueChanged);
+	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsFileWidget::valueChanged);
+	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsFileWidget::valueChanged);
+	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsFileWidget::valueChanged);
+	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsFileWidget::valueChanged);
+}
+
+void OptionsFileWidget::valueChanged() {
+	if (!windowTitle().isEmpty() && (windowTitle()[0] != '*')) {
+		setWindowTitle("*" + windowTitle());
+	}
 }
 
 void OptionsFileWidget::save() {
@@ -112,4 +124,8 @@ void OptionsFileWidget::save() {
 	j["startProfiling"] = startProfilingWidget->checkBox->isChecked();
 	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
 	optionsFile << j.dump(1, '\t');
+
+	if (!windowTitle().isEmpty() && (windowTitle()[0] == '*')) {
+		setWindowTitle(windowTitle().remove(0, 1));
+	}
 }

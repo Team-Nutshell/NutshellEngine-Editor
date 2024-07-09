@@ -42,6 +42,7 @@ private slots:
 	void onBackfaceCullingToggled(bool backfaceCulling);
 	void onCamerasVisibilityToggled(bool showCameras);
 	void onLightingToggled(bool lightingEnabled);
+	void onCollidersVisibilityToggled(bool showColliders);
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 	void onCameraReset();
 	void onOrthographicCameraToAxisChanged(const nml::vec3& axis);
@@ -101,6 +102,7 @@ private:
 	bool m_backfaceCullingEnabled = false;
 	bool m_showCameras = false;
 	bool m_lightingEnabled = false;
+	bool m_showColliders = false;
 
 	std::optional<Transform> m_entityMoveTransform;
 

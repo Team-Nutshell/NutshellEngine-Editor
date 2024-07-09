@@ -9,10 +9,12 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	m_toggleCurrentEntityVisibilityAction->setEnabled(false);
 	m_toggleBackfaceCullingAction = addAction("Enable Backface Culling", this, &ViewMenu::toggleBackfaceCulling);
 	m_toggleBackfaceCullingAction->setShortcut(QKeySequence::fromString("F"));
-	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCameraVisibility);
+	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCamerasVisibility);
 	m_toggleCamerasVisibilityAction->setShortcut(QKeySequence::fromString("C"));
 	m_toggleLightingAction = addAction("Enable Lighting", this, &ViewMenu::toggleLighting);
 	m_toggleLightingAction->setShortcut(QKeySequence::fromString("L"));
+	m_toggleCollidersVisibilityAction = addAction("Show Colliders", this, &ViewMenu::toggleCollidersVisibility);
+	m_toggleCollidersVisibilityAction->setShortcut(QKeySequence::fromString("X"));
 	addSeparator();
 	m_switchCameraProjectionAction = addAction("Switch Camera Projection to Orthographic", this, &ViewMenu::switchCameraProjection);
 	m_switchCameraProjectionAction->setShortcut(QKeySequence::fromString("P"));
@@ -34,8 +36,9 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCameraVisibilityToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCamerasVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &ViewMenu::onLightingToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCollidersVisibilitySignal, this, &ViewMenu::onCollidersVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &ViewMenu::onCameraProjectionSwitched);
 
 	std::fstream optionsFile("assets/options.json", std::ios::in);
@@ -102,12 +105,16 @@ void ViewMenu::toggleBackfaceCulling() {
 	emit m_globalInfo.signalEmitter.toggleBackfaceCullingSignal(!m_backfaceCullingEnabled);
 }
 
-void ViewMenu::toggleCameraVisibility() {
+void ViewMenu::toggleCamerasVisibility() {
 	emit m_globalInfo.signalEmitter.toggleCamerasVisibilitySignal(!m_showCameras);
 }
 
 void ViewMenu::toggleLighting() {
 	emit m_globalInfo.signalEmitter.toggleLightingSignal(!m_lightingEnabled);
+}
+
+void ViewMenu::toggleCollidersVisibility() {
+	emit m_globalInfo.signalEmitter.toggleCollidersVisibilitySignal(!m_showColliders);
 }
 
 void ViewMenu::switchCameraProjection() {
@@ -179,7 +186,7 @@ void ViewMenu::onBackfaceCullingToggled(bool backfaceCulling) {
 	m_toggleBackfaceCullingAction->setText(m_backfaceCullingEnabled ? "Disable Backface Culling" : "Enable Backface Culling");
 }
 
-void ViewMenu::onCameraVisibilityToggled(bool showCameras) {
+void ViewMenu::onCamerasVisibilityToggled(bool showCameras) {
 	m_showCameras = showCameras;
 	m_toggleCamerasVisibilityAction->setText(m_showCameras ? "Hide Cameras" : "Show Cameras");
 }
@@ -187,6 +194,11 @@ void ViewMenu::onCameraVisibilityToggled(bool showCameras) {
 void ViewMenu::onLightingToggled(bool lightingEnabled) {
 	m_lightingEnabled = lightingEnabled;
 	m_toggleLightingAction->setText(m_lightingEnabled ? "Disable Lighting" : "Enable Lighting");
+}
+
+void ViewMenu::onCollidersVisibilityToggled(bool showColliders) {
+	m_showColliders = showColliders;
+	m_toggleCollidersVisibilityAction->setText(m_showColliders ? "Hide Colliders" : "Show Colliders");
 }
 
 void ViewMenu::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {
