@@ -1,5 +1,7 @@
 #pragma once
 #include "vec3.h"
+#include <array>
+#include <utility>
 #include <string>
 #include <iostream>
 
@@ -42,8 +44,12 @@ struct mat3 {
 
 	// Functions
 	float det() const;
+	std::array<std::pair<float, vec3>, 3> eigen() const;
 
 	float* data();
+
+	// Static Functions
+	static mat3 identity();
 };
 
 // Operators

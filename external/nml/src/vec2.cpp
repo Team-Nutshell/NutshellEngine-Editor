@@ -41,6 +41,10 @@ vec2& vec2::operator/=(const float other) {
 	return *this;
 }
 
+vec2 vec2::operator-() const {
+	return vec2(-x, -y);
+}
+
 float& vec2::operator[](size_t index) {
 	if (index == 0) { return x; }
 	else if (index == 1) { return y; }

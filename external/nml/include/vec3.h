@@ -5,6 +5,7 @@ namespace nml {
 
 struct vec2;
 struct vec4;
+struct mat4;
 struct quat;
 
 // x | y | z
@@ -27,6 +28,7 @@ struct vec3 {
 	vec3& operator-=(const vec3& other);
 	vec3& operator*=(const float other);
 	vec3& operator/=(const float other);
+	vec3 operator-() const;
 	float& operator[](size_t index);
 	const float operator[](size_t index) const;
 
@@ -51,8 +53,9 @@ float dot(const vec3& a, const vec3& b);
 vec3 cross(const vec3& a, const vec3& b);
 vec3 reflect(const vec3& i, const vec3& n);
 vec3 refract(const vec3& i, const vec3& n, float ior);
+vec3 quatToEulerAngles(const quat& qua);
+vec3 rotationMatrixToEulerAngles(const mat4& mat);
 
-vec3 to_vec3(const quat& qua);
 std::string to_string(const vec3& vec);
 
 }

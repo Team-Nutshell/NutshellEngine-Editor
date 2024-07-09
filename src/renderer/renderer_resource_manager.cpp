@@ -12,7 +12,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 #include "../../external/nlohmann/json.hpp"
+#include <array>
 #include <set>
+#include <functional>
 #include <numeric>
 #include <algorithm>
 #include <fstream>
@@ -36,19 +38,69 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 	}
 	
 	// Calculate OBB
-	/*auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
+	auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
 		return nml::to_string(a) < nml::to_string(b);
 		};
 
 	if (modelsToGPU.find(name) != modelsToGPU.end()) {
-		const ModelToGPU& model = modelsToGPU[name];
+		ModelToGPU& model = modelsToGPU[name];
 		for (auto& mesh : model.meshes) {
 			std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
 			for (size_t j = 0; j < mesh.vertices.size(); j++) {
-				uniquePositions.insert(mesh.vertices[j]);
+				uniquePositions.insert(mesh.vertices[j].position);
 			}
+
+			float size = static_cast<float>(uniquePositions.size());
+
+			const nml::vec3 means = std::reduce(uniquePositions.begin(), uniquePositions.end(), nml::vec3(0.0f, 0.0f, 0.0f), [](nml::vec3 acc, const nml::vec3& val) { return acc + val; }) / size;
+
+			nml::mat3 covarianceMatrix;
+			for (const nml::vec3& position : uniquePositions) {
+				covarianceMatrix.x.x += (position.x - means.x) * (position.x - means.x);
+				covarianceMatrix.y.y += (position.y - means.y) * (position.y - means.y);
+				covarianceMatrix.z.z += (position.z - means.z) * (position.z - means.z);
+				covarianceMatrix.x.y += (position.x - means.x) * (position.y - means.y);
+				covarianceMatrix.x.z += (position.x - means.x) * (position.z - means.z);
+				covarianceMatrix.y.z += (position.y - means.y) * (position.z - means.z);
+			}
+			covarianceMatrix.x.x /= size;
+			covarianceMatrix.y.y /= size;
+			covarianceMatrix.z.z /= size;
+			covarianceMatrix.x.y /= size;
+			covarianceMatrix.x.z /= size;
+			covarianceMatrix.y.z /= size;
+
+			covarianceMatrix.y.x = covarianceMatrix.x.y;
+			covarianceMatrix.z.x = covarianceMatrix.x.z;
+			covarianceMatrix.z.y = covarianceMatrix.y.z;
+
+			std::array<std::pair<float, nml::vec3>, 3> eigen = covarianceMatrix.eigen();
+
+			mesh.obb.center = means;
+
+			for (const nml::vec3& position : uniquePositions) {
+				const nml::vec3 positionMinusCenter = position - mesh.obb.center;
+
+				const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
+				if (extentX > mesh.obb.halfExtent.x) {
+					mesh.obb.halfExtent.x = extentX;
+				}
+
+				const float extentY = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
+				if (extentY > mesh.obb.halfExtent.y) {
+					mesh.obb.halfExtent.y = extentY;
+				}
+
+				const float extentZ = std::abs(nml::dot(eigen[2].second, positionMinusCenter));
+				if (extentZ > mesh.obb.halfExtent.z) {
+					mesh.obb.halfExtent.z = extentZ;
+				}
+			}
+
+			nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+			mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
 		}
-	}*/
+	}
 }
 
 void RendererResourceManager::loadImage(const std::string& imagePath, const std::string& name) {
@@ -359,7 +411,7 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, const std::
 			cgltf_scene* scene = data->scene;
 
 			for (size_t i = 0; i < scene->nodes_count; i++) {
-				loadGltfNode(modelPath, model, nml::mat4(), scene->nodes[i]);
+				loadGltfNode(modelPath, model, nml::mat4::identity(), scene->nodes[i]);
 			}
 		}
 
@@ -372,7 +424,7 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, const std::
 }
 
 void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelToGPU& rendererModel, nml::mat4 modelMatrix, cgltf_node* node) {
-	nml::mat4 nodeMatrix;
+	nml::mat4 nodeMatrix = nml::mat4::identity();
 	if (node->has_matrix) {
 		nodeMatrix = nml::mat4(node->matrix);
 	}
@@ -381,7 +433,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 			nodeMatrix *= nml::translate(nml::vec3(node->translation));
 		}
 		if (node->has_rotation) {
-			nodeMatrix *= nml::to_mat4(nml::quat(node->rotation[3], node->rotation[0], node->rotation[1], node->rotation[2]));
+			nodeMatrix *= nml::quatToRotationMatrix(nml::quat(node->rotation[3], node->rotation[0], node->rotation[1], node->rotation[2]));
 		}
 		if (node->has_scale) {
 			nodeMatrix *= nml::scale(nml::vec3(node->scale));
@@ -442,22 +494,16 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 
 			for (size_t j = 0; j < vertexCount; j++) {
 				nml::vec3 vertexPosition = nml::vec3(modelMatrix * nml::vec4(nml::vec3(position + positionCursor), 1.0f));
-				primitive.vertices[j].position.x = vertexPosition.x;
-				primitive.vertices[j].position.y = vertexPosition.y;
-				primitive.vertices[j].position.z = vertexPosition.z;
+				primitive.vertices[j].position = vertexPosition;
 				positionCursor += (positionStride / sizeof(float));
 
 				if (normalCount != 0) {
 					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(normal + normalCursor), 0.0f)));
-					primitive.vertices[j].normal.x = vertexNormal.x;
-					primitive.vertices[j].normal.y = vertexNormal.y;
-					primitive.vertices[j].normal.z = vertexNormal.z;
+					primitive.vertices[j].normal = vertexNormal;
 					normalCursor += (normalStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[j].normal.x = 0.0f;
-					primitive.vertices[j].normal.y = 0.0f;
-					primitive.vertices[j].normal.z = 0.0f;
+					primitive.vertices[j].normal = nml::vec3(0.0f, 0.0f, 0.0f);
 				}
 
 				if (uvCount != 0) {
@@ -466,8 +512,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 					uvCursor += (uvStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[j].uv.x = 0.0f;
-					primitive.vertices[j].uv.y = 0.0f;
+					primitive.vertices[j].uv = nml::vec2(0.0f, 0.0f);
 				}
 			}
 

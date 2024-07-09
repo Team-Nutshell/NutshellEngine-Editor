@@ -5,7 +5,7 @@
 
 namespace nml {
 
-quat::quat(): a(1.0f), b(0.0f), c(0.0f), d(0.0f) {}
+quat::quat(): a(0.0f), b(0.0f), c(0.0f), d(0.0f) {}
 quat::quat(float _a, float _b, float _c, float _d): a(_a), b(_b), c(_c), d(_d) {}
 quat::quat(const float* _ptr): a(*_ptr), b(*(_ptr + 1)), c(*(_ptr + 2)), d(*(_ptr + 3)) {}
 
@@ -59,6 +59,10 @@ quat& quat::operator/=(const float other) {
 	return *this;
 }
 
+quat quat::operator-() const {
+	return quat(-a, -b, -c, -d);
+}
+
 float& quat::operator[](size_t index) {
 	if (index == 0) { return a; }
 	else if (index == 1) { return b; }
@@ -81,6 +85,10 @@ float quat::length() const {
 
 float* quat::data() {
 	return &a;
+}
+
+quat quat::identity() {
+	return quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 quat operator+(quat lhs, const quat& rhs) {
@@ -164,7 +172,7 @@ quat slerp(const quat& a, const quat& b, const float interpolationValue) {
 	return (scaleA * a + scaleB * tmpB);
 }
 
-quat to_quat(const vec3& vec) {
+quat eulerAnglesToQuat(const vec3& vec) {
 	const float cosHalfPhi = std::cos(vec.x / 2.0f);
 	const float sinHalfPhi = std::sin(vec.x / 2.0f);
 	const float cosHalfTheta = std::cos(vec.y / 2.0f);

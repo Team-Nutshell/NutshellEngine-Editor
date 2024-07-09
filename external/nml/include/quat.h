@@ -23,6 +23,7 @@ struct quat {
     quat& operator*=(const quat& other);
     quat& operator*=(const float other);
 	quat& operator/=(const float other);
+	quat operator-() const;
     float& operator[](size_t index);
 	const float operator[](size_t index) const;
 
@@ -30,6 +31,9 @@ struct quat {
     float length() const;
 
     float* data();
+
+	// Static Functions
+	static quat identity();
 };
 
 // Operators
@@ -47,8 +51,8 @@ quat conjugate(const quat& qua);
 quat normalize(const quat& qua);
 float dot(const quat& a, const quat& b);
 quat slerp(const quat& a, const quat& b, const float interpolationValue);
+quat eulerAnglesToQuat(const vec3& vec);
 
-quat to_quat(const vec3& vec);
 std::string to_string(const quat& qua);
 
 }

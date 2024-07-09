@@ -30,6 +30,7 @@ struct vec4 {
 	vec4& operator-=(const vec4& other);
 	vec4& operator*=(const float other);
 	vec4& operator/=(const float other);
+	vec4 operator-() const;
 	float& operator[](size_t index);
 	const float operator[](size_t index) const;
 

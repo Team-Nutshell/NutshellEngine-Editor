@@ -53,6 +53,10 @@ vec4& vec4::operator/=(const float other) {
 	return *this;
 }
 
+vec4 vec4::operator-() const {
+	return vec4(-x, -y, -z, -w);
+}
+
 float& vec4::operator[](size_t index) {
 	if (index == 0) { return x; }
 	else if (index == 1) { return y; }

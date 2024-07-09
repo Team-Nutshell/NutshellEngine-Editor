@@ -38,6 +38,9 @@ struct mat2 {
 	float det() const;
 
 	float* data();
+
+	// Static Functions
+	static mat2 identity();
 };
 
 // Operators

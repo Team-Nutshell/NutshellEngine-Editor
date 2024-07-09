@@ -6,7 +6,7 @@
 
 namespace nml {
 
-mat4::mat4(): x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
+mat4::mat4(): x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 mat4::mat4(float _value): x(_value), y(_value), z(_value), w(_value) {}
 mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
 mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
@@ -113,6 +113,10 @@ float mat4::det() const {
 
 float* mat4::data() {
 	return x.data();
+}
+
+mat4 mat4::identity() {
+	return mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 mat4 operator+(mat4 lhs, const mat4& rhs) {
@@ -302,7 +306,7 @@ void decomposeTransform(const mat4& transform, vec3& translation, quat& rotation
 	rotation.d = (baseRotationMat.y.x - baseRotationMat.x.y) / (4.0f * rotation.a);
 }
 
-mat4 to_mat4(const quat& qua) {
+mat4 quatToRotationMatrix(const quat& qua) {
 	const float ab = qua.a * qua.b;
 	const float ac = qua.a * qua.c;
 	const float ad = qua.a * qua.d;

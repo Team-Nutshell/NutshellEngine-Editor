@@ -5,7 +5,7 @@
 
 namespace nml {
 
-mat2::mat2(): x(1.0f, 0.0f), y(0.0f, 1.0f) {}
+mat2::mat2(): x(0.0f), y(0.0f) {}
 mat2::mat2(float _value): x(_value), y(_value) {}
 mat2::mat2(float _xx, float _xy, float _yx, float _yy): x(_xx, _xy), y(_yx, _yy) {}
 mat2::mat2(float _xx, float _xy, vec2 _y): x(_xx, _xy), y(_y) {}
@@ -74,6 +74,10 @@ float mat2::det() const {
 
 float* mat2::data() {
 	return x.data();
+}
+
+mat2 mat2::identity() {
+	return mat2(1.0f, 0.0f, 0.0f, 1.0f);
 }
 
 mat2 operator+(mat2 lhs, const mat2& rhs) {
