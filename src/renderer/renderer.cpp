@@ -499,9 +499,9 @@ void Renderer::initializeGL() {
 	// Default cube
 	GLuint defaultCubeVertexBuffer;
 	gl.glGenBuffers(1, &defaultCubeVertexBuffer);
-	std::vector<float> defaultCubeVertices = { 0.05f, 0.05f, -0.05f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, -0.05f, 0.05f, -0.05f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, -0.05f, 0.05f, 0.05f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.05f, 0.05f, 0.05f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.05f, -0.05f, 0.05f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.05f, 0.05f, 0.05f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, -0.05f, 0.05f, 0.05f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, -0.05f, -0.05f, 0.05f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -0.05f, -0.05f, 0.05f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, -0.05f, 0.05f, 0.05f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, -0.05f, 0.05f, -0.05f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, -0.05f, -0.05f, -0.05f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -0.05f, -0.05f, -0.05f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.05f, -0.05f, -0.05f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.05f, -0.05f, 0.05f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, -0.05f, -0.05f, 0.05f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.05f, -0.05f, -0.05f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.05f, 0.05f, -0.05f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.05f, 0.05f, 0.05f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.05f, -0.05f, 0.05f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -0.05f, -0.05f, -0.05f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, -0.05f, 0.05f, -0.05f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 0.05f, 0.05f, -0.05f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.05f, -0.05f, -0.05f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f };
+	std::vector<RendererResourceManager::MeshToGPU::Vertex> defaultCubeVertices = { { { 0.05f, 0.05f, -0.05f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f } }, { { -0.05f, 0.05f, -0.05f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } }, { { -0.05f, 0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } }, { { 0.05f, 0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } }, { { 0.05f, -0.05f, 0.05f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }, { { 0.05f, 0.05f, 0.05f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } }, { { -0.05f, 0.05f, 0.05f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } }, { { -0.05f, -0.05f, 0.05f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }, { { -0.05f, -0.05f, 0.05f }, { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } }, { { -0.05f, 0.05f, 0.05f }, { -1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }, { { -0.05f, 0.05f, -0.05f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } }, { { -0.05f, -0.05f, -0.05f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { -0.05f, -0.05f, -0.05f }, { 0.0f, -1.0f, 0.0f }, { 1.0f, 0.0f } }, { { 0.05f, -0.05f, -0.05f }, { 0.0f, -1.0f, 0.0f }, { 1.0f, 1.0f } }, { { 0.05f, -0.05f, 0.05f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 1.0f } }, { { -0.05f, -0.05f, 0.05f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f } }, { { 0.05f, -0.05f, -0.05f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } }, { { 0.05f, 0.05f, -0.05f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }, { { 0.05f, 0.05f, 0.05f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } }, { { 0.05f, -0.05f, 0.05f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { -0.05f, -0.05f, -0.05f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } }, { { -0.05f, 0.05f, -0.05f}, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } }, { { 0.05f, 0.05f, -0.05f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } }, { { 0.05f, -0.05f, -0.05f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } } };
 	gl.glBindBuffer(GL_ARRAY_BUFFER, defaultCubeVertexBuffer);
-	gl.glBufferData(GL_ARRAY_BUFFER, defaultCubeVertices.size() * sizeof(float), defaultCubeVertices.data(), GL_STATIC_DRAW);
+	gl.glBufferData(GL_ARRAY_BUFFER, defaultCubeVertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), defaultCubeVertices.data(), GL_STATIC_DRAW);
 
 	RendererMesh defaultCubeMesh;
 	defaultCubeMesh.vertexBuffer = defaultCubeVertexBuffer;
@@ -543,9 +543,9 @@ void Renderer::initializeGL() {
 	// Frustum cube
 	GLuint cameraFrustumCubeVertexBuffer;
 	gl.glGenBuffers(1, &cameraFrustumCubeVertexBuffer);
-	std::vector<float> cameraFrustumCubeVertices = { -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f };
+	std::vector<RendererResourceManager::MeshToGPU::Vertex> cameraFrustumCubeVertices = { { { -1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f } }, { { 1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f, 1.0f }, { -1.0f, 1.0f } }, { { 1.0f, -1.0f, 1.0f }, { 1.0f, 1.0f, -1.0f }, { 1.0f, 1.0f } } };
 	gl.glBindBuffer(GL_ARRAY_BUFFER, cameraFrustumCubeVertexBuffer);
-	gl.glBufferData(GL_ARRAY_BUFFER, cameraFrustumCubeVertices.size() * sizeof(float), cameraFrustumCubeVertices.data(), GL_STATIC_DRAW);
+	gl.glBufferData(GL_ARRAY_BUFFER, cameraFrustumCubeVertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), cameraFrustumCubeVertices.data(), GL_STATIC_DRAW);
 
 	RendererMesh cameraFrustumCubeMesh;
 	cameraFrustumCubeMesh.vertexBuffer = cameraFrustumCubeVertexBuffer;
@@ -1121,12 +1121,20 @@ void Renderer::updateLights() {
 
 void Renderer::loadResourcesToGPU() {
 	for (const auto& modelToGPU : m_globalInfo.rendererResourceManager.modelsToGPU) {
+		if (m_globalInfo.rendererResourceManager.models.find(modelToGPU.first) != m_globalInfo.rendererResourceManager.models.end()) {
+			// Free resources for same model
+			for (auto& mesh : m_globalInfo.rendererResourceManager.models[modelToGPU.first].meshes) {
+				gl.glDeleteBuffers(1, &mesh.vertexBuffer);
+				gl.glDeleteBuffers(1, &mesh.indexBuffer);
+			}
+		}
+
 		RendererModel newRendererModel;
 		for (const auto& meshToGPU : modelToGPU.second.meshes) {
 			RendererMesh newRendererMesh;
 			gl.glGenBuffers(1, &newRendererMesh.vertexBuffer);
 			gl.glBindBuffer(GL_ARRAY_BUFFER, newRendererMesh.vertexBuffer);
-			gl.glBufferData(GL_ARRAY_BUFFER, meshToGPU.vertices.size() * sizeof(float), meshToGPU.vertices.data(), GL_STATIC_DRAW);
+			gl.glBufferData(GL_ARRAY_BUFFER, meshToGPU.vertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), meshToGPU.vertices.data(), GL_STATIC_DRAW);
 			
 			gl.glGenBuffers(1, &newRendererMesh.indexBuffer);
 			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newRendererMesh.indexBuffer);
@@ -1147,6 +1155,11 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.modelsToGPU.clear();
 
 	for (const auto& imageToGPU : m_globalInfo.rendererResourceManager.imagesToGPU) {
+		if (m_globalInfo.rendererResourceManager.textures.find(imageToGPU.first) != m_globalInfo.rendererResourceManager.textures.end()) {
+			// Free resources for same image
+			gl.glDeleteTextures(1, &m_globalInfo.rendererResourceManager.textures[imageToGPU.first]);
+		}
+
 		m_globalInfo.rendererResourceManager.textures[imageToGPU.first] = 0;
 		uint32_t* texture = &m_globalInfo.rendererResourceManager.textures[imageToGPU.first];
 		gl.glGenTextures(1, texture);

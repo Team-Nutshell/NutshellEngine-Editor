@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 #include "../../external/nlohmann/json.hpp"
+#include <set>
 #include <numeric>
 #include <algorithm>
 #include <fstream>
@@ -30,8 +31,24 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 		else {
 			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported by the editor.");
+			return;
 		}
 	}
+	
+	// Calculate OBB
+	/*auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
+		return nml::to_string(a) < nml::to_string(b);
+		};
+
+	if (modelsToGPU.find(name) != modelsToGPU.end()) {
+		const ModelToGPU& model = modelsToGPU[name];
+		for (auto& mesh : model.meshes) {
+			std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
+			for (size_t j = 0; j < mesh.vertices.size(); j++) {
+				uniquePositions.insert(mesh.vertices[j]);
+			}
+		}
+	}*/
 }
 
 void RendererResourceManager::loadImage(const std::string& imagePath, const std::string& name) {
@@ -254,23 +271,23 @@ RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::
 	nlohmann::json j = nlohmann::json::parse(meshFile);
 
 	if (j.contains("vertices")) {
-		mesh.vertices.resize(j["vertices"].size() * 8);
+		mesh.vertices.resize(j["vertices"].size());
 		for (size_t i = 0; i < j["vertices"].size(); i++) {
 			if (j["vertices"][i].contains("position")) {
-				mesh.vertices[(i * 8) + 0] = j["vertices"][i]["position"][0];
-				mesh.vertices[(i * 8) + 1] = j["vertices"][i]["position"][1];
-				mesh.vertices[(i * 8) + 2] = j["vertices"][i]["position"][2];
+				mesh.vertices[i].position.x = j["vertices"][i]["position"][0];
+				mesh.vertices[i].position.y = j["vertices"][i]["position"][1];
+				mesh.vertices[i].position.z = j["vertices"][i]["position"][2];
 			}
 
 			if (j["vertices"][i].contains("normal")) {
-				mesh.vertices[(i * 8) + 3] = j["vertices"][i]["normal"][0];
-				mesh.vertices[(i * 8) + 4] = j["vertices"][i]["normal"][1];
-				mesh.vertices[(i * 8) + 5] = j["vertices"][i]["normal"][2];
+				mesh.vertices[i].normal.x = j["vertices"][i]["normal"][0];
+				mesh.vertices[i].normal.y = j["vertices"][i]["normal"][1];
+				mesh.vertices[i].normal.z = j["vertices"][i]["normal"][2];
 			}
 
 			if (j["vertices"][i].contains("uv")) {
-				mesh.vertices[(i * 8) + 6] = j["vertices"][i]["uv"][0];
-				mesh.vertices[(i * 8) + 7] = j["vertices"][i]["uv"][1];
+				mesh.vertices[i].uv.x = j["vertices"][i]["uv"][0];
+				mesh.vertices[i].uv.y = j["vertices"][i]["uv"][1];
 			}
 		}
 	}
@@ -417,7 +434,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				}
 			}
 			size_t vertexCount = positionCount;
-			primitive.vertices.resize(vertexCount * 8);
+			primitive.vertices.resize(vertexCount);
 
 			size_t positionCursor = 0;
 			size_t normalCursor = 0;
@@ -425,32 +442,32 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 
 			for (size_t j = 0; j < vertexCount; j++) {
 				nml::vec3 vertexPosition = nml::vec3(modelMatrix * nml::vec4(nml::vec3(position + positionCursor), 1.0f));
-				primitive.vertices[(j * 8) + 0] = vertexPosition.x;
-				primitive.vertices[(j * 8) + 1] = vertexPosition.y;
-				primitive.vertices[(j * 8) + 2] = vertexPosition.z;
+				primitive.vertices[j].position.x = vertexPosition.x;
+				primitive.vertices[j].position.y = vertexPosition.y;
+				primitive.vertices[j].position.z = vertexPosition.z;
 				positionCursor += (positionStride / sizeof(float));
 
 				if (normalCount != 0) {
 					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(normal + normalCursor), 0.0f)));
-					primitive.vertices[(j * 8) + 3] = vertexNormal.x;
-					primitive.vertices[(j * 8) + 4] = vertexNormal.y;
-					primitive.vertices[(j * 8) + 5] = vertexNormal.z;
+					primitive.vertices[j].normal.x = vertexNormal.x;
+					primitive.vertices[j].normal.y = vertexNormal.y;
+					primitive.vertices[j].normal.z = vertexNormal.z;
 					normalCursor += (normalStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[(j * 8) + 3] = 0.0f;
-					primitive.vertices[(j * 8) + 4] = 0.0f;
-					primitive.vertices[(j * 8) + 5] = 0.0f;
+					primitive.vertices[j].normal.x = 0.0f;
+					primitive.vertices[j].normal.y = 0.0f;
+					primitive.vertices[j].normal.z = 0.0f;
 				}
 
 				if (uvCount != 0) {
-					primitive.vertices[(j * 8) + 6] = *(uv + uvCursor);
-					primitive.vertices[(j * 8) + 7] = *(uv + uvCursor + 1);
+					primitive.vertices[j].uv.x = *(uv + uvCursor);
+					primitive.vertices[j].uv.y = *(uv + uvCursor + 1);
 					uvCursor += (uvStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[(j * 8) + 6] = 0.0f;
-					primitive.vertices[(j * 8) + 7] = 0.0f;
+					primitive.vertices[j].uv.x = 0.0f;
+					primitive.vertices[j].uv.y = 0.0f;
 				}
 			}
 

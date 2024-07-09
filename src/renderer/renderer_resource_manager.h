@@ -12,8 +12,15 @@ class Logger;
 
 class RendererResourceManager {
 public:
+
 	struct MeshToGPU {
-		std::vector<float> vertices;
+		struct Vertex {
+			nml::vec3 position;
+			nml::vec3 normal;
+			nml::vec2 uv;
+		};
+
+		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		std::string diffuseTexturePath;
 		std::string emissiveTexturePath;
