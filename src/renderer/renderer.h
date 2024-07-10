@@ -112,6 +112,7 @@ private:
 	GLuint m_pickingProgram;
 	GLuint m_outlineSoloProgram;
 	GLuint m_outlineProgram;
+	GLuint m_colliderProgram;
 
 	GLuint m_pickingFramebuffer;
 	GLuint m_pickingImage;

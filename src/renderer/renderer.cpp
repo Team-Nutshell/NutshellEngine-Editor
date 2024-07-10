@@ -483,6 +483,34 @@ void Renderer::initializeGL() {
 
 	m_outlineProgram = compileProgram(fullscreenVertexShader, outlineFragmentShader);
 
+	// Collider
+	std::string colliderVertexShaderCode = R"GLSL(
+	#version 460
+
+	in vec3 position;
+
+	uniform mat4 viewProj;
+	uniform mat4 model;
+
+	void main() {
+		gl_Position = viewProj * model * vec4(position, 1.0);
+	}
+	)GLSL";
+	GLuint colliderVertexShader = compileShader(GL_VERTEX_SHADER, colliderVertexShaderCode);
+
+	std::string colliderFragmentShaderCode = R"GLSL(
+	#version 460
+
+	out vec4 outColor;
+
+	void main() {
+		outColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+	)GLSL";
+	GLuint colliderFragmentShader = compileShader(GL_FRAGMENT_SHADER, colliderFragmentShaderCode);
+
+	m_colliderProgram = compileProgram(colliderVertexShader, colliderFragmentShader);
+
 	// Cube indices
 	GLuint cubeTriangleIndexBuffer;
 	gl.glGenBuffers(1, &cubeTriangleIndexBuffer);
@@ -579,6 +607,10 @@ void Renderer::paintGL() {
 
 	updateCamera();
 
+	if (m_lightingEnabled) {
+		updateLights();
+	}
+
 	if (m_backfaceCullingEnabled) {
 		gl.glEnable(GL_CULL_FACE);
 	}
@@ -598,10 +630,6 @@ void Renderer::paintGL() {
 	// Entities
 	gl.glUseProgram(m_entityProgram);
 	gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
-
-	if (m_lightingEnabled) {
-		updateLights();
-	}
 
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.isVisible) {
@@ -694,6 +722,24 @@ void Renderer::paintGL() {
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
 
 					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
+				}
+			}
+		}
+	}
+
+	// Entities Colliders
+	if (m_showColliders) {
+		gl.glUseProgram(m_colliderProgram);
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+
+		for (const auto& entity : m_globalInfo.entities) {
+			if (entity.second.isVisible) {
+				if (entity.second.collidable) {
+					const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
 				}
 			}
 		}

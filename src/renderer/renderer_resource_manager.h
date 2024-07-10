@@ -12,7 +12,6 @@ class Logger;
 
 class RendererResourceManager {
 public:
-
 	struct MeshToGPU {
 		struct Vertex {
 			nml::vec3 position;
