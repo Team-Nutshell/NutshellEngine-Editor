@@ -12,6 +12,7 @@ struct RendererMesh {
 	std::string emissiveTexturePath = "defaultEmissiveTexture";
 	float alphaCutoff = 0.0f;
 
-	AABB aabb;
 	OBB obb;
+	Sphere sphere;
+	Capsule capsule;
 };

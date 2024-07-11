@@ -42,12 +42,15 @@ set(COMMON_HEADERS
 	src/common/signal_emitter.h)
 
 set(COMMON_SOURCES
-	src/common/logger.cpp)
+	src/common/logger.cpp
+	src/common/scene_manager.cpp)
 
 set(RENDERER_SOURCES
+	src/renderer/collider_mesh.cpp
 	src/renderer/renderer.cpp
 	src/renderer/renderer_resource_manager.cpp)
 set(RENDERER_HEADERS
+	src/renderer/collider_mesh.h
 	src/renderer/renderer.h
 	src/renderer/renderer_camera.h
 	src/renderer/renderer_mesh.h

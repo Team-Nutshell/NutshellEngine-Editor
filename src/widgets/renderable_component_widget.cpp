@@ -2,6 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../renderer/collider_mesh.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -61,6 +62,8 @@ void RenderableComponentWidget::onAddEntityRenderable(EntityID entityID) {
 		updateWidgets(renderable);
 		show();
 	}
+
+	ColliderMesh::update(m_globalInfo, entityID);
 }
 
 void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
@@ -75,6 +78,8 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 			updateWidgets(renderable);
 		}
 	}
+
+	ColliderMesh::update(m_globalInfo, entityID);
 }
 
 void RenderableComponentWidget::onStringUpdated(const std::string& string) {

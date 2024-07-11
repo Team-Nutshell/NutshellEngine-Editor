@@ -572,7 +572,7 @@ void Renderer::initializeGL() {
 	// Frustum cube
 	GLuint cameraFrustumCubeVertexBuffer;
 	gl.glGenBuffers(1, &cameraFrustumCubeVertexBuffer);
-	std::vector<RendererResourceManager::MeshToGPU::Vertex> cameraFrustumCubeVertices = { { { -1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f } }, { { 1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f, 1.0f }, { -1.0f, 1.0f } }, { { 1.0f, -1.0f, 1.0f }, { 1.0f, 1.0f, -1.0f }, { 1.0f, 1.0f } } };
+	std::vector<RendererResourceManager::MeshToGPU::Vertex> cameraFrustumCubeVertices = { { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { 1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { 1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { -1.0f, 1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { 1.0f, 1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } }, { { -1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } } };
 	gl.glBindBuffer(GL_ARRAY_BUFFER, cameraFrustumCubeVertexBuffer);
 	gl.glBufferData(GL_ARRAY_BUFFER, cameraFrustumCubeVertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), cameraFrustumCubeVertices.data(), GL_STATIC_DRAW);
 
@@ -709,7 +709,7 @@ void Renderer::paintGL() {
 		gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
 		GLint positionPos = gl.glGetAttribLocation(m_cameraFrustumProgram, "position");
 		gl.glEnableVertexAttribArray(positionPos);
-		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 12, (void*)0);
+		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
 		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
 
 		for (const auto& entity : m_globalInfo.entities) {
@@ -735,12 +735,23 @@ void Renderer::paintGL() {
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
-				if (entity.second.collidable) {
+				if (entity.second.collidable && (m_globalInfo.rendererResourceManager.models.find("Collider_" + std::to_string(entity.first)) != m_globalInfo.rendererResourceManager.models.end())) {
 					const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
 					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
+
+					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.models["Collider_" + std::to_string(entity.first)];
+					for (const auto& colliderMesh : colliderModel.meshes) {
+						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderMesh.vertexBuffer);
+						GLint positionPos = gl.glGetAttribLocation(m_colliderProgram, "position");
+						gl.glEnableVertexAttribArray(positionPos);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderMesh.indexBuffer);
+
+						gl.glDrawElements(GL_LINES, colliderMesh.indexCount, GL_UNSIGNED_INT, NULL);
+					}
 				}
 			}
 		}
@@ -905,6 +916,24 @@ void Renderer::paintGL() {
 			}
 		}
 
+		// Entity Collider
+		if (m_showColliders) {
+			if (entity.isVisible) {
+				if (entity.collidable && (m_globalInfo.rendererResourceManager.models.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.models.end())) {
+					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.models["Collider_" + std::to_string(entity.entityID)];
+					for (const auto& colliderMesh : colliderModel.meshes) {
+						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderMesh.vertexBuffer);
+						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+						gl.glEnableVertexAttribArray(positionPos);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderMesh.indexBuffer);
+
+						gl.glDrawElements(GL_LINES, colliderMesh.indexCount, GL_UNSIGNED_INT, NULL);
+					}
+				}
+			}
+		}
+
 		// Outline
 		gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
 		gl.glEnable(GL_DEPTH_TEST);
@@ -937,6 +966,7 @@ GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode)
 		int length;
 		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog.data());
 		m_globalInfo.logger.addLog(LogLevel::Error, "Error while compiling shader :" + std::string(infolog.data(), length));
+
 		return 0xFFFFFFFF;
 	}
 
@@ -959,6 +989,7 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 		m_globalInfo.logger.addLog(LogLevel::Error, "Error while linking program :" + std::string(infolog.data(), length));
 		gl.glDetachShader(program, vertexShader);
 		gl.glDetachShader(program, fragmentShader);
+
 		return 0xFFFFFFFF;
 	}
 
@@ -1197,6 +1228,8 @@ void Renderer::loadResourcesToGPU() {
 			newRendererMesh.alphaCutoff = meshToGPU.alphaCutoff;
 
 			newRendererMesh.obb = meshToGPU.obb;
+			newRendererMesh.sphere = meshToGPU.sphere;
+			newRendererMesh.capsule = meshToGPU.capsule;
 
 			newRendererModel.meshes.push_back(newRendererMesh);
 		}

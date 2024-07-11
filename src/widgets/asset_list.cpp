@@ -8,6 +8,7 @@
 #include <QImage>
 #include <filesystem>
 #include <algorithm>
+#include <fstream>
 
 AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {

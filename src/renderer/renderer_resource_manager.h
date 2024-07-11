@@ -25,8 +25,9 @@ public:
 		std::string emissiveTexturePath;
 		float alphaCutoff = 0.0f;
 
-		AABB aabb;
 		OBB obb;
+		Sphere sphere;
+		Capsule capsule;
 	};
 
 	struct ModelToGPU {

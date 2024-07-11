@@ -2,6 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../renderer/collider_mesh.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -130,6 +131,8 @@ void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
 		updateWidgets(collidable);
 		show();
 	}
+
+	ColliderMesh::update(m_globalInfo, entityID);
 }
 
 void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
@@ -144,6 +147,8 @@ void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, cons
 			updateWidgets(collidable);
 		}
 	}
+
+	ColliderMesh::update(m_globalInfo, entityID);
 }
 
 void CollidableComponentWidget::onElementUpdated(const std::string& element) {

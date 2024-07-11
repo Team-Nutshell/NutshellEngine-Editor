@@ -12,3 +12,14 @@ struct OBB {
 	nml::vec3 halfExtent;
 	nml::vec3 rotation;
 };
+
+struct Sphere {
+	nml::vec3 center;
+	float radius;
+};
+
+struct Capsule {
+	nml::vec3 base;
+	nml::vec3 tip;
+	float radius;
+};

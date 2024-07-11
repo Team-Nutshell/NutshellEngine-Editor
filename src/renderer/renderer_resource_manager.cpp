@@ -37,18 +37,43 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 	}
 	
-	// Calculate OBB
+	// Calculate OBB, Sphere and Capsule
 	auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
 		return nml::to_string(a) < nml::to_string(b);
 		};
 
 	if (modelsToGPU.find(name) != modelsToGPU.end()) {
+		AABB aabb;
 		ModelToGPU& model = modelsToGPU[name];
 		for (auto& mesh : model.meshes) {
 			std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
 			for (size_t j = 0; j < mesh.vertices.size(); j++) {
 				uniquePositions.insert(mesh.vertices[j].position);
+
+				if (mesh.vertices[j].position.x < aabb.min.x) {
+					aabb.min.x = mesh.vertices[j].position.x;
+				}
+				if (mesh.vertices[j].position.y < aabb.min.y) {
+					aabb.min.y = mesh.vertices[j].position.y;
+				}
+				if (mesh.vertices[j].position.z < aabb.min.z) {
+					aabb.min.z = mesh.vertices[j].position.z;
+				}
+
+				if (mesh.vertices[j].position.x > aabb.max.x) {
+					aabb.max.x = mesh.vertices[j].position.x;
+				}
+				if (mesh.vertices[j].position.y > aabb.max.y) {
+					aabb.max.y = mesh.vertices[j].position.y;
+				}
+				if (mesh.vertices[j].position.z > aabb.max.z) {
+					aabb.max.z = mesh.vertices[j].position.z;
+				}
 			}
+
+			// AABB
+			mesh.sphere.center = (aabb.min + aabb.max) / 2.0f;
+			mesh.sphere.radius = (mesh.sphere.center - aabb.min).length();
 
 			float size = static_cast<float>(uniquePositions.size());
 
@@ -75,12 +100,18 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 			covarianceMatrix.z.y = covarianceMatrix.y.z;
 
 			std::array<std::pair<float, nml::vec3>, 3> eigen = covarianceMatrix.eigen();
+			std::sort(eigen.begin(), eigen.end(), [](const std::pair<float, nml::vec3>& a, const std::pair<float, nml::vec3>& b) {
+				return a.first > b.first;
+				});
 
 			mesh.obb.center = means;
+			mesh.capsule.radius = 0.0f;
 
+			float segmentLengthMax = 0.0f;
 			for (const nml::vec3& position : uniquePositions) {
 				const nml::vec3 positionMinusCenter = position - mesh.obb.center;
 
+				// OBB
 				const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
 				if (extentX > mesh.obb.halfExtent.x) {
 					mesh.obb.halfExtent.x = extentX;
@@ -95,10 +126,26 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 				if (extentZ > mesh.obb.halfExtent.z) {
 					mesh.obb.halfExtent.z = extentZ;
 				}
+
+				// Capsule
+				const float segmentLength = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
+				if (segmentLength > segmentLengthMax) {
+					segmentLengthMax = segmentLength;
+				}
+
+				const float radius = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
+				if (radius > mesh.capsule.radius) {
+					mesh.capsule.radius = radius;
+				}
 			}
 
+			// OBB
 			nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 			mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
+
+			// Capsule
+			mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+			mesh.capsule.tip = mesh.obb.center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
 		}
 	}
 }
