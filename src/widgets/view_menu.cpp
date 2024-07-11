@@ -64,7 +64,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 			m_toggleCurrentEntityVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCurrentEntityVisibility"]));
 		}
 		if (j["renderer"].contains("toggleGridVisibility")) {
-			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleGridVisibility"]));
+			m_toggleGridVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleGridVisibility"]));
 		}
 		if (j["renderer"].contains("toggleBackfaceCulling")) {
 			m_toggleBackfaceCullingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleBackfaceCulling"]));
@@ -76,7 +76,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleLighting"]));
 		}
 		if (j["renderer"].contains("toggleCollidersVisibility")) {
-			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCollidersVisibility"]));
+			m_toggleCollidersVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCollidersVisibility"]));
 		}
 		if (j["renderer"].contains("switchCameraProjection")) {
 			m_switchCameraProjectionAction->setShortcut(QString::fromStdString(j["renderer"]["switchCameraProjection"]));
