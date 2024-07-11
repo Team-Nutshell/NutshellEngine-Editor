@@ -1196,6 +1196,8 @@ void Renderer::loadResourcesToGPU() {
 
 			newRendererMesh.alphaCutoff = meshToGPU.alphaCutoff;
 
+			newRendererMesh.obb = meshToGPU.obb;
+
 			newRendererModel.meshes.push_back(newRendererMesh);
 		}
 

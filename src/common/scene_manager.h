@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "global_info.h"
 #include "../widgets/main_window.h"
 #include "../undo_commands/clear_scene_command.h"
 #include "../undo_commands/open_scene_command.h"

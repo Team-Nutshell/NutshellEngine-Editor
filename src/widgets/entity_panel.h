@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "entity_list.h"
 #include <QWidget>
 

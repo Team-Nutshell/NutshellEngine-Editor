@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QFileDialog>

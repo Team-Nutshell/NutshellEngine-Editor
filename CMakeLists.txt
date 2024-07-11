@@ -34,8 +34,9 @@ set(COMMON_COMPONENTS_HEADERS
 
 set(COMMON_HEADERS
 	${COMMON_COMPONENTS_HEADERS}
-	src/common/common.h
+	src/common/bounding_volumes.h
 	src/common/entity.h
+	src/common/global_info.h
 	src/common/logger.h
 	src/common/scene_manager.h
 	src/common/signal_emitter.h)

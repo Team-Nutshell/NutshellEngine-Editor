@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "transform_component_widget.h"
 #include "camera_component_widget.h"
 #include "light_component_widget.h"

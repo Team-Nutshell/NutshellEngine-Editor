@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "entity_info_name_widget.h"
 #include "entity_info_persistence_widget.h"
 #include "component_scroll_area.h"

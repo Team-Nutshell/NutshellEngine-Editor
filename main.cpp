@@ -2,7 +2,7 @@
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
-#include "src/common/common.h"
+#include "src/common/global_info.h"
 #include "src/widgets/project_window.h"
 #include "src/widgets/main_window.h"
 #include <QApplication>

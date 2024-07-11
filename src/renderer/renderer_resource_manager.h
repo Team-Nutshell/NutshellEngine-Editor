@@ -19,18 +19,13 @@ public:
 			nml::vec2 uv;
 		};
 
-		struct OBB {
-			nml::vec3 center;
-			nml::vec3 halfExtent;
-			nml::vec3 rotation;
-		};
-
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		std::string diffuseTexturePath;
 		std::string emissiveTexturePath;
 		float alphaCutoff = 0.0f;
 
+		AABB aabb;
 		OBB obb;
 	};
 

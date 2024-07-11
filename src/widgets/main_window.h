@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "file_menu.h"
 #include "edit_menu.h"
 #include "view_menu.h"

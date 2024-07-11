@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "new_project_directory_path_widget.h"
 #include "new_project_name_widget.h"
 #include <QWidget>

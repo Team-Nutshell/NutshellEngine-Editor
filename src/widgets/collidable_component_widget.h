@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "combo_box_widget.h"
 #include "boolean_widget.h"
 #include "vector3_widget.h"

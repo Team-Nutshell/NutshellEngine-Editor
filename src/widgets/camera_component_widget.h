@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/common.h"
+#include "../common/global_info.h"
 #include "vector3_widget.h"
 #include "scalar_widget.h"
 #include <QWidget>
