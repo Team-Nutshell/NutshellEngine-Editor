@@ -7,6 +7,8 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	m_toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
 	m_toggleCurrentEntityVisibilityAction->setShortcut(QKeySequence::fromString("V"));
 	m_toggleCurrentEntityVisibilityAction->setEnabled(false);
+	m_toggleGridVisibilityAction = addAction("Hide Grid", this, &ViewMenu::toggleGridVisibility);
+	m_toggleGridVisibilityAction->setShortcut(QKeySequence::fromString("G"));
 	m_toggleBackfaceCullingAction = addAction("Enable Backface Culling", this, &ViewMenu::toggleBackfaceCulling);
 	m_toggleBackfaceCullingAction->setShortcut(QKeySequence::fromString("F"));
 	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCamerasVisibility);
@@ -35,6 +37,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &ViewMenu::onGridVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCamerasVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &ViewMenu::onLightingToggled);
@@ -60,6 +63,9 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 		if (j["renderer"].contains("toggleCurrentEntityVisibility")) {
 			m_toggleCurrentEntityVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCurrentEntityVisibility"]));
 		}
+		if (j["renderer"].contains("toggleGridVisibility")) {
+			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleGridVisibility"]));
+		}
 		if (j["renderer"].contains("toggleBackfaceCulling")) {
 			m_toggleBackfaceCullingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleBackfaceCulling"]));
 		}
@@ -68,6 +74,9 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 		}
 		if (j["renderer"].contains("toggleLighting")) {
 			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleLighting"]));
+		}
+		if (j["renderer"].contains("toggleCollidersVisibility")) {
+			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCollidersVisibility"]));
 		}
 		if (j["renderer"].contains("switchCameraProjection")) {
 			m_switchCameraProjectionAction->setShortcut(QString::fromStdString(j["renderer"]["switchCameraProjection"]));
@@ -99,6 +108,10 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 void ViewMenu::toggleCurrentEntityVisibility() {
 	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = !m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible;
 	emit m_globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal(m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible);
+}
+
+void ViewMenu::toggleGridVisibility() {
+	emit m_globalInfo.signalEmitter.toggleGridVisibilitySignal(!m_showGrid);
 }
 
 void ViewMenu::toggleBackfaceCulling() {
@@ -179,6 +192,11 @@ void ViewMenu::onSelectEntity() {
 void ViewMenu::onCurrentEntityVisibilityToggled(bool isEntityVisible) {
 	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = isEntityVisible;
 	m_toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
+}
+
+void ViewMenu::onGridVisibilityToggled(bool showGrid) {
+	m_showGrid = showGrid;
+	m_toggleGridVisibilityAction->setText(m_showGrid ? "Hide Grid" : "Show Grid");
 }
 
 void ViewMenu::onBackfaceCullingToggled(bool backfaceCulling) {

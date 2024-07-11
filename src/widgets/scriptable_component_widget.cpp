@@ -84,7 +84,7 @@ void ScriptableComponentWidget::onSelectEntity() {
 
 void ScriptableComponentWidget::onAddEntityScriptable(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Scriptable scriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
+		const Scriptable& scriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
 		updateWidgets(scriptable);
 		show();
 	}

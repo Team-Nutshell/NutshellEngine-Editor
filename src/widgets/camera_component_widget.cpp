@@ -61,7 +61,7 @@ void CameraComponentWidget::onSelectEntity() {
 
 void CameraComponentWidget::onAddEntityCamera(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Camera camera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
+		const Camera& camera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 		updateWidgets(camera);
 		show();
 	}

@@ -13,6 +13,7 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setMouseTracking(true);
 
 	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &Renderer::onGridVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &Renderer::onLightingToggled);
@@ -746,15 +747,17 @@ void Renderer::paintGL() {
 	}
 
 	// Grid
-	if (!m_camera.useOrthographicProjection) {
-		gl.glUseProgram(m_gridProgram);
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
-		gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_camera.nearPlane);
-		gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_camera.farPlane);
+	if (m_showGrid) {
+		if (!m_camera.useOrthographicProjection) {
+			gl.glUseProgram(m_gridProgram);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_camera.nearPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_camera.farPlane);
 
-		gl.glDrawArrays(GL_TRIANGLES, 0, 6);
+			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 	}
 
 	if (m_backfaceCullingEnabled) {
@@ -1266,6 +1269,10 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	nml::vec4 worldSpace = invViewMatrix * viewSpace;
 
 	return nml::vec3(worldSpace) / worldSpace.w;
+}
+
+void Renderer::onGridVisibilityToggled(bool showGrid) {
+	m_showGrid = showGrid;
 }
 
 void Renderer::onBackfaceCullingToggled(bool backfaceCullingEnabled) {

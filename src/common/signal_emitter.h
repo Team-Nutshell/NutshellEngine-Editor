@@ -41,6 +41,7 @@ signals:
 	void changeEntityScriptableSignal(EntityID, const Scriptable&);
 
 	void toggleBackfaceCullingSignal(bool);
+	void toggleGridVisibilitySignal(bool);
 	void toggleCurrentEntityVisibilitySignal(bool);
 	void toggleCamerasVisibilitySignal(bool);
 	void toggleLightingSignal(bool);

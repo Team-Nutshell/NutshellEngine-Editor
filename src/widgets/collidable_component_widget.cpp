@@ -126,7 +126,7 @@ void CollidableComponentWidget::onSelectEntity() {
 
 void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Collidable collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
+		const Collidable& collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 		updateWidgets(collidable);
 		show();
 	}

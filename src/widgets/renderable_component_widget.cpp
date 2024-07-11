@@ -57,7 +57,7 @@ void RenderableComponentWidget::onSelectEntity() {
 
 void RenderableComponentWidget::onAddEntityRenderable(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Renderable renderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
+		const Renderable& renderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 		updateWidgets(renderable);
 		show();
 	}

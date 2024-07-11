@@ -10,6 +10,7 @@ public:
 
 private:
 	void toggleCurrentEntityVisibility();
+	void toggleGridVisibility();
 	void toggleBackfaceCulling();
 	void toggleCamerasVisibility();
 	void toggleLighting();
@@ -26,6 +27,7 @@ private:
 private slots:
 	void onSelectEntity();
 	void onCurrentEntityVisibilityToggled(bool isEntityVisible);
+	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCullingEnabled);
 	void onCamerasVisibilityToggled(bool showCameras);
 	void onLightingToggled(bool lightingEnabled);
@@ -36,6 +38,7 @@ private:
 	GlobalInfo& m_globalInfo;
 
 	QAction* m_toggleCurrentEntityVisibilityAction;
+	QAction* m_toggleGridVisibilityAction;
 	QAction* m_toggleBackfaceCullingAction;
 	QAction* m_toggleCamerasVisibilityAction;
 	QAction* m_toggleLightingAction;
@@ -49,6 +52,7 @@ private:
 	QAction* m_orthographicCameraToZMAction;
 	QAction* m_orthographicCameraToZPAction;
 
+	bool m_showGrid = true;
 	bool m_backfaceCullingEnabled = false;
 	bool m_showCameras = false;
 	bool m_lightingEnabled = false;

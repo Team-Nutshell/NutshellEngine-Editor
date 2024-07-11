@@ -79,7 +79,7 @@ void RigidbodyComponentWidget::onSelectEntity() {
 
 void RigidbodyComponentWidget::onAddEntityRigidbody(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Rigidbody rigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
+		const Rigidbody& rigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
 		updateWidgets(rigidbody);
 		show();
 	}

@@ -39,6 +39,7 @@ private:
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
 private slots:
+	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCulling);
 	void onCamerasVisibilityToggled(bool showCameras);
 	void onLightingToggled(bool lightingEnabled);
@@ -99,6 +100,7 @@ private:
 	bool m_doPicking = false;
 	bool m_gotResized = false;
 
+	bool m_showGrid = true;
 	bool m_backfaceCullingEnabled = false;
 	bool m_showCameras = false;
 	bool m_lightingEnabled = false;

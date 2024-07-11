@@ -79,7 +79,7 @@ void LightComponentWidget::onSelectEntity() {
 
 void LightComponentWidget::onAddEntityLight(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
-		Light light = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
+		const Light& light = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 		updateWidgets(light);
 		show();
 	}
