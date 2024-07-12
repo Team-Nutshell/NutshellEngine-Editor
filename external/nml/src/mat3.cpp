@@ -3,6 +3,7 @@
 #include "../include/mat4.h"
 #include "../include/other.h"
 #include <limits>
+#include <cstdint>
 #include <cmath>
 #include <stdexcept>
 
