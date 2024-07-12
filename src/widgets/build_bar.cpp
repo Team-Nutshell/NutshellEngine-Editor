@@ -107,6 +107,7 @@ bool BuildBar::build() {
 
 	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
+	bool cMakeSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
@@ -170,7 +171,6 @@ bool BuildBar::build() {
 
 	const std::string cMakeBuildCommand = cMakePath + " --build . --config " + buildType;
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
-	bool buildSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
