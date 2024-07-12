@@ -78,6 +78,7 @@ bool BuildBar::build() {
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path("editor_build");
 
+	bool buildSuccess = true;
 #if defined(NTSHENGN_OS_WINDOWS)
 	HANDLE pipeRead = NULL;
 	HANDLE pipeWrite = NULL;
@@ -106,7 +107,6 @@ bool BuildBar::build() {
 
 	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
-	bool cMakeSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
