@@ -909,7 +909,7 @@ void Renderer::paintGL() {
 				gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 12, (void*)0);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
 
 				gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
