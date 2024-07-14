@@ -14,11 +14,9 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	QStringList headerLabels = {"Time", "Level", "Log"};
 	setHorizontalHeaderLabels(headerLabels);
 
-	updateLogs();
-}
+	connect(&m_globalInfo.logger, &Logger::addLogSignal, this, &LogsWidget::onLogAdded);
 
-LogsWidget::~LogsWidget() {
-	m_globalInfo.logger.logsWidget = nullptr;
+	updateLogs();
 }
 
 void LogsWidget::updateLogs() {
@@ -55,4 +53,8 @@ void LogsWidget::updateLogs() {
 	}
 	currentLog += logs.size() - currentLog;
 	verticalScrollBar()->setSliderPosition(verticalScrollBar()->maximum());
+}
+
+void LogsWidget::onLogAdded() {
+	updateLogs();
 }

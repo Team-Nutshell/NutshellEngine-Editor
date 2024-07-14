@@ -3,6 +3,7 @@
 #include <tuple>
 #include <ctime>
 #include <string>
+#include <QObject>
 
 enum class LogLevel {
 	Info,
@@ -12,10 +13,8 @@ enum class LogLevel {
 
 typedef std::tuple<std::time_t, LogLevel, std::string> Log;
 
-class LogBar;
-class LogsWidget;
-
-class Logger {
+class Logger : public QObject {
+	Q_OBJECT
 public:
 	void addLog(LogLevel logLevel, const std::string& logMessage);
 
@@ -24,7 +23,6 @@ public:
 private:
 	std::vector<Log> m_logs;
 
-public:
-	LogBar* logBar{ nullptr };
-	LogsWidget* logsWidget{ nullptr };
+signals:
+	void addLogSignal();
 };

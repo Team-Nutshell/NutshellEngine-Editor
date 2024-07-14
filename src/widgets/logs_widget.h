@@ -6,10 +6,12 @@ class LogsWidget : public QTableWidget {
 	Q_OBJECT
 public:
 	LogsWidget(GlobalInfo& globalInfo);
-	~LogsWidget();
 
 public:
 	void updateLogs();
+
+private slots:
+	void onLogAdded();
 
 private:
 	GlobalInfo& m_globalInfo;

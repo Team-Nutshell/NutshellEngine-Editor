@@ -66,5 +66,4 @@ void MainWindow::createResourcePanel() {
 void MainWindow::createLogBar() {
 	m_logBar = new LogBar(m_globalInfo);
 	m_mainWidget->layout()->addWidget(m_logBar);
-	m_globalInfo.logger.logBar = m_logBar;
 }
