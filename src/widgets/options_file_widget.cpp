@@ -1,4 +1,5 @@
 #include "options_file_widget.h"
+#include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -84,9 +85,7 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 }
 
 void OptionsFileWidget::valueChanged() {
-	if (!windowTitle().isEmpty() && (windowTitle()[0] != '*')) {
-		setWindowTitle("*" + windowTitle());
-	}
+	SaveTitleChanger::change(this);
 }
 
 void OptionsFileWidget::save() {
@@ -125,7 +124,5 @@ void OptionsFileWidget::save() {
 	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
 	optionsFile << j.dump(1, '\t');
 
-	if (!windowTitle().isEmpty() && (windowTitle()[0] == '*')) {
-		setWindowTitle(windowTitle().remove(0, 1));
-	}
+	SaveTitleChanger::save(this);
 }

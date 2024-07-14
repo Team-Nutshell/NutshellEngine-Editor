@@ -38,6 +38,7 @@ set(COMMON_HEADERS
 	src/common/entity.h
 	src/common/global_info.h
 	src/common/logger.h
+	src/common/save_title_changer.h
 	src/common/scene_manager.h
 	src/common/signal_emitter.h)
 
