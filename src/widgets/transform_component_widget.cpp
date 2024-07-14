@@ -1,7 +1,9 @@
 #include "transform_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 
 TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -56,6 +58,8 @@ void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const 
 			updateWidgets(transform);
 		}
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void TransformComponentWidget::onVec3Updated(const nml::vec3& value) {

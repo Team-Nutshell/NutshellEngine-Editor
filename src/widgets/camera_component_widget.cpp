@@ -1,7 +1,9 @@
 #include "camera_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 
 CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -65,12 +67,16 @@ void CameraComponentWidget::onAddEntityCamera(EntityID entityID) {
 		updateWidgets(camera);
 		show();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera& camera) {
@@ -79,6 +85,8 @@ void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera
 			updateWidgets(camera);
 		}
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {

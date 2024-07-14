@@ -1,8 +1,10 @@
 #include "collidable_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
 #include "../renderer/collider_mesh.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -133,12 +135,16 @@ void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
 	}
 
 	ColliderMesh::update(m_globalInfo, entityID);
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, const Collidable& collidable) {
@@ -149,6 +155,8 @@ void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, cons
 	}
 
 	ColliderMesh::update(m_globalInfo, entityID);
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void CollidableComponentWidget::onElementUpdated(const std::string& element) {

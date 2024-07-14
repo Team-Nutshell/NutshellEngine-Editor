@@ -124,5 +124,5 @@ void OptionsFileWidget::save() {
 	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
 	optionsFile << j.dump(1, '\t');
 
-	SaveTitleChanger::save(this);
+	SaveTitleChanger::reset(this);
 }

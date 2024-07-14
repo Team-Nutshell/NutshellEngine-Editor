@@ -1,4 +1,5 @@
 #include "scene_manager.h"
+#include "../common/save_title_changer.h"
 #include "../widgets/main_window.h"
 #include "../undo_commands/clear_scene_command.h"
 #include "../undo_commands/open_scene_command.h"
@@ -62,6 +63,8 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			}
 		}
 	}
+
+	SaveTitleChanger::reset(mainWindow);
 }
 
 void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {

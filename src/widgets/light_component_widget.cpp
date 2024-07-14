@@ -1,7 +1,9 @@
 #include "light_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -83,12 +85,16 @@ void LightComponentWidget::onAddEntityLight(EntityID entityID) {
 		updateWidgets(light);
 		show();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void LightComponentWidget::onRemoveEntityLight(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& light) {
@@ -97,6 +103,8 @@ void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& l
 			updateWidgets(light);
 		}
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void LightComponentWidget::onElementUpdated(const std::string& element) {

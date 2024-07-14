@@ -1,7 +1,9 @@
 #include "rigidbody_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 
@@ -83,12 +85,16 @@ void RigidbodyComponentWidget::onAddEntityRigidbody(EntityID entityID) {
 		updateWidgets(rigidbody);
 		show();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody) {
@@ -97,6 +103,8 @@ void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const 
 			updateWidgets(rigidbody);
 		}
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {

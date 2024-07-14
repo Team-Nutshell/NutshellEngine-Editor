@@ -9,7 +9,7 @@ public:
 		}
 	}
 	
-	static void save(QWidget* widget) {
+	static void reset(QWidget* widget) {
 		if (!widget->windowTitle().isEmpty() && (widget->windowTitle()[0] == '*')) {
 			widget->setWindowTitle(widget->windowTitle().remove(0, 1));
 		}

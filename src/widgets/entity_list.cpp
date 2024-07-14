@@ -1,5 +1,7 @@
 #include "entity_list.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/destroy_entity_command.h"
+#include "../widgets/main_window.h"
 #include <QSizePolicy>
 #include <QLabel>
 #include <QSignalBlocker>
@@ -35,10 +37,14 @@ EntityListItem* EntityList::findItemWithEntityID(EntityID entityID) {
 
 void EntityList::onCreateEntity(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void EntityList::onDestroyEntity(EntityID entityID) {
 	takeItem(row(findItemWithEntityID(entityID)));
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void EntityList::onSelectEntity() {
@@ -57,6 +63,8 @@ void EntityList::onSelectEntity() {
 
 void EntityList::onChangeEntityName(EntityID entityID, const std::string& name) {
 	findItemWithEntityID(entityID)->setText(QString::fromStdString(name));
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void EntityList::onToggleCurrentEntityVisibility(bool isVisible) {

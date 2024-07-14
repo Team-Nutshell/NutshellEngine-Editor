@@ -1,5 +1,7 @@
 #include "component_title_widget.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/remove_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QHBoxLayout>
 #include <QLabel>
 
@@ -20,4 +22,6 @@ ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::st
 
 void ComponentTitleWidget::onClick() {
 	m_globalInfo.undoStack->push(new RemoveEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, m_name));
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }

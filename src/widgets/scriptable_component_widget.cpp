@@ -2,7 +2,9 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "new_script_message_box.h"
+#include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
+#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <fstream>
@@ -88,12 +90,16 @@ void ScriptableComponentWidget::onAddEntityScriptable(EntityID entityID) {
 		updateWidgets(scriptable);
 		show();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable) {
@@ -102,6 +108,8 @@ void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, cons
 			updateWidgets(scriptable);
 		}
 	}
+
+	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
 void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
