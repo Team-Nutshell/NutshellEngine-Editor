@@ -921,6 +921,7 @@ void Renderer::paintGL() {
 			if (entity.isVisible) {
 				if (entity.collidable && (m_globalInfo.rendererResourceManager.models.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.models.end())) {
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.models["Collider_" + std::to_string(entity.entityID)];
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 					for (const auto& colliderMesh : colliderModel.meshes) {
 						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderMesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
