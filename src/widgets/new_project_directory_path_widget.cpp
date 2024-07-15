@@ -7,7 +7,7 @@ NewProjectDirectoryPathWidget::NewProjectDirectoryPathWidget(GlobalInfo& globalI
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new QLabel("New project directory:"));
-	m_directoryPathButton = new QPushButton("Select a project directory");
+	m_directoryPathButton = new QPushButton("Select a directory");
 	layout()->addWidget(m_directoryPathButton);
 	connect(m_directoryPathButton, &QPushButton::clicked, this, &NewProjectDirectoryPathWidget::onDirectoryPathButtonClicked);
 }
