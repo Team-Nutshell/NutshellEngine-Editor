@@ -9,6 +9,7 @@ LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setSizePolicy(sizePolicy);
 
 	connect(&m_globalInfo.logger, &Logger::addLogSignal, this, &LogBar::onLogAdded);
+	connect(&m_globalInfo.logger, &Logger::clearLogsSignal, this, &LogBar::onLogsCleared);
 }
 
 void LogBar::onLogAdded() {
@@ -23,6 +24,10 @@ void LogBar::onLogAdded() {
 	setText(QString::fromStdString(fullLog));
 }
 
+void LogBar::onLogsCleared() {
+	clear();
+}
+
 void LogBar::mousePressEvent(QMouseEvent* event) {
 	if (event->button() == Qt::MouseButton::LeftButton) {
 		LogsWidget* logsWidget = new LogsWidget(m_globalInfo);
@@ -32,6 +37,10 @@ void LogBar::mousePressEvent(QMouseEvent* event) {
 }
 
 void LogBar::paintEvent(QPaintEvent* event) {
+	if (m_globalInfo.logger.getLogs().empty()) {
+		return;
+	}
+
 	const Log& log = m_globalInfo.logger.getLogs().back();
 
 	LogLevel logLevel = std::get<1>(log);

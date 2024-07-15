@@ -12,6 +12,7 @@ public:
 
 private slots:
 	void onLogAdded();
+	void onLogsCleared();
 	void mousePressEvent(QMouseEvent* event);
 
 protected:
