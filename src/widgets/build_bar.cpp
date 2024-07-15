@@ -70,13 +70,13 @@ bool BuildBar::build() {
 		}
 	}
 
-	if (!std::filesystem::exists("editor_build")) {
-		std::filesystem::create_directory("editor_build");
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
 	}
 
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
-	std::filesystem::current_path("editor_build");
+	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
 	bool buildSuccess = true;
 #if defined(NTSHENGN_OS_WINDOWS)
@@ -221,19 +221,19 @@ void BuildBar::run() {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Running the application.");
 
-	if (!std::filesystem::exists("editor_build")) {
-		std::filesystem::create_directory("editor_build");
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] There is no build to run.");
 
 		return;
 	}
 
 	// Copy runtime
-	std::filesystem::copy("assets/runtime/" + buildType, "editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
-	std::filesystem::current_path("editor_build");
+	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
 	const std::regex syntaxSugarRegex(R"(\x1B\[[0-9]*?m)");
 
