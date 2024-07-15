@@ -198,6 +198,13 @@ void AssetList::dropEvent(QDropEvent* event) {
 	std::string destination = m_currentDirectory;
 	for (const QUrl& source : sources) {
 		std::string sourcePath = source.toLocalFile().toStdString();
-		std::filesystem::copy(sourcePath, destination);
+		std::string fullDestinationDirectory = destination;
+		if (std::filesystem::is_directory(sourcePath)) {
+			fullDestinationDirectory = destination + "/" + std::filesystem::path(sourcePath).filename().string();
+			if (!std::filesystem::exists(fullDestinationDirectory)) {
+				std::filesystem::create_directory(fullDestinationDirectory);
+			}
+		}
+		std::filesystem::copy(sourcePath, fullDestinationDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 	}
 }
