@@ -205,7 +205,9 @@ bool BuildBar::build() {
 		buildSuccess = false;
 	}
 
-	CloseHandle(pipeRead);
+	if (buildSuccess) {
+		CloseHandle(pipeRead);
+	}
 #elif defined(NTSHENGN_OS_LINUX)
 #endif
 
