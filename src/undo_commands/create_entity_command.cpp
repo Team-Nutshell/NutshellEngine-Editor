@@ -3,7 +3,16 @@
 CreateEntityCommand::CreateEntityCommand(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	setText("Create Entity " + QString::fromStdString(name));
 	m_entityID = NO_ENTITY;
-	m_entityName = name;
+	uint32_t entityNameIndex = 0;
+	if (m_globalInfo.findEntityByName(name) == NO_ENTITY) {
+		m_entityName = name;
+	}
+	else {
+		while (m_globalInfo.findEntityByName(name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
+			entityNameIndex++;
+		}
+		m_entityName = name + "_" + std::to_string(entityNameIndex);
+	}
 }
 
 void CreateEntityCommand::undo() {
