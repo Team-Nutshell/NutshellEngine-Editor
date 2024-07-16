@@ -7,7 +7,10 @@ LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
 	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Fixed);
 	setSizePolicy(sizePolicy);
+	menu = new LogBarMenu(m_globalInfo);
+	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 
+	connect(this, &LogBar::customContextMenuRequested, this, &LogBar::showMenu);
 	connect(&m_globalInfo.logger, &Logger::addLogSignal, this, &LogBar::onLogAdded);
 	connect(&m_globalInfo.logger, &Logger::clearLogsSignal, this, &LogBar::onLogsCleared);
 }
@@ -26,6 +29,11 @@ void LogBar::onLogAdded() {
 
 void LogBar::onLogsCleared() {
 	clear();
+}
+
+void LogBar::showMenu(const QPoint& pos) {
+	(void)pos;
+	menu->popup(QCursor::pos());
 }
 
 void LogBar::mousePressEvent(QMouseEvent* event) {
