@@ -962,8 +962,7 @@ GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode)
 	if (params != GL_TRUE) {
 		GLsizei maxlength;
 		gl.glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxlength);
-		std::vector<GLchar> infolog;
-		infolog.reserve(maxlength);
+		std::vector<GLchar> infolog(maxlength);
 		int length;
 		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog.data());
 		m_globalInfo.logger.addLog(LogLevel::Error, "Error while compiling shader :" + std::string(infolog.data(), length));
@@ -984,7 +983,7 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 	if (params != GL_TRUE) {
 		GLsizei maxlength;
 		gl.glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxlength);
-		std::vector<GLchar> infolog;
+		std::vector<GLchar> infolog(maxlength);
 		int length;
 		gl.glGetProgramInfoLog(program, maxlength, &length, infolog.data());
 		m_globalInfo.logger.addLog(LogLevel::Error, "Error while linking program :" + std::string(infolog.data(), length));
