@@ -8,6 +8,7 @@
 #if defined(NTSHENGN_OS_WINDOWS)
 #include <windows.h>
 #elif defined(NTSHENGN_OS_LINUX)
+#include <stdio.h>
 #endif
 
 BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -78,6 +79,10 @@ bool BuildBar::build() {
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
+	if (!std::filesystem::exists(buildType)) {
+		std::filesystem::create_directory(buildType);
+	}
+
 	bool buildSuccess = true;
 #if defined(NTSHENGN_OS_WINDOWS)
 	HANDLE pipeRead = NULL;
@@ -112,10 +117,10 @@ bool BuildBar::build() {
 		CloseHandle(pipeWrite);
 
 		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
-		CHAR stdoutBuffer[4096];
+		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
-		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdoutBuffer, bytesRead));
+		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
+			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -146,7 +151,7 @@ bool BuildBar::build() {
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
 
-		return cMakeSuccess;
+		return false;
 	}
 
 	CloseHandle(pipeRead);
@@ -175,10 +180,10 @@ bool BuildBar::build() {
 		CloseHandle(pipeWrite);
 
 		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
-		CHAR stdoutBuffer[4096];
+		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
-		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdoutBuffer, bytesRead));
+		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
+			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -209,6 +214,76 @@ bool BuildBar::build() {
 		CloseHandle(pipeRead);
 	}
 #elif defined(NTSHENGN_OS_LINUX)
+	// CMake
+	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common 2>&1";
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
+	bool cMakeSuccess = true;
+	FILE* fp = popen(cMakeCommand.c_str(), "r");
+	if (fp == NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
+		return false;
+	}
+	
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
+	char stdOutBuffer[4096];
+	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
+	}
+
+	if (pclose(fp) == 0) {
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully launched the project\'s CMakeLists.txt.");
+	}
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error with the project\'s CMakeLists.txt.");
+
+		cMakeSuccess = false;
+	}
+
+	if (!cMakeSuccess) {
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
+		return false;
+	}
+
+	// Build
+	const std::string cMakeBuildCommand = cMakePath + " --build . --config " + buildType + " 2>&1";
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
+	fp = popen(cMakeBuildCommand.c_str(), "r");
+	if (fp == NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
+		return false;
+	}
+	
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
+	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
+	}
+
+	if (pclose(fp) == 0) {
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully built the project.");
+	}
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error while building the project.");
+
+		buildSuccess = false;
+	}
+
+	std::string scriptsLibrary = "libNutshellEngine-Scripts.so";
+	std::filesystem::copy(scriptsLibrary, buildType, std::filesystem::copy_options::overwrite_existing);
+	std::string buildAssetsDirectory = buildType + "/assets";
+	if (!std::filesystem::exists(buildAssetsDirectory)) {
+		std::filesystem::create_directory(buildAssetsDirectory);
+	}
+	std::filesystem::copy("assets", buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 #endif
 
 	// Reset current path
@@ -269,10 +344,10 @@ void BuildBar::run() {
 		CloseHandle(pipeWrite);
 
 		m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Application Logs:");
-		CHAR stdoutBuffer[4096];
+		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
-		while (ReadFile(pipeRead, stdoutBuffer, 4096, &bytesRead, NULL)) {
-			std::string log = std::string(stdoutBuffer, bytesRead);
+		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
+			std::string log = std::string(stdOutBuffer, bytesRead);
 
 			std::stringstream syntaxSugarRegexResult;
 			std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
@@ -297,7 +372,7 @@ void BuildBar::run() {
 	else {
 		CloseHandle(pipeWrite);
 		CloseHandle(pipeRead);
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot find NutshellEngine\'s runtime executable.");
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot launch NutshellEngine\'s runtime executable.");
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -306,6 +381,34 @@ void BuildBar::run() {
 	}
 	CloseHandle(pipeRead);
 #elif defined(NTSHENGN_OS_LINUX)
+	std::filesystem::current_path(buildType);
+	const std::string runCommand = "./NutshellEngine 2>&1";
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Launching application with command: " + runCommand);
+	FILE* fp = popen(runCommand.c_str(), "r");
+	if (fp == NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot launch NutshellEngine\'s runtime executable.");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+	}
+	
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Application logs:");
+	char stdOutBuffer[4096];
+	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
+		std::string log = std::string(stdOutBuffer);
+
+		std::stringstream syntaxSugarRegexResult;
+		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
+
+		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
+	}
+
+	if (pclose(fp) == 0) {
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Successfully closed the application.");
+	}
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Error when closing the application.");
+	}
 #endif
 
 	// Reset current path
