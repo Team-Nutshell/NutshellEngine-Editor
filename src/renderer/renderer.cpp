@@ -830,7 +830,7 @@ void Renderer::paintGL() {
 
 		QPoint cursorPosition = mapFromGlobal(QCursor::pos());
 		uint32_t pickedEntityID;
-		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, (height() - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
+		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, ((height() - 1) - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
 		if (pickedEntityID != NO_ENTITY) {
 			m_globalInfo.currentEntityID = pickedEntityID;
 		}
