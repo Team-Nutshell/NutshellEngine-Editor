@@ -215,7 +215,7 @@ bool BuildBar::build() {
 	}
 #elif defined(NTSHENGN_OS_LINUX)
 	// CMake
-	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common 2>&1";
+	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
 	bool cMakeSuccess = true;
 	FILE* fp = popen(cMakeCommand.c_str(), "r");
