@@ -51,16 +51,14 @@ void FilePushButton::dropEvent(QDropEvent* event) {
 	QList<QUrl> sources = event->mimeData()->urls();
 	if (!sources.isEmpty()) {
 		path = sources[0].toLocalFile().toStdString();
-		if (m_pathType == PathType::File) {
-			if (!std::filesystem::is_directory(path)) {
-				emit pathChanged(path);
-			}
+		bool pathIsFile = !std::filesystem::is_directory(path);
+		if ((m_pathType == PathType::File) && !pathIsFile) {
+			return;
 		}
-		else if (m_pathType == PathType::Directory) {
-			if (std::filesystem::is_directory(path)) {
-				emit pathChanged(path);
-			}
+		else if ((m_pathType == PathType::Directory) && pathIsFile) {
+			return;
 		}
 
+		emit pathChanged(path);
 	}
 }
