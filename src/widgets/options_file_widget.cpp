@@ -53,7 +53,7 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	}
 	if (j.contains("windowIconImagePath")) {
 		std::string windowIconImagePath = j["windowIconImagePath"];
-		windowIconImageWidget->filePath = windowIconImagePath;
+		windowIconImageWidget->filePathButton->path = windowIconImagePath;
 		windowIconImageWidget->filePathLabel->setText(QString::fromStdString(windowIconImagePath.substr(windowIconImagePath.rfind('/') + 1)));
 		windowIconImageWidget->filePathLabel->setToolTip(QString::fromStdString(windowIconImagePath));
 	}
@@ -65,7 +65,7 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	}
 	if (j.contains("firstScenePath")) {
 		std::string firstScenePath = j["firstScenePath"];
-		firstSceneWidget->filePath = firstScenePath;
+		firstSceneWidget->filePathButton->path = firstScenePath;
 		firstSceneWidget->filePathLabel->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
 		firstSceneWidget->filePathLabel->setToolTip(QString::fromStdString(firstScenePath));
 	}
@@ -93,8 +93,8 @@ void OptionsFileWidget::save() {
 	if (windowTitleWidget->value != "") {
 		j["windowTitle"] = windowTitleWidget->value;
 	}
-	if (windowIconImageWidget->filePath != "") {
-		std::string windowIconImagePath = windowIconImageWidget->filePath;
+	if (windowIconImageWidget->filePathButton->path != "") {
+		std::string windowIconImagePath = windowIconImageWidget->filePathButton->path;
 		std::replace(windowIconImagePath.begin(), windowIconImagePath.end(), '\\', '/');
 		if (m_globalInfo.projectDirectory != "") {
 			if (std::filesystem::path(windowIconImagePath).is_absolute()) {
@@ -108,8 +108,8 @@ void OptionsFileWidget::save() {
 	if (maxFPSWidget->value != 0) {
 		j["maxFPS"] = maxFPSWidget->value;
 	}
-	if (firstSceneWidget->filePath != "") {
-		std::string firstScenePath = firstSceneWidget->filePath;
+	if (firstSceneWidget->filePathButton->path != "") {
+		std::string firstScenePath = firstSceneWidget->filePathButton->path;
 		std::replace(firstScenePath.begin(), firstScenePath.end(), '\\', '/');
 		if (m_globalInfo.projectDirectory != "") {
 			if (std::filesystem::path(firstScenePath).is_absolute()) {

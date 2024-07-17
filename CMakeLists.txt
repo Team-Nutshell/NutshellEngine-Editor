@@ -106,6 +106,7 @@ set(WIDGET_SOURCES
 	src/widgets/component_list.cpp
 	src/widgets/component_scroll_area.cpp
 	src/widgets/component_title_widget.cpp
+	src/widgets/file_push_button.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/entity_info_name_widget.cpp
 	src/widgets/entity_info_panel.cpp
@@ -155,6 +156,7 @@ set(WIDGET_HEADERS
 	src/widgets/component_list.h
 	src/widgets/component_scroll_area.h
 	src/widgets/component_title_widget.h
+	src/widgets/file_push_button.h
 	src/widgets/edit_menu.h
 	src/widgets/entity_info_name_widget.h
 	src/widgets/entity_info_panel.h

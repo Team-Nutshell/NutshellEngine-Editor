@@ -1,8 +1,8 @@
 #pragma once
 #include "../common/global_info.h"
+#include "file_push_button.h"
 #include <QWidget>
 #include <QLabel>
-#include <QPushButton>
 #include <string>
 
 class FileSelectorWidget : public QWidget {
@@ -14,16 +14,12 @@ signals:
 	void fileSelected(const std::string&);
 
 private slots:
-	void onFilePathButtonClicked();
+	void onPathChanged(const std::string& path);
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::string m_defaultPath = "";
-
 public:
 	QLabel* filePathLabel;
-	QPushButton* filePathButton;
-
-	std::string filePath = "";
+	FilePushButton* filePathButton;
 };

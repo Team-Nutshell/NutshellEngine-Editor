@@ -37,12 +37,12 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 				}
 			}
 		}
-		modelPathWidget->filePath = modelPath;
+		modelPathWidget->filePathButton->path = modelPath;
 		modelPathWidget->filePathLabel->setText(QString::fromStdString(modelPath.substr(modelPath.rfind('/') + 1)));
 		modelPathWidget->filePathLabel->setToolTip(QString::fromStdString(modelPath));
 	}
 	else {
-		modelPathWidget->filePath = "";
+		modelPathWidget->filePathButton->path = "";
 		modelPathWidget->filePathLabel->setText("No model selected");
 		modelPathWidget->filePathLabel->setToolTip("");
 	}
