@@ -27,7 +27,7 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 					obbs.push_back(mesh.obb);
 				}
 			}
-			else {
+			else if (globalInfo.rendererResourceManager.models.find(renderable.modelPath) != globalInfo.rendererResourceManager.models.end()) {
 				const RendererModel& model = globalInfo.rendererResourceManager.models[renderable.modelPath];
 
 				for (const auto& mesh : model.meshes) {
