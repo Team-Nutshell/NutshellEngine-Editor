@@ -2,7 +2,7 @@
 #include <QFileDialog>
 #include <QMimeData>
 
-FilePushButton::FilePushButton(GlobalInfo& globalInfo, const std::string& text, const std::string& defaultPath, PathType pathType) : m_globalInfo(globalInfo), QPushButton(QString::fromStdString(text)), m_defaultPath(defaultPath), m_pathType(pathType) {
+FilePushButton::FilePushButton(GlobalInfo& globalInfo, const std::string& text, const std::string& defaultPath, PathType pathType) : QPushButton(QString::fromStdString(text)), m_globalInfo(globalInfo), m_defaultPath(defaultPath), m_pathType(pathType) {
 	setAcceptDrops(true);
 	
 	connect(this, &QPushButton::clicked, this, &FilePushButton::onButtonClicked);
