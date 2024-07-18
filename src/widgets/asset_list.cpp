@@ -46,59 +46,49 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
 }
 
-void AssetList::onItemClicked(QListWidgetItem* item) {
-	std::string itemFileName = item->text().toStdString();
-
-	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
-		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
-		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
-
-		if (!std::filesystem::is_directory(selectedElementPath)) {
-			return;
-		}
-
-		m_currentDirectory = selectedElementPath;
-		if (!m_directoryWatcher.directories().empty()) {
-			m_directoryWatcher.removePaths(m_directoryWatcher.directories());
-		}
-		m_directoryWatcher.addPath(QString::fromStdString(m_currentDirectory));
-
-		{
-			const QSignalBlocker signalBlocker(this);
-			clear();
-		}
-
-		if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
-			addItem("../");
-		}
-
-		for (const auto& entry : std::filesystem::directory_iterator(m_currentDirectory)) {
-			std::string entryPath = entry.path().string();
-			std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
-			if (std::filesystem::is_directory(entry)) {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
-			}
-			else {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
-			}
-		}
-
-		emit directoryChanged(m_currentDirectory.substr(m_globalInfo.projectDirectory.size() + 1));
+void AssetList::enterDirectory(const std::string& directory) {
+	m_currentDirectory = directory;
+	if (!m_directoryWatcher.directories().empty()) {
+		m_directoryWatcher.removePaths(m_directoryWatcher.directories());
 	}
+	m_directoryWatcher.addPath(QString::fromStdString(m_currentDirectory));
+
+	{
+		const QSignalBlocker signalBlocker(this);
+		clear();
+	}
+
+	if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
+		addItem("../");
+	}
+
+	for (const auto& entry : std::filesystem::directory_iterator(m_currentDirectory)) {
+		std::string entryPath = entry.path().string();
+		std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
+		if (std::filesystem::is_directory(entry)) {
+			addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
+		}
+		else {
+			addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
+		}
+	}
+
+	setCurrentRow(0);
+
+	emit directoryChanged(m_currentDirectory.substr(m_globalInfo.projectDirectory.size() + 1));
 }
 
-void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
-	std::string itemFileName = item->text().toStdString();
-	size_t lastDot = itemFileName.rfind('.');
+void AssetList::actionOnFile(const std::string& file) {
+	size_t lastDot = file.rfind('.');
 	if (lastDot != std::string::npos) {
-		std::string extension = itemFileName.substr(lastDot + 1);
+		std::string extension = file.substr(lastDot + 1);
 
 		if (extension == "ntsn") {
-			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + itemFileName);
+			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
 		}
 		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png")) {
-			QImage image = QImage(QString::fromStdString(m_currentDirectory) + "/" + QString::fromStdString(itemFileName));
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemFileName, image);
+			QImage image = QImage(QString::fromStdString(m_currentDirectory) + "/" + QString::fromStdString(file));
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
 			imageViewer->show();
 		}
 		else if (extension == "ntim") {
@@ -106,19 +96,19 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 			int height = 1;
 			std::vector<uint8_t> pixelData;
 
-			std::fstream imageFile(m_currentDirectory + "/" + itemFileName, std::ios::in);
+			std::fstream imageFile(m_currentDirectory + "/" + file, std::ios::in);
 			if (imageFile.is_open()) {
 				if (!nlohmann::json::accept(imageFile)) {
-					m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + itemFileName + "\" is not a valid JSON file.");
+					m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + file + "\" is not a valid JSON file.");
 					return;
 				}
 			}
 			else {
-				m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + itemFileName + "\" cannot be opened.");
+				m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + file + "\" cannot be opened.");
 				return;
 			}
 
-			imageFile = std::fstream(m_currentDirectory + "/" + itemFileName, std::ios::in);
+			imageFile = std::fstream(m_currentDirectory + "/" + file, std::ios::in);
 
 			nlohmann::json j = nlohmann::json::parse(imageFile);
 
@@ -136,12 +126,38 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
 				}
 			}
 			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + itemFileName, image);
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
 			imageViewer->show();
 		}
 		else if (extension == "ntop") {
-			OptionsFileWidget* optionsFileWidget = new OptionsFileWidget(m_globalInfo, m_currentDirectory + "/" + itemFileName);
+			OptionsFileWidget* optionsFileWidget = new OptionsFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
 			optionsFileWidget->show();
+		}
+	}
+}
+
+void AssetList::onItemClicked(QListWidgetItem* item) {
+	std::string itemFileName = item->text().toStdString();
+
+	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
+		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
+		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
+
+		if (std::filesystem::is_directory(selectedElementPath)) {
+			enterDirectory(selectedElementPath);
+		}
+	}
+}
+
+void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
+	std::string itemFileName = item->text().toStdString();
+
+	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
+		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
+		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
+
+		if (!std::filesystem::is_directory(selectedElementPath)) {
+			actionOnFile(itemFileName);
 		}
 	}
 }
@@ -192,7 +208,40 @@ QMimeData* AssetList::mimeData(const QList<QListWidgetItem*>& items) const {
 }
 
 void AssetList::keyPressEvent(QKeyEvent* event) {
-	event->ignore();
+	if (!selectedItems().empty()) {
+		QListWidgetItem* listItem = selectedItems()[0];
+		int currentSelectionIndex = row(listItem);
+		if (event->key() == Qt::Key::Key_Up) {
+			clearSelection();
+			if (currentSelectionIndex == 0) {
+				setCurrentItem(item(count() - 1));
+			}
+			else {
+				setCurrentItem(item(currentSelectionIndex - 1));
+			}
+		}
+		else if (event->key() == Qt::Key::Key_Down) {
+			clearSelection();
+			if (currentSelectionIndex == (count() - 1)) {
+				setCurrentItem(item(0));
+			}
+			else {
+				setCurrentItem(item(currentSelectionIndex + 1));
+			}
+		}
+		else if ((event->key() == Qt::Key::Key_Return) || (event->key() == Qt::Key::Key_Enter)) {
+			std::string itemFileName = listItem->text().toStdString();
+			std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
+			std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
+
+			if (std::filesystem::is_directory(selectedElementPath)) {
+				enterDirectory(selectedElementPath);
+			}
+			else {
+				actionOnFile(itemFileName);
+			}
+		}
+	}
 }
 
 void AssetList::dragEnterEvent(QDragEnterEvent* event) {

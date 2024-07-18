@@ -14,6 +14,10 @@ class AssetList : public QListWidget {
 public:
 	AssetList(GlobalInfo& globalInfo);
 
+private:
+	void enterDirectory(const std::string& directory);
+	void actionOnFile(const std::string& file);
+
 signals:
 	void directoryChanged(const std::string& directory);
 
