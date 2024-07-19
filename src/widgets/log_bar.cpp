@@ -16,7 +16,7 @@ LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void LogBar::onLogAdded() {
-	const Log& log = m_globalInfo.logger.getLogs().back();
+	const Log log = m_globalInfo.logger.getLogs().back();
 	std::string time = std::string(std::asctime(std::localtime(&std::get<0>(log))));
 	time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
 
