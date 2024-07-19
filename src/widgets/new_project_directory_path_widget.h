@@ -1,7 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
+#include "file_push_button.h"
 #include <QWidget>
-#include <QPushButton>
 
 class NewProjectDirectoryPathWidget : public QWidget {
 	Q_OBJECT
@@ -12,10 +12,10 @@ signals:
 	void newProjectDirectorySelected(const std::string& newProjectDirectory);
 
 private slots:
-	void onDirectoryPathButtonClicked();
+	void onPathChanged(const std::string& path);
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	QPushButton* m_directoryPathButton;
+	FilePushButton* m_directoryPathButton;
 };

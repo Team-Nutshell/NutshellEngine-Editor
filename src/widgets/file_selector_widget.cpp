@@ -24,6 +24,5 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 void FileSelectorWidget::onPathChanged(const std::string& path) {
 	filePathLabel->setText(QString::fromStdString(path.substr(path.rfind('/') + 1)));
 	filePathLabel->setToolTip(QString::fromStdString(path));
-
 	emit fileSelected(path);
 }

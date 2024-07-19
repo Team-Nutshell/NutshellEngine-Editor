@@ -29,29 +29,35 @@ void NewProjectWidget::onCreateNewProjectButtonClicked() {
 
 void NewProjectWidget::onDirectorySelected(const std::string& directoryPath) {
 	m_projectDirectoryPath = directoryPath;
+	std::replace(m_projectDirectoryPath.begin(), m_projectDirectoryPath.end(), '\\', '/');
+
 	std::string projectNameNoSpace = m_projectName;
 	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
 
+	std::string projectFullPath;
 	if (m_projectName != "") {
-		m_projectPathLabel->setText(QString::fromStdString(m_projectDirectoryPath + "/" + projectNameNoSpace));
+		projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 	}
 	else {
-		m_projectPathLabel->setText(QString::fromStdString(m_projectDirectoryPath + "/" + projectNameNoSpace));
-		m_createNewProjectButton->setEnabled(false);
-		return;
+		projectFullPath = m_projectDirectoryPath + "/? (missing project name)";
 	}
 
-	bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
-	if (directoryExists) {
-		m_projectPathLabel->setText(m_projectPathLabel->text() + " (directory already exists)");
-	}
+	if ((m_projectDirectoryPath != "") && (m_projectName != "")) {
+		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
+		if (directoryExists) {
+			projectFullPath = projectFullPath + " (directory already exists)";
 
-	if (((m_projectDirectoryPath != "") && (m_projectName != "")) && !directoryExists) {
-		m_createNewProjectButton->setEnabled(true);
+			m_createNewProjectButton->setEnabled(false);
+		}
+		else {
+			m_createNewProjectButton->setEnabled(true);
+		}
 	}
 	else {
 		m_createNewProjectButton->setEnabled(false);
 	}
+
+	m_projectPathLabel->setText(QString::fromStdString(projectFullPath));
 }
 
 void NewProjectWidget::onTextChanged(const std::string& text) {
@@ -59,35 +65,38 @@ void NewProjectWidget::onTextChanged(const std::string& text) {
 	std::string projectNameNoSpace = m_projectName;
 	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
 
+	std::string projectFullPath;
 	if (m_projectDirectoryPath != "") {
 		if (m_projectName != "") {
-			m_projectPathLabel->setText(QString::fromStdString(m_projectDirectoryPath + "/" + projectNameNoSpace));
+			projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 		}
 		else {
-			m_projectPathLabel->setText(QString::fromStdString(m_projectDirectoryPath + "/? (missing project name)"));
-			m_createNewProjectButton->setEnabled(false);
-			return;
+			projectFullPath = m_projectDirectoryPath + "/? (missing project name)";
 		}
 	}
 	else {
 		if (m_projectName != "") {
-			m_projectPathLabel->setText(QString("?/") + QString::fromStdString(projectNameNoSpace) + " (missing directory)");
+			projectFullPath = "?/" + projectNameNoSpace + " (missing directory)";
 		}
 		else {
-			m_projectPathLabel->setText(QString::fromStdString(m_projectDirectoryPath + "?/? (missing directory and project name)"));
+			projectFullPath = "?/? (missing directory and project name)";
 		}
-		return;
 	}
 
-	bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
-	if (directoryExists) {
-		m_projectPathLabel->setText(m_projectPathLabel->text() + " (directory already exists)");
-	}
+	if ((m_projectDirectoryPath != "") && (m_projectName != "")) {
+		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
+		if (directoryExists) {
+			projectFullPath = projectFullPath + " (directory already exists)";
 
-	if (((m_projectDirectoryPath != "") && (m_projectName != "")) && !directoryExists) {
-		m_createNewProjectButton->setEnabled(true);
+			m_createNewProjectButton->setEnabled(false);
+		}
+		else {
+			m_createNewProjectButton->setEnabled(true);
+		}
 	}
 	else {
 		m_createNewProjectButton->setEnabled(false);
 	}
+
+	m_projectPathLabel->setText(QString::fromStdString(projectFullPath));
 }

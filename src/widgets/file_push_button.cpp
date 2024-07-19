@@ -15,22 +15,30 @@ void FilePushButton::onButtonClicked() {
 	if (m_pathType == PathType::Directory) {
 		fileDialog.setFileMode(QFileDialog::FileMode::Directory);
 	}
-	std::string filePathDirectory = path.substr(0, path.rfind('/'));
 	if (path != "") {
-		if (std::filesystem::path(path).is_absolute()) {
-			fileDialog.setDirectory(QString::fromStdString(filePathDirectory));
+		std::string pathDirectory;
+		if (std::filesystem::is_directory(path)) {
+			pathDirectory = path;
 		}
 		else {
-			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/" + filePathDirectory));
+			pathDirectory = path.substr(0, path.rfind('/'));
+		}
+
+		if (std::filesystem::path(path).is_absolute()) {
+			fileDialog.setDirectory(QString::fromStdString(pathDirectory));
+		}
+		else {
+			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/" + pathDirectory));
 		}
 	}
 	else {
-		fileDialog.setDirectory(QString::fromStdString(m_defaultPath));
+		if (m_defaultPath != "") {
+			fileDialog.setDirectory(QString::fromStdString(m_defaultPath));
+		}
 	}
 
 	if (fileDialog.exec()) {
 		path = fileDialog.selectedFiles()[0].toStdString();
-
 		emit pathChanged(path);
 	}
 }
@@ -58,7 +66,6 @@ void FilePushButton::dropEvent(QDropEvent* event) {
 		else if ((m_pathType == PathType::Directory) && pathIsFile) {
 			return;
 		}
-
 		emit pathChanged(path);
 	}
 }
