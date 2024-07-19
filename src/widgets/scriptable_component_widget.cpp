@@ -5,47 +5,34 @@
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entity_component_command.h"
 #include "../widgets/main_window.h"
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <cstdlib>
 
 ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Scriptable"));
-	std::vector<std::string> scriptEntries;
-	scriptEntries.push_back("No script selected");
-	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
-		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
-			if (entry.is_directory()) {
-				continue;
-			}
-
-			std::fstream scriptFile(entry.path().string(), std::ios::in);
-			if (scriptFile.is_open()) {
-				std::string scriptContent((std::istreambuf_iterator<char>(scriptFile)), std::istreambuf_iterator<char>());
-				size_t scriptNameStartPos = scriptContent.find("NTSHENGN_SCRIPT(");
-				if (scriptNameStartPos != std::string::npos) {
-					scriptNameStartPos += 16;
-					size_t scriptNameLength = scriptContent.substr(scriptNameStartPos).find(")");
-					if (scriptNameLength != std::string::npos) {
-						scriptEntries.push_back(scriptContent.substr(scriptNameStartPos, scriptNameLength));
-					}
-				}
-			}
-		}
-		m_scriptsDirectoryWatcher.addPath(QString::fromStdString(m_globalInfo.projectDirectory) + "/scripts/");
-	}
-	scriptEntries.push_back("+ New script...");
+	QWidget* scriptSelectorWidget = new QWidget();
+	scriptSelectorWidget->setLayout(new QHBoxLayout());
+	scriptSelectorWidget->layout()->setContentsMargins(0, 0, 0, 0);
+	std::vector<std::string> scriptEntries = getScriptEntries();
 	scriptNameWidget = new ComboBoxWidget(m_globalInfo, "Script", scriptEntries);
-	layout()->addWidget(scriptNameWidget);
+	scriptSelectorWidget->layout()->addWidget(scriptNameWidget);
+	openCodeEditorButton = new QPushButton("E");
+	openCodeEditorButton->setFixedWidth(30);
+	scriptSelectorWidget->layout()->addWidget(openCodeEditorButton);
+	layout()->addWidget(scriptSelectorWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
 	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementUpdated);
+	connect(openCodeEditorButton, &QPushButton::clicked, this, &ScriptableComponentWidget::onOpenCodeEditorButtonClicked);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ScriptableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityScriptableSignal, this, &ScriptableComponentWidget::onAddEntityScriptable);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityScriptableSignal, this, &ScriptableComponentWidget::onRemoveEntityScriptable);
@@ -72,6 +59,38 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 			scriptNameWidget->comboBox->setCurrentText("No script selected");
 		}
 	}
+}
+
+std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
+	m_scriptToPath.clear();
+	std::vector<std::string> scriptEntries;
+	scriptEntries.push_back("No script selected");
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
+		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
+			if (entry.is_directory()) {
+				continue;
+			}
+
+			std::fstream scriptFile(entry.path().string(), std::ios::in);
+			if (scriptFile.is_open()) {
+				std::string scriptContent((std::istreambuf_iterator<char>(scriptFile)), std::istreambuf_iterator<char>());
+				size_t scriptNameStartPos = scriptContent.find("NTSHENGN_SCRIPT(");
+				if (scriptNameStartPos != std::string::npos) {
+					scriptNameStartPos += 16;
+					size_t scriptNameLength = scriptContent.substr(scriptNameStartPos).find(")");
+					if (scriptNameLength != std::string::npos) {
+						std::string scriptName = scriptContent.substr(scriptNameStartPos, scriptNameLength);
+						scriptEntries.push_back(scriptName);
+						m_scriptToPath[scriptName] = entry.path().string();
+					}
+				}
+			}
+		}
+		m_scriptsDirectoryWatcher.addPath(QString::fromStdString(m_globalInfo.projectDirectory) + "/scripts/");
+	}
+	scriptEntries.push_back("+ New script...");
+
+	return scriptEntries;
 }
 
 void ScriptableComponentWidget::onSelectEntity() {
@@ -150,31 +169,53 @@ void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Scriptable", &newScriptable));
 }
 
-void ScriptableComponentWidget::onDirectoryChanged(const QString& path) {
-	(void)path;
-	std::vector<std::string> scriptEntries;
-	scriptEntries.push_back("No script selected");
-	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
-		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
-			if (entry.path().string().find("generate_scriptable_factory.py") != std::string::npos) {
-				continue;
-			}
+void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {
+	std::string codeEditorCommand = "";
 
-			std::fstream scriptFile(entry.path().string(), std::ios::in);
-			if (scriptFile.is_open()) {
-				std::string scriptContent((std::istreambuf_iterator<char>(scriptFile)), std::istreambuf_iterator<char>());
-				size_t scriptNameStartPos = scriptContent.find("NTSHENGN_SCRIPT(");
-				if (scriptNameStartPos != std::string::npos) {
-					scriptNameStartPos += 16;
-					size_t scriptNameLength = scriptContent.substr(scriptNameStartPos).find(")");
-					if (scriptNameLength != std::string::npos) {
-						scriptEntries.push_back(scriptContent.substr(scriptNameStartPos, scriptNameLength));
-					}
-				}
-			}
+	std::fstream optionsFile("assets/options.json", std::ios::in);
+	if (optionsFile.is_open()) {
+		if (!nlohmann::json::accept(optionsFile)) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
 		}
 	}
-	scriptEntries.push_back("+ New script...");
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
+	}
+
+	optionsFile = std::fstream("assets/options.json", std::ios::in);
+	nlohmann::json j = nlohmann::json::parse(optionsFile);
+
+	if (j.contains("code")) {
+		if (j["code"].contains("codeEditorCommand")) {
+			codeEditorCommand = j["code"]["codeEditorCommand"];
+		}
+	}
+
+	if (codeEditorCommand.empty()) {
+		m_globalInfo.logger.addLog(LogLevel::Warning, "No code editor command has been specified.");
+
+		return;
+	}
+
+	std::string currentText = scriptNameWidget->comboBox->currentText().toStdString();
+	std::string scriptPath = "";
+	if (m_scriptToPath.find(currentText) == m_scriptToPath.end()) {
+		return;
+	}
+	scriptPath = m_scriptToPath[currentText];
+
+	std::string filePathTemplate = "$(FILE_PATH)";
+	size_t filePathTemplatePos = codeEditorCommand.find(filePathTemplate);
+	if (filePathTemplatePos != std::string::npos) {
+		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), scriptPath);
+	}
+
+	std::system(codeEditorCommand.c_str());
+}
+
+void ScriptableComponentWidget::onDirectoryChanged(const QString& path) {
+	(void)path;
+	std::vector<std::string> scriptEntries = getScriptEntries();
 
 	{
 		const QSignalBlocker signalBlocker(scriptNameWidget->comboBox);

@@ -2,7 +2,9 @@
 #include "../common/global_info.h"
 #include "combo_box_widget.h"
 #include <QWidget>
+#include <QPushButton>
 #include <QFileSystemWatcher>
+#include <unordered_map>
 
 class ScriptableComponentWidget : public QWidget {
 	Q_OBJECT
@@ -11,6 +13,7 @@ public:
 
 private:
 	void updateWidgets(const Scriptable& scriptable);
+	std::vector<std::string> getScriptEntries();
 
 private slots:
 	void onSelectEntity();
@@ -18,13 +21,17 @@ private slots:
 	void onRemoveEntityScriptable(EntityID entityID);
 	void onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable);
 	void onElementUpdated(const std::string& element);
+	void onOpenCodeEditorButtonClicked();
 	void onDirectoryChanged(const QString& path);
 
 private:
 	GlobalInfo& m_globalInfo;
 
+	std::unordered_map<std::string, std::string> m_scriptToPath;
+
 	QFileSystemWatcher m_scriptsDirectoryWatcher;
 
 public:
 	ComboBoxWidget* scriptNameWidget;
+	QPushButton* openCodeEditorButton;
 };
