@@ -19,6 +19,9 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
 
 	setLayout(new QVBoxLayout());
+	QMargins contentMargins = layout()->contentsMargins();
+	contentMargins.setTop(contentMargins.top() + 10);
+	layout()->setContentsMargins(contentMargins);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
 	layout()->addWidget(windowTitleWidget);
