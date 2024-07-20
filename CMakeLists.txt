@@ -47,6 +47,7 @@ set(COMMON_COMPONENTS_HEADERS
 set(COMMON_HEADERS
 	${COMMON_COMPONENTS_HEADERS}
 	src/common/bounding_volumes.h
+	src/common/editor_parameters.h
 	src/common/entity.h
 	src/common/global_info.h
 	src/common/logger.h
@@ -55,6 +56,7 @@ set(COMMON_HEADERS
 	src/common/signal_emitter.h)
 
 set(COMMON_SOURCES
+	src/common/editor_parameters.cpp
 	src/common/logger.cpp
 	src/common/scene_manager.cpp)
 

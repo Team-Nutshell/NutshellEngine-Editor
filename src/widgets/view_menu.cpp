@@ -1,39 +1,37 @@
 #include "view_menu.h"
-#include "../../external/nlohmann/json.hpp"
 #include <QKeySequence>
-#include <fstream>
 
 ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalInfo) {
 	m_toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
-	m_toggleCurrentEntityVisibilityAction->setShortcut(QKeySequence::fromString("V"));
+	m_toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibility);
 	m_toggleCurrentEntityVisibilityAction->setEnabled(false);
 	m_toggleGridVisibilityAction = addAction("Hide Grid", this, &ViewMenu::toggleGridVisibility);
-	m_toggleGridVisibilityAction->setShortcut(QKeySequence::fromString("G"));
+	m_toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibility);
 	m_toggleBackfaceCullingAction = addAction("Enable Backface Culling", this, &ViewMenu::toggleBackfaceCulling);
-	m_toggleBackfaceCullingAction->setShortcut(QKeySequence::fromString("F"));
+	m_toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCulling);
 	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCamerasVisibility);
-	m_toggleCamerasVisibilityAction->setShortcut(QKeySequence::fromString("C"));
+	m_toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibility);
 	m_toggleLightingAction = addAction("Enable Lighting", this, &ViewMenu::toggleLighting);
-	m_toggleLightingAction->setShortcut(QKeySequence::fromString("L"));
+	m_toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLighting);
 	m_toggleCollidersVisibilityAction = addAction("Show Colliders", this, &ViewMenu::toggleCollidersVisibility);
-	m_toggleCollidersVisibilityAction->setShortcut(QKeySequence::fromString("X"));
+	m_toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibility);
 	addSeparator();
 	m_switchCameraProjectionAction = addAction("Switch Camera Projection to Orthographic", this, &ViewMenu::switchCameraProjection);
-	m_switchCameraProjectionAction->setShortcut(QKeySequence::fromString("P"));
+	m_switchCameraProjectionAction->setShortcut(m_globalInfo.editorParameters.renderer.switchCameraProjection);
 	m_resetCameraAction = addAction("Reset Camera", this, &ViewMenu::resetCamera);
-	m_resetCameraAction->setShortcut(QKeySequence::fromString("0"));
+	m_resetCameraAction->setShortcut(m_globalInfo.editorParameters.renderer.resetCamera);
 	m_orthographicCameraToXMAction = addAction("Orthographic Camera X-", this, &ViewMenu::orthographicCameraToXM);
-	m_orthographicCameraToXMAction->setShortcut(QKeySequence::fromString("4"));
+	m_orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXM);
 	m_orthographicCameraToXPAction = addAction("Orthographic Camera X+", this, &ViewMenu::orthographicCameraToXP);
-	m_orthographicCameraToXPAction->setShortcut(QKeySequence::fromString("6"));
+	m_orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXP);
 	m_orthographicCameraToYMAction = addAction("Orthographic Camera Y-", this, &ViewMenu::orthographicCameraToYM);
-	m_orthographicCameraToYMAction->setShortcut(QKeySequence::fromString("1"));
+	m_orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYM);
 	m_orthographicCameraToYPAction = addAction("Orthographic Camera Y+", this, &ViewMenu::orthographicCameraToYP);
-	m_orthographicCameraToYPAction->setShortcut(QKeySequence::fromString("7"));
+	m_orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYP);
 	m_orthographicCameraToZMAction = addAction("Orthographic Camera Z-", this, &ViewMenu::orthographicCameraToZM);
-	m_orthographicCameraToZMAction->setShortcut(QKeySequence::fromString("8"));
+	m_orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZM);
 	m_orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
-	m_orthographicCameraToZPAction->setShortcut(QKeySequence::fromString("2"));
+	m_orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZP);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
@@ -43,66 +41,6 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &ViewMenu::onLightingToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCollidersVisibilitySignal, this, &ViewMenu::onCollidersVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &ViewMenu::onCameraProjectionSwitched);
-
-	std::fstream optionsFile("assets/options.json", std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
-			return;
-		}
-	}
-	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
-		return;
-	}
-
-	optionsFile = std::fstream("assets/options.json", std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
-
-	if (j.contains("renderer")) {
-		if (j["renderer"].contains("toggleCurrentEntityVisibility")) {
-			m_toggleCurrentEntityVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCurrentEntityVisibility"]));
-		}
-		if (j["renderer"].contains("toggleGridVisibility")) {
-			m_toggleGridVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleGridVisibility"]));
-		}
-		if (j["renderer"].contains("toggleBackfaceCulling")) {
-			m_toggleBackfaceCullingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleBackfaceCulling"]));
-		}
-		if (j["renderer"].contains("toggleCamerasVisibility")) {
-			m_toggleCamerasVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCamerasVisibility"]));
-		}
-		if (j["renderer"].contains("toggleLighting")) {
-			m_toggleLightingAction->setShortcut(QString::fromStdString(j["renderer"]["toggleLighting"]));
-		}
-		if (j["renderer"].contains("toggleCollidersVisibility")) {
-			m_toggleCollidersVisibilityAction->setShortcut(QString::fromStdString(j["renderer"]["toggleCollidersVisibility"]));
-		}
-		if (j["renderer"].contains("switchCameraProjection")) {
-			m_switchCameraProjectionAction->setShortcut(QString::fromStdString(j["renderer"]["switchCameraProjection"]));
-		}
-		if (j["renderer"].contains("resetCamera")) {
-			m_resetCameraAction->setShortcut(QString::fromStdString(j["renderer"]["resetCamera"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToXM")) {
-			m_orthographicCameraToXMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToXM"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToXP")) {
-			m_orthographicCameraToXPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToXP"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToYM")) {
-			m_orthographicCameraToYMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToYM"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToYP")) {
-			m_orthographicCameraToYPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToYP"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToZM")) {
-			m_orthographicCameraToZMAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToZM"]));
-		}
-		if (j["renderer"].contains("orthographicCameraToZP")) {
-			m_orthographicCameraToZPAction->setShortcut(QString::fromStdString(j["renderer"]["orthographicCameraToZP"]));
-		}
-	}
 }
 
 void ViewMenu::toggleCurrentEntityVisibility() {

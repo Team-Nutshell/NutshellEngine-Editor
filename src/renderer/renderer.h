@@ -62,17 +62,6 @@ private:
 
 	RendererCamera m_camera;
 
-	Qt::Key m_cameraForwardKey = Qt::Key::Key_W;
-	Qt::Key m_cameraBackwardKey = Qt::Key::Key_S;
-	Qt::Key m_cameraLeftKey = Qt::Key::Key_A;
-	Qt::Key m_cameraRightKey = Qt::Key::Key_D;
-	Qt::Key m_cameraUpKey = Qt::Key::Key_Space;
-	Qt::Key m_cameraDownKey = Qt::Key::Key_Shift;
-
-	Qt::Key m_translateEntityKey = Qt::Key::Key_T;
-	Qt::Key m_rotateEntityKey = Qt::Key::Key_R;
-	Qt::Key m_scaleEntityKey = Qt::Key::Key_E;
-
 	bool m_cameraForwardKeyPressed = false;
 	bool m_cameraBackwardKeyPressed = false;
 	bool m_cameraLeftKeyPressed = false;

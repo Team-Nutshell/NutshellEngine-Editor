@@ -170,26 +170,7 @@ void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
 }
 
 void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {
-	std::string codeEditorCommand = "";
-
-	std::fstream optionsFile("assets/options.json", std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
-		}
-	}
-	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
-	}
-
-	optionsFile = std::fstream("assets/options.json", std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
-
-	if (j.contains("code")) {
-		if (j["code"].contains("codeEditorCommand")) {
-			codeEditorCommand = j["code"]["codeEditorCommand"];
-		}
-	}
+	std::string codeEditorCommand = m_globalInfo.editorParameters.code.codeEditorCommand;
 
 	if (codeEditorCommand.empty()) {
 		m_globalInfo.logger.addLog(LogLevel::Warning, "No code editor command has been specified.");
@@ -204,7 +185,7 @@ void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {
 	}
 	scriptPath = m_scriptToPath[currentText];
 
-	std::string filePathTemplate = "$(FILE_PATH)";
+	std::string filePathTemplate = "${FILE_PATH}";
 	size_t filePathTemplatePos = codeEditorCommand.find(filePathTemplate);
 	if (filePathTemplatePos != std::string::npos) {
 		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), scriptPath);

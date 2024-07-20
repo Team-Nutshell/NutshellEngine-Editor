@@ -1,10 +1,8 @@
 #include "renderer.h"
 #include "../undo_commands/destroy_entity_command.h"
 #include "../undo_commands/change_entity_component_command.h"
-#include "../../external/nlohmann/json.hpp"
 #include <QKeySequence>
 #include <QKeyEvent>
-#include <fstream>
 #include <array>
 #include <cstdint>
 
@@ -21,78 +19,6 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &Renderer::onCameraProjectionSwitched);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
-
-	std::fstream optionsFile("assets/options.json", std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
-			return;
-		}
-	}
-	else {
-		globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
-		return;
-	}
-
-	optionsFile = std::fstream("assets/options.json", std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
-
-	if (j.contains("renderer")) {
-		if (j["renderer"].contains("cameraForwardKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraForwardKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraForwardKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("cameraBackwardKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraBackwardKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraBackwardKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("cameraLeftKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraLeftKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraLeftKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("cameraRightKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraRightKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraRightKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("cameraUpKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraUpKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraUpKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("cameraDownKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraDownKey"]));
-			if (!sequence.isEmpty()) {
-				m_cameraDownKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("translateEntityKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["translateEntityKey"]));
-			if (!sequence.isEmpty()) {
-				m_translateEntityKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("rotateEntityKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["rotateEntityKey"]));
-			if (!sequence.isEmpty()) {
-				m_rotateEntityKey = sequence[0].key();
-			}
-		}
-		if (j["renderer"].contains("scaleEntityKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["scaleEntityKey"]));
-			if (!sequence.isEmpty()) {
-				m_scaleEntityKey = sequence[0].key();
-			}
-		}
-	}
 }
 
 Renderer::~Renderer() {
@@ -1363,25 +1289,25 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		return;
 	}
 
-	if (event->key() == m_cameraForwardKey) {
+	if (event->key() == m_globalInfo.editorParameters.renderer.cameraForwardKey) {
 		m_cameraForwardKeyPressed = true;
 	}
-	else if (event->key() == m_cameraBackwardKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraBackwardKey) {
 		m_cameraBackwardKeyPressed = true;
 	}
-	else if (event->key() == m_cameraLeftKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraLeftKey) {
 		m_cameraLeftKeyPressed = true;
 	}
-	else if (event->key() == m_cameraRightKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraRightKey) {
 		m_cameraRightKeyPressed = true;
 	}
-	else if (event->key() == m_cameraUpKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraUpKey) {
 		m_cameraUpKeyPressed = true;
 	}
-	else if (event->key() == m_cameraDownKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraDownKey) {
 		m_cameraDownKeyPressed = true;
 	}
-	else if (event->key() == m_translateEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
 			m_translateEntityKeyPressed = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
@@ -1389,7 +1315,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
 	}
-	else if (event->key() == m_rotateEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
 			m_rotateEntityKeyPressed = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
@@ -1397,7 +1323,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
 	}
-	else if (event->key() == m_scaleEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
 			m_scaleEntityKeyPressed = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
@@ -1419,25 +1345,25 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 		return;
 	}
 
-	if (event->key() == m_cameraForwardKey) {
+	if (event->key() == m_globalInfo.editorParameters.renderer.cameraForwardKey) {
 		m_cameraForwardKeyPressed = false;
 	}
-	else if (event->key() == m_cameraBackwardKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraBackwardKey) {
 		m_cameraBackwardKeyPressed = false;
 	}
-	else if (event->key() == m_cameraLeftKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraLeftKey) {
 		m_cameraLeftKeyPressed = false;
 	}
-	else if (event->key() == m_cameraRightKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraRightKey) {
 		m_cameraRightKeyPressed = false;
 	}
-	else if (event->key() == m_cameraUpKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraUpKey) {
 		m_cameraUpKeyPressed = false;
 	}
-	else if (event->key() == m_cameraDownKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraDownKey) {
 		m_cameraDownKeyPressed = false;
 	}
-	else if (event->key() == m_translateEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
 		if (m_translateEntityKeyPressed) {
 			m_translateEntityKeyPressed = false;
 			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
@@ -1447,7 +1373,7 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 			}
 		}
 	}
-	else if (event->key() == m_rotateEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
 		if (m_rotateEntityKeyPressed) {
 			m_rotateEntityKeyPressed = false;
 			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
@@ -1457,7 +1383,7 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 			}
 		}
 	}
-	else if (event->key() == m_scaleEntityKey) {
+	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
 		if (m_scaleEntityKeyPressed) {
 			m_scaleEntityKeyPressed = false;
 			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);

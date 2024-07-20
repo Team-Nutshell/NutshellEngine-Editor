@@ -1,6 +1,5 @@
 #include "build_bar.h"
 #include <QHBoxLayout>
-#include <fstream>
 #include <sstream>
 #include <filesystem>
 #include <thread>
@@ -43,34 +42,6 @@ bool BuildBar::build() {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build.");
 
-	std::string cMakePath = "cmake";
-
-	std::fstream optionsFile("assets/options.json", std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" is not a valid JSON file.");
-			buildButton->setEnabled(false);
-
-			return false;
-		}
-	}
-	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"assets/options.json\" cannot be opened.");
-		buildButton->setEnabled(false);
-
-		return false;
-	}
-
-	optionsFile = std::fstream("assets/options.json", std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
-
-	if (j.contains("build")) {
-		if (j["build"].contains("cMakePath")) {
-			cMakePath = j["build"]["cMakePath"];
-			std::replace(cMakePath.begin(), cMakePath.end(), '\\', '/');
-		}
-	}
-
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
 	}
@@ -110,7 +81,7 @@ bool BuildBar::build() {
 	PROCESS_INFORMATION processInformation;
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string cMakeCommand = cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common";
+	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
 	bool cMakeSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
@@ -174,7 +145,7 @@ bool BuildBar::build() {
 
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string cMakeBuildCommand = cMakePath + " --build . --config " + buildType;
+	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType;
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);

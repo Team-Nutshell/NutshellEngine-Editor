@@ -1,4 +1,5 @@
 #pragma once
+#include "editor_parameters.h"
 #include "entity.h"
 #include "logger.h"
 #include "signal_emitter.h"
@@ -28,6 +29,7 @@ struct GlobalInfo {
 	void* mainWindow;
 
 	std::unique_ptr<QUndoStack> undoStack;
+	EditorParameters editorParameters;
 	SignalEmitter signalEmitter;
 	Logger logger;
 	RendererResourceManager rendererResourceManager = RendererResourceManager(&logger);
