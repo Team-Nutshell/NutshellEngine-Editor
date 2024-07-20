@@ -31,16 +31,17 @@ private:
 private:
 	GlobalInfo& m_globalInfo;
 
-	QWidget* m_mainWidget;
-	QSplitter* m_horizontalSplitter;
-	QSplitter* m_verticalSplitter;
-	EntityPanel* m_entityPanel;
-	Renderer* m_renderer;
-	EntityInfoPanel* m_entityInfoPanel;
-	ResourcePanel* m_resourcePanel;
-	LogBar* m_logBar;
-	BuildBar* m_buildBar;
-	FileMenu* m_fileMenu;
-	EditMenu* m_editMenu;
-	ViewMenu* m_viewMenu;
+public:
+	QWidget* mainWidget;
+	QSplitter* horizontalSplitter;
+	QSplitter* verticalSplitter;
+	EntityPanel* entityPanel;
+	Renderer* renderer;
+	EntityInfoPanel* entityInfoPanel;
+	ResourcePanel* resourcePanel;
+	LogBar* logBar;
+	BuildBar* buildBar;
+	FileMenu* fileMenu;
+	EditMenu* editMenu;
+	ViewMenu* viewMenu;
 };

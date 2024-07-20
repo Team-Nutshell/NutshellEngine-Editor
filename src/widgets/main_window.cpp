@@ -9,61 +9,61 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 
-	m_mainWidget = new QWidget();
-	m_mainWidget->setLayout(new QVBoxLayout());
-	m_mainWidget->layout()->setContentsMargins(0, 0, 0, 0);
-	m_horizontalSplitter = new QSplitter();
-	m_horizontalSplitter->setOrientation(Qt::Orientation::Horizontal);
-	setCentralWidget(m_mainWidget);
+	mainWidget = new QWidget();
+	mainWidget->setLayout(new QVBoxLayout());
+	mainWidget->layout()->setContentsMargins(0, 0, 0, 0);
+	horizontalSplitter = new QSplitter();
+	horizontalSplitter->setOrientation(Qt::Orientation::Horizontal);
+	setCentralWidget(mainWidget);
 	createMenuBar();
 	createBuildBar();
 	createEntityPanel();
 	createRenderer();
 	createEntityInfoPanel();
-	m_verticalSplitter = new QSplitter();
-	m_verticalSplitter->setOrientation(Qt::Orientation::Vertical);
-	m_verticalSplitter->addWidget(m_horizontalSplitter);
-	m_mainWidget->layout()->addWidget(m_verticalSplitter);
+	verticalSplitter = new QSplitter();
+	verticalSplitter->setOrientation(Qt::Orientation::Vertical);
+	verticalSplitter->addWidget(horizontalSplitter);
+	mainWidget->layout()->addWidget(verticalSplitter);
 	createResourcePanel();
-	m_verticalSplitter->setSizes({ 520, 200 });
+	verticalSplitter->setSizes({ 520, 200 });
 	createLogBar();
 }
 
 void MainWindow::createMenuBar() {
-	m_fileMenu = new FileMenu(m_globalInfo);
-	menuBar()->addMenu(m_fileMenu);
-	m_editMenu = new EditMenu(m_globalInfo);
-	menuBar()->addMenu(m_editMenu);
-	m_viewMenu = new ViewMenu(m_globalInfo);
-	menuBar()->addMenu(m_viewMenu);
+	fileMenu = new FileMenu(m_globalInfo);
+	menuBar()->addMenu(fileMenu);
+	editMenu = new EditMenu(m_globalInfo);
+	menuBar()->addMenu(editMenu);
+	viewMenu = new ViewMenu(m_globalInfo);
+	menuBar()->addMenu(viewMenu);
 }
 
 void MainWindow::createBuildBar() {
-	m_buildBar = new BuildBar(m_globalInfo);
-	m_mainWidget->layout()->addWidget(m_buildBar);
+	buildBar = new BuildBar(m_globalInfo);
+	mainWidget->layout()->addWidget(buildBar);
 }
 
 void MainWindow::createEntityPanel() {
-	m_entityPanel = new EntityPanel(m_globalInfo);
-	m_horizontalSplitter->addWidget(m_entityPanel);
+	entityPanel = new EntityPanel(m_globalInfo);
+	horizontalSplitter->addWidget(entityPanel);
 }
 
 void MainWindow::createRenderer() {
-	m_renderer = new Renderer(m_globalInfo);
-	m_horizontalSplitter->addWidget(m_renderer);
+	renderer = new Renderer(m_globalInfo);
+	horizontalSplitter->addWidget(renderer);
 }
 
 void MainWindow::createEntityInfoPanel() {
-	m_entityInfoPanel = new EntityInfoPanel(m_globalInfo);
-	m_horizontalSplitter->addWidget(m_entityInfoPanel);
+	entityInfoPanel = new EntityInfoPanel(m_globalInfo);
+	horizontalSplitter->addWidget(entityInfoPanel);
 }
 
 void MainWindow::createResourcePanel() {
-	m_resourcePanel = new ResourcePanel(m_globalInfo);
-	m_verticalSplitter->addWidget(m_resourcePanel);
+	resourcePanel = new ResourcePanel(m_globalInfo);
+	verticalSplitter->addWidget(resourcePanel);
 }
 
 void MainWindow::createLogBar() {
-	m_logBar = new LogBar(m_globalInfo);
-	m_mainWidget->layout()->addWidget(m_logBar);
+	logBar = new LogBar(m_globalInfo);
+	mainWidget->layout()->addWidget(logBar);
 }

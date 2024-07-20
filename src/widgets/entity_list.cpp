@@ -14,6 +14,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setSizePolicy(sizePolicy);
 	menu = new EntityListMenu(m_globalInfo);
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+	setDragDropMode(QListWidget::DragDropMode::InternalMove);
 	
 	connect(this, &QListWidget::customContextMenuRequested, this, &EntityList::showMenu);
 	connect(this, &QListWidget::itemSelectionChanged, this, &EntityList::onItemSelectionChanged);
