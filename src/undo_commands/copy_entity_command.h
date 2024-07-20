@@ -14,6 +14,6 @@ private:
 	GlobalInfo& m_globalInfo;
 
 	Entity m_copiedEntity;
-	std::string m_passedEntityName;
+	std::string m_pastedEntityName;
 	EntityID m_pastedEntityID;
 };
