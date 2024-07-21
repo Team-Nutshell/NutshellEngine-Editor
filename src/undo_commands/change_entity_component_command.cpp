@@ -1,7 +1,7 @@
 #include "change_entity_component_command.h"
 
 ChangeEntityComponentCommand::ChangeEntityComponentCommand(GlobalInfo& globalInfo, EntityID entityID, const std::string& componentName, Component* component) : m_globalInfo(globalInfo) {
-	setText("Remove " + QString::fromStdString(componentName) + " Component to Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name));
+	setText("Change " + QString::fromStdString(componentName) + " Component to Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name));
 	m_entityID = entityID;
 	m_componentName = componentName;
 	if (m_componentName == "Transform") {
