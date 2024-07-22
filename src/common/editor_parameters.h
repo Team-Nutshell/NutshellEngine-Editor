@@ -36,7 +36,7 @@ struct CodeParameters {
 #if NTSHENGN_OS_WINDOWS
 	std::string codeEditorCommand = "notepad ${FILE_PATH}";
 #elif NTSHENGN_OS_LINUX
-	std::string codeEditorCommand = "";
+	std::string codeEditorCommand = "nano ${FILE_PATH}";
 #endif
 };
 
