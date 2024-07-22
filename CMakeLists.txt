@@ -108,8 +108,8 @@ set(WIDGET_SOURCES
 	src/widgets/component_list.cpp
 	src/widgets/component_scroll_area.cpp
 	src/widgets/component_title_widget.cpp
-	src/widgets/file_push_button.cpp
 	src/widgets/edit_menu.cpp
+	src/widgets/editor_parameters_widget.cpp
 	src/widgets/entity_info_name_widget.cpp
 	src/widgets/entity_info_panel.cpp
 	src/widgets/entity_info_persistence_widget.cpp
@@ -118,9 +118,11 @@ set(WIDGET_SOURCES
 	src/widgets/entity_list_menu.cpp
 	src/widgets/entity_panel.cpp
 	src/widgets/file_menu.cpp
+	src/widgets/file_push_button.cpp
 	src/widgets/file_selector_widget.cpp
 	src/widgets/image_viewer.cpp
 	src/widgets/integer_widget.cpp
+	src/widgets/key_select_widget.cpp
 	src/widgets/light_component_widget.cpp
 	src/widgets/log_bar.cpp
 	src/widgets/log_bar_menu.cpp
@@ -133,6 +135,7 @@ set(WIDGET_SOURCES
 	src/widgets/new_script_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/options_file_widget.cpp
+	src/widgets/options_menu.cpp
 	src/widgets/project_window.cpp
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
@@ -158,8 +161,8 @@ set(WIDGET_HEADERS
 	src/widgets/component_list.h
 	src/widgets/component_scroll_area.h
 	src/widgets/component_title_widget.h
-	src/widgets/file_push_button.h
 	src/widgets/edit_menu.h
+	src/widgets/editor_parameters_widget.h
 	src/widgets/entity_info_name_widget.h
 	src/widgets/entity_info_panel.h
 	src/widgets/entity_info_persistence_widget.h
@@ -168,9 +171,11 @@ set(WIDGET_HEADERS
 	src/widgets/entity_list_menu.h
 	src/widgets/entity_panel.h
 	src/widgets/file_menu.h
+	src/widgets/file_push_button.h
 	src/widgets/file_selector_widget.h
 	src/widgets/image_viewer.h
 	src/widgets/integer_widget.h
+	src/widgets/key_select_widget.h
 	src/widgets/light_component_widget.h
 	src/widgets/log_bar.h
 	src/widgets/log_bar_menu.h
@@ -183,6 +188,7 @@ set(WIDGET_HEADERS
 	src/widgets/new_script_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/options_file_widget.h
+	src/widgets/options_menu.h
 	src/widgets/project_window.h
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h

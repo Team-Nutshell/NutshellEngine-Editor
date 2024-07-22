@@ -3,6 +3,7 @@
 #include "file_menu.h"
 #include "edit_menu.h"
 #include "view_menu.h"
+#include "options_menu.h"
 #include "build_bar.h"
 #include "entity_panel.h"
 #include "log_bar.h"
@@ -44,4 +45,5 @@ public:
 	FileMenu* fileMenu;
 	EditMenu* editMenu;
 	ViewMenu* viewMenu;
+	OptionsMenu* optionsMenu;
 };

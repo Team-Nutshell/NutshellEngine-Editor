@@ -1,7 +1,7 @@
 #include "boolean_widget.h"
 #include <QHBoxLayout>
 
-BooleanWidget::BooleanWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+BooleanWidget::BooleanWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	nameLabel = new QLabel(QString::fromStdString(name));

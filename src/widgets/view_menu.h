@@ -37,25 +37,26 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	QAction* m_toggleCurrentEntityVisibilityAction;
-	QAction* m_toggleGridVisibilityAction;
-	QAction* m_toggleBackfaceCullingAction;
-	QAction* m_toggleCamerasVisibilityAction;
-	QAction* m_toggleLightingAction;
-	QAction* m_toggleCollidersVisibilityAction;
-	QAction* m_switchCameraProjectionAction;
-	QAction* m_resetCameraAction;
-	QAction* m_orthographicCameraToXMAction;
-	QAction* m_orthographicCameraToXPAction;
-	QAction* m_orthographicCameraToYMAction;
-	QAction* m_orthographicCameraToYPAction;
-	QAction* m_orthographicCameraToZMAction;
-	QAction* m_orthographicCameraToZPAction;
-
 	bool m_showGrid = true;
 	bool m_backfaceCullingEnabled = false;
 	bool m_showCameras = false;
 	bool m_lightingEnabled = false;
 	bool m_showColliders = false;
 	bool m_cameraProjectionOrthographic = false;
+
+public:
+	QAction* toggleCurrentEntityVisibilityAction;
+	QAction* toggleGridVisibilityAction;
+	QAction* toggleBackfaceCullingAction;
+	QAction* toggleCamerasVisibilityAction;
+	QAction* toggleLightingAction;
+	QAction* toggleCollidersVisibilityAction;
+	QAction* switchCameraProjectionAction;
+	QAction* resetCameraAction;
+	QAction* orthographicCameraToXMAction;
+	QAction* orthographicCameraToXPAction;
+	QAction* orthographicCameraToYMAction;
+	QAction* orthographicCameraToYPAction;
+	QAction* orthographicCameraToZMAction;
+	QAction* orthographicCameraToZPAction;
 };

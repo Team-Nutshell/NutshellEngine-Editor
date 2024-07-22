@@ -2,36 +2,36 @@
 #include <QKeySequence>
 
 ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalInfo) {
-	m_toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
-	m_toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibility);
-	m_toggleCurrentEntityVisibilityAction->setEnabled(false);
-	m_toggleGridVisibilityAction = addAction("Hide Grid", this, &ViewMenu::toggleGridVisibility);
-	m_toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibility);
-	m_toggleBackfaceCullingAction = addAction("Enable Backface Culling", this, &ViewMenu::toggleBackfaceCulling);
-	m_toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCulling);
-	m_toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCamerasVisibility);
-	m_toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibility);
-	m_toggleLightingAction = addAction("Enable Lighting", this, &ViewMenu::toggleLighting);
-	m_toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLighting);
-	m_toggleCollidersVisibilityAction = addAction("Show Colliders", this, &ViewMenu::toggleCollidersVisibility);
-	m_toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibility);
+	toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
+	toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
+	toggleCurrentEntityVisibilityAction->setEnabled(false);
+	toggleGridVisibilityAction = addAction("Hide Grid", this, &ViewMenu::toggleGridVisibility);
+	toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
+	toggleBackfaceCullingAction = addAction("Enable Backface Culling", this, &ViewMenu::toggleBackfaceCulling);
+	toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
+	toggleCamerasVisibilityAction = addAction("Show Cameras", this, &ViewMenu::toggleCamerasVisibility);
+	toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
+	toggleLightingAction = addAction("Enable Lighting", this, &ViewMenu::toggleLighting);
+	toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightingKey);
+	toggleCollidersVisibilityAction = addAction("Show Colliders", this, &ViewMenu::toggleCollidersVisibility);
+	toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 	addSeparator();
-	m_switchCameraProjectionAction = addAction("Switch Camera Projection to Orthographic", this, &ViewMenu::switchCameraProjection);
-	m_switchCameraProjectionAction->setShortcut(m_globalInfo.editorParameters.renderer.switchCameraProjection);
-	m_resetCameraAction = addAction("Reset Camera", this, &ViewMenu::resetCamera);
-	m_resetCameraAction->setShortcut(m_globalInfo.editorParameters.renderer.resetCamera);
-	m_orthographicCameraToXMAction = addAction("Orthographic Camera X-", this, &ViewMenu::orthographicCameraToXM);
-	m_orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXM);
-	m_orthographicCameraToXPAction = addAction("Orthographic Camera X+", this, &ViewMenu::orthographicCameraToXP);
-	m_orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXP);
-	m_orthographicCameraToYMAction = addAction("Orthographic Camera Y-", this, &ViewMenu::orthographicCameraToYM);
-	m_orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYM);
-	m_orthographicCameraToYPAction = addAction("Orthographic Camera Y+", this, &ViewMenu::orthographicCameraToYP);
-	m_orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYP);
-	m_orthographicCameraToZMAction = addAction("Orthographic Camera Z-", this, &ViewMenu::orthographicCameraToZM);
-	m_orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZM);
-	m_orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
-	m_orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZP);
+	switchCameraProjectionAction = addAction("Switch Camera Projection to Orthographic", this, &ViewMenu::switchCameraProjection);
+	switchCameraProjectionAction->setShortcut(m_globalInfo.editorParameters.renderer.switchCameraProjectionKey);
+	resetCameraAction = addAction("Reset Camera", this, &ViewMenu::resetCamera);
+	resetCameraAction->setShortcut(m_globalInfo.editorParameters.renderer.resetCameraKey);
+	orthographicCameraToXMAction = addAction("Orthographic Camera X-", this, &ViewMenu::orthographicCameraToXM);
+	orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
+	orthographicCameraToXPAction = addAction("Orthographic Camera X+", this, &ViewMenu::orthographicCameraToXP);
+	orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
+	orthographicCameraToYMAction = addAction("Orthographic Camera Y-", this, &ViewMenu::orthographicCameraToYM);
+	orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
+	orthographicCameraToYPAction = addAction("Orthographic Camera Y+", this, &ViewMenu::orthographicCameraToYP);
+	orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
+	orthographicCameraToZMAction = addAction("Orthographic Camera Z-", this, &ViewMenu::orthographicCameraToZM);
+	orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
+	orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
+	orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onSelectEntity);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
@@ -120,44 +120,44 @@ void ViewMenu::orthographicCameraToZP() {
 
 void ViewMenu::onSelectEntity() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_toggleCurrentEntityVisibilityAction->setEnabled(true);
+		toggleCurrentEntityVisibilityAction->setEnabled(true);
 	}
 	else {
-		m_toggleCurrentEntityVisibilityAction->setEnabled(false);
+		toggleCurrentEntityVisibilityAction->setEnabled(false);
 	}
 }
 
 void ViewMenu::onCurrentEntityVisibilityToggled(bool isEntityVisible) {
 	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = isEntityVisible;
-	m_toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
+	toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
 }
 
 void ViewMenu::onGridVisibilityToggled(bool showGrid) {
 	m_showGrid = showGrid;
-	m_toggleGridVisibilityAction->setText(m_showGrid ? "Hide Grid" : "Show Grid");
+	toggleGridVisibilityAction->setText(m_showGrid ? "Hide Grid" : "Show Grid");
 }
 
 void ViewMenu::onBackfaceCullingToggled(bool backfaceCulling) {
 	m_backfaceCullingEnabled = backfaceCulling;
-	m_toggleBackfaceCullingAction->setText(m_backfaceCullingEnabled ? "Disable Backface Culling" : "Enable Backface Culling");
+	toggleBackfaceCullingAction->setText(m_backfaceCullingEnabled ? "Disable Backface Culling" : "Enable Backface Culling");
 }
 
 void ViewMenu::onCamerasVisibilityToggled(bool showCameras) {
 	m_showCameras = showCameras;
-	m_toggleCamerasVisibilityAction->setText(m_showCameras ? "Hide Cameras" : "Show Cameras");
+	toggleCamerasVisibilityAction->setText(m_showCameras ? "Hide Cameras" : "Show Cameras");
 }
 
 void ViewMenu::onLightingToggled(bool lightingEnabled) {
 	m_lightingEnabled = lightingEnabled;
-	m_toggleLightingAction->setText(m_lightingEnabled ? "Disable Lighting" : "Enable Lighting");
+	toggleLightingAction->setText(m_lightingEnabled ? "Disable Lighting" : "Enable Lighting");
 }
 
 void ViewMenu::onCollidersVisibilityToggled(bool showColliders) {
 	m_showColliders = showColliders;
-	m_toggleCollidersVisibilityAction->setText(m_showColliders ? "Hide Colliders" : "Show Colliders");
+	toggleCollidersVisibilityAction->setText(m_showColliders ? "Hide Colliders" : "Show Colliders");
 }
 
 void ViewMenu::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {
 	m_cameraProjectionOrthographic = cameraProjectionOrthographic;
-	m_switchCameraProjectionAction->setText(m_cameraProjectionOrthographic ? "Switch Camera Projection to Perspective" : "Switch Camera Projection to Orthographic");
+	switchCameraProjectionAction->setText(m_cameraProjectionOrthographic ? "Switch Camera Projection to Perspective" : "Switch Camera Projection to Orthographic");
 }

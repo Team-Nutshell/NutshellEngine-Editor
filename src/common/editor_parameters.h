@@ -1,4 +1,5 @@
 #pragma once
+#include "../../external/nlohmann/json.hpp"
 #include <Qt>
 #include <string>
 
@@ -9,23 +10,23 @@ struct RendererParameters {
 	Qt::Key cameraRightKey = Qt::Key_D;
 	Qt::Key cameraUpKey = Qt::Key_Space;
 	Qt::Key cameraDownKey = Qt::Key_Shift;
-	Qt::Key switchCameraProjection = Qt::Key_P;
-	Qt::Key resetCamera = Qt::Key_0;
-	Qt::Key orthographicCameraToXM = Qt::Key_4;
-	Qt::Key orthographicCameraToXP = Qt::Key_6;
-	Qt::Key orthographicCameraToYM = Qt::Key_1;
-	Qt::Key orthographicCameraToYP = Qt::Key_7;
-	Qt::Key orthographicCameraToZM = Qt::Key_8;
-	Qt::Key orthographicCameraToZP = Qt::Key_2;
+	Qt::Key switchCameraProjectionKey = Qt::Key_P;
+	Qt::Key resetCameraKey = Qt::Key_0;
+	Qt::Key orthographicCameraToXMKey = Qt::Key_4;
+	Qt::Key orthographicCameraToXPKey = Qt::Key_6;
+	Qt::Key orthographicCameraToYMKey = Qt::Key_1;
+	Qt::Key orthographicCameraToYPKey = Qt::Key_7;
+	Qt::Key orthographicCameraToZMKey = Qt::Key_8;
+	Qt::Key orthographicCameraToZPKey = Qt::Key_2;
 	Qt::Key translateEntityKey = Qt::Key_T;
 	Qt::Key rotateEntityKey = Qt::Key_R;
-	Qt::Key scaleEntityKey = Qt::Key_S;
-	Qt::Key toggleCurrentEntityVisibility = Qt::Key_V;
-	Qt::Key toggleGridVisibility = Qt::Key_G;
-	Qt::Key toggleBackfaceCulling = Qt::Key_F;
-	Qt::Key toggleCamerasVisibility = Qt::Key_C;
-	Qt::Key toggleLighting = Qt::Key_L;
-	Qt::Key toggleCollidersVisibility = Qt::Key_X;
+	Qt::Key scaleEntityKey = Qt::Key_E;
+	Qt::Key toggleCurrentEntityVisibilityKey = Qt::Key_V;
+	Qt::Key toggleGridVisibilityKey = Qt::Key_G;
+	Qt::Key toggleBackfaceCullingKey = Qt::Key_F;
+	Qt::Key toggleCamerasVisibilityKey = Qt::Key_C;
+	Qt::Key toggleLightingKey = Qt::Key_L;
+	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
 };
 
 struct BuildParameters {
@@ -43,6 +44,9 @@ struct CodeParameters {
 class EditorParameters {
 public:
 	EditorParameters();
+
+	void fromJson(const nlohmann::json& j);
+	nlohmann::json toJson() const;
 
 public:
 	RendererParameters renderer = {};

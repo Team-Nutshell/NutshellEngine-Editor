@@ -11,7 +11,7 @@ public:
 	StringWidget(GlobalInfo& globalInfo, const std::string& name);
 
 signals:
-	void valueChanged(std::string);
+	void valueChanged(const std::string&);
 
 private slots:
 	void onEditingFinished();
