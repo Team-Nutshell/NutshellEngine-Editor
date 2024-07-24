@@ -17,7 +17,7 @@ struct RendererCamera {
 	}
 
 	nml::vec3 perspectivePosition = nml::vec3(0.0f, 2.0f, 3.0f);
-	nml::vec3 perspectiveDirection = nml::normalize(nml::vec3(0.0f, -0.7f, -1.0f));
+	nml::vec3 perspectiveDirection = nml::normalize(nml::vec3(0.0f, -(2.0f / 3.0f), -1.0f));
 	nml::vec3 perspectiveUp = nml::vec3(0.0f, 1.0f, 0.0f);
 
 	float perspectiveYaw;
