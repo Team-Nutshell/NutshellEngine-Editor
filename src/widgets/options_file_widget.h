@@ -15,7 +15,7 @@ public:
 	OptionsFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath);
 
 private slots:
-	void valueChanged();
+	void onValueChanged();
 	void save();
 
 private:

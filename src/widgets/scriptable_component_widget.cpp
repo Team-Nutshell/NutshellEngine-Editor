@@ -122,7 +122,8 @@ void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
 }
 
 void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(scriptable);
 		}
@@ -133,7 +134,9 @@ void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, cons
 
 void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
 	Scriptable newScriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
-	if (sender() == scriptNameWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == scriptNameWidget) {
 		if (element == "No script selected") {
 			newScriptable.scriptName = "";
 		}

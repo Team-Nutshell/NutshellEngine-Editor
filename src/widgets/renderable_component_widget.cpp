@@ -79,7 +79,8 @@ void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
 }
 
 void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, const Renderable& renderable) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(renderable);
 		}
@@ -92,7 +93,9 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 
 void RenderableComponentWidget::onStringUpdated(const std::string& string) {
 	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
-	if (sender() == modelPathWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == modelPathWidget) {
 		std::string fullModelPath = string;
 		newRenderable.modelPath = fullModelPath;
 		std::replace(newRenderable.modelPath.begin(), newRenderable.modelPath.end(), '\\', '/');

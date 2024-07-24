@@ -98,7 +98,8 @@ void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
 }
 
 void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(rigidbody);
 		}
@@ -109,13 +110,15 @@ void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const 
 
 void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-	if (sender() == isStaticWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == isStaticWidget) {
 		newRigidbody.isStatic = boolean;
 	}
-	else if (sender() == isAffectedByConstantsWidget) {
+	else if (senderWidget == isAffectedByConstantsWidget) {
 		newRigidbody.isAffectedByConstants = boolean;
 	}
-	else if (sender() == lockRotationWidget) {
+	else if (senderWidget == lockRotationWidget) {
 		newRigidbody.lockRotation = boolean;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));
@@ -123,19 +126,21 @@ void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
 
 void RigidbodyComponentWidget::onScalarUpdated(float value) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-	if (sender() == massWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == massWidget) {
 		newRigidbody.mass = value;
 	}
-	else if (sender() == inertiaWidget) {
+	else if (senderWidget == inertiaWidget) {
 		newRigidbody.inertia = value;
 	}
-	else if (sender() == restitutionWidget) {
+	else if (senderWidget == restitutionWidget) {
 		newRigidbody.restitution = value;
 	}
-	else if (sender() == staticFrictionWidget) {
+	else if (senderWidget == staticFrictionWidget) {
 		newRigidbody.staticFriction = value;
 	}
-	else if (sender() == dynamicFrictionWidget) {
+	else if (senderWidget == dynamicFrictionWidget) {
 		newRigidbody.dynamicFriction = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));

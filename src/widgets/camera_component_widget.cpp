@@ -80,7 +80,8 @@ void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
 }
 
 void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera& camera) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(camera);
 		}
@@ -91,10 +92,12 @@ void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera
 
 void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
-	if (sender() == forwardWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == forwardWidget) {
 		newCamera.forward = value;
 	}
-	else if (sender() == upWidget) {
+	else if (senderWidget == upWidget) {
 		newCamera.up = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));
@@ -102,13 +105,15 @@ void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
 
 void CameraComponentWidget::onScalarUpdated(float value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
-	if (sender() == fovWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == fovWidget) {
 		newCamera.fov = value;
 	}
-	else if (sender() == nearPlaneWidget) {
+	else if (senderWidget == nearPlaneWidget) {
 		newCamera.nearPlane = value;
 	}
-	else if (sender() == farPlaneWidget) {
+	else if (senderWidget == farPlaneWidget) {
 		newCamera.farPlane = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));

@@ -148,7 +148,8 @@ void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
 }
 
 void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, const Collidable& collidable) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(collidable);
 		}
@@ -161,7 +162,9 @@ void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, cons
 
 void CollidableComponentWidget::onElementUpdated(const std::string& element) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-	if (sender() == typeWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == typeWidget) {
 		newCollidable.type = element;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
@@ -169,19 +172,21 @@ void CollidableComponentWidget::onElementUpdated(const std::string& element) {
 
 void CollidableComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-	if (sender() == centerWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == centerWidget) {
 		newCollidable.center = value;
 	}
-	else if (sender() == halfExtentWidget) {
+	else if (senderWidget == halfExtentWidget) {
 		newCollidable.halfExtent = value;
 	}
-	else if (sender() == rotationWidget) {
+	else if (senderWidget == rotationWidget) {
 		newCollidable.rotation = value;
 	}
-	else if (sender() == baseWidget) {
+	else if (senderWidget == baseWidget) {
 		newCollidable.base = value;
 	}
-	else if (sender() == tipWidget) {
+	else if (senderWidget == tipWidget) {
 		newCollidable.tip = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
@@ -189,7 +194,9 @@ void CollidableComponentWidget::onVec3Updated(const nml::vec3& value) {
 
 void CollidableComponentWidget::onBooleanUpdated(bool boolean) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-	if (sender() == fromRenderableWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == fromRenderableWidget) {
 		newCollidable.fromRenderable = boolean;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
@@ -197,7 +204,9 @@ void CollidableComponentWidget::onBooleanUpdated(bool boolean) {
 
 void CollidableComponentWidget::onScalarUpdated(float value) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-	if (sender() == radiusWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == radiusWidget) {
 		newCollidable.radius = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));

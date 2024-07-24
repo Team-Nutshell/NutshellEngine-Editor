@@ -53,7 +53,8 @@ void TransformComponentWidget::onSelectEntity() {
 }
 
 void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const Transform& transform) {
-	if (sender() != this) {
+	QObject* senderWidget = sender();
+	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
 			updateWidgets(transform);
 		}
@@ -64,13 +65,15 @@ void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const 
 
 void TransformComponentWidget::onVec3Updated(const nml::vec3& value) {
 	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-	if (sender() == positionWidget) {
+
+	QObject* senderWidget = sender();
+	if (senderWidget == positionWidget) {
 		newTransform.position = value;
 	}
-	else if (sender() == rotationWidget) {
+	else if (senderWidget == rotationWidget) {
 		newTransform.rotation = value;
 	}
-	else if (sender() == scaleWidget) {
+	else if (senderWidget == scaleWidget) {
 		newTransform.scale = value;
 	}
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &newTransform));
