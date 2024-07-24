@@ -4,16 +4,16 @@
 #include <algorithm>
 #include <filesystem>
 
-FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText, const std::string& defaultPath) : m_globalInfo(globalInfo) {
+FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string& labelText, const std::string& noFileText, const std::string& defaultPath) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	filePathLabel = new QLabel(QString::fromStdString(noFileText));
+	filePathLabel = new QLabel(QString::fromStdString(labelText));
 	layout()->addWidget(filePathLabel);
 	std::string filePath = defaultPath;
 	if (!std::filesystem::path(filePath).is_absolute()) {
 		filePath = m_globalInfo.projectDirectory + "/" + filePath;
 	}
-	filePathButton = new FilePushButton(m_globalInfo, buttonText, filePath, FilePushButton::PathType::File);
+	filePathButton = new FilePushButton(m_globalInfo, noFileText, filePath, FilePushButton::PathType::File);
 	filePathButton->setAcceptDrops(true);
 	layout()->addWidget(filePathButton);
 	layout()->setAlignment(filePathButton, Qt::AlignmentFlag::AlignRight);
@@ -22,7 +22,7 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 }
 
 void FileSelectorWidget::onPathChanged(const std::string& path) {
-	filePathLabel->setText(QString::fromStdString(path.substr(path.rfind('/') + 1)));
-	filePathLabel->setToolTip(QString::fromStdString(path));
+	filePathButton->setText(QString::fromStdString(path.substr(path.rfind('/') + 1)));
+	filePathButton->setToolTip(QString::fromStdString(path));
 	emit fileSelected(path);
 }

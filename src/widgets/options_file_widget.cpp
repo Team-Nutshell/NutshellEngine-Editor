@@ -25,11 +25,11 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
 	layout()->addWidget(windowTitleWidget);
-	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "No window icon selected", "Select a window icon", m_globalInfo.projectDirectory + "/assets");
+	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "Window Icon", "No window icon selected", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(windowIconImageWidget);
 	maxFPSWidget = new IntegerWidget(m_globalInfo, "Max FPS");
 	layout()->addWidget(maxFPSWidget);
-	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "No first scene selected", "Select a first scene", m_globalInfo.projectDirectory + "/assets");
+	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "First Scene", "No first scene selected", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(firstSceneWidget);
 	startProfilingWidget = new BooleanWidget(m_globalInfo, "Start Profiling");
 	layout()->addWidget(startProfilingWidget);
@@ -57,8 +57,8 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	if (j.contains("windowIconImagePath")) {
 		std::string windowIconImagePath = j["windowIconImagePath"];
 		windowIconImageWidget->filePathButton->path = windowIconImagePath;
-		windowIconImageWidget->filePathLabel->setText(QString::fromStdString(windowIconImagePath.substr(windowIconImagePath.rfind('/') + 1)));
-		windowIconImageWidget->filePathLabel->setToolTip(QString::fromStdString(windowIconImagePath));
+		windowIconImageWidget->filePathButton->setText(QString::fromStdString(windowIconImagePath.substr(windowIconImagePath.rfind('/') + 1)));
+		windowIconImageWidget->filePathButton->setToolTip(QString::fromStdString(windowIconImagePath));
 	}
 	if (j.contains("maxFPS")) {
 		float maxFPSFloat = j["maxFPS"];
@@ -69,8 +69,8 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 	if (j.contains("firstScenePath")) {
 		std::string firstScenePath = j["firstScenePath"];
 		firstSceneWidget->filePathButton->path = firstScenePath;
-		firstSceneWidget->filePathLabel->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
-		firstSceneWidget->filePathLabel->setToolTip(QString::fromStdString(firstScenePath));
+		firstSceneWidget->filePathButton->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
+		firstSceneWidget->filePathButton->setToolTip(QString::fromStdString(firstScenePath));
 	}
 	if (j.contains("startProfiling")) {
 		bool startProfiling = j["startProfiling"]; 

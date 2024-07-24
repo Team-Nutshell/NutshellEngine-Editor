@@ -15,7 +15,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Renderable"));
-	modelPathWidget = new FileSelectorWidget(m_globalInfo, "No model selected", "Select a model", m_globalInfo.projectDirectory + "/assets");
+	modelPathWidget = new FileSelectorWidget(m_globalInfo, "Model", "No model selected", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(modelPathWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
@@ -38,13 +38,13 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 			}
 		}
 		modelPathWidget->filePathButton->path = modelPath;
-		modelPathWidget->filePathLabel->setText(QString::fromStdString(modelPath.substr(modelPath.rfind('/') + 1)));
-		modelPathWidget->filePathLabel->setToolTip(QString::fromStdString(modelPath));
+		modelPathWidget->filePathButton->setText(QString::fromStdString(modelPath.substr(modelPath.rfind('/') + 1)));
+		modelPathWidget->filePathButton->setToolTip(QString::fromStdString(modelPath));
 	}
 	else {
 		modelPathWidget->filePathButton->path = "";
-		modelPathWidget->filePathLabel->setText("No model selected");
-		modelPathWidget->filePathLabel->setToolTip("");
+		modelPathWidget->filePathButton->setText("No model selected");
+		modelPathWidget->filePathButton->setToolTip("");
 	}
 }
 

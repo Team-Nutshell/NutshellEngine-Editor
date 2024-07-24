@@ -8,7 +8,7 @@
 class FileSelectorWidget : public QWidget {
 	Q_OBJECT
 public:
-	FileSelectorWidget(GlobalInfo& globalInfo, const std::string& noFileText, const std::string& buttonText, const std::string& defaultPath);
+	FileSelectorWidget(GlobalInfo& globalInfo, const std::string& labelText, const std::string& noFileText, const std::string& defaultPath);
 
 signals:
 	void fileSelected(const std::string&);

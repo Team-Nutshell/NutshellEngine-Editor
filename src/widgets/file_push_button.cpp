@@ -60,10 +60,7 @@ void FilePushButton::dropEvent(QDropEvent* event) {
 	if (!sources.isEmpty()) {
 		path = sources[0].toLocalFile().toStdString();
 		bool pathIsFile = !std::filesystem::is_directory(path);
-		if ((m_pathType == PathType::File) && !pathIsFile) {
-			return;
-		}
-		else if ((m_pathType == PathType::Directory) && pathIsFile) {
+		if (((m_pathType == PathType::File) && !pathIsFile) || ((m_pathType == PathType::Directory) && pathIsFile)) {
 			return;
 		}
 		emit pathChanged(path);
