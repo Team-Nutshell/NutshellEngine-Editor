@@ -2,6 +2,7 @@
 #include "../common/scene_manager.h"
 #include "image_viewer.h"
 #include "options_file_widget.h"
+#include "sampler_file_widget.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QImage>
@@ -128,6 +129,10 @@ void AssetList::actionOnFile(const std::string& file) {
 			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
 			imageViewer->show();
+		}
+		else if (extension == "ntsp") {
+			SamplerFileWidget* samplerFileWidget = new SamplerFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			samplerFileWidget->show();
 		}
 		else if (extension == "ntop") {
 			OptionsFileWidget* optionsFileWidget = new OptionsFileWidget(m_globalInfo, m_currentDirectory + "/" + file);

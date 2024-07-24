@@ -138,7 +138,7 @@ void OptionsFileWidget::save() {
 		}
 		j["windowIconImagePath"] = windowIconImagePath;
 	}
-	if (maxFPSWidget->value != 0) {
+	if (maxFPSWidget->value > 0) {
 		j["maxFPS"] = maxFPSWidget->value;
 	}
 	if (firstSceneWidget->filePathButton->path != "") {

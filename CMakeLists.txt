@@ -140,6 +140,7 @@ set(WIDGET_SOURCES
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
 	src/widgets/rigidbody_component_widget.cpp
+	src/widgets/sampler_file_widget.cpp
 	src/widgets/scalar_widget.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
@@ -193,6 +194,7 @@ set(WIDGET_HEADERS
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
 	src/widgets/rigidbody_component_widget.h
+	src/widgets/sampler_file_widget.h
 	src/widgets/scalar_widget.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
