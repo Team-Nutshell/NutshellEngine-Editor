@@ -7,10 +7,10 @@
 #include <QAction>
 #include <string>
 
-class SamplerFileWidget : public QWidget {
+class SamplerNtspFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	SamplerFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
+	SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
 
 private slots:
 	void onValueChanged();

@@ -1,11 +1,11 @@
-#include "material_file_widget.h"
+#include "material_ntml_file_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <fstream>
 
-MaterialFileWidget::MaterialFileWidget(GlobalInfo& globalInfo, const std::string& materialFilePath) : m_globalInfo(globalInfo), m_materialFilePath(materialFilePath) {
+MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& materialFilePath) : m_globalInfo(globalInfo), m_materialFilePath(materialFilePath) {
 	resize(640, 360);
 	setWindowTitle("NutshellEngine - Material File - " + QString::fromStdString(materialFilePath));
 	setWindowIcon(QIcon("assets/icon.png"));
@@ -13,7 +13,7 @@ MaterialFileWidget::MaterialFileWidget(GlobalInfo& globalInfo, const std::string
 
 	m_menuBar = new QMenuBar(this);
 	m_fileMenu = m_menuBar->addMenu("File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &MaterialFileWidget::save);
+	m_fileSaveAction = m_fileMenu->addAction("Save", this, &MaterialNtmlFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
 
 	setLayout(new QVBoxLayout());
@@ -173,28 +173,28 @@ MaterialFileWidget::MaterialFileWidget(GlobalInfo& globalInfo, const std::string
 		indexOfRefractionWidget->valueLineEdit->setText(QString::number(indexOfRefraction));
 	}
 
-	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(diffuseTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(normalTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(normalTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(metalnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(metalnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(roughnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(roughnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(occlusionTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(occlusionTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(emissiveTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(emissiveTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialFileWidget::onValueChanged);
-	connect(emissiveFactorWidget, &ScalarWidget::valueChanged, this, &MaterialFileWidget::onValueChanged);
-	connect(alphaCutoffWidget, &ScalarWidget::valueChanged, this, &MaterialFileWidget::onValueChanged);
-	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialFileWidget::onValueChanged);
+	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(diffuseTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(normalTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(normalTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(metalnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(metalnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(roughnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(roughnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(occlusionTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(occlusionTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(emissiveTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(emissiveTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(emissiveFactorWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(alphaCutoffWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 }
 
-void MaterialFileWidget::onValueChanged() {
+void MaterialNtmlFileWidget::onValueChanged() {
 	SaveTitleChanger::change(this);
 }
 
-void MaterialFileWidget::save() {
+void MaterialNtmlFileWidget::save() {
 	nlohmann::json j;
 	if (diffuseTextureImageWidget->filePathButton->path != "") {
 		std::string diffuseTextureImagePath = diffuseTextureImageWidget->filePathButton->path;

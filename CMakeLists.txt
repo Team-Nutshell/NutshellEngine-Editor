@@ -128,20 +128,20 @@ set(WIDGET_SOURCES
 	src/widgets/log_bar_menu.cpp
 	src/widgets/logs_widget.cpp
 	src/widgets/main_window.cpp
-	src/widgets/material_file_widget.cpp
+	src/widgets/material_ntml_file_widget.cpp
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
 	src/widgets/new_project_widget.cpp
 	src/widgets/new_scene_message_box.cpp
 	src/widgets/new_script_message_box.cpp
 	src/widgets/open_project_widget.cpp
-	src/widgets/options_file_widget.cpp
+	src/widgets/options_ntop_file_widget.cpp
 	src/widgets/options_menu.cpp
 	src/widgets/project_window.cpp
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
 	src/widgets/rigidbody_component_widget.cpp
-	src/widgets/sampler_file_widget.cpp
+	src/widgets/sampler_ntsp_file_widget.cpp
 	src/widgets/scalar_widget.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
@@ -183,20 +183,20 @@ set(WIDGET_HEADERS
 	src/widgets/log_bar_menu.h
 	src/widgets/logs_widget.h
 	src/widgets/main_window.h
-	src/widgets/material_file_widget.h
+	src/widgets/material_ntml_file_widget.h
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
 	src/widgets/new_project_widget.h
 	src/widgets/new_scene_message_box.h
 	src/widgets/new_script_message_box.h
 	src/widgets/open_project_widget.h
-	src/widgets/options_file_widget.h
+	src/widgets/options_ntop_file_widget.h
 	src/widgets/options_menu.h
 	src/widgets/project_window.h
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
 	src/widgets/rigidbody_component_widget.h
-	src/widgets/sampler_file_widget.h
+	src/widgets/sampler_ntsp_file_widget.h
 	src/widgets/scalar_widget.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h

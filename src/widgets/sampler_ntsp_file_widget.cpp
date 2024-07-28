@@ -1,10 +1,10 @@
-#include "sampler_file_widget.h"
+#include "sampler_ntsp_file_widget.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <fstream>
 
-SamplerFileWidget::SamplerFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath) : m_globalInfo(globalInfo), m_samplerFilePath(samplerFilePath) {
+SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath) : m_globalInfo(globalInfo), m_samplerFilePath(samplerFilePath) {
 	resize(640, 360);
 	setWindowTitle("NutshellEngine - Sampler File - " + QString::fromStdString(samplerFilePath));
 	setWindowIcon(QIcon("assets/icon.png"));
@@ -12,7 +12,7 @@ SamplerFileWidget::SamplerFileWidget(GlobalInfo& globalInfo, const std::string& 
 
 	m_menuBar = new QMenuBar(this);
 	m_fileMenu = m_menuBar->addMenu("File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &SamplerFileWidget::save);
+	m_fileSaveAction = m_fileMenu->addAction("Save", this, &SamplerNtspFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
 
 	setLayout(new QVBoxLayout());
@@ -110,21 +110,21 @@ SamplerFileWidget::SamplerFileWidget(GlobalInfo& globalInfo, const std::string& 
 		anisotropyLevelWidget->valueLineEdit->setText(QString::number(anisotropyLevel));
 	}
 
-	connect(magFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(minFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(mipmapFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(addressModeUWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(addressModeVWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(addressModeWWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(borderColorWidget, &ComboBoxWidget::elementSelected, this, &SamplerFileWidget::onValueChanged);
-	connect(anisotropyLevelWidget, &ScalarWidget::valueChanged, this, &SamplerFileWidget::onValueChanged);
+	connect(magFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(minFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(mipmapFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(addressModeUWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(addressModeVWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(addressModeWWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(borderColorWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(anisotropyLevelWidget, &ScalarWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
 }
 
-void SamplerFileWidget::onValueChanged() {
+void SamplerNtspFileWidget::onValueChanged() {
 	SaveTitleChanger::change(this);
 }
 
-void SamplerFileWidget::save() {
+void SamplerNtspFileWidget::save() {
 	nlohmann::json j;
 	if (magFilterWidget->comboBox->currentText() != "") {
 		j["magFilter"] = magFilterWidget->comboBox->currentText().toStdString();

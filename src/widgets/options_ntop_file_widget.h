@@ -9,10 +9,10 @@
 #include <QAction>
 #include <string>
 
-class OptionsFileWidget : public QWidget {
+class OptionsNtopFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	OptionsFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath);
+	OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath);
 
 private slots:
 	void onValueChanged();

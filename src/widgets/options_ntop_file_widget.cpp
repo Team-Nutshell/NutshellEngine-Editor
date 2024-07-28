@@ -1,4 +1,4 @@
-#include "options_file_widget.h"
+#include "options_ntop_file_widget.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <cmath>
 
-OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath) : m_globalInfo(globalInfo), m_optionsFilePath(optionsFilePath) {
+OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath) : m_globalInfo(globalInfo), m_optionsFilePath(optionsFilePath) {
 	resize(640, 360);
 	setWindowTitle("NutshellEngine - Options File - " + QString::fromStdString(optionsFilePath));
 	setWindowIcon(QIcon("assets/icon.png"));
@@ -15,7 +15,7 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 
 	m_menuBar = new QMenuBar(this);
 	m_fileMenu = m_menuBar->addMenu("File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &OptionsFileWidget::save);
+	m_fileSaveAction = m_fileMenu->addAction("Save", this, &OptionsNtopFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
 
 	setLayout(new QVBoxLayout());
@@ -80,14 +80,14 @@ OptionsFileWidget::OptionsFileWidget(GlobalInfo& globalInfo, const std::string& 
 		}
 	}
 
-	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsFileWidget::onValueChanged);
-	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsFileWidget::onValueChanged);
-	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsFileWidget::onValueChanged);
-	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsFileWidget::onValueChanged);
-	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsFileWidget::onValueChanged);
+	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsNtopFileWidget::onValueChanged);
 }
 
-void OptionsFileWidget::onValueChanged() {
+void OptionsNtopFileWidget::onValueChanged() {
 	QObject* senderWidget = sender();
 	if (senderWidget == windowIconImageWidget) {
 		std::string iconImagePath = windowIconImageWidget->filePathButton->path;
@@ -125,7 +125,7 @@ void OptionsFileWidget::onValueChanged() {
 	SaveTitleChanger::change(this);
 }
 
-void OptionsFileWidget::save() {
+void OptionsNtopFileWidget::save() {
 	nlohmann::json j;
 	if (windowTitleWidget->value != "") {
 		j["windowTitle"] = windowTitleWidget->value;

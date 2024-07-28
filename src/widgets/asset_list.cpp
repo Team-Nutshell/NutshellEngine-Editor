@@ -1,9 +1,9 @@
 #include "asset_list.h"
 #include "../common/scene_manager.h"
 #include "image_viewer.h"
-#include "material_file_widget.h"
-#include "options_file_widget.h"
-#include "sampler_file_widget.h"
+#include "material_ntml_file_widget.h"
+#include "options_ntop_file_widget.h"
+#include "sampler_ntsp_file_widget.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QImage>
@@ -132,16 +132,16 @@ void AssetList::actionOnFile(const std::string& file) {
 			imageViewer->show();
 		}
 		else if (extension == "ntml") {
-			MaterialFileWidget* materialFileWidget = new MaterialFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			materialFileWidget->show();
+			MaterialNtmlFileWidget* materialNtmlFileWidget = new MaterialNtmlFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			materialNtmlFileWidget->show();
 		}
 		else if (extension == "ntsp") {
-			SamplerFileWidget* samplerFileWidget = new SamplerFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			samplerFileWidget->show();
+			SamplerNtspFileWidget* samplerNtspFileWidget = new SamplerNtspFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			samplerNtspFileWidget->show();
 		}
 		else if (extension == "ntop") {
-			OptionsFileWidget* optionsFileWidget = new OptionsFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			optionsFileWidget->show();
+			OptionsNtopFileWidget* optionsNtopFileWidget = new OptionsNtopFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			optionsNtopFileWidget->show();
 		}
 	}
 }

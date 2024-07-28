@@ -7,10 +7,10 @@
 #include <QAction>
 #include <string>
 
-class MaterialFileWidget : public QWidget {
+class MaterialNtmlFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	MaterialFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
+	MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
 
 private slots:
 	void onValueChanged();
