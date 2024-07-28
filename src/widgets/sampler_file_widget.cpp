@@ -2,7 +2,6 @@
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
-#include <QSignalBlocker>
 #include <fstream>
 
 SamplerFileWidget::SamplerFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath) : m_globalInfo(globalInfo), m_samplerFilePath(samplerFilePath) {

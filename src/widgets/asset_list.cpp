@@ -1,6 +1,7 @@
 #include "asset_list.h"
 #include "../common/scene_manager.h"
 #include "image_viewer.h"
+#include "material_file_widget.h"
 #include "options_file_widget.h"
 #include "sampler_file_widget.h"
 #include <QSizePolicy>
@@ -129,6 +130,10 @@ void AssetList::actionOnFile(const std::string& file) {
 			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
 			imageViewer->show();
+		}
+		else if (extension == "ntml") {
+			MaterialFileWidget* materialFileWidget = new MaterialFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			materialFileWidget->show();
 		}
 		else if (extension == "ntsp") {
 			SamplerFileWidget* samplerFileWidget = new SamplerFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
