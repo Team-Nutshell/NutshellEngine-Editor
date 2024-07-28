@@ -71,12 +71,18 @@ void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	globalInfo.currentScenePath = sceneFilePath;
 	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(globalInfo.mainWindow);
 	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName) + " - " + QString::fromStdString(sceneFilePath));
-	std::fstream sceneFile(sceneFilePath, std::ios::out | std::ios::trunc);
 	nlohmann::json j;
 	for (int i = 0; i < mainWindow->entityPanel->entityList->count(); i++) {
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(mainWindow->entityPanel->entityList->item(i));
 
 		j["entities"].push_back(globalInfo.entities[entityListItem->entityID].toJson());
 	}
-	sceneFile << j.dump(1, '\t');
+
+	std::fstream sceneFile(sceneFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		sceneFile << "{\n}";
+	}
+	else {
+		sceneFile << j.dump(1, '\t');
+	}
 }

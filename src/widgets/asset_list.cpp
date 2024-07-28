@@ -2,6 +2,7 @@
 #include "../common/scene_manager.h"
 #include "image_viewer.h"
 #include "material_ntml_file_widget.h"
+#include "model_ntmd_file_widget.h"
 #include "options_ntop_file_widget.h"
 #include "sampler_ntsp_file_widget.h"
 #include <QSizePolicy>
@@ -130,6 +131,10 @@ void AssetList::actionOnFile(const std::string& file) {
 			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
 			imageViewer->show();
+		}
+		else if (extension == "ntmd") {
+			ModelNtmdFileWidget* modelNtmdFileWidget = new ModelNtmdFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
+			modelNtmdFileWidget->show();
 		}
 		else if (extension == "ntml") {
 			MaterialNtmlFileWidget* materialNtmlFileWidget = new MaterialNtmlFileWidget(m_globalInfo, m_currentDirectory + "/" + file);

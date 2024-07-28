@@ -18,7 +18,7 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 	layout()->addWidget(filePathButton);
 	layout()->setAlignment(filePathButton, Qt::AlignmentFlag::AlignRight);
 	resetFilePathButton = new QPushButton("X");
-	resetFilePathButton->setFixedWidth(30);
+	resetFilePathButton->setFixedWidth(20);
 	layout()->addWidget(resetFilePathButton);
 
 	connect(filePathButton, &FilePushButton::pathChanged, this, &FileSelectorWidget::onPathChanged);

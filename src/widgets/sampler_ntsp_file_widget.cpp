@@ -149,8 +149,13 @@ void SamplerNtspFileWidget::save() {
 	}
 	j["anisotropyLevel"] = anisotropyLevelWidget->value;
 
-	std::fstream optionsFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
-	optionsFile << j.dump(1, '\t');
+	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		samplerFile << "{\n}";
+	}
+	else {
+		samplerFile << j.dump(1, '\t');
+	}
 
 	SaveTitleChanger::reset(this);
 }

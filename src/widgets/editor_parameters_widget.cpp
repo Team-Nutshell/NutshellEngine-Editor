@@ -353,7 +353,13 @@ void EditorParametersWidget::onCodeEditorCommandChanged(const std::string& codeE
 }
 
 void EditorParametersWidget::save() {
-	std::fstream optionsFile("assets/options.json", std::ios::out | std::ios::trunc);
 	nlohmann::json j = m_globalInfo.editorParameters.toJson();
-	optionsFile << j.dump(1, '\t');
+
+	std::fstream optionsFile("assets/options.json", std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
 }

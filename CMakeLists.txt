@@ -129,6 +129,8 @@ set(WIDGET_SOURCES
 	src/widgets/logs_widget.cpp
 	src/widgets/main_window.cpp
 	src/widgets/material_ntml_file_widget.cpp
+	src/widgets/model_ntmd_file_widget.cpp
+	src/widgets/model_ntmd_primitive_widget.cpp
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
 	src/widgets/new_project_widget.cpp
@@ -184,6 +186,8 @@ set(WIDGET_HEADERS
 	src/widgets/logs_widget.h
 	src/widgets/main_window.h
 	src/widgets/material_ntml_file_widget.h
+	src/widgets/model_ntmd_file_widget.h
+	src/widgets/model_ntmd_primitive_widget.h
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
 	src/widgets/new_project_widget.h

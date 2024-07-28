@@ -344,8 +344,13 @@ void MaterialNtmlFileWidget::save() {
 	j["alphaCutoff"] = alphaCutoffWidget->value;
 	j["indexOfRefraction"] = indexOfRefractionWidget->value;
 
-	std::fstream optionsFile(m_materialFilePath, std::ios::out | std::ios::trunc);
-	optionsFile << j.dump(1, '\t');
+	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		materialFile << "{\n}";
+	}
+	else {
+		materialFile << j.dump(1, '\t');
+	}
 
 	SaveTitleChanger::reset(this);
 }

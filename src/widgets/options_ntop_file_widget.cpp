@@ -158,8 +158,14 @@ void OptionsNtopFileWidget::save() {
 		j["firstScenePath"] = firstScenePath;
 	}
 	j["startProfiling"] = startProfilingWidget->checkBox->isChecked();
+
 	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
-	optionsFile << j.dump(1, '\t');
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
 
 	SaveTitleChanger::reset(this);
 }

@@ -26,7 +26,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	scriptNameWidget = new ComboBoxWidget(m_globalInfo, "Script", scriptEntries);
 	scriptSelectorWidget->layout()->addWidget(scriptNameWidget);
 	openCodeEditorButton = new QPushButton("E");
-	openCodeEditorButton->setFixedWidth(30);
+	openCodeEditorButton->setFixedWidth(20);
 	scriptSelectorWidget->layout()->addWidget(openCodeEditorButton);
 	layout()->addWidget(scriptSelectorWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
