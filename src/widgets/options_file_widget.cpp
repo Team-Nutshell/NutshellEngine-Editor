@@ -91,31 +91,35 @@ void OptionsFileWidget::onValueChanged() {
 	QObject* senderWidget = sender();
 	if (senderWidget == windowIconImageWidget) {
 		std::string iconImagePath = windowIconImageWidget->filePathButton->path;
-		std::replace(iconImagePath.begin(), iconImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(iconImagePath).is_absolute()) {
-				if (iconImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					iconImagePath = iconImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
+		if (!iconImagePath.empty()) {
+			std::replace(iconImagePath.begin(), iconImagePath.end(), '\\', '/');
+			if (m_globalInfo.projectDirectory != "") {
+				if (std::filesystem::path(iconImagePath).is_absolute()) {
+					if (iconImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
+						iconImagePath = iconImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
+					}
 				}
 			}
+			windowIconImageWidget->filePathButton->path = iconImagePath;
+			windowIconImageWidget->filePathButton->setText(QString::fromStdString(iconImagePath.substr(iconImagePath.rfind('/') + 1)));
+			windowIconImageWidget->filePathButton->setToolTip(QString::fromStdString(iconImagePath));
 		}
-		windowIconImageWidget->filePathButton->path = iconImagePath;
-		windowIconImageWidget->filePathButton->setText(QString::fromStdString(iconImagePath.substr(iconImagePath.rfind('/') + 1)));
-		windowIconImageWidget->filePathButton->setToolTip(QString::fromStdString(iconImagePath));
 	}
 	else if (senderWidget == firstSceneWidget) {
 		std::string firstScenePath = firstSceneWidget->filePathButton->path;
-		std::replace(firstScenePath.begin(), firstScenePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(firstScenePath).is_absolute()) {
-				if (firstScenePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					firstScenePath = firstScenePath.substr(m_globalInfo.projectDirectory.size() + 1);
+		if (!firstScenePath.empty()) {
+			std::replace(firstScenePath.begin(), firstScenePath.end(), '\\', '/');
+			if (m_globalInfo.projectDirectory != "") {
+				if (std::filesystem::path(firstScenePath).is_absolute()) {
+					if (firstScenePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
+						firstScenePath = firstScenePath.substr(m_globalInfo.projectDirectory.size() + 1);
+					}
 				}
 			}
+			firstSceneWidget->filePathButton->path = firstScenePath;
+			firstSceneWidget->filePathButton->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
+			firstSceneWidget->filePathButton->setToolTip(QString::fromStdString(firstScenePath));
 		}
-		firstSceneWidget->filePathButton->path = firstScenePath;
-		firstSceneWidget->filePathButton->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
-		firstSceneWidget->filePathButton->setToolTip(QString::fromStdString(firstScenePath));
 	}
 
 	SaveTitleChanger::change(this);

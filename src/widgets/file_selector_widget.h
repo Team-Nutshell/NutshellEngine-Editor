@@ -3,6 +3,7 @@
 #include "file_push_button.h"
 #include <QWidget>
 #include <QLabel>
+#include <QPushButton>
 #include <string>
 
 class FileSelectorWidget : public QWidget {
@@ -15,11 +16,15 @@ signals:
 
 private slots:
 	void onPathChanged(const std::string& path);
+	void onResetFilePathClicked();
 
 private:
 	GlobalInfo& m_globalInfo;
 
+	std::string m_noFileText;
+
 public:
 	QLabel* filePathLabel;
 	FilePushButton* filePathButton;
+	QPushButton* resetFilePathButton;
 };
