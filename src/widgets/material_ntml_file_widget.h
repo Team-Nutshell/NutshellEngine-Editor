@@ -10,7 +10,7 @@
 class MaterialNtmlFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
+	MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& materialFilePath);
 
 private slots:
 	void onValueChanged();
