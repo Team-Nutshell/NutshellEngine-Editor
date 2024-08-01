@@ -68,8 +68,7 @@ set(RENDERER_HEADERS
 	src/renderer/collider_mesh.h
 	src/renderer/renderer.h
 	src/renderer/renderer_camera.h
-	src/renderer/renderer_mesh.h
-	src/renderer/renderer_model.h
+	src/renderer/renderer_resources.h
 	src/renderer/renderer_resource_manager.h)
 
 set(UNDO_COMMANDS_SOURCES

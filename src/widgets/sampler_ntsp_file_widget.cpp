@@ -156,6 +156,18 @@ void SamplerNtspFileWidget::save() {
 	else {
 		samplerFile << j.dump(1, '\t');
 	}
+	samplerFile.close();
+
+	std::string samplerPath = m_samplerFilePath;
+	std::replace(samplerPath.begin(), samplerPath.end(), '\\', '/');
+	if (m_globalInfo.projectDirectory != "") {
+		if (std::filesystem::path(samplerPath).is_absolute()) {
+			if (samplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
+				samplerPath = samplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
+			}
+		}
+	}
+	m_globalInfo.rendererResourceManager.loadSampler(m_samplerFilePath, samplerPath);
 
 	SaveTitleChanger::reset(this);
 }

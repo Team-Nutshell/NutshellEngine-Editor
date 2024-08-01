@@ -22,19 +22,19 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 Renderer::~Renderer() {
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].vertexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0].indexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].primitives[0].mesh.vertexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["defaultCube"].primitives[0].mesh.indexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
+	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 	gl.glDeleteBuffers(1, &m_lightBuffer);
 
 	for (const auto& model : m_globalInfo.rendererResourceManager.models) {
 		if ((model.first == "defaultCube") || (model.first == "cameraFrustumCube")) {
 			continue;
 		}
-		for (const auto& mesh : model.second.meshes) {
-			gl.glDeleteBuffers(1, &mesh.vertexBuffer);
-			gl.glDeleteBuffers(1, &mesh.indexBuffer);
+		for (const auto& primitive : model.second.primitives) {
+			gl.glDeleteBuffers(1, &primitive.mesh.vertexBuffer);
+			gl.glDeleteBuffers(1, &primitive.mesh.indexBuffer);
 		}
 	}
 
@@ -458,16 +458,13 @@ void Renderer::initializeGL() {
 	gl.glBindBuffer(GL_ARRAY_BUFFER, defaultCubeVertexBuffer);
 	gl.glBufferData(GL_ARRAY_BUFFER, defaultCubeVertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), defaultCubeVertices.data(), GL_STATIC_DRAW);
 
-	RendererMesh defaultCubeMesh;
-	defaultCubeMesh.vertexBuffer = defaultCubeVertexBuffer;
-	defaultCubeMesh.indexBuffer = cubeTriangleIndexBuffer;
-	defaultCubeMesh.indexCount = static_cast<GLuint>(cubeTriangleIndices.size());
-	defaultCubeMesh.diffuseTexturePath = "defaultDiffuseTexture";
-	defaultCubeMesh.emissiveTexturePath = "defaultEmissiveTexture";
+	RendererPrimitive defaultCubePrimitive;
+	defaultCubePrimitive.mesh.vertexBuffer = defaultCubeVertexBuffer;
+	defaultCubePrimitive.mesh.indexBuffer = cubeTriangleIndexBuffer;
+	defaultCubePrimitive.mesh.indexCount = static_cast<GLuint>(cubeTriangleIndices.size());
 
 	RendererModel defaultCubeModel;
-	defaultCubeModel.meshes.push_back(defaultCubeMesh);
-
+	defaultCubeModel.primitives.push_back(defaultCubePrimitive);
 	m_globalInfo.rendererResourceManager.models["defaultCube"] = defaultCubeModel;
 
 	// Default textures
@@ -476,11 +473,7 @@ void Renderer::initializeGL() {
 	std::vector<uint8_t> diffuseTextureData = { 145, 99, 65, 255, 208, 194, 175, 255, 208, 194, 175, 255, 145, 99, 65, 255 };
 	gl.glBindTexture(GL_TEXTURE_2D, defaultDiffuseTexture);
 	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, diffuseTextureData.data());
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
+	gl.glGenerateMipmap(GL_TEXTURE_2D);
 	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
 
 	GLuint defaultEmissiveTexture;
@@ -488,12 +481,15 @@ void Renderer::initializeGL() {
 	std::vector<uint8_t> emissiveTextureData = { 0, 0, 0, 255 };
 	gl.glBindTexture(GL_TEXTURE_2D, defaultEmissiveTexture);
 	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveTextureData.data());
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 	m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"] = defaultEmissiveTexture;
+
+	RendererSampler defaultSampler;
+	defaultSampler.minFilter = GL_NEAREST;
+	defaultSampler.magFilter = GL_NEAREST;
+	defaultSampler.mipmapFilter = GL_NEAREST;
+	defaultSampler.wrapS = GL_CLAMP_TO_EDGE;
+	defaultSampler.wrapT = GL_CLAMP_TO_EDGE;
+	m_globalInfo.rendererResourceManager.samplers["defaultSampler"] = defaultSampler;
 
 	// Frustum cube
 	GLuint cameraFrustumCubeVertexBuffer;
@@ -502,16 +498,13 @@ void Renderer::initializeGL() {
 	gl.glBindBuffer(GL_ARRAY_BUFFER, cameraFrustumCubeVertexBuffer);
 	gl.glBufferData(GL_ARRAY_BUFFER, cameraFrustumCubeVertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), cameraFrustumCubeVertices.data(), GL_STATIC_DRAW);
 
-	RendererMesh cameraFrustumCubeMesh;
-	cameraFrustumCubeMesh.vertexBuffer = cameraFrustumCubeVertexBuffer;
-	cameraFrustumCubeMesh.indexBuffer = cubeLineIndexBuffer;
-	cameraFrustumCubeMesh.indexCount = static_cast<GLuint>(cubeLineIndices.size());
-	cameraFrustumCubeMesh.diffuseTexturePath = "defaultDiffuseTexture";
-	cameraFrustumCubeMesh.emissiveTexturePath = "defaultEmissiveTexture";
+	RendererPrimitive cameraFrustumCubePrimitive;
+	cameraFrustumCubePrimitive.mesh.vertexBuffer = cameraFrustumCubeVertexBuffer;
+	cameraFrustumCubePrimitive.mesh.indexBuffer = cubeLineIndexBuffer;
+	cameraFrustumCubePrimitive.mesh.indexCount = static_cast<GLuint>(cubeLineIndices.size());
 
 	RendererModel cameraFrustumCubeModel;
-	cameraFrustumCubeModel.meshes.push_back(cameraFrustumCubeMesh);
-
+	cameraFrustumCubeModel.primitives.push_back(cameraFrustumCubePrimitive);
 	m_globalInfo.rendererResourceManager.models["cameraFrustumCube"] = cameraFrustumCubeModel;
 
 	// Light
@@ -568,7 +561,10 @@ void Renderer::paintGL() {
 
 			if (entity.second.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
 				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.models[entity.second.renderable->modelPath];
-				for (const auto& entityMesh : entityModel.meshes) {
+				for (const auto& entityPrimitive : entityModel.primitives) {
+					const RendererMesh& entityMesh = entityPrimitive.mesh;
+					const RendererMaterial& entityMaterial = entityPrimitive.material;
+
 					gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 					GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
@@ -582,14 +578,17 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
 					gl.glActiveTexture(GL_TEXTURE0);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.diffuseTexturePath]);
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.diffuseTextureName]);
+					m_globalInfo.rendererResourceManager.samplers[entityMaterial.diffuseTextureSamplerName].bind(gl);
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
 					gl.glActiveTexture(GL_TEXTURE1);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMesh.emissiveTexturePath]);
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.emissiveTextureName]);
+					m_globalInfo.rendererResourceManager.samplers[entityMaterial.emissiveTextureSamplerName].bind(gl);
+
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
-					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMesh.alphaCutoff);
+					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMaterial.alphaCutoff);
 
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
 
@@ -597,7 +596,9 @@ void Renderer::paintGL() {
 				}
 			}
 			else {
-				RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0];
+				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.models["defaultCube"].primitives[0];
+				RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
+				RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
 				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
@@ -611,11 +612,13 @@ void Renderer::paintGL() {
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 				gl.glActiveTexture(GL_TEXTURE0);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.diffuseTexturePath]);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.diffuseTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.diffuseTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
 				gl.glActiveTexture(GL_TEXTURE1);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMesh.emissiveTexturePath]);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.emissiveTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
@@ -632,11 +635,11 @@ void Renderer::paintGL() {
 		gl.glUseProgram(m_cameraFrustumProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-		gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
+		gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
 		GLint positionPos = gl.glGetAttribLocation(m_cameraFrustumProgram, "position");
 		gl.glEnableVertexAttribArray(positionPos);
 		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
+		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
@@ -648,7 +651,7 @@ void Renderer::paintGL() {
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
 
-					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
+					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 			}
 		}
@@ -669,14 +672,14 @@ void Renderer::paintGL() {
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
 
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.models["Collider_" + std::to_string(entity.first)];
-					for (const auto& colliderMesh : colliderModel.meshes) {
-						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderMesh.vertexBuffer);
+					for (const auto& colliderPrimitive : colliderModel.primitives) {
+						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_colliderProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
 						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderMesh.indexBuffer);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
 
-						gl.glDrawElements(GL_LINES, colliderMesh.indexCount, GL_UNSIGNED_INT, NULL);
+						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 				}
 			}
@@ -731,18 +734,18 @@ void Renderer::paintGL() {
 
 				if (entity.second.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
 					const RendererModel& entityModel = m_globalInfo.rendererResourceManager.models[entity.second.renderable->modelPath];
-					for (const auto& entityMesh : entityModel.meshes) {
-						gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
+					for (const auto& entityPrimitive : entityModel.primitives) {
+						gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
 						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
 
-						gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
+						gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 				}
 				else {
-					RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0];
+					RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].primitives[0].mesh;
 					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
@@ -794,18 +797,18 @@ void Renderer::paintGL() {
 
 		if (entity.renderable && (m_globalInfo.rendererResourceManager.models.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.models.end())) {
 			const RendererModel& entityModel = m_globalInfo.rendererResourceManager.models[entity.renderable->modelPath];
-			for (const auto& entityMesh : entityModel.meshes) {
-				gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
+			for (const auto& entityPrimitive : entityModel.primitives) {
+				gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 				gl.glEnableVertexAttribArray(positionPos);
 				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
+				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
 
-				gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
+				gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
 		}
 		else {
-			RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].meshes[0];
+			RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.models["defaultCube"].primitives[0].mesh;
 			gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 			GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 			gl.glEnableVertexAttribArray(positionPos);
@@ -832,13 +835,13 @@ void Renderer::paintGL() {
 				nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
 
-				gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].vertexBuffer);
+				gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 				gl.glEnableVertexAttribArray(positionPos);
 				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexBuffer);
+				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 
-				gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].meshes[0].indexCount, GL_UNSIGNED_INT, NULL);
+				gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.models["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
 		}
 
@@ -848,14 +851,14 @@ void Renderer::paintGL() {
 				if (entity.collidable && (m_globalInfo.rendererResourceManager.models.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.models.end())) {
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.models["Collider_" + std::to_string(entity.entityID)];
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
-					for (const auto& colliderMesh : colliderModel.meshes) {
-						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderMesh.vertexBuffer);
+					for (const auto& colliderPrimitive : colliderModel.primitives) {
+						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
 						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderMesh.indexBuffer);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
 
-						gl.glDrawElements(GL_LINES, colliderMesh.indexCount, GL_UNSIGNED_INT, NULL);
+						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 				}
 			}
@@ -1129,35 +1132,40 @@ void Renderer::loadResourcesToGPU() {
 	for (const auto& modelToGPU : m_globalInfo.rendererResourceManager.modelsToGPU) {
 		if (m_globalInfo.rendererResourceManager.models.find(modelToGPU.first) != m_globalInfo.rendererResourceManager.models.end()) {
 			// Free resources for same model
-			for (auto& mesh : m_globalInfo.rendererResourceManager.models[modelToGPU.first].meshes) {
-				gl.glDeleteBuffers(1, &mesh.vertexBuffer);
-				gl.glDeleteBuffers(1, &mesh.indexBuffer);
+			for (auto& primitive : m_globalInfo.rendererResourceManager.models[modelToGPU.first].primitives) {
+				gl.glDeleteBuffers(1, &primitive.mesh.vertexBuffer);
+				gl.glDeleteBuffers(1, &primitive.mesh.indexBuffer);
 			}
 		}
 
 		RendererModel newRendererModel;
-		for (const auto& meshToGPU : modelToGPU.second.meshes) {
-			RendererMesh newRendererMesh;
-			gl.glGenBuffers(1, &newRendererMesh.vertexBuffer);
-			gl.glBindBuffer(GL_ARRAY_BUFFER, newRendererMesh.vertexBuffer);
+		for (const auto& primitiveToGPU : modelToGPU.second.primitives) {
+			const RendererResourceManager::MeshToGPU& meshToGPU = primitiveToGPU.mesh;
+			const RendererResourceManager::MaterialToGPU& materialToGPU = primitiveToGPU.material;
+
+			RendererPrimitive newRendererPrimitive;
+			gl.glGenBuffers(1, &newRendererPrimitive.mesh.vertexBuffer);
+			gl.glBindBuffer(GL_ARRAY_BUFFER, newRendererPrimitive.mesh.vertexBuffer);
 			gl.glBufferData(GL_ARRAY_BUFFER, meshToGPU.vertices.size() * sizeof(RendererResourceManager::MeshToGPU::Vertex), meshToGPU.vertices.data(), GL_STATIC_DRAW);
 			
-			gl.glGenBuffers(1, &newRendererMesh.indexBuffer);
-			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newRendererMesh.indexBuffer);
+			gl.glGenBuffers(1, &newRendererPrimitive.mesh.indexBuffer);
+			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newRendererPrimitive.mesh.indexBuffer);
 			gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshToGPU.indices.size() * sizeof(uint32_t), meshToGPU.indices.data(), GL_STATIC_DRAW);
 
-			newRendererMesh.indexCount = static_cast<uint32_t>(meshToGPU.indices.size());
+			newRendererPrimitive.mesh.indexCount = static_cast<uint32_t>(meshToGPU.indices.size());
 
-			newRendererMesh.diffuseTexturePath = meshToGPU.diffuseTexturePath;
-			newRendererMesh.emissiveTexturePath = meshToGPU.emissiveTexturePath;
+			newRendererPrimitive.material.diffuseTextureName = materialToGPU.diffuseTextureName;
+			newRendererPrimitive.material.diffuseTextureSamplerName = materialToGPU.diffuseTextureSamplerName;
+			newRendererPrimitive.material.emissiveTextureName = materialToGPU.emissiveTextureName;
+			newRendererPrimitive.material.emissiveTextureSamplerName = materialToGPU.emissiveTextureSamplerName;
 
-			newRendererMesh.alphaCutoff = meshToGPU.alphaCutoff;
+			newRendererPrimitive.material.alphaCutoff = materialToGPU.alphaCutoff;
 
-			newRendererMesh.obb = meshToGPU.obb;
-			newRendererMesh.sphere = meshToGPU.sphere;
-			newRendererMesh.capsule = meshToGPU.capsule;
+			newRendererPrimitive.mesh.obb = meshToGPU.obb;
+			newRendererPrimitive.mesh.sphere = meshToGPU.sphere;
+			newRendererPrimitive.mesh.capsule = meshToGPU.capsule;
 
-			newRendererModel.meshes.push_back(newRendererMesh);
+			newRendererModel.primitives.push_back(newRendererPrimitive);
 		}
 
 		m_globalInfo.rendererResourceManager.models[modelToGPU.first] = newRendererModel;
@@ -1176,51 +1184,55 @@ void Renderer::loadResourcesToGPU() {
 		gl.glBindTexture(GL_TEXTURE_2D, *texture);
 		gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
 		gl.glGenerateMipmap(GL_TEXTURE_2D);
-		if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
-			if (imageToGPU.second.mipmapFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
-				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-			}
-			else {
-				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-			}
-		}
-		else if (imageToGPU.second.minFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Linear) {
-			if (imageToGPU.second.mipmapFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
-				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			}
-			else {
-				gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			}
-		}
-
-		if (imageToGPU.second.magFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Nearest) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		}
-		else if (imageToGPU.second.magFilter == RendererResourceManager::ImageToGPU::SamplerFilter::Linear) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		}
-
-		if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::ClampToEdge) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		}
-		else if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::Repeat) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		}
-		else if (imageToGPU.second.wrapS == RendererResourceManager::ImageToGPU::SamplerWrap::MirroredRepeat) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		}
-
-		if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::ClampToEdge) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		}
-		else if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::Repeat) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		}
-		else if (imageToGPU.second.wrapT == RendererResourceManager::ImageToGPU::SamplerWrap::MirroredRepeat) {
-			gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-		}
 	}
 	m_globalInfo.rendererResourceManager.imagesToGPU.clear();
+
+	for (const auto& samplerToGPU : m_globalInfo.rendererResourceManager.samplersToGPU) {
+		RendererSampler sampler;
+		if (samplerToGPU.second.magFilter == RendererResourceManager::SamplerToGPU::Filter::Nearest) {
+			sampler.magFilter = GL_NEAREST;
+		}
+		else {
+			sampler.magFilter = GL_LINEAR;
+		}
+
+		if (samplerToGPU.second.minFilter == RendererResourceManager::SamplerToGPU::Filter::Nearest) {
+			sampler.minFilter = GL_NEAREST;
+		}
+		else {
+			sampler.minFilter = GL_LINEAR;
+		}
+
+		if (samplerToGPU.second.mipmapFilter == RendererResourceManager::SamplerToGPU::Filter::Nearest) {
+			sampler.mipmapFilter = GL_NEAREST;
+		}
+		else {
+			sampler.mipmapFilter = GL_LINEAR;
+		}
+
+		if (samplerToGPU.second.wrapS == RendererResourceManager::SamplerToGPU::Wrap::ClampToEdge) {
+			sampler.wrapS = GL_CLAMP_TO_EDGE;
+		}
+		else if (samplerToGPU.second.wrapS == RendererResourceManager::SamplerToGPU::Wrap::Repeat) {
+			sampler.wrapS = GL_REPEAT;
+		}
+		else {
+			sampler.wrapS = GL_MIRRORED_REPEAT;
+		}
+
+		if (samplerToGPU.second.wrapT == RendererResourceManager::SamplerToGPU::Wrap::ClampToEdge) {
+			sampler.wrapT = GL_CLAMP_TO_EDGE;
+		}
+		else if (samplerToGPU.second.wrapS == RendererResourceManager::SamplerToGPU::Wrap::Repeat) {
+			sampler.wrapT = GL_REPEAT;
+		}
+		else {
+			sampler.wrapT = GL_MIRRORED_REPEAT;
+		}
+
+		m_globalInfo.rendererResourceManager.samplers[samplerToGPU.first] = sampler;
+	}
+	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 }
 
 nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix) {

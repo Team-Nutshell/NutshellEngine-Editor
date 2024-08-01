@@ -34,6 +34,18 @@
 RendererResourceManager::RendererResourceManager(Logger* passLogger) : logger(passLogger) {}
 
 void RendererResourceManager::loadModel(const std::string& modelPath, const std::string& name) {
+	if (!std::filesystem::exists(modelPath)) {
+		logger->addLog(LogLevel::Warning, "Model file \"" + modelPath + "\" does not exist.");
+		return;
+	}
+
+	if (resourceLastWriteTime.find(modelPath) != resourceLastWriteTime.end()) {
+		if (resourceLastWriteTime[modelPath] == std::filesystem::last_write_time(modelPath)) {
+			// Resource is already loaded and hasn't changed
+			return;
+		}
+	}
+
 	size_t lastDot = modelPath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = modelPath.substr(lastDot + 1);
@@ -48,6 +60,8 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 			return;
 		}
 	}
+
+	resourceLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
 	
 	// Calculate OBB, Sphere and Capsule
 	auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
@@ -57,8 +71,12 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 	if (modelsToGPU.find(name) != modelsToGPU.end()) {
 		AABB aabb;
 		ModelToGPU& model = modelsToGPU[name];
-		for (auto& mesh : model.meshes) {
+		for (PrimitiveToGPU& primitive : model.primitives) {
+			MeshToGPU& mesh = primitive.mesh;
+
 			std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
+
+			// AABB
 			for (size_t j = 0; j < mesh.vertices.size(); j++) {
 				uniquePositions.insert(mesh.vertices[j].position);
 
@@ -83,7 +101,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 				}
 			}
 
-			// AABB
+			// Sphere
 			mesh.sphere.center = (aabb.min + aabb.max) / 2.0f;
 			mesh.sphere.radius = (mesh.sphere.center - aabb.min).length();
 
@@ -163,6 +181,18 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 }
 
 void RendererResourceManager::loadImage(const std::string& imagePath, const std::string& name) {
+	if (!std::filesystem::exists(imagePath)) {
+		logger->addLog(LogLevel::Warning, "Image file \"" + imagePath + "\" does not exist.");
+		return;
+	}
+
+	if (resourceLastWriteTime.find(imagePath) != resourceLastWriteTime.end()) {
+		if (resourceLastWriteTime[imagePath] == std::filesystem::last_write_time(imagePath)) {
+			// Resource is already loaded and hasn't changed
+			return;
+		}
+	}
+
 	size_t lastDot = imagePath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = imagePath.substr(lastDot + 1);
@@ -173,6 +203,36 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 			loadImageStb(imagePath, name);
 		}
 	}
+
+	resourceLastWriteTime[imagePath] = std::filesystem::last_write_time(imagePath);
+}
+
+void RendererResourceManager::loadSampler(const std::string& samplerPath, const std::string& name) {
+	if (!std::filesystem::exists(samplerPath)) {
+		logger->addLog(LogLevel::Warning, "Sampler file \"" + samplerPath + "\" does not exist.");
+		return;
+	}
+
+	if (resourceLastWriteTime.find(samplerPath) != resourceLastWriteTime.end()) {
+		if (resourceLastWriteTime[samplerPath] == std::filesystem::last_write_time(samplerPath)) {
+			// Resource is already loaded and hasn't changed
+			return;
+		}
+	}
+
+	size_t lastDot = samplerPath.rfind('.');
+	if (lastDot != std::string::npos) {
+		std::string extension = samplerPath.substr(lastDot + 1);
+		if (extension == "ntsp") {
+			loadNtsp(samplerPath, name);
+		}
+		else {
+			logger->addLog(LogLevel::Warning, "Sampler file extension \"." + extension + "\" is not supported by the editor.");
+			return;
+		}
+	}
+
+	resourceLastWriteTime[samplerPath] = std::filesystem::last_write_time(samplerPath);
 }
 
 void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::string& name) {
@@ -196,11 +256,9 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 
 	if (j.contains("primitives")) {
 		for (size_t i = 0; i < j["primitives"].size(); i++) {
+			PrimitiveToGPU primitive;
 			if (j["primitives"][i].contains("meshPath")) {
-				MeshToGPU mesh = loadNtmh(projectDirectory + "/" + std::string(j["primitives"][i]["meshPath"]));
-				if (!mesh.vertices.empty()) {
-					model.meshes.push_back(mesh);
-				}
+				primitive.mesh = loadNtmh(projectDirectory + "/" + std::string(j["primitives"][i]["meshPath"]));
 
 				if (j["primitives"][i].contains("materialPath")) {
 					std::string materialPath = projectDirectory + "/" + std::string(j["primitives"][i]["materialPath"]);
@@ -222,142 +280,37 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 
 					if (jmtl.contains("diffuseTexture")) {
 						if (jmtl["diffuseTexture"].contains("imagePath")) {
-							model.meshes.back().diffuseTexturePath = jmtl["diffuseTexture"]["imagePath"];
-							loadImage(projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imagePath"]), model.meshes.back().diffuseTexturePath);
+							primitive.material.diffuseTextureName = jmtl["diffuseTexture"]["imagePath"];
+							loadImage(projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imagePath"]), primitive.material.diffuseTextureName);
 						}
 
 						if (jmtl["diffuseTexture"].contains("imageSamplerPath")) {
-							std::string samplerPath = projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imageSamplerPath"]);
-							std::fstream samplerFile(samplerPath, std::ios::in);
-							if (samplerFile.is_open()) {
-								if (!nlohmann::json::accept(samplerFile)) {
-									logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
-									return;
-								}
-							}
-							else {
-								logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
-								return;
-							}
-
-							samplerFile = std::fstream(samplerPath, std::ios::in);
-
-							nlohmann::json jsmplr = nlohmann::json::parse(samplerFile);
-
-							ImageToGPU& image = imagesToGPU[jmtl["diffuseTexture"]["imagePath"]];
-							if (jsmplr.contains("minFilter")) {
-								if (jsmplr["minFilter"] == "Nearest") {
-									image.minFilter = ImageToGPU::SamplerFilter::Nearest;
-								}
-								else if (jsmplr["minFilter"] == "Linear") {
-									image.minFilter = ImageToGPU::SamplerFilter::Linear;
-								}
-
-								if (jsmplr["magFilter"] == "Nearest") {
-									image.magFilter = ImageToGPU::SamplerFilter::Nearest;
-								}
-								else if (jsmplr["magFilter"] == "Linear") {
-									image.magFilter = ImageToGPU::SamplerFilter::Linear;
-								}
-
-								if (jsmplr["mipmapFilter"] == "Nearest") {
-									image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
-								}
-								else if (jsmplr["mipmapFilter"] == "Linear") {
-									image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
-								}
-
-								if (jsmplr["addressModeU"] == "Repeat") {
-									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
-								}
-								else if (jsmplr["addressModeU"] == "MirroredRepeat") {
-									image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
-								}
-								else if (jsmplr["addressModeU"] == "ClampToEdge") {
-									image.wrapS = ImageToGPU::SamplerWrap::ClampToEdge;
-								}
-
-								if (jsmplr["addressModeV"] == "Repeat") {
-									image.wrapT = ImageToGPU::SamplerWrap::Repeat;
-								}
-								else if (jsmplr["addressModeV"] == "MirroredRepeat") {
-									image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
-								}
-								else if (jsmplr["addressModeV"] == "ClampToEdge") {
-									image.wrapT = ImageToGPU::SamplerWrap::ClampToEdge;
-								}
-							}
+							primitive.material.diffuseTextureSamplerName = jmtl["diffuseTexture"]["imageSamplerPath"];
+							loadSampler(projectDirectory + "/" + std::string(jmtl["diffuseTexture"]["imageSamplerPath"]), primitive.material.diffuseTextureSamplerName);
 						}
 					}
 					
 					if (jmtl.contains("emissiveTexture")) {
 						if (jmtl["emissiveTexture"].contains("imagePath")) {
-							model.meshes.back().emissiveTexturePath = jmtl["emissiveTexture"]["imagePath"];
-							loadImage(projectDirectory + "/" + std::string(jmtl["emissiveTexture"]["imagePath"]), model.meshes.back().emissiveTexturePath);
+							primitive.material.emissiveTextureName = jmtl["emissiveTexture"]["imagePath"];
+							loadImage(projectDirectory + "/" + std::string(jmtl["emissiveTexture"]["imagePath"]), primitive.material.emissiveTextureName);
 						}
 
 						if (jmtl["emissiveTexture"].contains("imageSamplerPath")) {
-							std::string samplerPath = projectDirectory + "/" + std::string(jmtl["emissiveTexture"]["imageSamplerPath"]);
-							std::fstream samplerFile(samplerPath, std::ios::in);
-							if (samplerFile.is_open()) {
-								if (!nlohmann::json::accept(samplerFile)) {
-									logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
-									return;
-								}
-							}
-							else {
-								logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
-								return;
-							}
-
-							samplerFile = std::fstream(samplerPath, std::ios::in);
-
-							nlohmann::json jsmplr = nlohmann::json::parse(samplerFile);
-
-							ImageToGPU& image = imagesToGPU[jmtl["emissiveTexture"]["imagePath"]];
-							if (jsmplr.contains("minFilter")) {
-								if (jsmplr["minFilter"] == "Nearest") {
-									image.minFilter = ImageToGPU::SamplerFilter::Nearest;
-								}
-								else if (jsmplr["minFilter"] == "Linear") {
-									image.minFilter = ImageToGPU::SamplerFilter::Linear;
-								}
-
-								if (jsmplr["magFilter"] == "Nearest") {
-									image.magFilter = ImageToGPU::SamplerFilter::Nearest;
-								}
-								else if (jsmplr["magFilter"] == "Linear") {
-									image.magFilter = ImageToGPU::SamplerFilter::Linear;
-								}
-
-								if (jsmplr["addressModeU"] == "Repeat") {
-									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
-								}
-								else if (jsmplr["addressModeU"] == "MirroredRepeat") {
-									image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
-								}
-								else if (jsmplr["addressModeU"] == "ClampToEdge") {
-									image.wrapS = ImageToGPU::SamplerWrap::ClampToEdge;
-								}
-
-								if (jsmplr["addressModeV"] == "Repeat") {
-									image.wrapT = ImageToGPU::SamplerWrap::Repeat;
-								}
-								else if (jsmplr["addressModeV"] == "MirroredRepeat") {
-									image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
-								}
-								else if (jsmplr["addressModeV"] == "ClampToEdge") {
-									image.wrapT = ImageToGPU::SamplerWrap::ClampToEdge;
-								}
-							}
+							primitive.material.emissiveTextureSamplerName = jmtl["emissiveTexture"]["imageSamplerPath"];
+							loadSampler(projectDirectory + "/" + std::string(jmtl["emissiveTexture"]["imageSamplerPath"]), primitive.material.emissiveTextureSamplerName);
 						}
 					}
 				}
 			}
+
+			if (!primitive.mesh.vertices.empty()) {
+				model.primitives.push_back(primitive);
+			}
 		}
 	}
 
-	if (!model.meshes.empty()) {
+	if (!model.primitives.empty()) {
 		modelsToGPU[name] = model;
 	}
 }
@@ -455,6 +408,71 @@ void RendererResourceManager::loadNtim(const std::string& imagePath, const std::
 	}
 }
 
+void RendererResourceManager::loadNtsp(const std::string& samplerPath, const std::string& name) {
+	SamplerToGPU sampler;
+
+	std::fstream samplerFile(samplerPath, std::ios::in);
+	if (samplerFile.is_open()) {
+		if (!nlohmann::json::accept(samplerFile)) {
+			logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
+			return;
+		}
+	}
+	else {
+		logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
+		return;
+	}
+
+	samplerFile = std::fstream(samplerPath, std::ios::in);
+
+	nlohmann::json jsmplr = nlohmann::json::parse(samplerFile);
+
+	if (jsmplr.contains("minFilter")) {
+		if (jsmplr["minFilter"] == "Nearest") {
+			sampler.minFilter = SamplerToGPU::Filter::Nearest;
+		}
+		else if (jsmplr["minFilter"] == "Linear") {
+			sampler.minFilter = SamplerToGPU::Filter::Linear;
+		}
+
+		if (jsmplr["magFilter"] == "Nearest") {
+			sampler.magFilter = SamplerToGPU::Filter::Nearest;
+		}
+		else if (jsmplr["magFilter"] == "Linear") {
+			sampler.magFilter = SamplerToGPU::Filter::Linear;
+		}
+
+		if (jsmplr["mipmapFilter"] == "Nearest") {
+			sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
+		}
+		else if (jsmplr["mipmapFilter"] == "Linear") {
+			sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
+		}
+
+		if (jsmplr["addressModeU"] == "Repeat") {
+			sampler.wrapS = SamplerToGPU::Wrap::Repeat;
+		}
+		else if (jsmplr["addressModeU"] == "MirroredRepeat") {
+			sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
+		}
+		else if (jsmplr["addressModeU"] == "ClampToEdge") {
+			sampler.wrapS = SamplerToGPU::Wrap::ClampToEdge;
+		}
+
+		if (jsmplr["addressModeV"] == "Repeat") {
+			sampler.wrapT = SamplerToGPU::Wrap::Repeat;
+		}
+		else if (jsmplr["addressModeV"] == "MirroredRepeat") {
+			sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
+		}
+		else if (jsmplr["addressModeV"] == "ClampToEdge") {
+			sampler.wrapT = SamplerToGPU::Wrap::ClampToEdge;
+		}
+	}
+
+	samplersToGPU[name] = sampler;
+}
+
 void RendererResourceManager::loadGltf(const std::string& modelPath, const std::string& name) {
 	ModelToGPU model;
 	cgltf_options options = {};
@@ -477,7 +495,7 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, const std::
 		cgltf_free(data);
 	}
 
-	if (!model.meshes.empty()) {
+	if (!model.primitives.empty()) {
 		modelsToGPU[name] = model;
 	}
 }
@@ -506,7 +524,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 		for (size_t i = 0; i < nodeMesh->primitives_count; i++) {
 			cgltf_primitive nodeMeshPrimitive = nodeMesh->primitives[i];
 
-			MeshToGPU primitive;
+			PrimitiveToGPU primitive;
 
 			float* position = nullptr;
 			float* normal = nullptr;
@@ -545,7 +563,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				}
 			}
 			size_t vertexCount = positionCount;
-			primitive.vertices.resize(vertexCount);
+			primitive.mesh.vertices.resize(vertexCount);
 
 			size_t positionCursor = 0;
 			size_t normalCursor = 0;
@@ -553,32 +571,32 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 
 			for (size_t j = 0; j < vertexCount; j++) {
 				nml::vec3 vertexPosition = nml::vec3(modelMatrix * nml::vec4(nml::vec3(position + positionCursor), 1.0f));
-				primitive.vertices[j].position = vertexPosition;
+				primitive.mesh.vertices[j].position = vertexPosition;
 				positionCursor += (positionStride / sizeof(float));
 
 				if (normalCount != 0) {
 					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(normal + normalCursor), 0.0f)));
-					primitive.vertices[j].normal = vertexNormal;
+					primitive.mesh.vertices[j].normal = vertexNormal;
 					normalCursor += (normalStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[j].normal = nml::vec3(0.0f, 0.0f, 0.0f);
+					primitive.mesh.vertices[j].normal = nml::vec3(0.0f, 0.0f, 0.0f);
 				}
 
 				if (uvCount != 0) {
-					primitive.vertices[j].uv.x = *(uv + uvCursor);
-					primitive.vertices[j].uv.y = *(uv + uvCursor + 1);
+					primitive.mesh.vertices[j].uv.x = *(uv + uvCursor);
+					primitive.mesh.vertices[j].uv.y = *(uv + uvCursor + 1);
 					uvCursor += (uvStride / sizeof(float));
 				}
 				else {
-					primitive.vertices[j].uv = nml::vec2(0.0f, 0.0f);
+					primitive.mesh.vertices[j].uv = nml::vec2(0.0f, 0.0f);
 				}
 			}
 
 			// Indices
 			cgltf_accessor* accessor = nodeMeshPrimitive.indices;
 			if (accessor != NULL) {
-				primitive.indices.reserve(accessor->count);
+				primitive.mesh.indices.reserve(accessor->count);
 				cgltf_buffer_view* bufferView = accessor->buffer_view;
 				cgltf_component_type componentType = accessor->component_type;
 				std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data);
@@ -587,7 +605,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				{
 					int8_t* index = reinterpret_cast<int8_t*>(buffer + accessor->offset + bufferView->offset);
 					for (size_t j = 0; j < accessor->count; j++) {
-						primitive.indices.push_back(static_cast<uint32_t>(index[j]));
+						primitive.mesh.indices.push_back(static_cast<uint32_t>(index[j]));
 					}
 					break;
 				}
@@ -596,7 +614,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				{
 					uint8_t* index = reinterpret_cast<uint8_t*>(buffer + accessor->offset + bufferView->offset);
 					for (size_t j = 0; j < accessor->count; j++) {
-						primitive.indices.push_back(static_cast<uint32_t>(index[j]));
+						primitive.mesh.indices.push_back(static_cast<uint32_t>(index[j]));
 					}
 					break;
 				}
@@ -605,7 +623,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				{
 					int16_t* index = reinterpret_cast<int16_t*>(buffer + accessor->offset + bufferView->offset);
 					for (size_t j = 0; j < accessor->count; j++) {
-						primitive.indices.push_back(static_cast<uint32_t>(index[j]));
+						primitive.mesh.indices.push_back(static_cast<uint32_t>(index[j]));
 					}
 					break;
 				}
@@ -614,7 +632,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				{
 					uint16_t* index = reinterpret_cast<uint16_t*>(buffer + accessor->offset + bufferView->offset);
 					for (size_t j = 0; j < accessor->count; j++) {
-						primitive.indices.push_back(static_cast<uint32_t>(index[j]));
+						primitive.mesh.indices.push_back(static_cast<uint32_t>(index[j]));
 					}
 					break;
 				}
@@ -622,7 +640,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				case cgltf_component_type_r_32u:
 				{
 					uint32_t* index = reinterpret_cast<uint32_t*>(buffer + accessor->offset + bufferView->offset);
-					std::copy(index, index + accessor->count, std::back_inserter(primitive.indices));
+					std::copy(index, index + accessor->count, std::back_inserter(primitive.mesh.indices));
 					break;
 				}
 
@@ -630,7 +648,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				{
 					float* index = reinterpret_cast<float*>(buffer + accessor->offset + bufferView->offset);
 					for (size_t j = 0; j < accessor->count; j++) {
-						primitive.indices.push_back(static_cast<uint32_t>(index[j]));
+						primitive.mesh.indices.push_back(static_cast<uint32_t>(index[j]));
 					}
 					break;
 				}
@@ -641,8 +659,8 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 			}
 			else {
 				// Calculate indices
-				primitive.indices.resize(primitive.vertices.size());
-				std::iota(primitive.indices.begin(), primitive.indices.end(), 0);
+				primitive.mesh.indices.resize(primitive.mesh.vertices.size());
+				std::iota(primitive.mesh.indices.begin(), primitive.mesh.indices.end(), 0);
 			}
 
 			// Material
@@ -685,45 +703,47 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 								imageURI = modelDirectory + "/" + imageURI;
 							}
 
-							ImageToGPU& image = imagesToGPU[imageURI];
+							SamplerToGPU sampler;
 							if (baseColorTexture->sampler != NULL) {
 								if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
-									image.minFilter = ImageToGPU::SamplerFilter::Nearest;
+									sampler.minFilter = SamplerToGPU::Filter::Nearest;
 								}
 								else {
-									image.minFilter = ImageToGPU::SamplerFilter::Linear;
+									sampler.minFilter = SamplerToGPU::Filter::Linear;
 								}
 
 								if ((baseColorTexture->sampler->mag_filter == 9728) || (baseColorTexture->sampler->mag_filter == 9984) || (baseColorTexture->sampler->mag_filter == 9986)) {
-									image.magFilter = ImageToGPU::SamplerFilter::Nearest;
+									sampler.magFilter = SamplerToGPU::Filter::Nearest;
 								}
 								else {
-									image.magFilter = ImageToGPU::SamplerFilter::Linear;
+									sampler.magFilter = SamplerToGPU::Filter::Linear;
 								}
 
 								if ((baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9985)) {
-									image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
+									sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
 								}
 								else {
-									image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
+									sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
 								}
 
 								if (baseColorTexture->sampler->wrap_s == 10497) {
-									image.wrapS = ImageToGPU::SamplerWrap::Repeat;
+									sampler.wrapS = SamplerToGPU::Wrap::Repeat;
 								}
 								else if (baseColorTexture->sampler->wrap_s == 33648) {
-									image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
+									sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
 								}
 
 								if (baseColorTexture->sampler->wrap_t == 10497) {
-									image.wrapT = ImageToGPU::SamplerWrap::Repeat;
+									sampler.wrapT = SamplerToGPU::Wrap::Repeat;
 								}
 								else if (baseColorTexture->sampler->wrap_t == 33648) {
-									image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
+									sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 								}
 							}
+							samplersToGPU[sampler.toString()] = sampler;
 
-							primitive.diffuseTexturePath = imageURI;
+							primitive.material.diffuseTextureName = imageURI;
+							primitive.material.diffuseTextureSamplerName = sampler.toString();
 						}
 					}
 					else if (baseColorFactor != NULL) {
@@ -742,7 +762,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 							imagesToGPU[mapKey] = image;
 						}
 
-						primitive.diffuseTexturePath = mapKey;
+						primitive.material.diffuseTextureName = mapKey;
 					}
 				}
 
@@ -780,45 +800,47 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 							imageURI = modelDirectory + "/" + imageURI;
 						}
 
-						ImageToGPU& image = imagesToGPU[imageURI];
+						SamplerToGPU sampler;
 						if (emissiveTexture->sampler != NULL) {
 							if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
-								image.minFilter = ImageToGPU::SamplerFilter::Nearest;
+								sampler.minFilter = SamplerToGPU::Filter::Nearest;
 							}
 							else {
-								image.minFilter = ImageToGPU::SamplerFilter::Linear;
+								sampler.minFilter = SamplerToGPU::Filter::Linear;
 							}
 
 							if ((emissiveTexture->sampler->mag_filter == 9728) || (emissiveTexture->sampler->mag_filter == 9984) || (emissiveTexture->sampler->mag_filter == 9986)) {
-								image.magFilter = ImageToGPU::SamplerFilter::Nearest;
+								sampler.magFilter = SamplerToGPU::Filter::Nearest;
 							}
 							else {
-								image.magFilter = ImageToGPU::SamplerFilter::Linear;
+								sampler.magFilter = SamplerToGPU::Filter::Linear;
 							}
 
 							if ((emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9985)) {
-								image.mipmapFilter = ImageToGPU::SamplerFilter::Nearest;
+								sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
 							}
 							else {
-								image.mipmapFilter = ImageToGPU::SamplerFilter::Linear;
+								sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
 							}
 
 							if (emissiveTexture->sampler->wrap_s == 10497) {
-								image.wrapS = ImageToGPU::SamplerWrap::Repeat;
+								sampler.wrapS = SamplerToGPU::Wrap::Repeat;
 							}
 							else if (emissiveTexture->sampler->wrap_s == 33648) {
-								image.wrapS = ImageToGPU::SamplerWrap::MirroredRepeat;
+								sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
 							}
 
 							if (emissiveTexture->sampler->wrap_t == 10497) {
-								image.wrapT = ImageToGPU::SamplerWrap::Repeat;
+								sampler.wrapT = SamplerToGPU::Wrap::Repeat;
 							}
 							else if (emissiveTexture->sampler->wrap_t == 33648) {
-								image.wrapT = ImageToGPU::SamplerWrap::MirroredRepeat;
+								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 							}
 						}
+						samplersToGPU[sampler.toString()] = sampler;
 
-						primitive.emissiveTexturePath = imageURI;
+						primitive.material.emissiveTextureName = imageURI;
+						primitive.material.emissiveTextureSamplerName = sampler.toString();
 					}
 				}
 				else if (emissiveFactor != NULL) {
@@ -837,16 +859,16 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 						imagesToGPU[mapKey] = image;
 					}
 
-					primitive.emissiveTexturePath = mapKey;
+					primitive.material.emissiveTextureName = mapKey;
 				}
 
 				// Alpha cutoff
 				if (primitiveMaterial->alpha_mode == cgltf_alpha_mode_mask) {
-					primitive.alphaCutoff = primitiveMaterial->alpha_cutoff;
+					primitive.material.alphaCutoff = primitiveMaterial->alpha_cutoff;
 				}
 			}
 
-			rendererModel.meshes.push_back(primitive);
+			rendererModel.primitives.push_back(primitive);
 		}
 	}
 

@@ -2,7 +2,7 @@
 #include "../common/global_info.h"
 #include "../../external/nml/include/nml.h"
 #include "renderer_camera.h"
-#include "renderer_model.h"
+#include "renderer_resources.h"
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLExtraFunctions>
