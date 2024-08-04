@@ -13,7 +13,7 @@ class Logger;
 
 class RendererResourceManager {
 public:
-	struct MeshToGPU {
+	struct Mesh {
 		struct Vertex {
 			nml::vec3 position;
 			nml::vec3 normal;
@@ -23,6 +23,7 @@ public:
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 
+		bool collidersCalculated = false;
 		OBB obb;
 		Sphere sphere;
 		Capsule capsule;
@@ -79,7 +80,7 @@ public:
 		Wrap wrapT = Wrap::ClampToEdge;
 	};
 
-	struct MaterialToGPU {
+	struct Material {
 		std::string diffuseTextureName;
 		std::string diffuseTextureSamplerName;
 		std::string emissiveTextureName;
@@ -87,13 +88,15 @@ public:
 		float alphaCutoff = 0.0f;
 	};
 
-	struct PrimitiveToGPU {
-		MeshToGPU mesh;
-		MaterialToGPU material;
+	struct ModelPrimitive {
+		std::string name = "";
+		nml::mat4 modelMatrix = nml::mat4::identity();
+		Mesh mesh;
+		Material material;
 	};
 
-	struct ModelToGPU {
-		std::vector<PrimitiveToGPU> primitives;
+	struct Model {
+		std::vector<ModelPrimitive> primitives;
 	};
 
 	struct ImageToGPU {
@@ -111,25 +114,29 @@ public:
 	void loadImage(const std::string& imagePath, const std::string& name);
 	void loadSampler(const std::string& samplerPath, const std::string& name);
 
+	void loadMeshColliders(Mesh& mesh);
+
 private:
-	void loadNtmd(const std::string& modelPath, const std::string& name);
-	MeshToGPU loadNtmh(const std::string& meshPath);
-	void loadNtim(const std::string& imagePath, const std::string& name);
-	void loadNtsp(const std::string& samplerPath, const std::string& name);
-	void loadGltf(const std::string& modelPath, const std::string& name);
-	void loadGltfNode(const std::string& modelPath, ModelToGPU& rendererModel, nml::mat4 modelMatrix, cgltf_node* node);
-	void loadImageStb(const std::string& imagePath, const std::string& name);
+	void loadNtmd(const std::string& modelPath, Model& model);
+	Mesh loadNtmh(const std::string& meshPath);
+	void loadNtim(const std::string& imagePath, ImageToGPU& image);
+	void loadNtsp(const std::string& samplerPath, SamplerToGPU& sampler);
+	void loadGltf(const std::string& modelPath, Model& model);
+	void loadGltfNode(const std::string& modelPath, Model& rendererModel, nml::mat4 modelMatrix, cgltf_node* node);
+	void loadImageStb(const std::string& imagePath, ImageToGPU& image);
 	void loadImageFromMemory(void* data, size_t size, const std::string& name);
 
 public:
-	std::unordered_map<std::string, RendererModel> models;
+	std::unordered_map<std::string, RendererModel> rendererModels;
 	std::unordered_map<std::string, uint32_t> textures;
 	std::unordered_map<std::string, RendererSampler> samplers;
 
-	std::unordered_map<std::string, ModelToGPU> modelsToGPU;
+	std::unordered_map<std::string, Model> models;
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
 	std::unordered_map<std::string, SamplerToGPU> materialsToGPU;
 	std::unordered_map<std::string, SamplerToGPU> samplersToGPU;
+
+	std::vector<std::string> modelsToLoad;
 
 	std::unordered_map<std::string, std::filesystem::file_time_type> resourceLastWriteTime;
 

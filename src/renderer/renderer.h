@@ -11,6 +11,9 @@
 #include <QWheelEvent>
 #include <QFocusEvent>
 #include <QResizeEvent>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <optional>
 
 class Renderer : public QOpenGLWidget {
@@ -56,6 +59,9 @@ private slots:
 	void wheelEvent(QWheelEvent* event);
 	void focusOutEvent(QFocusEvent* event);
 	void resizeEvent(QResizeEvent* event);
+	void dragEnterEvent(QDragEnterEvent* event);
+	void dragMoveEvent(QDragMoveEvent* event);
+	void dropEvent(QDropEvent* event);
 
 private:
 	GlobalInfo& m_globalInfo;

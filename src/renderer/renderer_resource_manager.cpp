@@ -46,14 +46,15 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 	}
 
+	Model model;
 	size_t lastDot = modelPath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = modelPath.substr(lastDot + 1);
 		if ((extension == "gltf") || (extension == "glb")) {
-			loadGltf(modelPath, name);
+			loadGltf(modelPath, model);
 		}
 		else if (extension == "ntmd") {
-			loadNtmd(modelPath, name);
+			loadNtmd(modelPath, model);
 		}
 		else {
 			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported by the editor.");
@@ -62,121 +63,10 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 	}
 
 	resourceLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
-	
-	// Calculate OBB, Sphere and Capsule
-	auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
-		return nml::to_string(a) < nml::to_string(b);
-		};
 
-	if (modelsToGPU.find(name) != modelsToGPU.end()) {
-		AABB aabb;
-		ModelToGPU& model = modelsToGPU[name];
-		for (PrimitiveToGPU& primitive : model.primitives) {
-			MeshToGPU& mesh = primitive.mesh;
-
-			std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
-
-			// AABB
-			for (size_t j = 0; j < mesh.vertices.size(); j++) {
-				uniquePositions.insert(mesh.vertices[j].position);
-
-				if (mesh.vertices[j].position.x < aabb.min.x) {
-					aabb.min.x = mesh.vertices[j].position.x;
-				}
-				if (mesh.vertices[j].position.y < aabb.min.y) {
-					aabb.min.y = mesh.vertices[j].position.y;
-				}
-				if (mesh.vertices[j].position.z < aabb.min.z) {
-					aabb.min.z = mesh.vertices[j].position.z;
-				}
-
-				if (mesh.vertices[j].position.x > aabb.max.x) {
-					aabb.max.x = mesh.vertices[j].position.x;
-				}
-				if (mesh.vertices[j].position.y > aabb.max.y) {
-					aabb.max.y = mesh.vertices[j].position.y;
-				}
-				if (mesh.vertices[j].position.z > aabb.max.z) {
-					aabb.max.z = mesh.vertices[j].position.z;
-				}
-			}
-
-			// Sphere
-			mesh.sphere.center = (aabb.min + aabb.max) / 2.0f;
-			mesh.sphere.radius = (mesh.sphere.center - aabb.min).length();
-
-			float size = static_cast<float>(uniquePositions.size());
-
-			const nml::vec3 means = std::reduce(uniquePositions.begin(), uniquePositions.end(), nml::vec3(0.0f, 0.0f, 0.0f), [](nml::vec3 acc, const nml::vec3& val) { return acc + val; }) / size;
-
-			nml::mat3 covarianceMatrix;
-			for (const nml::vec3& position : uniquePositions) {
-				covarianceMatrix.x.x += (position.x - means.x) * (position.x - means.x);
-				covarianceMatrix.y.y += (position.y - means.y) * (position.y - means.y);
-				covarianceMatrix.z.z += (position.z - means.z) * (position.z - means.z);
-				covarianceMatrix.x.y += (position.x - means.x) * (position.y - means.y);
-				covarianceMatrix.x.z += (position.x - means.x) * (position.z - means.z);
-				covarianceMatrix.y.z += (position.y - means.y) * (position.z - means.z);
-			}
-			covarianceMatrix.x.x /= size;
-			covarianceMatrix.y.y /= size;
-			covarianceMatrix.z.z /= size;
-			covarianceMatrix.x.y /= size;
-			covarianceMatrix.x.z /= size;
-			covarianceMatrix.y.z /= size;
-
-			covarianceMatrix.y.x = covarianceMatrix.x.y;
-			covarianceMatrix.z.x = covarianceMatrix.x.z;
-			covarianceMatrix.z.y = covarianceMatrix.y.z;
-
-			std::array<std::pair<float, nml::vec3>, 3> eigen = covarianceMatrix.eigen();
-			std::sort(eigen.begin(), eigen.end(), [](const std::pair<float, nml::vec3>& a, const std::pair<float, nml::vec3>& b) {
-				return a.first > b.first;
-				});
-
-			mesh.obb.center = means;
-			mesh.capsule.radius = 0.0f;
-
-			float segmentLengthMax = 0.0f;
-			for (const nml::vec3& position : uniquePositions) {
-				const nml::vec3 positionMinusCenter = position - mesh.obb.center;
-
-				// OBB
-				const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
-				if (extentX > mesh.obb.halfExtent.x) {
-					mesh.obb.halfExtent.x = extentX;
-				}
-
-				const float extentY = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
-				if (extentY > mesh.obb.halfExtent.y) {
-					mesh.obb.halfExtent.y = extentY;
-				}
-
-				const float extentZ = std::abs(nml::dot(eigen[2].second, positionMinusCenter));
-				if (extentZ > mesh.obb.halfExtent.z) {
-					mesh.obb.halfExtent.z = extentZ;
-				}
-
-				// Capsule
-				const float segmentLength = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
-				if (segmentLength > segmentLengthMax) {
-					segmentLengthMax = segmentLength;
-				}
-
-				const float radius = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
-				if (radius > mesh.capsule.radius) {
-					mesh.capsule.radius = radius;
-				}
-			}
-
-			// OBB
-			nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-			mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
-
-			// Capsule
-			mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
-			mesh.capsule.tip = mesh.obb.center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
-		}
+	if (!model.primitives.empty()) {
+		models[name] = model;
+		modelsToLoad.push_back(name);
 	}
 }
 
@@ -193,18 +83,23 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		}
 	}
 
+	ImageToGPU image;
 	size_t lastDot = imagePath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = imagePath.substr(lastDot + 1);
 		if (extension == "ntim") {
-			loadNtim(imagePath, name);
+			loadNtim(imagePath, image);
 		}
 		else {
-			loadImageStb(imagePath, name);
+			loadImageStb(imagePath, image);
 		}
 	}
 
 	resourceLastWriteTime[imagePath] = std::filesystem::last_write_time(imagePath);
+
+	if (!image.data.empty()) {
+		imagesToGPU[name] = image;
+	}
 }
 
 void RendererResourceManager::loadSampler(const std::string& samplerPath, const std::string& name) {
@@ -220,11 +115,12 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 		}
 	}
 
+	SamplerToGPU sampler;
 	size_t lastDot = samplerPath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = samplerPath.substr(lastDot + 1);
 		if (extension == "ntsp") {
-			loadNtsp(samplerPath, name);
+			loadNtsp(samplerPath, sampler);
 		}
 		else {
 			logger->addLog(LogLevel::Warning, "Sampler file extension \"." + extension + "\" is not supported by the editor.");
@@ -233,11 +129,11 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 	}
 
 	resourceLastWriteTime[samplerPath] = std::filesystem::last_write_time(samplerPath);
+
+	samplersToGPU[name] = sampler;
 }
 
-void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::string& name) {
-	ModelToGPU model;
-
+void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& model) {
 	std::fstream modelFile(modelPath, std::ios::in);
 	if (modelFile.is_open()) {
 		if (!nlohmann::json::accept(modelFile)) {
@@ -256,7 +152,7 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 
 	if (j.contains("primitives")) {
 		for (size_t i = 0; i < j["primitives"].size(); i++) {
-			PrimitiveToGPU primitive;
+			ModelPrimitive primitive;
 			if (j["primitives"][i].contains("meshPath")) {
 				primitive.mesh = loadNtmh(projectDirectory + "/" + std::string(j["primitives"][i]["meshPath"]));
 
@@ -309,14 +205,10 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, const std::
 			}
 		}
 	}
-
-	if (!model.primitives.empty()) {
-		modelsToGPU[name] = model;
-	}
 }
 
-RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::string& meshPath) {
-	MeshToGPU mesh;
+RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::string& meshPath) {
+	Mesh mesh;
 
 	std::fstream meshFile(meshPath, std::ios::in);
 	if (meshFile.is_open()) {
@@ -370,9 +262,7 @@ RendererResourceManager::MeshToGPU RendererResourceManager::loadNtmh(const std::
 	return mesh;
 }
 
-void RendererResourceManager::loadNtim(const std::string& imagePath, const std::string& name) {
-	ImageToGPU image;
-
+void RendererResourceManager::loadNtim(const std::string& imagePath, ImageToGPU& image) {
 	std::fstream imageFile(imagePath, std::ios::in);
 	if (imageFile.is_open()) {
 		if (!nlohmann::json::accept(imageFile)) {
@@ -402,15 +292,9 @@ void RendererResourceManager::loadNtim(const std::string& imagePath, const std::
 			image.data.push_back(static_cast<uint8_t>(j["data"][i]));
 		}
 	}
-
-	if (!image.data.empty()) {
-		imagesToGPU[name] = image;
-	}
 }
 
-void RendererResourceManager::loadNtsp(const std::string& samplerPath, const std::string& name) {
-	SamplerToGPU sampler;
-
+void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerToGPU& sampler) {
 	std::fstream samplerFile(samplerPath, std::ios::in);
 	if (samplerFile.is_open()) {
 		if (!nlohmann::json::accept(samplerFile)) {
@@ -469,12 +353,9 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, const std
 			sampler.wrapT = SamplerToGPU::Wrap::ClampToEdge;
 		}
 	}
-
-	samplersToGPU[name] = sampler;
 }
 
-void RendererResourceManager::loadGltf(const std::string& modelPath, const std::string& name) {
-	ModelToGPU model;
+void RendererResourceManager::loadGltf(const std::string& modelPath, Model& model) {
 	cgltf_options options = {};
 	cgltf_data* data = NULL;
 	cgltf_result result = cgltf_parse_file(&options, modelPath.c_str(), &data);
@@ -494,13 +375,9 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, const std::
 
 		cgltf_free(data);
 	}
-
-	if (!model.primitives.empty()) {
-		modelsToGPU[name] = model;
-	}
 }
 
-void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelToGPU& rendererModel, nml::mat4 modelMatrix, cgltf_node* node) {
+void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& rendererModel, nml::mat4 modelMatrix, cgltf_node* node) {
 	nml::mat4 nodeMatrix = nml::mat4::identity();
 	if (node->has_matrix) {
 		nodeMatrix = nml::mat4(node->matrix);
@@ -524,7 +401,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 		for (size_t i = 0; i < nodeMesh->primitives_count; i++) {
 			cgltf_primitive nodeMeshPrimitive = nodeMesh->primitives[i];
 
-			PrimitiveToGPU primitive;
+			ModelPrimitive primitive;
 
 			float* position = nullptr;
 			float* normal = nullptr;
@@ -570,12 +447,12 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 			size_t uvCursor = 0;
 
 			for (size_t j = 0; j < vertexCount; j++) {
-				nml::vec3 vertexPosition = nml::vec3(modelMatrix * nml::vec4(nml::vec3(position + positionCursor), 1.0f));
+				nml::vec3 vertexPosition = nml::vec3(position + positionCursor);
 				primitive.mesh.vertices[j].position = vertexPosition;
 				positionCursor += (positionStride / sizeof(float));
 
 				if (normalCount != 0) {
-					nml::vec3 vertexNormal = nml::normalize(nml::vec3(nml::transpose(nml::inverse(modelMatrix)) * nml::vec4(nml::vec3(normal + normalCursor), 0.0f)));
+					nml::vec3 vertexNormal = nml::vec3(normal + normalCursor);
 					primitive.mesh.vertices[j].normal = vertexNormal;
 					normalCursor += (normalStride / sizeof(float));
 				}
@@ -868,6 +745,12 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 				}
 			}
 
+			if (node->name) {
+				primitive.name = node->name;
+			}
+
+			primitive.modelMatrix = modelMatrix;
+
 			rendererModel.primitives.push_back(primitive);
 		}
 	}
@@ -877,7 +760,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, ModelTo
 	}
 }
 
-void RendererResourceManager::loadImageStb(const std::string& imagePath, const std::string& name) {
+void RendererResourceManager::loadImageStb(const std::string& imagePath, ImageToGPU& image) {
 	int width;
 	int height;
 	int texChannels;
@@ -888,12 +771,10 @@ void RendererResourceManager::loadImageStb(const std::string& imagePath, const s
 		return;
 	}
 
-	ImageToGPU image;
 	image.width = static_cast<uint32_t>(width);
 	image.height = static_cast<uint32_t>(height);
 	image.data.resize(width * height * 4);
 	std::copy(pixels, pixels + (width * height * 4), image.data.begin());
-	imagesToGPU[name] = image;
 
 	stbi_image_free(pixels);
 }
@@ -917,4 +798,117 @@ void RendererResourceManager::loadImageFromMemory(void* data, size_t size, const
 	imagesToGPU[name] = image;
 
 	stbi_image_free(pixels);
+}
+
+void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
+	// Calculate OBB, Sphere and Capsule
+	auto uniquePositionsCmp = [](const nml::vec3& a, const nml::vec3& b) {
+		return nml::to_string(a) < nml::to_string(b);
+		};
+
+	std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
+
+	// AABB
+	AABB aabb;
+	for (size_t j = 0; j < mesh.vertices.size(); j++) {
+		uniquePositions.insert(mesh.vertices[j].position);
+
+		if (mesh.vertices[j].position.x < aabb.min.x) {
+			aabb.min.x = mesh.vertices[j].position.x;
+		}
+		if (mesh.vertices[j].position.y < aabb.min.y) {
+			aabb.min.y = mesh.vertices[j].position.y;
+		}
+		if (mesh.vertices[j].position.z < aabb.min.z) {
+			aabb.min.z = mesh.vertices[j].position.z;
+		}
+
+		if (mesh.vertices[j].position.x > aabb.max.x) {
+			aabb.max.x = mesh.vertices[j].position.x;
+		}
+		if (mesh.vertices[j].position.y > aabb.max.y) {
+			aabb.max.y = mesh.vertices[j].position.y;
+		}
+		if (mesh.vertices[j].position.z > aabb.max.z) {
+			aabb.max.z = mesh.vertices[j].position.z;
+		}
+	}
+
+	// Sphere
+	mesh.sphere.center = (aabb.min + aabb.max) / 2.0f;
+	mesh.sphere.radius = (mesh.sphere.center - aabb.min).length();
+
+	float size = static_cast<float>(uniquePositions.size());
+
+	const nml::vec3 means = std::reduce(uniquePositions.begin(), uniquePositions.end(), nml::vec3(0.0f, 0.0f, 0.0f), [](nml::vec3 acc, const nml::vec3& val) { return acc + val; }) / size;
+
+	nml::mat3 covarianceMatrix;
+	for (const nml::vec3& position : uniquePositions) {
+		covarianceMatrix.x.x += (position.x - means.x) * (position.x - means.x);
+		covarianceMatrix.y.y += (position.y - means.y) * (position.y - means.y);
+		covarianceMatrix.z.z += (position.z - means.z) * (position.z - means.z);
+		covarianceMatrix.x.y += (position.x - means.x) * (position.y - means.y);
+		covarianceMatrix.x.z += (position.x - means.x) * (position.z - means.z);
+		covarianceMatrix.y.z += (position.y - means.y) * (position.z - means.z);
+	}
+	covarianceMatrix.x.x /= size;
+	covarianceMatrix.y.y /= size;
+	covarianceMatrix.z.z /= size;
+	covarianceMatrix.x.y /= size;
+	covarianceMatrix.x.z /= size;
+	covarianceMatrix.y.z /= size;
+
+	covarianceMatrix.y.x = covarianceMatrix.x.y;
+	covarianceMatrix.z.x = covarianceMatrix.x.z;
+	covarianceMatrix.z.y = covarianceMatrix.y.z;
+
+	std::array<std::pair<float, nml::vec3>, 3> eigen = covarianceMatrix.eigen();
+	std::sort(eigen.begin(), eigen.end(), [](const std::pair<float, nml::vec3>& a, const std::pair<float, nml::vec3>& b) {
+		return a.first > b.first;
+		});
+
+	mesh.obb.center = means;
+	mesh.capsule.radius = 0.0f;
+
+	float segmentLengthMax = 0.0f;
+	for (const nml::vec3& position : uniquePositions) {
+		const nml::vec3 positionMinusCenter = position - mesh.obb.center;
+
+		// OBB
+		const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
+		if (extentX > mesh.obb.halfExtent.x) {
+			mesh.obb.halfExtent.x = extentX;
+		}
+
+		const float extentY = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
+		if (extentY > mesh.obb.halfExtent.y) {
+			mesh.obb.halfExtent.y = extentY;
+		}
+
+		const float extentZ = std::abs(nml::dot(eigen[2].second, positionMinusCenter));
+		if (extentZ > mesh.obb.halfExtent.z) {
+			mesh.obb.halfExtent.z = extentZ;
+		}
+
+		// Capsule
+		const float segmentLength = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
+		if (segmentLength > segmentLengthMax) {
+			segmentLengthMax = segmentLength;
+		}
+
+		const float radius = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
+		if (radius > mesh.capsule.radius) {
+			mesh.capsule.radius = radius;
+		}
+	}
+
+	// OBB
+	nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
+
+	// Capsule
+	mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+	mesh.capsule.tip = mesh.obb.center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+
+	mesh.collidersCalculated = true;
 }

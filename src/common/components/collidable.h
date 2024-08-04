@@ -14,26 +14,22 @@ struct Collidable : public Component {
 	nml::vec3 base = nml::vec3(0.0f, 0.0f, 0.0f);
 	nml::vec3 tip = nml::vec3(0.0f, 0.5f, 0.0f);
 
-	bool fromRenderable = false;
-
 	nlohmann::json toJson() const {
 		nlohmann::json j;
 		j["type"] = type;
-		if (!fromRenderable) {
-			if ((type == "Box") || (type == "Sphere")) {
-				j["center"] = { center.x, center.y, center.z };
-			}
-			if ((type == "Sphere") || (type == "Capsule")) {
-				j["radius"] = radius;
-			}
-			if (type == "Box") {
-				j["halfExtent"] = { halfExtent.x, halfExtent.y, halfExtent.z };
-				j["rotation"] = { rotation.x, rotation.y, rotation.z };
-			}
-			if (type == "Capsule") {
-				j["base"] = { base.x, base.y, base.z };
-				j["tip"] = { tip.x, tip.y, tip.z };
-			}
+		if ((type == "Box") || (type == "Sphere")) {
+			j["center"] = { center.x, center.y, center.z };
+		}
+		if ((type == "Sphere") || (type == "Capsule")) {
+			j["radius"] = radius;
+		}
+		if (type == "Box") {
+			j["halfExtent"] = { halfExtent.x, halfExtent.y, halfExtent.z };
+			j["rotation"] = { rotation.x, rotation.y, rotation.z };
+		}
+		if (type == "Capsule") {
+			j["base"] = { base.x, base.y, base.z };
+			j["tip"] = { tip.x, tip.y, tip.z };
 		}
 
 		return j;
@@ -71,22 +67,6 @@ struct Collidable : public Component {
 			collidable.tip.x = j["tip"][0];
 			collidable.tip.y = j["tip"][1];
 			collidable.tip.z = j["tip"][2];
-		}
-
-		if (collidable.type == "Box") {
-			if (!j.contains("center") && !j.contains("halfExtent") && !j.contains("rotation")) {
-				collidable.fromRenderable = true;
-			}
-		}
-		else if (collidable.type == "Sphere") {
-			if (!j.contains("center") && !j.contains("radius")) {
-				collidable.fromRenderable = true;
-			}
-		}
-		else if (collidable.type == "Capsule") {
-			if (!j.contains("radius") && !j.contains("base") && !j.contains("tip")) {
-				collidable.fromRenderable = true;
-			}
 		}
 
 		return collidable;

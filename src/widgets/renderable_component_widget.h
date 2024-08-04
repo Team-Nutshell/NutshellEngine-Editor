@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include "file_selector_widget.h"
+#include "combo_box_widget.h"
 #include <QWidget>
 
 class RenderableComponentWidget : public QWidget {
@@ -17,10 +18,12 @@ private slots:
 	void onRemoveEntityRenderable(EntityID entityID);
 	void onChangeEntityRenderable(EntityID entityID, const Renderable& renderable);
 	void onStringUpdated(const std::string& string);
+	void onElementUpdated(const std::string& element);
 
 private:
 	GlobalInfo& m_globalInfo;
 
 public:
 	FileSelectorWidget* modelPathWidget;
+	ComboBoxWidget* primitiveIndexWidget;
 };

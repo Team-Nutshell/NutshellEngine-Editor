@@ -78,6 +78,7 @@ set(UNDO_COMMANDS_SOURCES
 	src/undo_commands/change_entity_persistence_command.cpp
 	src/undo_commands/clear_scene_command.cpp
 	src/undo_commands/copy_entity_command.cpp
+	src/undo_commands/create_entities_from_model_command.cpp
 	src/undo_commands/create_entity_command.cpp
 	src/undo_commands/destroy_entity_command.cpp
 	src/undo_commands/open_scene_command.cpp
@@ -89,6 +90,7 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/change_entity_persistence_command.h
 	src/undo_commands/clear_scene_command.h
 	src/undo_commands/copy_entity_command.h
+	src/undo_commands/create_entities_from_model_command.h
 	src/undo_commands/create_entity_command.h
 	src/undo_commands/destroy_entity_command.h
 	src/undo_commands/open_scene_command.h
