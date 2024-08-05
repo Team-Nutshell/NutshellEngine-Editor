@@ -9,6 +9,8 @@ class ColorPickerWidget : public QWidget {
 public:
 	ColorPickerWidget(GlobalInfo& globalInfo, const std::string& name, const nml::vec4& defaultColor);
 
+	void updateColor(const nml::vec4& newColor);
+
 signals:
 	void colorChanged(const nml::vec4&);
 

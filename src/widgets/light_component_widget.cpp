@@ -40,14 +40,7 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 		const QSignalBlocker signalBlocker(typeWidget->comboBox);
 		typeWidget->comboBox->setCurrentText(QString::fromStdString(light.type));
 	}
-	colorWidget->colorButton->setText("(" + QString::number(light.color.x, 'f', 2) + ", " + QString::number(light.color.y, 'f', 2) + ", " + QString::number(light.color.z, 'f', 2) + ", 1.00)");
-	QPalette colorButtonPalette = colorWidget->colorButton->palette();
-	colorButtonPalette.setColor(QPalette::ColorRole::Button, QColor::fromRgbF(light.color.x, light.color.y, light.color.z));
-	colorButtonPalette.setColor(QPalette::ColorRole::ButtonText, QColor::fromRgbF(1.0f - std::clamp(light.color.x, 0.0f, 1.0f), 1.0f - std::clamp(light.color.y, 0.0f, 1.0f), 1.0f - std::clamp(light.color.z, 0.0f, 1.0f)));
-	colorWidget->colorButton->setAutoFillBackground(true);
-	colorWidget->colorButton->setPalette(colorButtonPalette);
-	colorWidget->colorButton->update();
-	colorWidget->color = nml::vec4(light.color, 1.0f);
+	colorWidget->updateColor(nml::vec4(light.color, 1.0f));
 	directionWidget->value = light.direction;
 	directionWidget->xLineEdit->setText(QString::number(light.direction.x, 'f', 3));
 	directionWidget->yLineEdit->setText(QString::number(light.direction.y, 'f', 3));
