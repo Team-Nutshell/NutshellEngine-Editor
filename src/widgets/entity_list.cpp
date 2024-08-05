@@ -103,11 +103,6 @@ void EntityList::onItemSelectionChanged() {
 }
 
 void EntityList::keyPressEvent(QKeyEvent* event) {
-	if (event->isAutoRepeat()) {
-		event->accept();
-		return;
-	}
-
 	if (!selectedItems().empty()) {
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(selectedItems()[0]);
 		int currentSelectionIndex = row(entityListItem);
