@@ -30,14 +30,14 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(dynamicFrictionWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(isStaticWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(isAffectedByConstantsWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(lockRotationWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanUpdated);
-	connect(massWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(inertiaWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(restitutionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(staticFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
-	connect(dynamicFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarUpdated);
+	connect(isStaticWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanChanged);
+	connect(isAffectedByConstantsWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanChanged);
+	connect(lockRotationWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanChanged);
+	connect(massWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
+	connect(inertiaWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
+	connect(restitutionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
+	connect(staticFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
+	connect(dynamicFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RigidbodyComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRigidbodySignal, this, &RigidbodyComponentWidget::onAddEntityRigidbody);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onRemoveEntityRigidbody);
@@ -108,7 +108,7 @@ void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const 
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
+void RigidbodyComponentWidget::onBooleanChanged(bool boolean) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
 
 	QObject* senderWidget = sender();
@@ -124,7 +124,7 @@ void RigidbodyComponentWidget::onBooleanUpdated(bool boolean) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));
 }
 
-void RigidbodyComponentWidget::onScalarUpdated(float value) {
+void RigidbodyComponentWidget::onScalarChanged(float value) {
 	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
 
 	QObject* senderWidget = sender();

@@ -17,8 +17,8 @@ private slots:
 	void onAddEntityCamera(EntityID entityID);
 	void onRemoveEntityCamera(EntityID entityID);
 	void onChangeEntityCamera(EntityID entityID, const Camera& camera);
-	void onVec3Updated(const nml::vec3& value);
-	void onScalarUpdated(float value);
+	void onVec3Changed(const nml::vec3& value);
+	void onScalarChanged(float value);
 
 private:
 	GlobalInfo& m_globalInfo;

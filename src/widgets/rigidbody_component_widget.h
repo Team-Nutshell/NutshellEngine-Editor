@@ -17,8 +17,8 @@ private slots:
 	void onAddEntityRigidbody(EntityID entityID);
 	void onRemoveEntityRigidbody(EntityID entityID);
 	void onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody);
-	void onBooleanUpdated(bool boolean);
-	void onScalarUpdated(float value);
+	void onBooleanChanged(bool boolean);
+	void onScalarChanged(float value);
 
 private:
 	GlobalInfo& m_globalInfo;

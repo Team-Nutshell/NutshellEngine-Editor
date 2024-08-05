@@ -31,7 +31,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(scriptSelectorWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementUpdated);
+	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementChanged);
 	connect(openCodeEditorButton, &QPushButton::clicked, this, &ScriptableComponentWidget::onOpenCodeEditorButtonClicked);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ScriptableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityScriptableSignal, this, &ScriptableComponentWidget::onAddEntityScriptable);
@@ -132,7 +132,7 @@ void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, cons
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void ScriptableComponentWidget::onElementUpdated(const std::string& element) {
+void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 	Scriptable newScriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
 
 	QObject* senderWidget = sender();

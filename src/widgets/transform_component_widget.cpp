@@ -20,9 +20,9 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(scaleWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
-	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
-	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Updated);
+	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
+	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
+	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onChangeEntityTransform);
 }
@@ -63,7 +63,7 @@ void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const 
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void TransformComponentWidget::onVec3Updated(const nml::vec3& value) {
+void TransformComponentWidget::onVec3Changed(const nml::vec3& value) {
 	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
 
 	QObject* senderWidget = sender();

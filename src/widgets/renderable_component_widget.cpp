@@ -23,8 +23,8 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(primitiveIndexWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onStringUpdated);
-	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementUpdated);
+	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onStringChanged);
+	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onAddEntityRenderable);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onRemoveEntityRenderable);
@@ -128,7 +128,7 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void RenderableComponentWidget::onStringUpdated(const std::string& string) {
+void RenderableComponentWidget::onStringChanged(const std::string& string) {
 	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 
 	QObject* senderWidget = sender();
@@ -149,7 +149,7 @@ void RenderableComponentWidget::onStringUpdated(const std::string& string) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Renderable", &newRenderable));
 }
 
-void RenderableComponentWidget::onElementUpdated(const std::string& element) {
+void RenderableComponentWidget::onElementChanged(const std::string& element) {
 	uint primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
 	if (element != "No primitive index") {
 		size_t spacePos = element.find(' ');

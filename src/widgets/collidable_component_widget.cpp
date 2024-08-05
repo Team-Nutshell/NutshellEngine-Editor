@@ -34,13 +34,13 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(fromRenderableWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &CollidableComponentWidget::onElementUpdated);
-	connect(centerWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
-	connect(radiusWidget, &ScalarWidget::valueChanged, this, &CollidableComponentWidget::onScalarUpdated);
-	connect(halfExtentWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
-	connect(rotationWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
-	connect(baseWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
-	connect(tipWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Updated);
+	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &CollidableComponentWidget::onElementChanged);
+	connect(centerWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
+	connect(radiusWidget, &ScalarWidget::valueChanged, this, &CollidableComponentWidget::onScalarChanged);
+	connect(halfExtentWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
+	connect(rotationWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
+	connect(baseWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
+	connect(tipWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
 	connect(fromRenderableWidget, &QPushButton::clicked, this, &CollidableComponentWidget::onFromRenderableButtonClicked);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CollidableComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCollidableSignal, this, &CollidableComponentWidget::onAddEntityCollidable);
@@ -169,7 +169,7 @@ void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, cons
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void CollidableComponentWidget::onElementUpdated(const std::string& element) {
+void CollidableComponentWidget::onElementChanged(const std::string& element) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 
 	QObject* senderWidget = sender();
@@ -179,7 +179,7 @@ void CollidableComponentWidget::onElementUpdated(const std::string& element) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
 }
 
-void CollidableComponentWidget::onVec3Updated(const nml::vec3& value) {
+void CollidableComponentWidget::onVec3Changed(const nml::vec3& value) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 
 	QObject* senderWidget = sender();
@@ -201,7 +201,7 @@ void CollidableComponentWidget::onVec3Updated(const nml::vec3& value) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
 }
 
-void CollidableComponentWidget::onScalarUpdated(float value) {
+void CollidableComponentWidget::onScalarChanged(float value) {
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 
 	QObject* senderWidget = sender();

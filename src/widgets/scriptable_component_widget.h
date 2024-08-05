@@ -20,7 +20,7 @@ private slots:
 	void onAddEntityScriptable(EntityID entityID);
 	void onRemoveEntityScriptable(EntityID entityID);
 	void onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable);
-	void onElementUpdated(const std::string& element);
+	void onElementChanged(const std::string& element);
 	void onOpenCodeEditorButtonClicked();
 	void onDirectoryChanged(const QString& path);
 

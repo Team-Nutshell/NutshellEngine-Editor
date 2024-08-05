@@ -17,8 +17,8 @@ private slots:
 	void onAddEntityRenderable(EntityID entityID);
 	void onRemoveEntityRenderable(EntityID entityID);
 	void onChangeEntityRenderable(EntityID entityID, const Renderable& renderable);
-	void onStringUpdated(const std::string& string);
-	void onElementUpdated(const std::string& element);
+	void onStringChanged(const std::string& string);
+	void onElementChanged(const std::string& element);
 
 private:
 	GlobalInfo& m_globalInfo;

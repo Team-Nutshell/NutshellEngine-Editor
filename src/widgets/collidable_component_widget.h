@@ -20,9 +20,9 @@ private slots:
 	void onAddEntityCollidable(EntityID entityID);
 	void onRemoveEntityCollidable(EntityID entityID);
 	void onChangeEntityCollidable(EntityID entityID, const Collidable& collidable);
-	void onElementUpdated(const std::string& element);
-	void onVec3Updated(const nml::vec3& value);
-	void onScalarUpdated(float value);
+	void onElementChanged(const std::string& element);
+	void onVec3Changed(const nml::vec3& value);
+	void onScalarChanged(float value);
 	void onFromRenderableButtonClicked();
 	void onAddEntityRenderable(EntityID entityID);
 	void onRemoveEntityRenderable(EntityID entityID);

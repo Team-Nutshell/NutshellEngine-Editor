@@ -23,11 +23,11 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->addWidget(farPlaneWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(forwardWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
-	connect(upWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Updated);
-	connect(fovWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
-	connect(nearPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
-	connect(farPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarUpdated);
+	connect(forwardWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Changed);
+	connect(upWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Changed);
+	connect(fovWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarChanged);
+	connect(nearPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarChanged);
+	connect(farPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CameraComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCameraSignal, this, &CameraComponentWidget::onAddEntityCamera);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCameraSignal, this, &CameraComponentWidget::onRemoveEntityCamera);
@@ -90,7 +90,7 @@ void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
+void CameraComponentWidget::onVec3Changed(const nml::vec3& value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 
 	QObject* senderWidget = sender();
@@ -103,7 +103,7 @@ void CameraComponentWidget::onVec3Updated(const nml::vec3& value) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));
 }
 
-void CameraComponentWidget::onScalarUpdated(float value) {
+void CameraComponentWidget::onScalarChanged(float value) {
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 
 	QObject* senderWidget = sender();

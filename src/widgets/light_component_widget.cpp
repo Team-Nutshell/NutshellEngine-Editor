@@ -25,10 +25,10 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->addWidget(cutoffWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementUpdated);
-	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorUpdated);
-	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Updated);
-	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Updated);
+	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementChanged);
+	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorChanged);
+	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
+	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onSelectEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onAddEntityLight);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onRemoveEntityLight);
@@ -101,7 +101,7 @@ void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& l
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void LightComponentWidget::onElementUpdated(const std::string& element) {
+void LightComponentWidget::onElementChanged(const std::string& element) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
 	QObject* senderWidget = sender();
@@ -111,7 +111,7 @@ void LightComponentWidget::onElementUpdated(const std::string& element) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
 }
 
-void LightComponentWidget::onColorUpdated(const nml::vec4& color) {
+void LightComponentWidget::onColorChanged(const nml::vec4& color) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
 	QObject* senderWidget = sender();
@@ -121,7 +121,7 @@ void LightComponentWidget::onColorUpdated(const nml::vec4& color) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
 }
 
-void LightComponentWidget::onVec3Updated(const nml::vec3& value) {
+void LightComponentWidget::onVec3Changed(const nml::vec3& value) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
 	QObject* senderWidget = sender();
@@ -131,7 +131,7 @@ void LightComponentWidget::onVec3Updated(const nml::vec3& value) {
 	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
 }
 
-void LightComponentWidget::onVec2Updated(const nml::vec2& value) {
+void LightComponentWidget::onVec2Changed(const nml::vec2& value) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
 	QObject* senderWidget = sender();
