@@ -19,9 +19,9 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 
 		RendererResourceManager::ModelPrimitive modelPrimitive;
 
-		const nml::mat4 boxRotation = nml::rotate(obb.rotation.x, nml::vec3(1.0f, 0.0f, 0.0f)) *
-			nml::rotate(obb.rotation.y, nml::vec3(0.0f, 1.0f, 0.0f)) *
-			nml::rotate(obb.rotation.z, nml::vec3(0.0f, 0.0f, 1.0f));
+		const nml::mat4 boxRotation = nml::rotate(nml::toRad(obb.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) *
+			nml::rotate(nml::toRad(obb.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) *
+			nml::rotate(nml::toRad(obb.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 
 		modelPrimitive.mesh.vertices.resize(8);
 		modelPrimitive.mesh.vertices[0].position = obb.center + nml::vec3(boxRotation * nml::vec4(-obb.halfExtent.x, -obb.halfExtent.y, -obb.halfExtent.z, 1.0f));

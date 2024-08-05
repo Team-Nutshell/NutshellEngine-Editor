@@ -905,6 +905,9 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	// OBB
 	nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
+	mesh.obb.rotation.x = nml::toDeg(mesh.obb.rotation.x);
+	mesh.obb.rotation.y = nml::toDeg(mesh.obb.rotation.y);
+	mesh.obb.rotation.z = nml::toDeg(mesh.obb.rotation.z);
 
 	// Capsule
 	mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
