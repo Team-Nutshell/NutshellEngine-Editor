@@ -380,6 +380,7 @@ void Renderer::initializeGL() {
 	#version 460
 
 	uniform sampler2D outlineSoloTexture;
+	uniform vec3 outlineColor;
 
 	in vec2 fragUV;
 
@@ -399,7 +400,7 @@ void Renderer::initializeGL() {
 			float e = texture(outlineSoloTexture, fragUV + vec2(-texelSize.x * (range + 1.0), 0.0)).r;
 			float w = texture(outlineSoloTexture, fragUV + vec2(texelSize.x * (range + 1.0), 0.0)).r;
 			if ((n == 1.0) || (s == 1.0) || (e == 1.0) || (w == 1.0)) {
-				outColor = vec4(1.0, 1.0, 0.0, 1.0);
+				outColor = vec4(outlineColor, 1.0);
 				foundValue = true;
 				break;
 			}
@@ -927,6 +928,7 @@ void Renderer::paintGL() {
 		gl.glActiveTexture(GL_TEXTURE0);
 		gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloImage);
 		gl.glUniform1i(gl.glGetUniformLocation(m_outlineProgram, "outlineSoloTexture"), 0);
+		gl.glUniform3f(gl.glGetUniformLocation(m_outlineProgram, "outlineColor"), m_globalInfo.editorParameters.renderer.outlineColor.x, m_globalInfo.editorParameters.renderer.outlineColor.y, m_globalInfo.editorParameters.renderer.outlineColor.z);
 
 		gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
 

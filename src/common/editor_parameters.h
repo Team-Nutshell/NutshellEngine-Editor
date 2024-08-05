@@ -1,5 +1,6 @@
 #pragma once
 #include "../../external/nlohmann/json.hpp"
+#include "../../external/nml/include/nml.h"
 #include <Qt>
 #include <string>
 
@@ -27,6 +28,8 @@ struct RendererParameters {
 	Qt::Key toggleCamerasVisibilityKey = Qt::Key_C;
 	Qt::Key toggleLightingKey = Qt::Key_L;
 	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
+
+	nml::vec3 outlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
 };
 
 struct BuildParameters {

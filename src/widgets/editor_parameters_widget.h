@@ -3,6 +3,7 @@
 #include "file_selector_widget.h"
 #include "string_widget.h"
 #include "key_select_widget.h"
+#include "color_picker_widget.h"
 #include <QTabWidget>
 #include <QWidget>
 #include <QMenuBar>
@@ -18,6 +19,7 @@ private slots:
 	void onKeyChanged(const std::string& key);
 	void onCMakePathChanged(const std::string& cMakePath);
 	void onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged);
+	void onColorChanged(const nml::vec4& color);
 
 private:
 	void save();
@@ -50,6 +52,7 @@ public:
 	KeySelectWidget* toggleCamerasVisibilityKeySelect;
 	KeySelectWidget* toggleLightingKeySelect;
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
+	ColorPickerWidget* outlineColorWidget;
 
 	QWidget* buildParametersTab;
 	StringWidget* cMakePathWidget;

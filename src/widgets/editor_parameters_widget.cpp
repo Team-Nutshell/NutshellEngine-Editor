@@ -15,123 +15,133 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	setContentsMargins(contentMargins);
 
 	rendererParametersTab = new QTabWidget();
-	QGridLayout* layout = new QGridLayout();
-	rendererParametersTab->setLayout(layout);
+	QVBoxLayout* rendererVerticalLayout = new QVBoxLayout();
+	rendererParametersTab->setLayout(rendererVerticalLayout);
+
+	QWidget* rendererGridLayoutWidget = new QWidget();
+	QGridLayout* rendererGridLayout = new QGridLayout();
+	rendererGridLayoutWidget->setLayout(rendererGridLayout);
+	rendererVerticalLayout->addWidget(rendererGridLayoutWidget);
 
 	QKeySequence cameraForwardKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraForwardKey);
 	cameraForwardKeySelect = new KeySelectWidget(m_globalInfo, "Camera Forward", cameraForwardKeySequence.toString().toStdString());
 	cameraForwardKeySelect->layout()->setAlignment(cameraForwardKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraForwardKeySelect, 0, 0);
+	rendererGridLayout->addWidget(cameraForwardKeySelect, 0, 0);
 
 	QKeySequence cameraBackwardKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraBackwardKey);
 	cameraBackwardKeySelect = new KeySelectWidget(m_globalInfo, "Camera Backward", cameraBackwardKeySequence.toString().toStdString());
 	cameraBackwardKeySelect->layout()->setAlignment(cameraBackwardKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraBackwardKeySelect, 1, 0);
+	rendererGridLayout->addWidget(cameraBackwardKeySelect, 1, 0);
 
 	QKeySequence cameraLeftKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraLeftKey);
 	cameraLeftKeySelect = new KeySelectWidget(m_globalInfo, "Camera Left", cameraLeftKeySequence.toString().toStdString());
 	cameraLeftKeySelect->layout()->setAlignment(cameraLeftKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraLeftKeySelect, 2, 0);
+	rendererGridLayout->addWidget(cameraLeftKeySelect, 2, 0);
 
 	QKeySequence cameraRightKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraRightKey);
 	cameraRightKeySelect = new KeySelectWidget(m_globalInfo, "Camera Right", cameraRightKeySequence.toString().toStdString());
 	cameraRightKeySelect->layout()->setAlignment(cameraRightKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraRightKeySelect, 3, 0);
+	rendererGridLayout->addWidget(cameraRightKeySelect, 3, 0);
 
 	QKeySequence cameraUpKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraUpKey);
 	cameraUpKeySelect = new KeySelectWidget(m_globalInfo, "Camera Up", cameraUpKeySequence.toString().toStdString());
 	cameraUpKeySelect->layout()->setAlignment(cameraUpKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraUpKeySelect, 4, 0);
+	rendererGridLayout->addWidget(cameraUpKeySelect, 4, 0);
 
 	QKeySequence cameraDownKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraDownKey);
 	cameraDownKeySelect = new KeySelectWidget(m_globalInfo, "Camera Down", cameraDownKeySequence.toString().toStdString());
 	cameraDownKeySelect->layout()->setAlignment(cameraDownKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(cameraDownKeySelect, 5, 0);
+	rendererGridLayout->addWidget(cameraDownKeySelect, 5, 0);
 
 	QKeySequence switchCameraProjectionKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.switchCameraProjectionKey);
 	switchCameraProjectionKeySelect = new KeySelectWidget(m_globalInfo, "Switch Camera Projection", switchCameraProjectionKeySequence.toString().toStdString());
 	switchCameraProjectionKeySelect->layout()->setAlignment(switchCameraProjectionKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(switchCameraProjectionKeySelect, 6, 0);
+	rendererGridLayout->addWidget(switchCameraProjectionKeySelect, 6, 0);
 
 	QKeySequence resetCameraKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.resetCameraKey);
 	resetCameraKeySelect = new KeySelectWidget(m_globalInfo, "Switch Camera Projection", resetCameraKeySequence.toString().toStdString());
 	resetCameraKeySelect->layout()->setAlignment(resetCameraKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(resetCameraKeySelect, 7, 0);
+	rendererGridLayout->addWidget(resetCameraKeySelect, 7, 0);
 
 	QKeySequence orthographicCameraToXMKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
 	orthographicCameraToXMKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To X-", orthographicCameraToXMKeySequence.toString().toStdString());
 	orthographicCameraToXMKeySelect->layout()->setAlignment(orthographicCameraToXMKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToXMKeySelect, 0, 1);
+	rendererGridLayout->addWidget(orthographicCameraToXMKeySelect, 0, 1);
 
 	QKeySequence orthographicCameraToXPKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
 	orthographicCameraToXPKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To X+", orthographicCameraToXPKeySequence.toString().toStdString());
 	orthographicCameraToXPKeySelect->layout()->setAlignment(orthographicCameraToXPKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToXPKeySelect, 1, 1);
+	rendererGridLayout->addWidget(orthographicCameraToXPKeySelect, 1, 1);
 
 	QKeySequence orthographicCameraToYMKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
 	orthographicCameraToYMKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To Y-", orthographicCameraToYMKeySequence.toString().toStdString());
 	orthographicCameraToYMKeySelect->layout()->setAlignment(orthographicCameraToYMKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToYMKeySelect, 2, 1);
+	rendererGridLayout->addWidget(orthographicCameraToYMKeySelect, 2, 1);
 
 	QKeySequence orthographicCameraToYPKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
 	orthographicCameraToYPKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To Y+", orthographicCameraToYPKeySequence.toString().toStdString());
 	orthographicCameraToYPKeySelect->layout()->setAlignment(orthographicCameraToYPKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToYPKeySelect, 3, 1);
+	rendererGridLayout->addWidget(orthographicCameraToYPKeySelect, 3, 1);
 
 	QKeySequence orthographicCameraToZMKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
 	orthographicCameraToZMKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To Z-", orthographicCameraToZMKeySequence.toString().toStdString());
 	orthographicCameraToZMKeySelect->layout()->setAlignment(orthographicCameraToZMKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToZMKeySelect, 4, 1);
+	rendererGridLayout->addWidget(orthographicCameraToZMKeySelect, 4, 1);
 
 	QKeySequence orthographicCameraToZPKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 	orthographicCameraToZPKeySelect = new KeySelectWidget(m_globalInfo, "Orthographic Camera To Z+", orthographicCameraToZPKeySequence.toString().toStdString());
 	orthographicCameraToZPKeySelect->layout()->setAlignment(orthographicCameraToZPKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(orthographicCameraToZPKeySelect, 5, 1);
+	rendererGridLayout->addWidget(orthographicCameraToZPKeySelect, 5, 1);
 
 	QKeySequence translateEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.translateEntityKey);
 	translateEntityKeySelect = new KeySelectWidget(m_globalInfo, "Translate Entity", translateEntityKeySequence.toString().toStdString());
 	translateEntityKeySelect->layout()->setAlignment(translateEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(translateEntityKeySelect, 6, 1);
+	rendererGridLayout->addWidget(translateEntityKeySelect, 6, 1);
 
 	QKeySequence rotateEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.rotateEntityKey);
 	rotateEntityKeySelect = new KeySelectWidget(m_globalInfo, "Rotate Entity", rotateEntityKeySequence.toString().toStdString());
 	rotateEntityKeySelect->layout()->setAlignment(rotateEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(rotateEntityKeySelect, 7, 1);
+	rendererGridLayout->addWidget(rotateEntityKeySelect, 7, 1);
 
 	QKeySequence scaleEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.scaleEntityKey);
 	scaleEntityKeySelect = new KeySelectWidget(m_globalInfo, "Scale Entity", scaleEntityKeySequence.toString().toStdString());
 	scaleEntityKeySelect->layout()->setAlignment(scaleEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(scaleEntityKeySelect, 0, 2);
+	rendererGridLayout->addWidget(scaleEntityKeySelect, 0, 2);
 
 	QKeySequence toggleCurrentEntityVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 	toggleCurrentEntityVisibilityKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Current Entity Visibility", toggleCurrentEntityVisibilityKeySequence.toString().toStdString());
 	toggleCurrentEntityVisibilityKeySelect->layout()->setAlignment(toggleCurrentEntityVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleCurrentEntityVisibilityKeySelect, 1, 2);
+	rendererGridLayout->addWidget(toggleCurrentEntityVisibilityKeySelect, 1, 2);
 
 	QKeySequence toggleGridVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
 	toggleGridVisibilityKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Grid Visibility", toggleGridVisibilityKeySequence.toString().toStdString());
 	toggleGridVisibilityKeySelect->layout()->setAlignment(toggleGridVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleGridVisibilityKeySelect, 2, 2);
+	rendererGridLayout->addWidget(toggleGridVisibilityKeySelect, 2, 2);
 
 	QKeySequence toggleBackfaceCullingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
 	toggleBackfaceCullingKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Backface Culling", toggleBackfaceCullingKeySequence.toString().toStdString());
 	toggleBackfaceCullingKeySelect->layout()->setAlignment(toggleBackfaceCullingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleBackfaceCullingKeySelect, 3, 2);
+	rendererGridLayout->addWidget(toggleBackfaceCullingKeySelect, 3, 2);
 
 	QKeySequence toggleCamerasVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 	toggleCamerasVisibilityKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Cameras Visibility", toggleCamerasVisibilityKeySequence.toString().toStdString());
 	toggleCamerasVisibilityKeySelect->layout()->setAlignment(toggleCamerasVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleCamerasVisibilityKeySelect, 4, 2);
+	rendererGridLayout->addWidget(toggleCamerasVisibilityKeySelect, 4, 2);
 
 	QKeySequence toggleLightingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 	toggleLightingKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Lighting", toggleLightingKeySequence.toString().toStdString());
 	toggleLightingKeySelect->layout()->setAlignment(toggleLightingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleLightingKeySelect, 5, 2);
+	rendererGridLayout->addWidget(toggleLightingKeySelect, 5, 2);
 
 	QKeySequence toggleCollidersVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 	toggleCollidersVisibilityKeySelect = new KeySelectWidget(m_globalInfo, "Toggle Colliders Visibility", toggleCollidersVisibilityKeySequence.toString().toStdString());
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	layout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
+	rendererGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
+
+	outlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.outlineColor, 1.0f));
+	outlineColorWidget->layout()->setAlignment(outlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	outlineColorWidget->layout()->setAlignment(outlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(outlineColorWidget);
 
 	addTab(rendererParametersTab, "Renderer");
 
@@ -180,6 +190,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCamerasVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
+	connect(outlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCMakePathChanged);
 	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCodeEditorCommandChanged);
 }
@@ -348,6 +359,12 @@ void EditorParametersWidget::onCMakePathChanged(const std::string& cMakePath) {
 
 void EditorParametersWidget::onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged) {
 	m_globalInfo.editorParameters.code.codeEditorCommand = codeEditorCommandChanged;
+
+	save();
+}
+
+void EditorParametersWidget::onColorChanged(const nml::vec4& color) {
+	m_globalInfo.editorParameters.renderer.outlineColor = nml::vec3(color);
 
 	save();
 }
