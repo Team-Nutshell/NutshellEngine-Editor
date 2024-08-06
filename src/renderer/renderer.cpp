@@ -1289,6 +1289,14 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 }
 
+nml::vec2 Renderer::project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix) {
+	nml::vec4 clipSpace = viewProjMatrix * nml::vec4(p, 1.0f);
+	clipSpace /= clipSpace.w;
+	nml::vec2 screenSpace = (clipSpace + nml::vec2(1.0f, 1.0f)) / 2.0f;
+
+	return nml::vec2(screenSpace.x * width, screenSpace.y * height);
+}
+
 nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix) {
 	nml::vec2 screenSpace = nml::vec2(p.x / width, p.y / height);
 	nml::vec2 clipSpace = (screenSpace * 2.0f) - 1.0f;
@@ -1570,19 +1578,19 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				m_entityMoveTransform->rotation = nml::vec3(std::fmod(m_entityMoveTransform->rotation.x, 360.0f), std::fmod(m_entityMoveTransform->rotation.y, 360.0f), std::fmod(m_entityMoveTransform->rotation.z, 360.0f));
 			}
 			else if (m_scaleEntityMode) {
-				nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 previousMouseToCurrentMousePosition = worldSpaceCurrentMouse - worldSpacePreviousMouse;
-				if (nml::dot(previousMouseToCurrentMousePosition, previousMouseToCurrentMousePosition) != 0.0f) {
-					float previousMouseToCurrentMousePositionLength = previousMouseToCurrentMousePosition.length();
-					nml::vec3 objectToCurrentMousePosition = worldSpaceCurrentMouse - m_entityMoveTransform->position;
-					if (nml::dot(objectToCurrentMousePosition, objectToCurrentMousePosition) != 0.0f) {
-						float scaleFactor = 10.0f;
-						if (!m_camera.useOrthographicProjection) {
-							scaleFactor = 1000.0f;
-						}
-						m_entityMoveTransform->scale += ((previousMouseToCurrentMousePositionLength * scaleFactor) / objectToCurrentMousePosition.length()) * ((nml::dot(previousMouseToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
+				nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
+				nml::vec2 objectPositionProjected = project(m_entityMoveTransform->position, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
+				nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
+				if ((nml::dot(previousToCurrentMousePosition, previousToCurrentMousePosition) != 0.0f) && (nml::dot(objectToCurrentMousePosition, objectToCurrentMousePosition) != 0.0f)) {
+					nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+					nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+					float previousToCurrentPositionLength3D = (worldSpaceCurrentMouse - worldSpacePreviousMouse).length();
+					float objectToCurrentMousePosition3D = (worldSpaceCurrentMouse - m_entityMoveTransform->position).length();
+					float scaleFactor = 1.0f;
+					if (!m_camera.useOrthographicProjection) {
+						scaleFactor = 1000.0f;
 					}
+					m_entityMoveTransform->scale += ((previousToCurrentPositionLength3D * scaleFactor) / objectToCurrentMousePosition3D) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 				}
 			}
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
