@@ -15,7 +15,7 @@ private:
 	void updateWidgets(const Light& light);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityLight(EntityID entityID);
 	void onRemoveEntityLight(EntityID entityID);
 	void onChangeEntityLight(EntityID entityID, const Light& light);

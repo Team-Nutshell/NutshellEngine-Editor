@@ -17,7 +17,7 @@ EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalI
 	m_pasteEntityAction->setShortcut(QKeySequence::fromString("Ctrl+V"));
 	m_pasteEntityAction->setEnabled(false);
 
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EditMenu::onSelectEntity);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EditMenu::onEntitySelected);
 }
 
 void EditMenu::copyEntity() {
@@ -33,7 +33,7 @@ void EditMenu::pasteEntity() {
 	}
 }
 
-void EditMenu::onSelectEntity() {
+void EditMenu::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		m_copyEntityAction->setEnabled(true);
 	}

@@ -13,7 +13,7 @@ private:
 	void updateWidgets(const Renderable& renderable);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityRenderable(EntityID entityID);
 	void onRemoveEntityRenderable(EntityID entityID);
 	void onChangeEntityRenderable(EntityID entityID, const Renderable& renderable);

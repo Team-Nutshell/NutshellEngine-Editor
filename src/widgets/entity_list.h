@@ -21,7 +21,7 @@ private:
 private slots:
 	void onCreateEntity(EntityID entityID);
 	void onDestroyEntity(EntityID entityID);
-	void onSelectEntity();
+	void onEntitySelected();
 	void onChangeEntityName(EntityID entityID, const std::string& name);
 	void onToggleCurrentEntityVisibility(bool isVisible);
 	void showMenu(const QPoint& pos);

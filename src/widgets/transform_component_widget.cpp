@@ -23,7 +23,7 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onSelectEntity);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onChangeEntityTransform);
 }
 
@@ -42,7 +42,7 @@ void TransformComponentWidget::updateWidgets(const Transform& transform) {
 	scaleWidget->zLineEdit->setText(QString::number(transform.scale.z, 'f', 3));
 }
 
-void TransformComponentWidget::onSelectEntity() {
+void TransformComponentWidget::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		show();
 		updateWidgets(m_globalInfo.entities[m_globalInfo.currentEntityID].transform);

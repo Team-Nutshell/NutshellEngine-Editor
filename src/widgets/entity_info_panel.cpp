@@ -19,10 +19,10 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	m_componentScrollArea->hide();
 	layout()->addWidget(m_componentScrollArea);
 
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::onSelectEntity);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::onEntitySelected);
 }
 
-void EntityInfoPanel::onSelectEntity() {
+void EntityInfoPanel::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		m_entityInfoNameWidget->show();
 		m_entityInfoPersistenceWidget->show();

@@ -3,11 +3,11 @@
 
 EntityInfoNameWidget::EntityInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QLineEdit::editingFinished, this, &EntityInfoNameWidget::onEditingFinished);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoNameWidget::onSelectEntity);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoNameWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityInfoNameWidget::onChangeEntityName);
 }
 
-void EntityInfoNameWidget::onSelectEntity() {
+void EntityInfoNameWidget::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		setText(QString::fromStdString(m_globalInfo.entities[m_globalInfo.currentEntityID].name));
 		m_previousName = m_globalInfo.entities[m_globalInfo.currentEntityID].name;

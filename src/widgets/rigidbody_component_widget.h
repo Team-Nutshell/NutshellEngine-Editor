@@ -13,7 +13,7 @@ private:
 	void updateWidgets(const Rigidbody& rigidbody);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityRigidbody(EntityID entityID);
 	void onRemoveEntityRigidbody(EntityID entityID);
 	void onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody);

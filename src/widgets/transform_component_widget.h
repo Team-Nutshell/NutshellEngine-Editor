@@ -12,7 +12,7 @@ private:
 	void updateWidgets(const Transform& transform);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onChangeEntityTransform(EntityID entityID, const Transform& transform);
 	void onVec3Changed(const nml::vec3& value);
 

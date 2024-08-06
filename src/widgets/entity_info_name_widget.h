@@ -9,7 +9,7 @@ public:
 	EntityInfoNameWidget(GlobalInfo& globalInfo);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onEditingFinished();
 	void onChangeEntityName(EntityID entityID, const std::string& name);
 

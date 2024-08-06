@@ -16,7 +16,7 @@ private:
 	std::vector<std::string> getScriptEntries();
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityScriptable(EntityID entityID);
 	void onRemoveEntityScriptable(EntityID entityID);
 	void onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable);

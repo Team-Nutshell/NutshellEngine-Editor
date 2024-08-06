@@ -9,7 +9,7 @@ public:
 	EntityInfoPersistenceWidget(GlobalInfo& globalInfo);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onStateChanged(int state);
 	void onChangeEntityPersistence(EntityID entityID, bool isPersistent);
 

@@ -13,11 +13,11 @@ EntityInfoPersistenceWidget::EntityInfoPersistenceWidget(GlobalInfo& globalInfo)
 	layout()->addWidget(new QLabel("Is Persistent"));
 
 	connect(m_persistenceCheckBox, &QCheckBox::stateChanged, this, &EntityInfoPersistenceWidget::onStateChanged);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPersistenceWidget::onSelectEntity);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPersistenceWidget::onEntitySelected);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityInfoPersistenceWidget::onChangeEntityPersistence);
 }
 
-void EntityInfoPersistenceWidget::onSelectEntity() {
+void EntityInfoPersistenceWidget::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		{
 			const QSignalBlocker signalBlocker(m_persistenceCheckBox);

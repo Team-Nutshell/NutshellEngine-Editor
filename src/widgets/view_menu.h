@@ -25,7 +25,7 @@ private:
 	void orthographicCameraToZP();
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onCurrentEntityVisibilityToggled(bool isEntityVisible);
 	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCullingEnabled);

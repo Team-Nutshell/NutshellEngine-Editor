@@ -13,7 +13,7 @@ private:
 	void pasteEntity();
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 
 private:
 	GlobalInfo& m_globalInfo;

@@ -16,7 +16,7 @@ private:
 	void updateFromRenderableWidget();
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityCollidable(EntityID entityID);
 	void onRemoveEntityCollidable(EntityID entityID);
 	void onChangeEntityCollidable(EntityID entityID, const Collidable& collidable);

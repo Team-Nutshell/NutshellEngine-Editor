@@ -20,7 +20,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QListWidget::itemSelectionChanged, this, &EntityList::onItemSelectionChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &EntityList::onCreateEntity);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &EntityList::onDestroyEntity);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onSelectEntity);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onChangeEntityName);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &EntityList::onToggleCurrentEntityVisibility);
 }
@@ -48,7 +48,7 @@ void EntityList::onDestroyEntity(EntityID entityID) {
 	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
 }
 
-void EntityList::onSelectEntity() {
+void EntityList::onEntitySelected() {
 	{
 		const QSignalBlocker signalBlocker(this);
 		clearSelection();

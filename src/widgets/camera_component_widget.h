@@ -13,7 +13,7 @@ private:
 	void updateWidgets(const Camera& camera);
 
 private slots:
-	void onSelectEntity();
+	void onEntitySelected();
 	void onAddEntityCamera(EntityID entityID);
 	void onRemoveEntityCamera(EntityID entityID);
 	void onChangeEntityCamera(EntityID entityID, const Camera& camera);
