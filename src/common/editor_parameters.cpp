@@ -160,6 +160,13 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			}
 		}
 
+		if (j["renderer"].contains("cameraSpeed")) {
+			renderer.cameraSpeed = j["renderer"]["cameraSpeed"];
+		}
+		if (j["renderer"].contains("cameraSensitivity")) {
+			renderer.cameraSensitivity = j["renderer"]["cameraSensitivity"];
+		}
+
 		if (j["renderer"].contains("outlineColor")) {
 			renderer.outlineColor.x = j["renderer"]["outlineColor"][0];
 			renderer.outlineColor.y = j["renderer"]["outlineColor"][1];
@@ -206,6 +213,8 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["toggleCamerasVisibilityKey"] = QKeySequence(renderer.toggleCamerasVisibilityKey).toString().toStdString();
 	j["renderer"]["toggleLightingKey"] = QKeySequence(renderer.toggleLightingKey).toString().toStdString();
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
+	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
+	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["outlineColor"] = { renderer.outlineColor.x, renderer.outlineColor.y, renderer.outlineColor.z };
 
 	j["build"]["cMakePath"] = build.cMakePath;
