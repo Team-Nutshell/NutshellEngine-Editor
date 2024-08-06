@@ -4,6 +4,7 @@
 #include "string_widget.h"
 #include "key_select_widget.h"
 #include "color_picker_widget.h"
+#include "scalar_widget.h"
 #include <QTabWidget>
 #include <QWidget>
 #include <QMenuBar>
@@ -17,6 +18,7 @@ public:
 
 private slots:
 	void onKeyChanged(const std::string& key);
+	void onScalarChanged(float value);
 	void onCMakePathChanged(const std::string& cMakePath);
 	void onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged);
 	void onColorChanged(const nml::vec4& color);
@@ -52,6 +54,8 @@ public:
 	KeySelectWidget* toggleCamerasVisibilityKeySelect;
 	KeySelectWidget* toggleLightingKeySelect;
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
+	ScalarWidget* cameraSpeedWidget;
+	ScalarWidget* cameraSensitivityWidget;
 	ColorPickerWidget* outlineColorWidget;
 
 	QWidget* buildParametersTab;

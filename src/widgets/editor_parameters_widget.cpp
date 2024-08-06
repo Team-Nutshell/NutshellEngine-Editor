@@ -1,5 +1,6 @@
 #include "editor_parameters_widget.h"
 #include "main_window.h"
+#include "separator_line.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <fstream>
@@ -138,6 +139,22 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
 
+	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
+
+	cameraSpeedWidget = new ScalarWidget(m_globalInfo, "Camera Speed");
+	cameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSpeed, 'f', 3));
+	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(cameraSpeedWidget);
+
+	cameraSensitivityWidget = new ScalarWidget(m_globalInfo, "Camera Sensitivity");
+	cameraSensitivityWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSensitivity, 'f', 3));
+	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(cameraSensitivityWidget);
+
+	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
+
 	outlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.outlineColor, 1.0f));
 	outlineColorWidget->layout()->setAlignment(outlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	outlineColorWidget->layout()->setAlignment(outlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
@@ -190,6 +207,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCamerasVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
+	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(outlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCMakePathChanged);
 	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCodeEditorCommandChanged);
@@ -346,6 +365,18 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 			m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey = sequence[0].key();
 			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 		}
+	}
+
+	save();
+}
+
+void EditorParametersWidget::onScalarChanged(float value) {
+	QObject* senderWidget = sender();
+	if (senderWidget == cameraSpeedWidget) {
+		m_globalInfo.editorParameters.renderer.cameraSpeed = value;
+	}
+	else if (senderWidget == cameraSensitivityWidget) {
+		m_globalInfo.editorParameters.renderer.cameraSensitivity = value;
 	}
 
 	save();

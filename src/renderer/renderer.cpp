@@ -1035,8 +1035,8 @@ void Renderer::updateCamera() {
 	float deltaTime = static_cast<float>(m_waitTimer.interval()) / 1000.0f;
 
 	if (!m_camera.useOrthographicProjection) {
-		m_camera.perspectiveYaw = std::fmod(m_camera.perspectiveYaw + (m_mouseCursorDifference.x * m_camera.sensitivity), 360.0f);
-		m_camera.perspectivePitch = std::max(-89.0f, std::min(89.0f, m_camera.perspectivePitch + (m_mouseCursorDifference.y * m_camera.sensitivity)));
+		m_camera.perspectiveYaw = std::fmod(m_camera.perspectiveYaw + (m_mouseCursorDifference.x * m_globalInfo.editorParameters.renderer.cameraSensitivity), 360.0f);
+		m_camera.perspectivePitch = std::max(-89.0f, std::min(89.0f, m_camera.perspectivePitch + (m_mouseCursorDifference.y * m_globalInfo.editorParameters.renderer.cameraSensitivity)));
 
 		float cameraYawRad = nml::toRad(m_camera.perspectiveYaw);
 		float cameraPitchRad = nml::toRad(m_camera.perspectivePitch);
@@ -1048,7 +1048,7 @@ void Renderer::updateCamera() {
 
 		nml::vec3 t = nml::normalize(nml::vec3(-m_camera.perspectiveDirection.z, 0.0f, m_camera.perspectiveDirection.x));
 
-		float cameraSpeed = m_camera.speed * deltaTime;
+		float cameraSpeed = m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime;
 
 		if (m_cameraForwardKeyPressed) {
 			m_camera.perspectivePosition += m_camera.perspectiveDirection * cameraSpeed;
@@ -1081,9 +1081,9 @@ void Renderer::updateCamera() {
 			t = nml::normalize(nml::vec3(-m_camera.orthographicDirection.z, 0.0f, m_camera.orthographicDirection.x));
 		}
 
-		float horizontalSpeed = m_camera.orthographicHalfExtent * m_camera.speed * deltaTime * ((m_mouseCursorDifference.x == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.x));
-		float verticalSpeed = m_camera.orthographicHalfExtent * m_camera.speed * deltaTime * ((m_mouseCursorDifference.y == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.y));
-		float halfExtentSpeed = m_camera.speed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
+		float horizontalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime * ((m_mouseCursorDifference.x == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.x));
+		float verticalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime * ((m_mouseCursorDifference.y == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.y));
+		float halfExtentSpeed = m_globalInfo.editorParameters.renderer.cameraSpeed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
 
 		if (m_cameraForwardKeyPressed || (m_mouseCursorDifference.y < 0.0f)) {
 			m_camera.orthographicPosition += m_camera.orthographicUp * verticalSpeed;

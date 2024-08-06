@@ -46,8 +46,4 @@ struct RendererCamera {
 	nml::vec3 baseOrthographicDirection;
 	nml::vec3 baseOrthographicUp;
 	float baseOrthographicHalfExtent;
-
-	float speed = 2.0f;
-
-	float sensitivity = 0.5f;
 };

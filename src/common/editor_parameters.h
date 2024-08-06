@@ -29,6 +29,9 @@ struct RendererParameters {
 	Qt::Key toggleLightingKey = Qt::Key_L;
 	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
 
+	float cameraSpeed = 2.0f;
+	float cameraSensitivity = 0.5f;
+
 	nml::vec3 outlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
 };
 
