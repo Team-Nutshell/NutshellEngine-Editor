@@ -33,7 +33,7 @@ private:
 	void createOutlineSoloImages();
 	void createLightBuffer();
 
-	bool anyEntityTransformKeyPressed();
+	bool anyEntityTransformMode();
 	void updateCamera();
 	void updateLights();
 
@@ -42,6 +42,7 @@ private:
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
 private slots:
+	void onEntitySelected();
 	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCulling);
 	void onCamerasVisibilityToggled(bool showCameras);
@@ -75,9 +76,9 @@ private:
 	bool m_cameraUpKeyPressed = false;
 	bool m_cameraDownKeyPressed = false;
 
-	bool m_translateEntityKeyPressed = false;
-	bool m_rotateEntityKeyPressed = false;
-	bool m_scaleEntityKeyPressed = false;
+	bool m_translateEntityMode = false;
+	bool m_rotateEntityMode = false;
+	bool m_scaleEntityMode = false;
 
 	bool m_moveCameraButtonPressed = false;
 

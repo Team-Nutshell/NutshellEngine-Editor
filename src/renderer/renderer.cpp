@@ -14,6 +14,7 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAcceptDrops(true);
 
 	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &Renderer::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &Renderer::onGridVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
@@ -1023,12 +1024,12 @@ void Renderer::createLightBuffer() {
 	gl.glBufferData(GL_SHADER_STORAGE_BUFFER, 32768, NULL, GL_DYNAMIC_DRAW);
 }
 
-bool Renderer::anyEntityTransformKeyPressed() {
-	return m_translateEntityKeyPressed || m_rotateEntityKeyPressed || m_scaleEntityKeyPressed;
+bool Renderer::anyEntityTransformMode() {
+	return m_translateEntityMode || m_rotateEntityMode || m_scaleEntityMode;
 }
 
 void Renderer::updateCamera() {
-	if (anyEntityTransformKeyPressed()) {
+	if (anyEntityTransformMode()) {
 		return;
 	}
 
@@ -1297,6 +1298,15 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	return nml::vec3(worldSpace) / worldSpace.w;
 }
 
+void Renderer::onEntitySelected() {
+	m_translateEntityMode = false;
+	m_rotateEntityMode = false;
+	m_scaleEntityMode = false;
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		m_entityMoveTransform.reset();
+	}
+}
+
 void Renderer::onGridVisibilityToggled(bool showGrid) {
 	m_showGrid = showGrid;
 }
@@ -1318,10 +1328,28 @@ void Renderer::onCollidersVisibilityToggled(bool showColliders) {
 }
 
 void Renderer::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {
+	if (anyEntityTransformMode()) {
+		m_translateEntityMode = false;
+		m_rotateEntityMode = false;
+		m_scaleEntityMode = false;
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			m_entityMoveTransform.reset();
+		}
+	}
+
 	m_camera.useOrthographicProjection = cameraProjectionOrthographic;
 }
 
 void Renderer::onCameraReset() {
+	if (anyEntityTransformMode()) {
+		m_translateEntityMode = false;
+		m_rotateEntityMode = false;
+		m_scaleEntityMode = false;
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			m_entityMoveTransform.reset();
+		}
+	}
+
 	if (!m_camera.useOrthographicProjection) {
 		m_camera.perspectivePosition = m_camera.basePerspectivePosition;
 		m_camera.perspectiveDirection = m_camera.basePerspectiveDirection;
@@ -1337,6 +1365,15 @@ void Renderer::onCameraReset() {
 }
 
 void Renderer::onOrthographicCameraToAxisChanged(const nml::vec3& axis) {
+	if (anyEntityTransformMode()) {
+		m_translateEntityMode = false;
+		m_rotateEntityMode = false;
+		m_scaleEntityMode = false;
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			m_entityMoveTransform.reset();
+		}
+	}
+
 	m_camera.useOrthographicProjection = true;
 	m_camera.orthographicPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 	m_camera.orthographicDirection = axis;
@@ -1373,24 +1410,24 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		m_cameraDownKeyPressed = true;
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
-			m_translateEntityKeyPressed = true;
+		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+			m_translateEntityMode = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
-			m_rotateEntityKeyPressed = true;
+		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+			m_rotateEntityMode = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformKeyPressed()) {
-			m_scaleEntityKeyPressed = true;
+		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+			m_scaleEntityMode = true;
 			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
@@ -1428,56 +1465,46 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraDownKey) {
 		m_cameraDownKeyPressed = false;
 	}
-	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
-		if (m_translateEntityKeyPressed) {
-			m_translateEntityKeyPressed = false;
-			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
-			if (m_globalInfo.currentEntityID != NO_ENTITY) {
-				m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &m_entityMoveTransform.value()));
-				m_entityMoveTransform.reset();
-			}
-		}
-	}
-	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
-		if (m_rotateEntityKeyPressed) {
-			m_rotateEntityKeyPressed = false;
-			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
-			if (m_globalInfo.currentEntityID != NO_ENTITY) {
-				m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &m_entityMoveTransform.value()));
-				m_entityMoveTransform.reset();
-			}
-		}
-	}
-	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
-		if (m_scaleEntityKeyPressed) {
-			m_scaleEntityKeyPressed = false;
-			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
-			if (m_globalInfo.currentEntityID != NO_ENTITY) {
-				m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &m_entityMoveTransform.value()));
-				m_entityMoveTransform.reset();
-			}
-		}
-	}
 	event->accept();
 }
 
 void Renderer::mousePressEvent(QMouseEvent* event) {
-	if (!anyEntityTransformKeyPressed()) {
-		if (event->button() == Qt::RightButton) {
+	if (!anyEntityTransformMode()) {
+		if (event->button() == Qt::LeftButton) {
+			m_doPicking = true;
+		}
+		else if (event->button() == Qt::RightButton) {
 			m_moveCameraButtonPressed = true;
 			m_savedMousePosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
 			m_mouseCursorPreviousPosition = m_savedMousePosition;
 			setCursor(Qt::CursorShape::BlankCursor);
 		}
-		else if (event->button() == Qt::LeftButton) {
-			m_doPicking = true;
+	}
+	else {
+		if (event->button() == Qt::LeftButton) {
+			m_translateEntityMode = false;
+			m_rotateEntityMode = false;
+			m_scaleEntityMode = false;
+			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
+			if (m_globalInfo.currentEntityID != NO_ENTITY) {
+				m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &m_entityMoveTransform.value()));
+				m_entityMoveTransform.reset();
+			}
+		}
+		else {
+			m_translateEntityMode = false;
+			m_rotateEntityMode = false;
+			m_scaleEntityMode = false;
+			if (m_globalInfo.currentEntityID != NO_ENTITY) {
+				m_entityMoveTransform.reset();
+			}
 		}
 	}
 	event->accept();
 }
 
 void Renderer::mouseReleaseEvent(QMouseEvent* event) {
-	if (!anyEntityTransformKeyPressed()) {
+	if (!anyEntityTransformMode()) {
 		if (event->button() == Qt::RightButton) {
 			if (m_moveCameraButtonPressed) {
 				m_moveCameraButtonPressed = false;
@@ -1492,7 +1519,7 @@ void Renderer::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void Renderer::mouseMoveEvent(QMouseEvent* event) {
-	if (!anyEntityTransformKeyPressed()) {
+	if (!anyEntityTransformMode()) {
 		if (event->buttons() & Qt::RightButton) {
 			if (m_moveCameraButtonPressed) {
 				if (!m_mouseMoveFlag) {
@@ -1510,7 +1537,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 	else {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
-			if (m_translateEntityKeyPressed) {
+			if (m_translateEntityMode) {
 				nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
@@ -1530,7 +1557,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 					}
 				}
 			}
-			else if (m_rotateEntityKeyPressed) {
+			else if (m_rotateEntityMode) {
 				nml::mat4 rotationMatrix;
 				if (!m_camera.useOrthographicProjection) {
 					rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.perspectiveDirection);
@@ -1542,19 +1569,19 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				m_entityMoveTransform->rotation -= rotationAngles;
 				m_entityMoveTransform->rotation = nml::vec3(std::fmod(m_entityMoveTransform->rotation.x, 360.0f), std::fmod(m_entityMoveTransform->rotation.y, 360.0f), std::fmod(m_entityMoveTransform->rotation.z, 360.0f));
 			}
-			else if (m_scaleEntityKeyPressed) {
-				nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
-				if (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) {
-					float worldSpaceCursorDifferenceLength = worldSpaceCursorDifference.length();
-					nml::vec3 worldSpaceCursorCurrentEntityDifference = worldSpaceCursorCurrentPosition - m_entityMoveTransform->position;
-					if (nml::dot(worldSpaceCursorCurrentEntityDifference, worldSpaceCursorCurrentEntityDifference) != 0.0f) {
+			else if (m_scaleEntityMode) {
+				nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+				nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+				nml::vec3 previousMouseToCurrentMousePosition = worldSpaceCurrentMouse - worldSpacePreviousMouse;
+				if (nml::dot(previousMouseToCurrentMousePosition, previousMouseToCurrentMousePosition) != 0.0f) {
+					float previousMouseToCurrentMousePositionLength = previousMouseToCurrentMousePosition.length();
+					nml::vec3 objectToCurrentMousePosition = worldSpaceCurrentMouse - m_entityMoveTransform->position;
+					if (nml::dot(objectToCurrentMousePosition, objectToCurrentMousePosition) != 0.0f) {
 						float scaleFactor = 10.0f;
 						if (!m_camera.useOrthographicProjection) {
 							scaleFactor = 1000.0f;
 						}
-						m_entityMoveTransform->scale += ((worldSpaceCursorDifferenceLength * scaleFactor) / worldSpaceCursorCurrentEntityDifference.length()) * ((nml::dot(worldSpaceCursorDifference, worldSpaceCursorCurrentEntityDifference) > 0.0) ? 1.0f : -1.0f);
+						m_entityMoveTransform->scale += ((previousMouseToCurrentMousePositionLength * scaleFactor) / objectToCurrentMousePosition.length()) * ((nml::dot(previousMouseToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 					}
 				}
 			}
@@ -1565,8 +1592,10 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void Renderer::wheelEvent(QWheelEvent* event) {
-	m_mouseScrollY = static_cast<float>(event->angleDelta().y()) / 120.0f;
-	event->accept();
+	if (!anyEntityTransformMode()) {
+		m_mouseScrollY = static_cast<float>(event->angleDelta().y()) / 120.0f;
+		event->accept();
+	}
 }
 
 void Renderer::focusOutEvent(QFocusEvent* event) {
