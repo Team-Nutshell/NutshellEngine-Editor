@@ -39,6 +39,8 @@ private:
 
 	void loadResourcesToGPU();
 
+	void cancelTransform();
+
 	nml::vec2 project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix);
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 

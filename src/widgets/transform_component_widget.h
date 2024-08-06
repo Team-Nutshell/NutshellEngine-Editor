@@ -8,7 +8,6 @@ class TransformComponentWidget : public QWidget {
 public:
 	TransformComponentWidget(GlobalInfo& globalInfo);
 
-private:
 	void updateWidgets(const Transform& transform);
 
 private slots:

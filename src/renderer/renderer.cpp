@@ -2,6 +2,7 @@
 #include "../undo_commands/destroy_entity_command.h"
 #include "../undo_commands/change_entity_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
+#include "../widgets/main_window.h"
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <QMimeData>
@@ -1289,6 +1290,17 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 }
 
+void Renderer::cancelTransform() {
+	if (anyEntityTransformMode()) {
+		m_translateEntityMode = false;
+		m_rotateEntityMode = false;
+		m_scaleEntityMode = false;
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			m_entityMoveTransform.reset();
+		}
+	}
+}
+
 nml::vec2 Renderer::project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix) {
 	nml::vec4 clipSpace = viewProjMatrix * nml::vec4(p, 1.0f);
 	clipSpace /= clipSpace.w;
@@ -1307,12 +1319,7 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 }
 
 void Renderer::onEntitySelected() {
-	m_translateEntityMode = false;
-	m_rotateEntityMode = false;
-	m_scaleEntityMode = false;
-	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_entityMoveTransform.reset();
-	}
+	cancelTransform();
 }
 
 void Renderer::onGridVisibilityToggled(bool showGrid) {
@@ -1336,27 +1343,13 @@ void Renderer::onCollidersVisibilityToggled(bool showColliders) {
 }
 
 void Renderer::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {
-	if (anyEntityTransformMode()) {
-		m_translateEntityMode = false;
-		m_rotateEntityMode = false;
-		m_scaleEntityMode = false;
-		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_entityMoveTransform.reset();
-		}
-	}
+	cancelTransform();
 
 	m_camera.useOrthographicProjection = cameraProjectionOrthographic;
 }
 
 void Renderer::onCameraReset() {
-	if (anyEntityTransformMode()) {
-		m_translateEntityMode = false;
-		m_rotateEntityMode = false;
-		m_scaleEntityMode = false;
-		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_entityMoveTransform.reset();
-		}
-	}
+	cancelTransform();
 
 	if (!m_camera.useOrthographicProjection) {
 		m_camera.perspectivePosition = m_camera.basePerspectivePosition;
@@ -1373,14 +1366,7 @@ void Renderer::onCameraReset() {
 }
 
 void Renderer::onOrthographicCameraToAxisChanged(const nml::vec3& axis) {
-	if (anyEntityTransformMode()) {
-		m_translateEntityMode = false;
-		m_rotateEntityMode = false;
-		m_scaleEntityMode = false;
-		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_entityMoveTransform.reset();
-		}
-	}
+	cancelTransform();
 
 	m_camera.useOrthographicProjection = true;
 	m_camera.orthographicPosition = nml::vec3(0.0f, 0.0f, 0.0f);
@@ -1500,12 +1486,7 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 			}
 		}
 		else {
-			m_translateEntityMode = false;
-			m_rotateEntityMode = false;
-			m_scaleEntityMode = false;
-			if (m_globalInfo.currentEntityID != NO_ENTITY) {
-				m_entityMoveTransform.reset();
-			}
+			cancelTransform();
 		}
 	}
 	event->accept();
@@ -1594,6 +1575,10 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				}
 			}
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
+
+			// Update Transform Widget
+			MainWindow* mainWindow = reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow);
+			mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransform.value());
 		}
 	}
 	event->accept();

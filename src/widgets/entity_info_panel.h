@@ -16,7 +16,8 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	EntityInfoNameWidget* m_entityInfoNameWidget;
-	EntityInfoPersistenceWidget* m_entityInfoPersistenceWidget;
-	ComponentScrollArea* m_componentScrollArea;
+public:
+	EntityInfoNameWidget* entityInfoNameWidget;
+	EntityInfoPersistenceWidget* entityInfoPersistenceWidget;
+	ComponentScrollArea* componentScrollArea;
 };

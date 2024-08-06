@@ -11,5 +11,6 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
+public:
 	ComponentList* componentList;
 };

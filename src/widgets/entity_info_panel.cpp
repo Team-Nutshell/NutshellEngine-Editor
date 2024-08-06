@@ -9,28 +9,28 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 2, 2, 2);
 	layout()->addWidget(new QLabel("Entity Info"));
-	m_entityInfoNameWidget = new EntityInfoNameWidget(m_globalInfo);
-	m_entityInfoNameWidget->hide();
-	layout()->addWidget(m_entityInfoNameWidget);
-	m_entityInfoPersistenceWidget = new EntityInfoPersistenceWidget(m_globalInfo);
-	m_entityInfoPersistenceWidget->hide();
-	layout()->addWidget(m_entityInfoPersistenceWidget);
-	m_componentScrollArea = new ComponentScrollArea(m_globalInfo);
-	m_componentScrollArea->hide();
-	layout()->addWidget(m_componentScrollArea);
+	entityInfoNameWidget = new EntityInfoNameWidget(m_globalInfo);
+	entityInfoNameWidget->hide();
+	layout()->addWidget(entityInfoNameWidget);
+	entityInfoPersistenceWidget = new EntityInfoPersistenceWidget(m_globalInfo);
+	entityInfoPersistenceWidget->hide();
+	layout()->addWidget(entityInfoPersistenceWidget);
+	componentScrollArea = new ComponentScrollArea(m_globalInfo);
+	componentScrollArea->hide();
+	layout()->addWidget(componentScrollArea);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::onEntitySelected);
 }
 
 void EntityInfoPanel::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_entityInfoNameWidget->show();
-		m_entityInfoPersistenceWidget->show();
-		m_componentScrollArea->show();
+		entityInfoNameWidget->show();
+		entityInfoPersistenceWidget->show();
+		componentScrollArea->show();
 	}
 	else {
-		m_entityInfoNameWidget->hide();
-		m_entityInfoPersistenceWidget->hide();
-		m_componentScrollArea->hide();
+		entityInfoNameWidget->hide();
+		entityInfoPersistenceWidget->hide();
+		componentScrollArea->hide();
 	}
 }

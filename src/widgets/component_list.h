@@ -18,6 +18,7 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
+public:
 	TransformComponentWidget* transformWidget;
 	CameraComponentWidget* cameraWidget;
 	LightComponentWidget* lightWidget;
