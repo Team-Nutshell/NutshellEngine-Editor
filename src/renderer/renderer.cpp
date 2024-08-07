@@ -1485,7 +1485,7 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 				m_entityMoveTransform.reset();
 			}
 		}
-		else {
+		else if (event->button() == Qt::RightButton) {
 			cancelTransform();
 		}
 	}
