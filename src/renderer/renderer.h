@@ -66,6 +66,7 @@ private slots:
 	void dragEnterEvent(QDragEnterEvent* event);
 	void dragMoveEvent(QDragMoveEvent* event);
 	void dropEvent(QDropEvent* event);
+	void leaveEvent(QEvent* event);
 
 private:
 	GlobalInfo& m_globalInfo;

@@ -1642,3 +1642,35 @@ void Renderer::dropEvent(QDropEvent* event) {
 		}
 	}
 }
+
+void Renderer::leaveEvent(QEvent* event) {
+	(void)event;
+	if (anyEntityTransformMode()) {
+		QPoint localCursorPosition = mapFromGlobal(QCursor::pos());
+		QPoint newCursorPosition = localCursorPosition;
+
+		if (localCursorPosition.x() < 0) {
+			newCursorPosition.setX(width() - 1);
+			m_mouseCursorPreviousPosition.x = static_cast<float>(width());
+		}
+		else if (localCursorPosition.x() > (width() - 1)) {
+			newCursorPosition.setX(0);
+			m_mouseCursorPreviousPosition.x = -1.0f;
+		}
+		else {
+			m_mouseCursorPreviousPosition.x = static_cast<float>(localCursorPosition.x());
+		}
+		if (localCursorPosition.y() < 0) {
+			newCursorPosition.setY(height() - 1);
+			m_mouseCursorPreviousPosition.y = 0.0f;
+		}
+		else if (localCursorPosition.y() > (height() - 1)) {
+			newCursorPosition.setY(0);
+			m_mouseCursorPreviousPosition.y = static_cast<float>(height() + 1);
+		}
+		else {
+			m_mouseCursorPreviousPosition.y = static_cast<float>(height() - localCursorPosition.y());
+		}
+		QCursor::setPos(mapToGlobal(newCursorPosition));
+	}
+}
