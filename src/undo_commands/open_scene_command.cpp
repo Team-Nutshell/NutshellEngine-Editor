@@ -1,7 +1,7 @@
 #include "open_scene_command.h"
 
-OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::unordered_map<EntityID, Entity>& entities) : m_globalInfo(globalInfo) {
-	setText("Open Scene");
+OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::unordered_map<EntityID, Entity>& entities, const std::string& scenePath) : m_globalInfo(globalInfo) {
+	setText("Open Scene \"" + QString::fromStdString(scenePath) + "\"");
 	m_newEntities = entities;
 }
 

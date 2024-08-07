@@ -56,7 +56,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			}
 		}
 		if (!entities.empty()) {
-			globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, entities));
+			globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, entities, sceneFilePath));
 
 			for (const auto& entity : entities) {
 				ColliderMesh::update(globalInfo, entity.first);
