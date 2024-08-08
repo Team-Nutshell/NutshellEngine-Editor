@@ -86,7 +86,7 @@ void RigidbodyComponentWidget::onAddEntityRigidbody(EntityID entityID) {
 		show();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
@@ -94,7 +94,7 @@ void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody) {
@@ -105,7 +105,7 @@ void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const 
 		}
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RigidbodyComponentWidget::onBooleanChanged(bool boolean) {

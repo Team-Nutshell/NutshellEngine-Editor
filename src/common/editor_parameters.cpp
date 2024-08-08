@@ -167,10 +167,15 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.cameraSensitivity = j["renderer"]["cameraSensitivity"];
 		}
 
-		if (j["renderer"].contains("outlineColor")) {
-			renderer.outlineColor.x = j["renderer"]["outlineColor"][0];
-			renderer.outlineColor.y = j["renderer"]["outlineColor"][1];
-			renderer.outlineColor.z = j["renderer"]["outlineColor"][2];
+		if (j["renderer"].contains("currentEntityOutlineColor")) {
+			renderer.currentEntityOutlineColor.x = j["renderer"]["currentEntityOutlineColor"][0];
+			renderer.currentEntityOutlineColor.y = j["renderer"]["currentEntityOutlineColor"][1];
+			renderer.currentEntityOutlineColor.z = j["renderer"]["currentEntityOutlineColor"][2];
+		}
+		if (j["renderer"].contains("otherEntitiesOutlineColor")) {
+			renderer.otherEntitiesOutlineColor.x = j["renderer"]["otherEntitiesOutlineColor"][0];
+			renderer.otherEntitiesOutlineColor.y = j["renderer"]["otherEntitiesOutlineColor"][1];
+			renderer.otherEntitiesOutlineColor.z = j["renderer"]["otherEntitiesOutlineColor"][2];
 		}
 	}
 
@@ -215,7 +220,8 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
-	j["renderer"]["outlineColor"] = { renderer.outlineColor.x, renderer.outlineColor.y, renderer.outlineColor.z };
+	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
+	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
 
 	j["build"]["cMakePath"] = build.cMakePath;
 

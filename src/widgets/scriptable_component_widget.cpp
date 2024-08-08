@@ -110,7 +110,7 @@ void ScriptableComponentWidget::onAddEntityScriptable(EntityID entityID) {
 		show();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
@@ -118,7 +118,7 @@ void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable) {
@@ -129,7 +129,7 @@ void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, cons
 		}
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void ScriptableComponentWidget::onElementChanged(const std::string& element) {

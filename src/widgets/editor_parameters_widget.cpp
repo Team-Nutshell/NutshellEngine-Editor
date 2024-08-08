@@ -155,10 +155,15 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
-	outlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.outlineColor, 1.0f));
-	outlineColorWidget->layout()->setAlignment(outlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	outlineColorWidget->layout()->setAlignment(outlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
-	rendererVerticalLayout->addWidget(outlineColorWidget);
+	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor, 1.0f));
+	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(currentEntityOutlineColorWidget);
+
+	otherEntitiesOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor, 1.0f));
+	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(otherEntitiesOutlineColorWidget);
 
 	addTab(rendererParametersTab, "Renderer");
 
@@ -209,7 +214,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(outlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
+	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onCurrentEntityOutlineColorChanged);
+	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onOtherEntitiesOutlineColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCMakePathChanged);
 	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCodeEditorCommandChanged);
 }
@@ -268,42 +274,42 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToXPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToYMKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToYPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToZMKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToZPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
+			m_globalInfo.mainWindow->viewMenu->orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 		}
 	}
 	else if (senderWidget == translateEntityKeySelect) {
@@ -328,42 +334,42 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
+			m_globalInfo.mainWindow->viewMenu->toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleGridVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
+			m_globalInfo.mainWindow->viewMenu->toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleBackfaceCullingKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
+			m_globalInfo.mainWindow->viewMenu->toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
 		}
 	}
 	else if (senderWidget == toggleCamerasVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
+			m_globalInfo.mainWindow->viewMenu->toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleLightingKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleLightingKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightingKey);
+			m_globalInfo.mainWindow->viewMenu->toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 		}
 	}
 	else if (senderWidget == toggleCollidersVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey = sequence[0].key();
-			reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow)->viewMenu->toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
+			m_globalInfo.mainWindow->viewMenu->toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 		}
 	}
 
@@ -394,8 +400,14 @@ void EditorParametersWidget::onCodeEditorCommandChanged(const std::string& codeE
 	save();
 }
 
-void EditorParametersWidget::onColorChanged(const nml::vec4& color) {
-	m_globalInfo.editorParameters.renderer.outlineColor = nml::vec3(color);
+void EditorParametersWidget::onCurrentEntityOutlineColorChanged(const nml::vec4& currentEntityOutlineColor) {
+	m_globalInfo.editorParameters.renderer.currentEntityOutlineColor = nml::vec3(currentEntityOutlineColor);
+
+	save();
+}
+
+void EditorParametersWidget::onOtherEntitiesOutlineColorChanged(const nml::vec4& otherEntitiesOutlineColor) {
+	m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor = nml::vec3(otherEntitiesOutlineColor);
 
 	save();
 }

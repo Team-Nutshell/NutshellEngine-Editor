@@ -21,7 +21,8 @@ private slots:
 	void onScalarChanged(float value);
 	void onCMakePathChanged(const std::string& cMakePath);
 	void onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged);
-	void onColorChanged(const nml::vec4& color);
+	void onCurrentEntityOutlineColorChanged(const nml::vec4& currentEntityOutlineColor);
+	void onOtherEntitiesOutlineColorChanged(const nml::vec4& otherEntitiesOutlineColor);
 
 private:
 	void save();
@@ -56,7 +57,8 @@ public:
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
-	ColorPickerWidget* outlineColorWidget;
+	ColorPickerWidget* currentEntityOutlineColorWidget;
+	ColorPickerWidget* otherEntitiesOutlineColorWidget;
 
 	QWidget* buildParametersTab;
 	StringWidget* cMakePathWidget;

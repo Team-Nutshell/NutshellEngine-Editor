@@ -60,7 +60,7 @@ void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const 
 		}
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void TransformComponentWidget::onVec3Changed(const nml::vec3& value) {

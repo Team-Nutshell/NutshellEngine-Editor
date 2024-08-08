@@ -10,7 +10,7 @@ struct RendererParameters {
 	Qt::Key cameraLeftKey = Qt::Key_A;
 	Qt::Key cameraRightKey = Qt::Key_D;
 	Qt::Key cameraUpKey = Qt::Key_Space;
-	Qt::Key cameraDownKey = Qt::Key_Shift;
+	Qt::Key cameraDownKey = Qt::Key_Z;
 	Qt::Key switchCameraProjectionKey = Qt::Key_P;
 	Qt::Key resetCameraKey = Qt::Key_0;
 	Qt::Key orthographicCameraToXMKey = Qt::Key_4;
@@ -32,7 +32,8 @@ struct RendererParameters {
 	float cameraSpeed = 2.0f;
 	float cameraSensitivity = 0.5f;
 
-	nml::vec3 outlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
+	nml::vec3 currentEntityOutlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
+	nml::vec3 otherEntitiesOutlineColor = nml::vec3(1.0f, 0.7f, 0.0f);
 };
 
 struct BuildParameters {

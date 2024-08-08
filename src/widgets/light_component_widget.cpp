@@ -79,7 +79,7 @@ void LightComponentWidget::onAddEntityLight(EntityID entityID) {
 		show();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void LightComponentWidget::onRemoveEntityLight(EntityID entityID) {
@@ -87,7 +87,7 @@ void LightComponentWidget::onRemoveEntityLight(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& light) {
@@ -98,7 +98,7 @@ void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& l
 		}
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void LightComponentWidget::onElementChanged(const std::string& element) {

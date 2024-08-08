@@ -42,7 +42,7 @@ signals:
 
 	void toggleBackfaceCullingSignal(bool);
 	void toggleGridVisibilitySignal(bool);
-	void toggleCurrentEntityVisibilitySignal(bool);
+	void toggleEntityVisibilitySignal(EntityID, bool);
 	void toggleCamerasVisibilitySignal(bool);
 	void toggleLightingSignal(bool);
 	void toggleCollidersVisibilitySignal(bool);

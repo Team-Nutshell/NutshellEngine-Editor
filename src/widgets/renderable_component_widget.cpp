@@ -104,7 +104,7 @@ void RenderableComponentWidget::onAddEntityRenderable(EntityID entityID) {
 
 	ColliderMesh::update(m_globalInfo, entityID);
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
@@ -112,7 +112,7 @@ void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, const Renderable& renderable) {
@@ -125,7 +125,7 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 
 	ColliderMesh::update(m_globalInfo, entityID);
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void RenderableComponentWidget::onStringChanged(const std::string& string) {

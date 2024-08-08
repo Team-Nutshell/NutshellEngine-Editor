@@ -2,7 +2,7 @@
 #include <QKeySequence>
 
 ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalInfo) {
-	toggleCurrentEntityVisibilityAction = addAction("Hide Current Entity", this, &ViewMenu::toggleCurrentEntityVisibility);
+	toggleCurrentEntityVisibilityAction = addAction("Toggle Entity Visibility", this, &ViewMenu::toggleCurrentEntityVisibility);
 	toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 	toggleCurrentEntityVisibilityAction->setEnabled(false);
 	toggleGridVisibilityAction = addAction("Hide Grid", this, &ViewMenu::toggleGridVisibility);
@@ -34,7 +34,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 	orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onEntitySelected);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCurrentEntityVisibilitySignal, this, &ViewMenu::onCurrentEntityVisibilityToggled);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &ViewMenu::onEntityVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &ViewMenu::onGridVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCamerasVisibilityToggled);
@@ -45,7 +45,11 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalI
 
 void ViewMenu::toggleCurrentEntityVisibility() {
 	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = !m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible;
-	emit m_globalInfo.signalEmitter.toggleCurrentEntityVisibilitySignal(m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible);
+	emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(m_globalInfo.currentEntityID, m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible);
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		m_globalInfo.entities[otherSelectedEntityID].isVisible = !m_globalInfo.entities[otherSelectedEntityID].isVisible;
+		emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(otherSelectedEntityID, m_globalInfo.entities[otherSelectedEntityID].isVisible);
+	}
 }
 
 void ViewMenu::toggleGridVisibility() {
@@ -121,15 +125,24 @@ void ViewMenu::orthographicCameraToZP() {
 void ViewMenu::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		toggleCurrentEntityVisibilityAction->setEnabled(true);
+		if (m_globalInfo.otherSelectedEntityIDs.empty()) {
+			toggleCurrentEntityVisibilityAction->setText(m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible ? "Hide Current Entity" : "Show Current Entity");
+		}
+		else {
+			toggleCurrentEntityVisibilityAction->setText("Toggle Entities Visibility");
+		}
 	}
 	else {
 		toggleCurrentEntityVisibilityAction->setEnabled(false);
+		toggleCurrentEntityVisibilityAction->setText("Toggle Entity Visibility");
 	}
 }
 
-void ViewMenu::onCurrentEntityVisibilityToggled(bool isEntityVisible) {
-	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = isEntityVisible;
-	toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
+void ViewMenu::onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible) {
+	m_globalInfo.entities[entityID].isVisible = isEntityVisible;
+	if (m_globalInfo.otherSelectedEntityIDs.empty()) {
+		toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? "Hide Current Entity" : "Show Current Entity");
+	}
 }
 
 void ViewMenu::onGridVisibilityToggled(bool showGrid) {

@@ -145,7 +145,7 @@ void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
 
 	ColliderMesh::update(m_globalInfo, entityID);
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
@@ -153,7 +153,7 @@ void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, const Collidable& collidable) {
@@ -166,7 +166,7 @@ void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, cons
 
 	ColliderMesh::update(m_globalInfo, entityID);
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CollidableComponentWidget::onElementChanged(const std::string& element) {

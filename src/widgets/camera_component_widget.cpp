@@ -68,7 +68,7 @@ void CameraComponentWidget::onAddEntityCamera(EntityID entityID) {
 		show();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
@@ -76,7 +76,7 @@ void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
 		hide();
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera& camera) {
@@ -87,7 +87,7 @@ void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera
 		}
 	}
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
 void CameraComponentWidget::onVec3Changed(const nml::vec3& value) {

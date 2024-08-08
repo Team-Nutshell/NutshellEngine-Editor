@@ -9,7 +9,7 @@
 
 void SceneManager::newScene(GlobalInfo& globalInfo) {
 	globalInfo.currentScenePath = "";
-	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(globalInfo.mainWindow);
+	MainWindow* mainWindow = globalInfo.mainWindow;
 	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName));
 	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo));
 	emit globalInfo.signalEmitter.resetCameraSignal();
@@ -33,7 +33,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 
 	SceneManager::newScene(globalInfo);
 	globalInfo.currentScenePath = sceneFilePath;
-	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(globalInfo.mainWindow);
+	MainWindow* mainWindow = globalInfo.mainWindow;
 	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName) + " - " + QString::fromStdString(sceneFilePath));
 	if (j.contains("entities")) {
 		std::unordered_map<EntityID, Entity> entities;
@@ -69,7 +69,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 
 void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {
 	globalInfo.currentScenePath = sceneFilePath;
-	MainWindow* mainWindow = reinterpret_cast<MainWindow*>(globalInfo.mainWindow);
+	MainWindow* mainWindow = globalInfo.mainWindow;
 	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName) + " - " + QString::fromStdString(sceneFilePath));
 	nlohmann::json j;
 	for (int i = 0; i < mainWindow->entityPanel->entityList->count(); i++) {

@@ -8,10 +8,13 @@
 #include <QUndoStack>
 #include <memory>
 #include <unordered_map>
+#include <set>
 #include <algorithm>
 #include <string>
 #include <optional>
 #include <cstdint>
+
+class MainWindow;
 
 struct GlobalInfo {
 	std::string projectDirectory = "";
@@ -19,6 +22,7 @@ struct GlobalInfo {
 
 	std::unordered_map<EntityID, Entity> entities;
 	EntityID currentEntityID = NO_ENTITY;
+	std::set<EntityID> otherSelectedEntityIDs;
 	EntityID globalEntityID = 0;
 	std::optional<Entity> copiedEntity;
 
@@ -26,7 +30,7 @@ struct GlobalInfo {
 
 	float devicePixelRatio = 1.0f;
 
-	void* mainWindow;
+	MainWindow* mainWindow;
 
 	std::unique_ptr<QUndoStack> undoStack;
 	EditorParameters editorParameters;

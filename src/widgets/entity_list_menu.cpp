@@ -1,6 +1,6 @@
 #include "entity_list_menu.h"
 #include "../undo_commands/create_entity_command.h"
-#include "../undo_commands/destroy_entity_command.h"
+#include "../undo_commands/destroy_entities_command.h"
 
 EntityListMenu::EntityListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	newEntityAction = addAction("New Entity", this, &EntityListMenu::newEntity);
@@ -12,5 +12,5 @@ void EntityListMenu::newEntity() {
 }
 
 void EntityListMenu::deleteEntity() {
-	m_globalInfo.undoStack->push(new DestroyEntityCommand(m_globalInfo, m_globalInfo.currentEntityID));
+	m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, { m_globalInfo.currentEntityID }));
 }

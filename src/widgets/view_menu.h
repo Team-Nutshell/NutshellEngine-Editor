@@ -26,7 +26,7 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onCurrentEntityVisibilityToggled(bool isEntityVisible);
+	void onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible);
 	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCullingEnabled);
 	void onCamerasVisibilityToggled(bool showCameras);

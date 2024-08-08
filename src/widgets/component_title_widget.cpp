@@ -23,5 +23,5 @@ ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::st
 void ComponentTitleWidget::onClick() {
 	m_globalInfo.undoStack->push(new RemoveEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, m_name));
 
-	SaveTitleChanger::change(reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow));
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }

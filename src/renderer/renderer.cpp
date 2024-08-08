@@ -1,11 +1,13 @@
 #include "renderer.h"
-#include "../undo_commands/destroy_entity_command.h"
+#include "../undo_commands/destroy_entities_command.h"
 #include "../undo_commands/change_entity_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
 #include "../widgets/main_window.h"
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <QMimeData>
+#include <algorithm>
+#include <iterator>
 #include <array>
 #include <cstdint>
 
@@ -808,10 +810,26 @@ void Renderer::paintGL() {
 		uint32_t pickedEntityID;
 		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, ((height() - 1) - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
 		if (pickedEntityID != NO_ENTITY) {
-			m_globalInfo.currentEntityID = pickedEntityID;
+			if (m_globalInfo.currentEntityID != pickedEntityID) {
+				if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
+					if (m_globalInfo.currentEntityID != NO_ENTITY) {
+						m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+					}
+					m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
+					m_globalInfo.currentEntityID = pickedEntityID;
+				}
+				else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+					m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
+				}
+				else {
+					m_globalInfo.otherSelectedEntityIDs.clear();
+					m_globalInfo.currentEntityID = pickedEntityID;
+				}
+			}
 		}
 		else {
 			m_globalInfo.currentEntityID = NO_ENTITY;
+			m_globalInfo.otherSelectedEntityIDs.clear();
 		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
 
@@ -822,37 +840,52 @@ void Renderer::paintGL() {
 
 	// Outline
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		const Entity& entity = m_globalInfo.entities[m_globalInfo.currentEntityID];
+		std::set<EntityID> entitiesOutline = m_globalInfo.otherSelectedEntityIDs;
+		entitiesOutline.insert(m_globalInfo.currentEntityID);
 
-		// Outline Solo
-		gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gl.glEnable(GL_DEPTH_TEST);
-		gl.glDepthFunc(GL_LESS);
-		gl.glDepthMask(GL_TRUE);
-		gl.glDisable(GL_BLEND);
+		for (EntityID entityID : entitiesOutline) {
+			const Entity& entity = m_globalInfo.entities[entityID];
 
-		gl.glUseProgram(m_outlineSoloProgram);
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+			// Outline Solo
+			gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
+			gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			gl.glEnable(GL_DEPTH_TEST);
+			gl.glDepthFunc(GL_LESS);
+			gl.glDepthMask(GL_TRUE);
+			gl.glDisable(GL_BLEND);
 
-		// Entity
-		const Transform& transform = ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.transform;
-		nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-		nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
+			gl.glUseProgram(m_outlineSoloProgram);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-		if (entity.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
-			const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
-			if ((entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.renderable->primitiveIndex < entityModel.primitives.size())) {
-				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
-				gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
-				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
+			// Entity
+			const Transform& transform = ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.transform;
+			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 
-				gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+			if (entity.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
+				if ((entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.renderable->primitiveIndex < entityModel.primitives.size())) {
+					const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
+					gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
+					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+					gl.glEnableVertexAttribArray(positionPos);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
+
+					gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
+				else {
+					RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
+					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
+					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+					gl.glEnableVertexAttribArray(positionPos);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+
+					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
 			}
 			else {
 				RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
@@ -864,77 +897,71 @@ void Renderer::paintGL() {
 
 				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
-		}
-		else {
-			RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
-			gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-			GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-			gl.glEnableVertexAttribArray(positionPos);
-			gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-			gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
-			gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
-		}
+			// Entity Camera
+			if (m_showCameras) {
+				if (entity.camera) {
+					nml::mat4 entityCameraViewMatrix;
+					nml::mat4 entityCameraRotation;
+					if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
+						entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.camera->forward, entity.camera->up);
+						entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					}
+					else {
+						entityCameraViewMatrix = nml::lookAtRH(entity.transform.position, entity.transform.position + entity.camera->forward, entity.camera->up);
+						entityCameraRotation = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					}
+					nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
+					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
 
-		// Entity Camera
-		if (m_showCameras) {
-			if (entity.camera) {
-				nml::mat4 entityCameraViewMatrix;
-				nml::mat4 entityCameraRotation;
-				if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-					entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.camera->forward, entity.camera->up);
-					entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-				}
-				else {
-					entityCameraViewMatrix = nml::lookAtRH(entity.transform.position, entity.transform.position + entity.camera->forward, entity.camera->up);
-					entityCameraRotation = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-				}
-				nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
-				nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
-
-				gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
-				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
-
-				gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
-			}
-		}
-
-		// Entity Collider
-		if (m_showColliders) {
-			if (entity.isVisible) {
-				if (entity.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
-					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.entityID)];
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
-					const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
-					gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
+					gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
 					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
+					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 
-					gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 			}
+
+			// Entity Collider
+			if (m_showColliders) {
+				if (entity.isVisible) {
+					if (entity.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+						const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.entityID)];
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
+						const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
+						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
+						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
+						gl.glEnableVertexAttribArray(positionPos);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
+
+						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+					}
+				}
+			}
+
+			// Outline
+			gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+			gl.glEnable(GL_DEPTH_TEST);
+			gl.glDepthFunc(GL_ALWAYS);
+
+			gl.glUseProgram(m_outlineProgram);
+			gl.glActiveTexture(GL_TEXTURE0);
+			gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloImage);
+			gl.glUniform1i(gl.glGetUniformLocation(m_outlineProgram, "outlineSoloTexture"), 0);
+			if (entity.entityID == m_globalInfo.currentEntityID) {
+				gl.glUniform3f(gl.glGetUniformLocation(m_outlineProgram, "outlineColor"), m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.x, m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.y, m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.z);
+			}
+			else {
+				gl.glUniform3f(gl.glGetUniformLocation(m_outlineProgram, "outlineColor"), m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor.x, m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor.y, m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor.z);
+			}
+			gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			gl.glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
-
-		// Outline
-		gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
-		gl.glEnable(GL_DEPTH_TEST);
-		gl.glDepthFunc(GL_ALWAYS);
-
-		gl.glUseProgram(m_outlineProgram);
-		gl.glActiveTexture(GL_TEXTURE0);
-		gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloImage);
-		gl.glUniform1i(gl.glGetUniformLocation(m_outlineProgram, "outlineSoloTexture"), 0);
-		gl.glUniform3f(gl.glGetUniformLocation(m_outlineProgram, "outlineColor"), m_globalInfo.editorParameters.renderer.outlineColor.x, m_globalInfo.editorParameters.renderer.outlineColor.y, m_globalInfo.editorParameters.renderer.outlineColor.z);
-
-		gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		gl.glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 }
 
@@ -1429,7 +1456,11 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 	}
 	else if (event->key() == Qt::Key::Key_Delete) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_globalInfo.undoStack->push(new DestroyEntityCommand(m_globalInfo, m_globalInfo.currentEntityID));
+			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
+			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
+			m_globalInfo.currentEntityID = NO_ENTITY;
+			m_globalInfo.otherSelectedEntityIDs.clear();
+			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
 		}
 	}
 	event->accept();
@@ -1577,7 +1608,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
 
 			// Update Transform Widget
-			MainWindow* mainWindow = reinterpret_cast<MainWindow*>(m_globalInfo.mainWindow);
+			MainWindow* mainWindow = m_globalInfo.mainWindow;
 			mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransform.value());
 		}
 	}
