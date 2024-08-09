@@ -13,9 +13,9 @@ class EntityList : public QListWidget {
 public:
 	EntityList(GlobalInfo& globalInfo);
 
-private:
 	EntityListItem* findItemWithEntityID(EntityID entityID);
 
+private:
 	void updateSelection();
 
 private slots:

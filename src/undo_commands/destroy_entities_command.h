@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include <QUndoCommand>
+#include <utility>
 
 class DestroyEntitiesCommand : public QUndoCommand {
 public:
@@ -12,5 +13,5 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::vector<Entity> m_destroyedEntities;
+	std::vector<std::pair<Entity, int>> m_destroyedEntities;
 };
