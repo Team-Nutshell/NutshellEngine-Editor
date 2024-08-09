@@ -13,6 +13,8 @@ public:
 
 private:
 	void updateWidgets(const Scriptable& scriptable);
+	void updateComponent(EntityID entityID, Component* component);
+
 	std::vector<std::string> getScriptEntries();
 
 private slots:

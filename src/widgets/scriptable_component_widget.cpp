@@ -3,7 +3,7 @@
 #include "separator_line.h"
 #include "new_script_message_box.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../widgets/main_window.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -59,6 +59,10 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 			scriptNameWidget->comboBox->setCurrentText("No script selected");
 		}
 	}
+}
+
+void ScriptableComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Scriptable", { component }));
 }
 
 std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
@@ -169,7 +173,7 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 			newScriptable.scriptName = element;
 		}
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Scriptable", &newScriptable));
+	updateComponent(m_globalInfo.currentEntityID, &newScriptable);
 }
 
 void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {

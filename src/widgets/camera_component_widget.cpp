@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
 
@@ -49,6 +49,10 @@ void CameraComponentWidget::updateWidgets(const Camera& camera) {
 	nearPlaneWidget->valueLineEdit->setText(QString::number(camera.nearPlane, 'f', 3));
 	farPlaneWidget->value = camera.farPlane;
 	farPlaneWidget->valueLineEdit->setText(QString::number(camera.farPlane, 'f', 3));
+}
+
+void CameraComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Camera", { component }));
 }
 
 void CameraComponentWidget::onEntitySelected() {
@@ -100,7 +104,7 @@ void CameraComponentWidget::onVec3Changed(const nml::vec3& value) {
 	else if (senderWidget == upWidget) {
 		newCamera.up = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));
+	updateComponent(m_globalInfo.currentEntityID, &newCamera);
 }
 
 void CameraComponentWidget::onScalarChanged(float value) {
@@ -116,5 +120,5 @@ void CameraComponentWidget::onScalarChanged(float value) {
 	else if (senderWidget == farPlaneWidget) {
 		newCamera.farPlane = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera", &newCamera));
+	updateComponent(m_globalInfo.currentEntityID, &newCamera);
 }

@@ -10,6 +10,9 @@ public:
 
 	void updateWidgets(const Transform& transform);
 
+private:
+	void updateComponent(EntityID entityID, Component* component);
+
 private slots:
 	void onEntitySelected();
 	void onChangeEntityTransform(EntityID entityID, const Transform& transform);

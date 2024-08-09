@@ -11,6 +11,7 @@ public:
 
 private:
 	void updateWidgets(const Camera& camera);
+	void updateComponent(EntityID entityID, Component* component);
 
 private slots:
 	void onEntitySelected();

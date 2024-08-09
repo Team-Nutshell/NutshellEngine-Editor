@@ -1,6 +1,6 @@
 #include "renderer.h"
 #include "../undo_commands/destroy_entities_command.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
 #include "../widgets/main_window.h"
 #include <QKeySequence>
@@ -561,7 +561,8 @@ void Renderer::paintGL() {
 
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.isVisible) {
-			const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
@@ -683,7 +684,8 @@ void Renderer::paintGL() {
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
 				if (entity.second.camera) {
-					const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.second.camera->forward, entity.second.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), 16.0f / 9.0f, entity.second.camera->nearPlane, entity.second.camera->farPlane);
@@ -704,7 +706,8 @@ void Renderer::paintGL() {
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
 				if (entity.second.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.first)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
-					const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
@@ -763,7 +766,8 @@ void Renderer::paintGL() {
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
-				const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+				bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 				nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
@@ -859,7 +863,8 @@ void Renderer::paintGL() {
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
 			// Entity
-			const Transform& transform = ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.transform;
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entityID] : entity.transform;
 			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
@@ -901,16 +906,8 @@ void Renderer::paintGL() {
 			// Entity Camera
 			if (m_showCameras) {
 				if (entity.camera) {
-					nml::mat4 entityCameraViewMatrix;
-					nml::mat4 entityCameraRotation;
-					if ((entity.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) {
-						entityCameraViewMatrix = nml::lookAtRH(m_entityMoveTransform->position, m_entityMoveTransform->position + entity.camera->forward, entity.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(m_entityMoveTransform->rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(m_entityMoveTransform->rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
-					else {
-						entityCameraViewMatrix = nml::lookAtRH(entity.transform.position, entity.transform.position + entity.camera->forward, entity.camera->up);
-						entityCameraRotation = nml::rotate(nml::toRad(entity.transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(entity.transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					}
+					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.camera->forward, entity.camera->up);
+					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
@@ -1159,7 +1156,8 @@ void Renderer::updateLights() {
 
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.light) {
-			const Transform& transform = ((entity.second.entityID == m_globalInfo.currentEntityID) && m_entityMoveTransform) ? m_entityMoveTransform.value() : entity.second.transform;
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 			const Light& light = entity.second.light.value();
 
 			if (light.type == "Directional") {
@@ -1323,7 +1321,7 @@ void Renderer::cancelTransform() {
 		m_rotateEntityMode = false;
 		m_scaleEntityMode = false;
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_entityMoveTransform.reset();
+			m_entityMoveTransforms.clear();
 		}
 	}
 }
@@ -1433,7 +1431,10 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
 			m_translateEntityMode = true;
-			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
@@ -1441,7 +1442,10 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
 			m_rotateEntityMode = true;
-			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
@@ -1449,7 +1453,10 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
 			m_scaleEntityMode = true;
-			m_entityMoveTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
@@ -1518,8 +1525,14 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 			m_scaleEntityMode = false;
 			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
 			if (m_globalInfo.currentEntityID != NO_ENTITY) {
-				m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &m_entityMoveTransform.value()));
-				m_entityMoveTransform.reset();
+				std::vector<EntityID> changedEntityIDs = { m_globalInfo.currentEntityID };
+				std::vector<Component*> changedEntityTransforms = { &m_entityMoveTransforms[m_globalInfo.currentEntityID] };
+				for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+					changedEntityIDs.push_back(otherSelectedEntityIDs);
+					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityIDs]);
+				}
+				m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
+				m_entityMoveTransforms.clear();
 			}
 		}
 		else if (event->button() == Qt::RightButton) {
@@ -1562,60 +1575,68 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 	}
 	else {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+			selectedEntityIDs.insert(m_globalInfo.currentEntityID);
 			nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
 			if (m_translateEntityMode) {
 				nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
 				if (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) {
-					if (!m_camera.useOrthographicProjection) {
-						nml::vec3 cameraEntityDifference = m_entityMoveTransform->position - m_camera.perspectivePosition;
-						if (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) {
-							nml::vec3 worldSpaceCursorDifferenceNormalized = nml::normalize(worldSpaceCursorDifference);
-							float worldSpaceCursorDifferenceLength = worldSpaceCursorDifference.length();
-							float cameraEntityDifferenceLength = cameraEntityDifference.length();
-							float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / m_camera.nearPlane;
-							m_entityMoveTransform->position += worldSpaceCursorDifferenceNormalized * coefficient;
+					float worldSpaceCursorDifferenceLength = worldSpaceCursorDifference.length();
+					for (EntityID selectedEntityID : selectedEntityIDs) {
+						if (!m_camera.useOrthographicProjection) {
+							nml::vec3 cameraEntityDifference = m_entityMoveTransforms[selectedEntityID].position - m_camera.perspectivePosition;
+							if (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) {
+								nml::vec3 worldSpaceCursorDifferenceNormalized = nml::normalize(worldSpaceCursorDifference);
+								float cameraEntityDifferenceLength = cameraEntityDifference.length();
+								float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / m_camera.nearPlane;
+								m_entityMoveTransforms[selectedEntityID].position += worldSpaceCursorDifferenceNormalized * coefficient;
+							}
 						}
-					}
-					else {
-						m_entityMoveTransform->position += worldSpaceCursorDifference;
+						else {
+							m_entityMoveTransforms[selectedEntityID].position += worldSpaceCursorDifference;
+						}
 					}
 				}
 			}
 			else if (m_rotateEntityMode) {
 				nml::mat4 rotationMatrix;
-				if (!m_camera.useOrthographicProjection) {
-					rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.perspectiveDirection);
+				for (EntityID selectedEntityID : selectedEntityIDs) {
+					if (!m_camera.useOrthographicProjection) {
+						rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.perspectiveDirection);
+					}
+					else {
+						rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.orthographicDirection);
+					}
+					nml::vec3 rotationAngles = nml::vec3(nml::toDeg(std::atan2(rotationMatrix.z.y, rotationMatrix.z.z)), nml::toDeg(std::atan2(-rotationMatrix.z.x, std::sqrt((rotationMatrix.z.y * rotationMatrix.z.y) + (rotationMatrix.z.z * rotationMatrix.z.z)))), nml::toDeg(std::atan2(rotationMatrix.y.x, rotationMatrix.x.x)));
+					m_entityMoveTransforms[selectedEntityID].rotation -= rotationAngles;
+					m_entityMoveTransforms[selectedEntityID].rotation = nml::vec3(std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.x, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.y, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.z, 360.0f));
 				}
-				else {
-					rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.orthographicDirection);
-				}
-				nml::vec3 rotationAngles = nml::vec3(nml::toDeg(std::atan2(rotationMatrix.z.y, rotationMatrix.z.z)), nml::toDeg(std::atan2(-rotationMatrix.z.x, std::sqrt((rotationMatrix.z.y * rotationMatrix.z.y) + (rotationMatrix.z.z * rotationMatrix.z.z)))), nml::toDeg(std::atan2(rotationMatrix.y.x, rotationMatrix.x.x)));
-				m_entityMoveTransform->rotation -= rotationAngles;
-				m_entityMoveTransform->rotation = nml::vec3(std::fmod(m_entityMoveTransform->rotation.x, 360.0f), std::fmod(m_entityMoveTransform->rotation.y, 360.0f), std::fmod(m_entityMoveTransform->rotation.z, 360.0f));
 			}
 			else if (m_scaleEntityMode) {
 				nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
-				nml::vec2 objectPositionProjected = project(m_entityMoveTransform->position, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
-				nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
-				if ((nml::dot(previousToCurrentMousePosition, previousToCurrentMousePosition) != 0.0f) && (nml::dot(objectToCurrentMousePosition, objectToCurrentMousePosition) != 0.0f)) {
-					nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-					nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-					float previousToCurrentPositionLength3D = (worldSpaceCurrentMouse - worldSpacePreviousMouse).length();
-					float objectToCurrentMousePosition3D = (worldSpaceCurrentMouse - m_entityMoveTransform->position).length();
-					float scaleFactor = 1.0f;
-					if (!m_camera.useOrthographicProjection) {
-						scaleFactor = 1000.0f;
+				for (EntityID selectedEntityID : selectedEntityIDs) {
+					nml::vec2 objectPositionProjected = project(m_entityMoveTransforms[selectedEntityID].position, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
+					nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
+					if ((nml::dot(previousToCurrentMousePosition, previousToCurrentMousePosition) != 0.0f) && (nml::dot(objectToCurrentMousePosition, objectToCurrentMousePosition) != 0.0f)) {
+						nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+						nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+						float previousToCurrentPositionLength3D = (worldSpaceCurrentMouse - worldSpacePreviousMouse).length();
+						float objectToCurrentMousePosition3D = (worldSpaceCurrentMouse - m_entityMoveTransforms[selectedEntityID].position).length();
+						float scaleFactor = 1.0f;
+						if (!m_camera.useOrthographicProjection) {
+							scaleFactor = 1000.0f;
+						}
+						m_entityMoveTransforms[selectedEntityID].scale += ((previousToCurrentPositionLength3D * scaleFactor) / objectToCurrentMousePosition3D) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 					}
-					m_entityMoveTransform->scale += ((previousToCurrentPositionLength3D * scaleFactor) / objectToCurrentMousePosition3D) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 				}
 			}
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
 
 			// Update Transform Widget
 			MainWindow* mainWindow = m_globalInfo.mainWindow;
-			mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransform.value());
+			mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
 		}
 	}
 	event->accept();

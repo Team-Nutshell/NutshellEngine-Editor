@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -69,6 +69,10 @@ void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
 	dynamicFrictionWidget->valueLineEdit->setText(QString::number(rigidbody.dynamicFriction, 'f', 3));
 }
 
+void RigidbodyComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Rigidbody", { component }));
+}
+
 void RigidbodyComponentWidget::onEntitySelected() {
 	if ((m_globalInfo.currentEntityID != NO_ENTITY) && m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.has_value()) {
 		show();
@@ -121,7 +125,7 @@ void RigidbodyComponentWidget::onBooleanChanged(bool boolean) {
 	else if (senderWidget == lockRotationWidget) {
 		newRigidbody.lockRotation = boolean;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));
+	updateComponent(m_globalInfo.currentEntityID, &newRigidbody);
 }
 
 void RigidbodyComponentWidget::onScalarChanged(float value) {
@@ -143,5 +147,5 @@ void RigidbodyComponentWidget::onScalarChanged(float value) {
 	else if (senderWidget == dynamicFrictionWidget) {
 		newRigidbody.dynamicFriction = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody", &newRigidbody));
+	updateComponent(m_globalInfo.currentEntityID, &newRigidbody);
 }

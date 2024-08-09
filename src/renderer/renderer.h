@@ -108,7 +108,7 @@ private:
 	bool m_lightingEnabled = false;
 	bool m_showColliders = false;
 
-	std::optional<Transform> m_entityMoveTransform;
+	std::unordered_map<EntityID, Transform> m_entityMoveTransforms;
 
 	GLuint m_entityProgram;
 	GLuint m_cameraFrustumProgram;

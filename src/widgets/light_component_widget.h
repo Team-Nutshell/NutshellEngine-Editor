@@ -13,6 +13,7 @@ public:
 
 private:
 	void updateWidgets(const Light& light);
+	void updateComponent(EntityID entityID, Component* component);
 
 private slots:
 	void onEntitySelected();

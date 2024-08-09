@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
 
@@ -42,6 +42,10 @@ void TransformComponentWidget::updateWidgets(const Transform& transform) {
 	scaleWidget->zLineEdit->setText(QString::number(transform.scale.z, 'f', 3));
 }
 
+void TransformComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Transform", { component }));
+}
+
 void TransformComponentWidget::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		show();
@@ -76,5 +80,5 @@ void TransformComponentWidget::onVec3Changed(const nml::vec3& value) {
 	else if (senderWidget == scaleWidget) {
 		newTransform.scale = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Transform", &newTransform));
+	updateComponent(m_globalInfo.currentEntityID, &newTransform);
 }

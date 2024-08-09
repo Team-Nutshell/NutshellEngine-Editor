@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../renderer/collider_mesh.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
@@ -117,6 +117,10 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	updateFromRenderableWidget();
 }
 
+void CollidableComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Collidable", { component }));
+}
+
 void CollidableComponentWidget::updateFromRenderableWidget() {
 	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath != "") && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
 		fromRenderableWidget->setEnabled(true);
@@ -176,7 +180,7 @@ void CollidableComponentWidget::onElementChanged(const std::string& element) {
 	if (senderWidget == typeWidget) {
 		newCollidable.type = element;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
+	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
 }
 
 void CollidableComponentWidget::onVec3Changed(const nml::vec3& value) {
@@ -198,7 +202,7 @@ void CollidableComponentWidget::onVec3Changed(const nml::vec3& value) {
 	else if (senderWidget == tipWidget) {
 		newCollidable.tip = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
+	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
 }
 
 void CollidableComponentWidget::onScalarChanged(float value) {
@@ -208,7 +212,7 @@ void CollidableComponentWidget::onScalarChanged(float value) {
 	if (senderWidget == radiusWidget) {
 		newCollidable.radius = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable", &newCollidable));
+	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
 }
 
 void CollidableComponentWidget::onFromRenderableButtonClicked() {

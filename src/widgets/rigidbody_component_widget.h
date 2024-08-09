@@ -11,6 +11,7 @@ public:
 
 private:
 	void updateWidgets(const Rigidbody& rigidbody);
+	void updateComponent(EntityID entityID, Component* component);
 
 private slots:
 	void onEntitySelected();

@@ -13,6 +13,8 @@ public:
 
 private:
 	void updateWidgets(const Collidable& collidable);
+	void updateComponent(EntityID entityID, Component* component);
+
 	void updateFromRenderableWidget();
 
 private slots:

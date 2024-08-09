@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../renderer/collider_mesh.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
@@ -85,6 +85,10 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	}
 }
 
+void RenderableComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Renderable", { component }));
+}
+
 void RenderableComponentWidget::onEntitySelected() {
 	if ((m_globalInfo.currentEntityID != NO_ENTITY) && m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.has_value()) {
 		show();
@@ -146,7 +150,7 @@ void RenderableComponentWidget::onStringChanged(const std::string& string) {
 			}
 		}
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Renderable", &newRenderable));
+	updateComponent(m_globalInfo.currentEntityID, &newRenderable);
 }
 
 void RenderableComponentWidget::onElementChanged(const std::string& element) {
@@ -166,5 +170,5 @@ void RenderableComponentWidget::onElementChanged(const std::string& element) {
 	if (senderWidget == primitiveIndexWidget) {
 		newRenderable.primitiveIndex = primitiveIndex;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Renderable", &newRenderable));
+	updateComponent(m_globalInfo.currentEntityID, &newRenderable);
 }

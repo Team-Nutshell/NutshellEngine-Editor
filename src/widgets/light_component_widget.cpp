@@ -2,7 +2,7 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "../common/save_title_changer.h"
-#include "../undo_commands/change_entity_component_command.h"
+#include "../undo_commands/change_entities_component_command.h"
 #include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -62,6 +62,10 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	}
 }
 
+void LightComponentWidget::updateComponent(EntityID entityID, Component* component) {
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Light", { component }));
+}
+
 void LightComponentWidget::onEntitySelected() {
 	if ((m_globalInfo.currentEntityID != NO_ENTITY) && m_globalInfo.entities[m_globalInfo.currentEntityID].light.has_value()) {
 		show();
@@ -108,7 +112,7 @@ void LightComponentWidget::onElementChanged(const std::string& element) {
 	if (senderWidget == typeWidget) {
 		newLight.type = element;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
+	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }
 
 void LightComponentWidget::onColorChanged(const nml::vec4& color) {
@@ -118,7 +122,7 @@ void LightComponentWidget::onColorChanged(const nml::vec4& color) {
 	if (senderWidget == colorWidget) {
 		newLight.color = color;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
+	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }
 
 void LightComponentWidget::onVec3Changed(const nml::vec3& value) {
@@ -128,7 +132,7 @@ void LightComponentWidget::onVec3Changed(const nml::vec3& value) {
 	if (senderWidget == directionWidget) {
 		newLight.direction = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
+	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }
 
 void LightComponentWidget::onVec2Changed(const nml::vec2& value) {
@@ -138,5 +142,5 @@ void LightComponentWidget::onVec2Changed(const nml::vec2& value) {
 	if (senderWidget == cutoffWidget) {
 		newLight.cutoff = value;
 	}
-	m_globalInfo.undoStack->push(new ChangeEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light", &newLight));
+	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }
