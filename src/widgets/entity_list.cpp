@@ -130,6 +130,20 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			m_globalInfo.currentEntityID = NO_ENTITY;
 			m_globalInfo.otherSelectedEntityIDs.clear();
 			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
+			if (count() != 0) {
+				if (currentSelectionIndex < count()) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
+				else if (currentSelectionIndex > count()) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(count() - 1));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
+				else {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
+			}
 		}
 		else if (event->key() == Qt::Key::Key_Up) {
 			if (currentSelectionIndex == 0) {
