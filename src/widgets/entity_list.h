@@ -18,12 +18,6 @@ private:
 
 	void updateSelection();
 
-private:
-	GlobalInfo& m_globalInfo;
-
-	QColor m_currentSelectionColor{ QColor::fromRgb(136, 51, 156) };
-	QColor m_multiSelectionColor{ QColor::fromRgb(86, 11, 136) };
-
 private slots:
 	void onCreateEntity(EntityID entityID);
 	void onDestroyEntity(EntityID entityID);
@@ -31,8 +25,17 @@ private slots:
 	void onChangeEntityName(EntityID entityID, const std::string& name);
 	void onToggleEntityVisibility(EntityID entityID, bool isVisible);
 	void showMenu(const QPoint& pos);
-	void onItemPressed(QListWidgetItem* item);
+	void onItemPressed(QListWidgetItem* listWidgetItem);
 	void keyPressEvent(QKeyEvent* event);
+	void keyReleaseEvent(QKeyEvent* event);
+
+private:
+	GlobalInfo& m_globalInfo;
+
+	QColor m_currentSelectionColor{ QColor::fromRgb(136, 51, 156) };
+	QColor m_multiSelectionColor{ QColor::fromRgb(86, 11, 136) };
+
+	bool m_moveEntityOrderKeyPressed = false;
 
 public:
 	EntityListMenu* menu;

@@ -98,15 +98,22 @@ void EntityList::showMenu(const QPoint& pos) {
 	menu->popup(QCursor::pos());
 }
 
-void EntityList::onItemPressed(QListWidgetItem* item) {
-	EntityListItem* entityListItem = static_cast<EntityListItem*>(item);
+void EntityList::onItemPressed(QListWidgetItem* listWidgetItem) {
+	EntityListItem* entityListItem = static_cast<EntityListItem*>(listWidgetItem);
 	if (m_globalInfo.currentEntityID == entityListItem->entityID) {
 		return;
 	}
 
 	if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			int currentEntityIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
+			int selectionIndex = row(listWidgetItem);
+			int startRange = std::min(currentEntityIndex, selectionIndex);
+			int endRange = std::max(currentEntityIndex, selectionIndex);
 			m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+			for (int i = startRange; i < endRange; i++) {
+				m_globalInfo.otherSelectedEntityIDs.insert(static_cast<EntityListItem*>(item(i))->entityID);
+			}
 		}
 		m_globalInfo.otherSelectedEntityIDs.erase(entityListItem->entityID);
 		m_globalInfo.currentEntityID = entityListItem->entityID;
@@ -123,7 +130,7 @@ void EntityList::onItemPressed(QListWidgetItem* item) {
 
 void EntityList::keyPressEvent(QKeyEvent* event) {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		int currentSelectionIndex = row(findItemWithEntityID((m_globalInfo.currentEntityID)));
+		int currentSelectionIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
 		if (event->key() == Qt::Key::Key_Delete) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
@@ -146,25 +153,65 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else if (event->key() == Qt::Key::Key_Up) {
-			if (currentSelectionIndex == 0) {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(item(count() - 1));
-				m_globalInfo.currentEntityID = entityListItem->entityID;
+			if (!m_moveEntityOrderKeyPressed) {
+				if (currentSelectionIndex == 0) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(count() - 1));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
+				else {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
 			}
 			else {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
-				m_globalInfo.currentEntityID = entityListItem->entityID;
+				EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(currentSelectionIndex));
+				int newPosition = 0;
+				if (currentSelectionIndex == 0) {
+					newPosition = count();
+				}
+				else {
+					newPosition = currentSelectionIndex - 1;
+				}
+				insertItem(newPosition, entityListItem);
 			}
 		}
 		else if (event->key() == Qt::Key::Key_Down) {
-			if (currentSelectionIndex == (count() - 1)) {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(item(0));
-				m_globalInfo.currentEntityID = entityListItem->entityID;
+			if (!m_moveEntityOrderKeyPressed) {
+				if (currentSelectionIndex == (count() - 1)) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(0));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
+				else {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex + 1));
+					m_globalInfo.currentEntityID = entityListItem->entityID;
+				}
 			}
 			else {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex + 1));
-				m_globalInfo.currentEntityID = entityListItem->entityID;
+				EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(currentSelectionIndex));
+				int newPosition = 0;
+				if (currentSelectionIndex == count()) {
+					newPosition = 0;
+				}
+				else {
+					newPosition = currentSelectionIndex + 1;
+				}
+				insertItem(newPosition, entityListItem);
 			}
 		}
+		else if (event->key() == Qt::Key::Key_Alt) {
+			m_moveEntityOrderKeyPressed = true;
+		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
+	}
+}
+
+void EntityList::keyReleaseEvent(QKeyEvent* event) {
+	if (event->isAutoRepeat()) {
+		event->accept();
+		return;
+	}
+
+	if (event->key() == Qt::Key::Key_Alt) {
+		m_moveEntityOrderKeyPressed = false;
 	}
 }

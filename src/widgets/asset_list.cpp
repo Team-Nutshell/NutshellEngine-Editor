@@ -151,8 +151,8 @@ void AssetList::actionOnFile(const std::string& file) {
 	}
 }
 
-void AssetList::onItemClicked(QListWidgetItem* item) {
-	std::string itemFileName = item->text().toStdString();
+void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
+	std::string itemFileName = listWidgetItem->text().toStdString();
 
 	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
 		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
@@ -164,8 +164,8 @@ void AssetList::onItemClicked(QListWidgetItem* item) {
 	}
 }
 
-void AssetList::onItemDoubleClicked(QListWidgetItem* item) {
-	std::string itemFileName = item->text().toStdString();
+void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
+	std::string itemFileName = listWidgetItem->text().toStdString();
 
 	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
 		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
