@@ -811,7 +811,7 @@ void Renderer::paintGL() {
 		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, ((height() - 1) - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
 		if (pickedEntityID != NO_ENTITY) {
 			if (m_globalInfo.currentEntityID != pickedEntityID) {
-				if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
+				if (m_multiSelectionKeyPressed) {
 					if (m_globalInfo.currentEntityID != NO_ENTITY) {
 						m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
 					}
@@ -1454,6 +1454,9 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
 		}
 	}
+	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
+		m_multiSelectionKeyPressed = true;
+	}
 	else if (event->key() == Qt::Key::Key_Delete) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
@@ -1489,6 +1492,9 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraDownKey) {
 		m_cameraDownKeyPressed = false;
+	}
+	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
+		m_multiSelectionKeyPressed = false;
 	}
 	event->accept();
 }

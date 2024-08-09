@@ -84,6 +84,8 @@ private:
 	bool m_rotateEntityMode = false;
 	bool m_scaleEntityMode = false;
 
+	bool m_multiSelectionKeyPressed = false;
+
 	bool m_moveCameraButtonPressed = false;
 
 	float m_mouseScrollY = 0.0f;

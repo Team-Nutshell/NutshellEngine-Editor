@@ -139,6 +139,11 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
 
+	QKeySequence multiSelectionKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.multiSelectionKey);
+	multiSelectionKeySelect = new KeySelectWidget(m_globalInfo, "Multi Selection", multiSelectionKeySequence.toString().toStdString());
+	multiSelectionKeySelect->layout()->setAlignment(multiSelectionKeySelect->button, Qt::AlignmentFlag::AlignLeft);
+	rendererGridLayout->addWidget(multiSelectionKeySelect, 7, 2);
+
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
 	cameraSpeedWidget = new ScalarWidget(m_globalInfo, "Camera Speed");
@@ -212,6 +217,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCamerasVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
+	connect(multiSelectionKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onCurrentEntityOutlineColorChanged);
@@ -370,6 +376,12 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		if (!sequence.isEmpty()) {
 			m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
+		}
+	}
+	else if (senderWidget == multiSelectionKeySelect) {
+		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
+		if (!sequence.isEmpty()) {
+			m_globalInfo.editorParameters.renderer.multiSelectionKey = sequence[0].key();
 		}
 	}
 
