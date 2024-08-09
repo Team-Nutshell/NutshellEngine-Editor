@@ -1583,14 +1583,19 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
 				if (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) {
+					bool uniqueCoefficientCalculated = false;
+					float coefficient = 0.0f;
 					float worldSpaceCursorDifferenceLength = worldSpaceCursorDifference.length();
 					for (EntityID selectedEntityID : selectedEntityIDs) {
 						if (!m_camera.useOrthographicProjection) {
 							nml::vec3 cameraEntityDifference = m_entityMoveTransforms[selectedEntityID].position - m_camera.perspectivePosition;
 							if (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) {
 								nml::vec3 worldSpaceCursorDifferenceNormalized = nml::normalize(worldSpaceCursorDifference);
-								float cameraEntityDifferenceLength = cameraEntityDifference.length();
-								float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / m_camera.nearPlane;
+								if (!uniqueCoefficientCalculated) {
+									float cameraEntityDifferenceLength = cameraEntityDifference.length();
+									coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / m_camera.nearPlane;
+									uniqueCoefficientCalculated = true;
+								}
 								m_entityMoveTransforms[selectedEntityID].position += worldSpaceCursorDifferenceNormalized * coefficient;
 							}
 						}
