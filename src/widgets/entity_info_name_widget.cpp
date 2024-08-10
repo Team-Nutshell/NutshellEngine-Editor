@@ -4,7 +4,7 @@
 EntityInfoNameWidget::EntityInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QLineEdit::editingFinished, this, &EntityInfoNameWidget::onEditingFinished);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoNameWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityInfoNameWidget::onChangeEntityName);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityInfoNameWidget::onEntityNameChanged);
 }
 
 void EntityInfoNameWidget::onEntitySelected() {
@@ -21,7 +21,7 @@ void EntityInfoNameWidget::onEditingFinished() {
 	}
 }
 
-void EntityInfoNameWidget::onChangeEntityName(EntityID entityID, const std::string& name) {
+void EntityInfoNameWidget::onEntityNameChanged(EntityID entityID, const std::string& name) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		setText(QString::fromStdString(name));
 		m_previousName = name;

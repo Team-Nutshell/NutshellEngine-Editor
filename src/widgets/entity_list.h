@@ -19,11 +19,11 @@ private:
 	void updateSelection();
 
 private slots:
-	void onCreateEntity(EntityID entityID);
-	void onDestroyEntity(EntityID entityID);
+	void onEntityCreated(EntityID entityID);
+	void onEntityDestroyed(EntityID entityID);
 	void onEntitySelected();
-	void onChangeEntityName(EntityID entityID, const std::string& name);
-	void onToggleEntityVisibility(EntityID entityID, bool isVisible);
+	void onEntityNameChanged(EntityID entityID, const std::string& name);
+	void onEntityVisibilityToggled(EntityID entityID, bool isVisible);
 	void showMenu(const QPoint& pos);
 	void onItemPressed(QListWidgetItem* listWidgetItem);
 	void keyPressEvent(QKeyEvent* event);

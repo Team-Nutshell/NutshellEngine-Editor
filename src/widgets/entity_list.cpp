@@ -20,11 +20,11 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	
 	connect(this, &QListWidget::customContextMenuRequested, this, &EntityList::showMenu);
 	connect(this, &QListWidget::itemPressed, this, &EntityList::onItemPressed);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &EntityList::onCreateEntity);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &EntityList::onDestroyEntity);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &EntityList::onEntityCreated);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &EntityList::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onChangeEntityName);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &EntityList::onToggleEntityVisibility);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onEntityNameChanged);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &EntityList::onEntityVisibilityToggled);
 }
 
 EntityListItem* EntityList::findItemWithEntityID(EntityID entityID) {
@@ -53,13 +53,13 @@ void EntityList::updateSelection() {
 	}
 }
 
-void EntityList::onCreateEntity(EntityID entityID) {
+void EntityList::onEntityCreated(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void EntityList::onDestroyEntity(EntityID entityID) {
+void EntityList::onEntityDestroyed(EntityID entityID) {
 	takeItem(row(findItemWithEntityID(entityID)));
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
@@ -69,13 +69,13 @@ void EntityList::onEntitySelected() {
 	updateSelection();
 }
 
-void EntityList::onChangeEntityName(EntityID entityID, const std::string& name) {
+void EntityList::onEntityNameChanged(EntityID entityID, const std::string& name) {
 	findItemWithEntityID(entityID)->setText(QString::fromStdString(name));
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void EntityList::onToggleEntityVisibility(EntityID entityID, bool isVisible) {
+void EntityList::onEntityVisibilityToggled(EntityID entityID, bool isVisible) {
 	QFont font = findItemWithEntityID(entityID)->font();
 	if (isVisible) {
 		font.setItalic(false);

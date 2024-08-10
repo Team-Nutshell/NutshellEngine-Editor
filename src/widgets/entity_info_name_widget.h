@@ -11,7 +11,7 @@ public:
 private slots:
 	void onEntitySelected();
 	void onEditingFinished();
-	void onChangeEntityName(EntityID entityID, const std::string& name);
+	void onEntityNameChanged(EntityID entityID, const std::string& name);
 
 private:
 	GlobalInfo& m_globalInfo;
