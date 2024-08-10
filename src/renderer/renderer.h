@@ -45,6 +45,7 @@ private:
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
 private slots:
+	void onEntityDestroyed(EntityID entityID);
 	void onEntitySelected();
 	void onGridVisibilityToggled(bool showGrid);
 	void onBackfaceCullingToggled(bool backfaceCulling);

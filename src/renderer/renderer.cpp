@@ -17,6 +17,7 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAcceptDrops(true);
 
 	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &Renderer::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &Renderer::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &Renderer::onGridVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
@@ -1320,9 +1321,7 @@ void Renderer::cancelTransform() {
 		m_translateEntityMode = false;
 		m_rotateEntityMode = false;
 		m_scaleEntityMode = false;
-		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			m_entityMoveTransforms.clear();
-		}
+		m_entityMoveTransforms.clear();
 	}
 }
 
@@ -1341,6 +1340,11 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	nml::vec4 worldSpace = invViewMatrix * viewSpace;
 
 	return nml::vec3(worldSpace) / worldSpace.w;
+}
+
+void Renderer::onEntityDestroyed(EntityID entityID) {
+	(void)entityID;
+	cancelTransform();
 }
 
 void Renderer::onEntitySelected() {
