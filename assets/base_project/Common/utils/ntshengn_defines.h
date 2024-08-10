@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <filesystem>
+#include <string>
 
 #if defined(NTSHENGN_DEBUG)
 #if defined(NTSHENGN_COMPILER_MSVC)
@@ -29,7 +30,7 @@
 #define NTSHENGN_ASSERT(expression) \
 	do { \
 		if (!(expression)) { \
-			std::cerr << "\33[1m\33[31mASSERTION FAILED\33[39m\33[0m: " << #expression << ".\nLine \33[1m" << __LINE__ << "\33[0m in file \33[1m" << std::filesystem::path(__FILE__).filename() << "\33[0m." << std::endl; \
+			std::cerr << "\33[1m\33[31mASSERTION FAILED\33[39m\33[0m: " + std::string(#expression) + ".\nLine \33[1m" + std::to_string(__LINE__) + "\33[0m in file \33[1m" + std::filesystem::path(__FILE__).filename().string() + "\33[0m." << std::endl; \
 			NTSHENGN_BREAKPOINT(); \
 			exit(1); \
 		} \

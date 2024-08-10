@@ -4,6 +4,7 @@
 #include <string>
 #include <limits>
 #include <iostream>
+#include <cstdint>
 #include <cmath>
 #include <stdexcept>
 
@@ -604,15 +605,40 @@ namespace NtshEngn {
 				return ior * i - (ior * ndoti + std::sqrt(k)) * n;
 			}
 		}
-		inline vec3 quatToEulerAngles(const quat& qua) {
-			return vec3(std::atan2(2.0f * ((qua.a * qua.b) + (qua.c * qua.d)), 1.0f - (2.0f * ((qua.b * qua.b) + (qua.c * qua.c)))),
-				std::asin(2.0f * ((qua.a * qua.c) - (qua.d * qua.b))),
-				std::atan2(2.0f * ((qua.a * qua.d) + (qua.b * qua.c)), 1.0f - (2.0f * ((qua.c * qua.c) + (qua.d * qua.d)))));
+		inline mat4 quatToRotationMatrix(const quat& qua) { // Defined early for quatToEulerAngles
+			const float ab = qua.a * qua.b;
+			const float ac = qua.a * qua.c;
+			const float ad = qua.a * qua.d;
+			const float bb = qua.b * qua.b;
+			const float bc = qua.b * qua.c;
+			const float bd = qua.b * qua.d;
+			const float cc = qua.c * qua.c;
+			const float cd = qua.c * qua.d;
+			const float dd = qua.d * qua.d;
+
+			return mat4(1.0f - 2.0f * (cc + dd),
+				2.0f * (bc + ad),
+				2.0f * (bd - ac),
+				0.0f,
+				2.0f * (bc - ad),
+				1.0f - 2.0f * (bb + dd),
+				2.0f * (cd + ab),
+				0.0f,
+				2.0f * (bd + ac),
+				2.0f * (cd - ab),
+				1.0f - 2.0f * (bb + cc),
+				0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f);
 		}
-		inline vec3 rotationMatrixToEulerAngles(const mat4& mat) {
+		inline vec3 rotationMatrixToEulerAngles(const mat4& mat) { // Defined early for quatToEulerAngles
 			return vec3(-std::atan2(mat.z.y, mat.z.z),
 				-std::atan2(-mat.z.x, std::sqrt((mat.z.y * mat.z.y) + (mat.z.z * mat.z.z))),
 				-std::atan2(mat.y.x, mat.x.x));
+		}
+		inline vec3 quatToEulerAngles(const quat& qua) {
+			const mat4 rotationMatrix = quatToRotationMatrix(qua);
+
+    		return rotationMatrixToEulerAngles(rotationMatrix);
 		}
 		
 		inline std::string to_string(const vec3& vec) {
@@ -820,36 +846,13 @@ namespace NtshEngn {
 			translation = vec3(transform.w);
 			scale = vec3(transform.x.length(), transform.y.length(), transform.z.length());
 
-			mat3 baseRotationMat = mat3(vec3(transform.x) / scale.x, vec3(transform.y) / scale.y, vec3(transform.z) / scale.z);
-			rotation.a = std::sqrt(1.0f + baseRotationMat.x.x + baseRotationMat.y.y + baseRotationMat.z.z) / 2.0f;
-			rotation.b = (baseRotationMat.z.y - baseRotationMat.y.z) / (4.0f * rotation.a);
-			rotation.c = (baseRotationMat.x.z - baseRotationMat.z.x) / (4.0f * rotation.a);
-			rotation.d = (baseRotationMat.y.x - baseRotationMat.x.y) / (4.0f * rotation.a);
-		}
-		inline mat4 quatToRotationMatrix(const quat& qua) {
-			const float ab = qua.a * qua.b;
-			const float ac = qua.a * qua.c;
-			const float ad = qua.a * qua.d;
-			const float bb = qua.b * qua.b;
-			const float bc = qua.b * qua.c;
-			const float bd = qua.b * qua.d;
-			const float cc = qua.c * qua.c;
-			const float cd = qua.c * qua.d;
-			const float dd = qua.d * qua.d;
-
-			return mat4(1.0f - 2.0f * (cc + dd),
-				2.0f * (bc + ad),
-				2.0f * (bd - ac),
-				0.0f,
-				2.0f * (bc - ad),
-				1.0f - 2.0f * (bb + dd),
-				2.0f * (cd + ab),
-				0.0f,
-				2.0f * (bd + ac),
-				2.0f * (cd - ab),
-				1.0f - 2.0f * (bb + cc),
-				0.0f,
-				0.0f, 0.0f, 0.0f, 1.0f);
+			const mat3 baseRotationMat = mat3(vec3(transform.x) / scale.x, vec3(transform.y) / scale.y, vec3(transform.z) / scale.z);
+			const float trace = baseRotationMat.x.x + baseRotationMat.y.y + baseRotationMat.z.z;
+			const float S = std::sqrt(1.0f + trace) * 2.0f;
+			rotation.a = S / 4.0f;
+			rotation.b = (baseRotationMat.y.z - baseRotationMat.z.y) / S;
+			rotation.c = (baseRotationMat.z.x - baseRotationMat.x.z) / S;
+			rotation.d = (baseRotationMat.x.y - baseRotationMat.y.x) / S;
 		}
 
 		inline std::string to_string(const mat4& mat) {
@@ -893,17 +896,17 @@ namespace NtshEngn {
 			return (scaleA * a + scaleB * tmpB);
 		}
 		inline quat eulerAnglesToQuat(const vec3& vec) {
-			const float cosHalfPhi = std::cos(vec.x / 2.0f);
-			const float sinHalfPhi = std::sin(vec.x / 2.0f);
-			const float cosHalfTheta = std::cos(vec.y / 2.0f);
-			const float sinHalfTheta = std::sin(vec.y / 2.0f);
-			const float cosHalfPsi = std::cos(vec.z / 2.0f);
-			const float sinHalfPsi = std::sin(vec.z / 2.0f);
+			const float cosHalfX = std::cos(vec.x / 2.0f);
+			const float sinHalfX = std::sin(vec.x / 2.0f);
+			const float cosHalfY = std::cos(vec.y / 2.0f);
+			const float sinHalfY = std::sin(vec.y / 2.0f);
+			const float cosHalfZ = std::cos(vec.z / 2.0f);
+			const float sinHalfZ = std::sin(vec.z / 2.0f);
 
-			return quat(cosHalfPhi * cosHalfTheta * cosHalfPsi + sinHalfPhi * sinHalfTheta * sinHalfPsi,
-				sinHalfPhi * cosHalfTheta * cosHalfPsi - cosHalfPhi * sinHalfTheta * sinHalfPsi,
-				cosHalfPhi * sinHalfTheta * cosHalfPsi + sinHalfPhi * cosHalfTheta * sinHalfPsi,
-				cosHalfPhi * cosHalfTheta * sinHalfPsi - sinHalfPhi * sinHalfTheta * cosHalfPsi);
+			return quat(cosHalfX * cosHalfY * cosHalfZ - sinHalfX * sinHalfY * sinHalfZ,
+				sinHalfX * cosHalfY * cosHalfZ + cosHalfX * sinHalfY * sinHalfZ,
+				cosHalfX * sinHalfY * cosHalfZ - sinHalfX * cosHalfY * sinHalfZ,
+				cosHalfX * cosHalfY * sinHalfZ + sinHalfX * sinHalfY * cosHalfZ);
 		}
 
 		inline std::string to_string(const quat& qua) {

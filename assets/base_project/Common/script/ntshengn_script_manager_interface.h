@@ -2,6 +2,7 @@
 #include "../ecs/components/ntshengn_ecs_scriptable.h"
 #include <set>
 #include <memory>
+#include <algorithm>
 
 namespace NtshEngn {
 	

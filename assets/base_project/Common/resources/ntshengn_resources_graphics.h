@@ -194,16 +194,16 @@ namespace NtshEngn {
 
 	// Skin
 	struct Joint {
-		Math::mat4 inverseBindMatrix;
-		Math::mat4 localTransform;
+		Math::mat4 inverseBindMatrix = Math::mat4::identity();
+		Math::mat4 localTransform = Math::mat4::identity();
 		std::vector<uint32_t> children;
 	};
 
 	struct Skin {
 		std::vector<Joint> joints;
 		uint32_t rootJoint = 0;
-		Math::mat4 baseMatrix;
-		Math::mat4 inverseGlobalTransform;
+		Math::mat4 baseMatrix = Math::mat4::identity();
+		Math::mat4 inverseGlobalTransform = Math::mat4::identity();
 	};
 
 	struct Mesh {
