@@ -173,17 +173,17 @@ quat slerp(const quat& a, const quat& b, const float interpolationValue) {
 }
 
 quat eulerAnglesToQuat(const vec3& vec) {
-	const float cosHalfPhi = std::cos(vec.x / 2.0f);
-	const float sinHalfPhi = std::sin(vec.x / 2.0f);
-	const float cosHalfTheta = std::cos(vec.y / 2.0f);
-	const float sinHalfTheta = std::sin(vec.y / 2.0f);
-	const float cosHalfPsi = std::cos(vec.z / 2.0f);
-	const float sinHalfPsi = std::sin(vec.z / 2.0f);
+	const float cosHalfX = std::cos(vec.x / 2.0f);
+	const float sinHalfX = std::sin(vec.x / 2.0f);
+	const float cosHalfY = std::cos(vec.y / 2.0f);
+	const float sinHalfY = std::sin(vec.y / 2.0f);
+	const float cosHalfZ = std::cos(vec.z / 2.0f);
+	const float sinHalfZ = std::sin(vec.z / 2.0f);
 
-	return quat(cosHalfPhi * cosHalfTheta * cosHalfPsi + sinHalfPhi * sinHalfTheta * sinHalfPsi,
-		sinHalfPhi * cosHalfTheta * cosHalfPsi - cosHalfPhi * sinHalfTheta * sinHalfPsi,
-		cosHalfPhi * sinHalfTheta * cosHalfPsi + sinHalfPhi * cosHalfTheta * sinHalfPsi,
-		cosHalfPhi * cosHalfTheta * sinHalfPsi - sinHalfPhi * sinHalfTheta * cosHalfPsi);
+	return quat(cosHalfX * cosHalfY * cosHalfZ - sinHalfX * sinHalfY * sinHalfZ,
+		sinHalfX * cosHalfY * cosHalfZ + cosHalfX * sinHalfY * sinHalfZ,
+		cosHalfX * sinHalfY * cosHalfZ - sinHalfX * cosHalfY * sinHalfZ,
+		cosHalfX * cosHalfY * sinHalfZ + sinHalfX * sinHalfY * cosHalfZ);
 }
 
 std::string to_string(const quat& qua) {

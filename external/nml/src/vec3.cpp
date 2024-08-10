@@ -142,9 +142,9 @@ vec3 refract(const vec3& i, const vec3& n, float ior) {
 }
 
 vec3 quatToEulerAngles(const quat& qua) {
-	return vec3(std::atan2(2.0f * ((qua.a * qua.b) + (qua.c * qua.d)), 1.0f - (2.0f * ((qua.b * qua.b) + (qua.c * qua.c)))),
-		std::asin(2.0f * ((qua.a * qua.c) - (qua.d * qua.b))),
-		std::atan2(2.0f * ((qua.a * qua.d) + (qua.b * qua.c)), 1.0f - (2.0f * ((qua.c * qua.c) + (qua.d * qua.d)))));
+	const mat4 rotationMatrix = quatToRotationMatrix(qua);
+
+	return rotationMatrixToEulerAngles(rotationMatrix);
 }
 
 vec3 rotationMatrixToEulerAngles(const mat4& mat) {
