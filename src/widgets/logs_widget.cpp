@@ -3,7 +3,7 @@
 #include <QScrollBar>
 
 LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	resize(1280, 720);
+	resize(1310, 720);
 	setWindowTitle("NutshellEngine - Logs");
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
@@ -47,7 +47,6 @@ void LogsWidget::updateLogs() {
 		}
 
 		std::string logString = std::get<2>(logs[i]);
-		logString.erase(std::remove(logString.begin(), logString.end(), '\n'), logString.end());
 
 		logsTable->insertRow(logsTable->rowCount());
 		QTableWidgetItem* timeItem = new QTableWidgetItem(QString::fromStdString(time));
@@ -59,6 +58,7 @@ void LogsWidget::updateLogs() {
 		QTableWidgetItem* logItem = new QTableWidgetItem(QString::fromStdString(logString));
 		logItem->setFlags(logItem->flags() & ~Qt::ItemIsEditable);
 		logsTable->setItem(logsTable->rowCount() - 1, 2, logItem);
+		logsTable->resizeRowToContents(logsTable->rowCount() - 1);
 	}
 	m_currentLog += logs.size() - m_currentLog;
 	logsTable->verticalScrollBar()->setSliderPosition(logsTable->verticalScrollBar()->maximum());
