@@ -20,10 +20,15 @@ ColorPickerWidget::ColorPickerWidget(GlobalInfo& globalInfo, const std::string& 
 
 void ColorPickerWidget::setColor(const nml::vec4& color) {
 	m_color = color;
+	float luminance = nml::dot(nml::vec3(m_color), nml::vec3(0.2126f, 0.7152f, 0.0722f));
+	float buttonTextColor = 0.0f;
+	if (luminance < 0.5f) {
+		buttonTextColor = 1.0f;
+	}
 	colorButton->setText("(" + QString::number(m_color.x, 'f', 2) + ", " + QString::number(m_color.y, 'f', 2) + ", " + QString::number(m_color.z, 'f', 2) + ", 1.00)");
 	QPalette colorButtonPalette = colorButton->palette();
 	colorButtonPalette.setColor(QPalette::ColorRole::Button, QColor::fromRgbF(m_color.x, m_color.y, m_color.z));
-	colorButtonPalette.setColor(QPalette::ColorRole::ButtonText, QColor::fromRgbF(1.0f - std::clamp(m_color.x, 0.0f, 1.0f), 1.0f - std::clamp(m_color.y, 0.0f, 1.0f), 1.0f - std::clamp(m_color.z, 0.0f, 1.0f)));
+	colorButtonPalette.setColor(QPalette::ColorRole::ButtonText, QColor::fromRgbF(buttonTextColor, buttonTextColor, buttonTextColor));
 	colorButton->setAutoFillBackground(true);
 	colorButton->setPalette(colorButtonPalette);
 	colorButton->update();
