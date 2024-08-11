@@ -46,6 +46,7 @@ set(COMMON_COMPONENTS_HEADERS
 
 set(COMMON_HEADERS
 	${COMMON_COMPONENTS_HEADERS}
+	src/common/asset_helper.h
 	src/common/bounding_volumes.h
 	src/common/editor_parameters.h
 	src/common/entity.h

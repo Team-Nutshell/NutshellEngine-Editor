@@ -16,6 +16,7 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	upWidget = new Vector3Widget(m_globalInfo, "Up");
 	layout()->addWidget(upWidget);
 	fovWidget = new ScalarWidget(m_globalInfo, "FOV");
+	fovWidget->setMin(0.0f);
 	layout()->addWidget(fovWidget);
 	nearPlaneWidget = new ScalarWidget(m_globalInfo, "Near Plane");
 	layout()->addWidget(nearPlaneWidget);
@@ -35,20 +36,11 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 }
 
 void CameraComponentWidget::updateWidgets(const Camera& camera) {
-	forwardWidget->value = camera.forward;
-	forwardWidget->xLineEdit->setText(QString::number(camera.forward.x, 'f', 3));
-	forwardWidget->yLineEdit->setText(QString::number(camera.forward.y, 'f', 3));
-	forwardWidget->zLineEdit->setText(QString::number(camera.forward.z, 'f', 3));
-	upWidget->value = camera.up;
-	upWidget->xLineEdit->setText(QString::number(camera.up.x, 'f', 3));
-	upWidget->yLineEdit->setText(QString::number(camera.up.y, 'f', 3));
-	upWidget->zLineEdit->setText(QString::number(camera.up.z, 'f', 3));
-	fovWidget->value = camera.fov;
-	fovWidget->valueLineEdit->setText(QString::number(camera.fov, 'f', 3));
-	nearPlaneWidget->value = camera.nearPlane;
-	nearPlaneWidget->valueLineEdit->setText(QString::number(camera.nearPlane, 'f', 3));
-	farPlaneWidget->value = camera.farPlane;
-	farPlaneWidget->valueLineEdit->setText(QString::number(camera.farPlane, 'f', 3));
+	forwardWidget->setValue(camera.forward);
+	upWidget->setValue(camera.up);
+	fovWidget->setValue(camera.fov);
+	nearPlaneWidget->setValue(camera.nearPlane);
+	farPlaneWidget->setValue(camera.farPlane);
 }
 
 void CameraComponentWidget::updateComponent(EntityID entityID, Component* component) {

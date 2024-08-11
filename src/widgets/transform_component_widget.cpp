@@ -28,18 +28,9 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 }
 
 void TransformComponentWidget::updateWidgets(const Transform& transform) {
-	positionWidget->value = transform.position;
-	positionWidget->xLineEdit->setText(QString::number(transform.position.x, 'f', 3));
-	positionWidget->yLineEdit->setText(QString::number(transform.position.y, 'f', 3));
-	positionWidget->zLineEdit->setText(QString::number(transform.position.z, 'f', 3));
-	rotationWidget->value = transform.rotation;
-	rotationWidget->xLineEdit->setText(QString::number(transform.rotation.x, 'f', 3));
-	rotationWidget->yLineEdit->setText(QString::number(transform.rotation.y, 'f', 3));
-	rotationWidget->zLineEdit->setText(QString::number(transform.rotation.z, 'f', 3));
-	scaleWidget->value = transform.scale;
-	scaleWidget->xLineEdit->setText(QString::number(transform.scale.x, 'f', 3));
-	scaleWidget->yLineEdit->setText(QString::number(transform.scale.y, 'f', 3));
-	scaleWidget->zLineEdit->setText(QString::number(transform.scale.z, 'f', 3));
+	positionWidget->setValue(transform.position);
+	rotationWidget->setValue(transform.rotation);
+	scaleWidget->setValue(transform.scale);
 }
 
 void TransformComponentWidget::updateComponent(EntityID entityID, Component* component) {

@@ -10,6 +10,9 @@ class StringWidget : public QWidget {
 public:
 	StringWidget(GlobalInfo& globalInfo, const std::string& name);
 
+	void setText(const std::string& text);
+	const std::string& getText();
+
 signals:
 	void valueChanged(const std::string&);
 
@@ -19,9 +22,9 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
+	std::string m_text = "";
+
 public:
 	QLabel* nameLabel;
 	QLineEdit* valueLineEdit;
-
-	std::string value = "";
 };

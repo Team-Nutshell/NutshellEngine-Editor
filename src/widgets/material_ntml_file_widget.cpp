@@ -1,5 +1,6 @@
 #include "material_ntml_file_widget.h"
 #include "separator_line.h"
+#include "../common/asset_helper.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
@@ -54,6 +55,8 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 	layout()->addWidget(emissiveFactorWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
 	alphaCutoffWidget = new ScalarWidget(globalInfo, "Alpha Cutoff");
+	alphaCutoffWidget->setMin(0.0f);
+	alphaCutoffWidget->setMax(1.0f);
 	layout()->addWidget(alphaCutoffWidget);
 	indexOfRefractionWidget = new ScalarWidget(globalInfo, "Index of Refraction");
 	layout()->addWidget(indexOfRefractionWidget);
@@ -76,101 +79,74 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 	if (j.contains("diffuseTexture")) {
 		if (j["diffuseTexture"].contains("imagePath")) {
 			std::string imagePath = j["diffuseTexture"]["imagePath"];
-			diffuseTextureImageWidget->filePathButton->path = imagePath;
-			diffuseTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			diffuseTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			diffuseTextureImageWidget->setPath(imagePath);
 		}
 		if (j["diffuseTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["diffuseTexture"]["imageSamplerPath"];
-			diffuseTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			diffuseTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			diffuseTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			diffuseTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("normalTexture")) {
 		if (j["normalTexture"].contains("imagePath")) {
 			std::string imagePath = j["normalTexture"]["imagePath"];
-			normalTextureImageWidget->filePathButton->path = imagePath;
-			normalTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			normalTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			normalTextureImageWidget->setPath(imagePath);
 		}
 		if (j["normalTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["normalTexture"]["imageSamplerPath"];
-			normalTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			normalTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			normalTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			normalTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("metalnessTexture")) {
 		if (j["metalnessTexture"].contains("imagePath")) {
 			std::string imagePath = j["metalnessTexture"]["imagePath"];
-			metalnessTextureImageWidget->filePathButton->path = imagePath;
-			metalnessTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			metalnessTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			metalnessTextureImageWidget->setPath(imagePath);
 		}
 		if (j["metalnessTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["metalnessTexture"]["imageSamplerPath"];
-			metalnessTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			metalnessTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			metalnessTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			metalnessTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("roughnessTexture")) {
 		if (j["roughnessTexture"].contains("imagePath")) {
 			std::string imagePath = j["roughnessTexture"]["imagePath"];
-			roughnessTextureImageWidget->filePathButton->path = imagePath;
-			roughnessTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			roughnessTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			roughnessTextureImageWidget->setPath(imagePath);
 		}
 		if (j["roughnessTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["roughnessTexture"]["imageSamplerPath"];
-			roughnessTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			roughnessTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			roughnessTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			roughnessTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("occlusionTexture")) {
 		if (j["occlusionTexture"].contains("imagePath")) {
 			std::string imagePath = j["occlusionTexture"]["imagePath"];
-			occlusionTextureImageWidget->filePathButton->path = imagePath;
-			occlusionTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			occlusionTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			occlusionTextureImageWidget->setPath(imagePath);
 		}
 		if (j["occlusionTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["occlusionTexture"]["imageSamplerPath"];
-			occlusionTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			occlusionTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			occlusionTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			occlusionTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("emissiveTexture")) {
 		if (j["emissiveTexture"].contains("imagePath")) {
 			std::string imagePath = j["emissiveTexture"]["imagePath"];
-			emissiveTextureImageWidget->filePathButton->path = imagePath;
-			emissiveTextureImageWidget->filePathButton->setText(QString::fromStdString(imagePath.substr(imagePath.rfind('/') + 1)));
-			emissiveTextureImageWidget->filePathButton->setToolTip(QString::fromStdString(imagePath));
+			emissiveTextureImageWidget->setPath(imagePath);
 		}
 		if (j["emissiveTexture"].contains("imageSamplerPath")) {
 			std::string imageSamplerPath = j["emissiveTexture"]["imageSamplerPath"];
-			emissiveTextureImageSamplerWidget->filePathButton->path = imageSamplerPath;
-			emissiveTextureImageSamplerWidget->filePathButton->setText(QString::fromStdString(imageSamplerPath.substr(imageSamplerPath.rfind('/') + 1)));
-			emissiveTextureImageSamplerWidget->filePathButton->setToolTip(QString::fromStdString(imageSamplerPath));
+			emissiveTextureImageSamplerWidget->setPath(imageSamplerPath);
 		}
 	}
 	if (j.contains("emissiveFactor")) {
 		float emissiveFactor = j["emissiveFactor"];
-		emissiveFactorWidget->value = emissiveFactor;
-		emissiveFactorWidget->valueLineEdit->setText(QString::number(emissiveFactor));
+		emissiveFactorWidget->setValue(emissiveFactor);
 	}
 	if (j.contains("alphaCutoff")) {
 		float alphaCutoff = j["alphaCutoff"];
-		alphaCutoffWidget->value = alphaCutoff;
-		alphaCutoffWidget->valueLineEdit->setText(QString::number(alphaCutoff));
+		alphaCutoffWidget->setValue(alphaCutoff);
 	}
 	if (j.contains("indexOfRefraction")) {
 		float indexOfRefraction = j["indexOfRefraction"];
-		indexOfRefractionWidget->value = indexOfRefraction;
-		indexOfRefractionWidget->valueLineEdit->setText(QString::number(indexOfRefraction));
+		indexOfRefractionWidget->setValue(indexOfRefraction);
 	}
 
 	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
@@ -191,158 +167,100 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 }
 
 void MaterialNtmlFileWidget::onValueChanged() {
+	QObject* senderWidget = sender();
+	if (senderWidget == diffuseTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(diffuseTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		diffuseTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == diffuseTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(diffuseTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		diffuseTextureImageSamplerWidget->setPath(path);
+	}
+	else if (senderWidget == normalTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(normalTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		normalTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == normalTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(normalTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		normalTextureImageSamplerWidget->setPath(path);
+	}
+	else if (senderWidget == metalnessTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(metalnessTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		metalnessTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == metalnessTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(metalnessTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		metalnessTextureImageSamplerWidget->setPath(path);
+	}
+	else if (senderWidget == roughnessTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(roughnessTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		roughnessTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == roughnessTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(roughnessTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		roughnessTextureImageSamplerWidget->setPath(path);
+	}
+	else if (senderWidget == occlusionTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(occlusionTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		occlusionTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == occlusionTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(occlusionTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		occlusionTextureImageSamplerWidget->setPath(path);
+	}
+	else if (senderWidget == emissiveTextureImageWidget) {
+		std::string path = AssetHelper::absoluteToRelative(emissiveTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
+		emissiveTextureImageWidget->setPath(path);
+	}
+	else if (senderWidget == emissiveTextureImageSamplerWidget) {
+		std::string path = AssetHelper::absoluteToRelative(emissiveTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
+		emissiveTextureImageSamplerWidget->setPath(path);
+	}
+
 	SaveTitleChanger::change(this);
 }
 
 void MaterialNtmlFileWidget::save() {
 	nlohmann::json j;
-	if (diffuseTextureImageWidget->filePathButton->path != "") {
-		std::string diffuseTextureImagePath = diffuseTextureImageWidget->filePathButton->path;
-		std::replace(diffuseTextureImagePath.begin(), diffuseTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(diffuseTextureImagePath).is_absolute()) {
-				if (diffuseTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					diffuseTextureImagePath = diffuseTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["diffuseTexture"]["imagePath"] = diffuseTextureImagePath;
+	if (diffuseTextureImageWidget->getPath() != "") {
+	j["diffuseTexture"]["imagePath"] = diffuseTextureImageWidget->getPath();
 	}
-	if (diffuseTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string diffuseTextureImageSamplerPath = diffuseTextureImageSamplerWidget->filePathButton->path;
-		std::replace(diffuseTextureImageSamplerPath.begin(), diffuseTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(diffuseTextureImageSamplerPath).is_absolute()) {
-				if (diffuseTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					diffuseTextureImageSamplerPath = diffuseTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["diffuseTexture"]["imageSamplerPath"] = diffuseTextureImageSamplerPath;
+	if (diffuseTextureImageSamplerWidget->getPath() != "") {
+	j["diffuseTexture"]["imageSamplerPath"] = diffuseTextureImageSamplerWidget->getPath();
 	}
-	if (normalTextureImageWidget->filePathButton->path != "") {
-		std::string normalTextureImagePath = normalTextureImageWidget->filePathButton->path;
-		std::replace(normalTextureImagePath.begin(), normalTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(normalTextureImagePath).is_absolute()) {
-				if (normalTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					normalTextureImagePath = normalTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["normalTexture"]["imagePath"] = normalTextureImagePath;
+	if (normalTextureImageWidget->getPath() != "") {
+		j["normalTexture"]["imagePath"] = normalTextureImageWidget->getPath();
 	}
-	if (normalTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string normalTextureImageSamplerPath = normalTextureImageSamplerWidget->filePathButton->path;
-		std::replace(normalTextureImageSamplerPath.begin(), normalTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(normalTextureImageSamplerPath).is_absolute()) {
-				if (normalTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					normalTextureImageSamplerPath = normalTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["normalTexture"]["imageSamplerPath"] = normalTextureImageSamplerPath;
+	if (normalTextureImageSamplerWidget->getPath() != "") {
+		j["normalTexture"]["imageSamplerPath"] = normalTextureImageSamplerWidget->getPath();
 	}
-	if (metalnessTextureImageWidget->filePathButton->path != "") {
-		std::string metalnessTextureImagePath = metalnessTextureImageWidget->filePathButton->path;
-		std::replace(metalnessTextureImagePath.begin(), metalnessTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(metalnessTextureImagePath).is_absolute()) {
-				if (metalnessTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					metalnessTextureImagePath = metalnessTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["metalnessTexture"]["imagePath"] = metalnessTextureImagePath;
+	if (metalnessTextureImageWidget->getPath() != "") {
+		j["metalnessTexture"]["imagePath"] = metalnessTextureImageWidget->getPath();
 	}
-	if (metalnessTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string metalnessTextureImageSamplerPath = metalnessTextureImageSamplerWidget->filePathButton->path;
-		std::replace(metalnessTextureImageSamplerPath.begin(), metalnessTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(metalnessTextureImageSamplerPath).is_absolute()) {
-				if (metalnessTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					metalnessTextureImageSamplerPath = metalnessTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["metalnessTexture"]["imageSamplerPath"] = metalnessTextureImageSamplerPath;
+	if (metalnessTextureImageSamplerWidget->getPath() != "") {
+		j["metalnessTexture"]["imageSamplerPath"] = metalnessTextureImageSamplerWidget->getPath();
 	}
-	if (roughnessTextureImageWidget->filePathButton->path != "") {
-		std::string roughnessTextureImagePath = roughnessTextureImageWidget->filePathButton->path;
-		std::replace(roughnessTextureImagePath.begin(), roughnessTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(roughnessTextureImagePath).is_absolute()) {
-				if (roughnessTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					roughnessTextureImagePath = roughnessTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["roughnessTexture"]["imagePath"] = roughnessTextureImagePath;
+	if (roughnessTextureImageWidget->getPath() != "") {
+		j["roughnessTexture"]["imagePath"] = roughnessTextureImageWidget->getPath();
 	}
-	if (roughnessTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string roughnessTextureImageSamplerPath = roughnessTextureImageSamplerWidget->filePathButton->path;
-		std::replace(roughnessTextureImageSamplerPath.begin(), roughnessTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(roughnessTextureImageSamplerPath).is_absolute()) {
-				if (roughnessTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					roughnessTextureImageSamplerPath = roughnessTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["roughnessTexture"]["imageSamplerPath"] = roughnessTextureImageSamplerPath;
+	if (roughnessTextureImageSamplerWidget->getPath() != "") {
+		j["roughnessTexture"]["imageSamplerPath"] = roughnessTextureImageSamplerWidget->getPath();
 	}
-	if (occlusionTextureImageWidget->filePathButton->path != "") {
-		std::string occlusionTextureImagePath = occlusionTextureImageWidget->filePathButton->path;
-		std::replace(occlusionTextureImagePath.begin(), occlusionTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(occlusionTextureImagePath).is_absolute()) {
-				if (occlusionTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					occlusionTextureImagePath = occlusionTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["occlusionTexture"]["imagePath"] = occlusionTextureImagePath;
+	if (occlusionTextureImageWidget->getPath() != "") {
+		j["occlusionTexture"]["imagePath"] = occlusionTextureImageWidget->getPath();
 	}
-	if (occlusionTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string occlusionTextureImageSamplerPath = occlusionTextureImageSamplerWidget->filePathButton->path;
-		std::replace(occlusionTextureImageSamplerPath.begin(), occlusionTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(occlusionTextureImageSamplerPath).is_absolute()) {
-				if (occlusionTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					occlusionTextureImageSamplerPath = occlusionTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["occlusionTexture"]["imageSamplerPath"] = occlusionTextureImageSamplerPath;
+	if (occlusionTextureImageSamplerWidget->getPath() != "") {
+		j["occlusionTexture"]["imageSamplerPath"] = occlusionTextureImageSamplerWidget->getPath();
 	}
-	if (emissiveTextureImageWidget->filePathButton->path != "") {
-		std::string emissiveTextureImagePath = emissiveTextureImageWidget->filePathButton->path;
-		std::replace(emissiveTextureImagePath.begin(), emissiveTextureImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(emissiveTextureImagePath).is_absolute()) {
-				if (emissiveTextureImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					emissiveTextureImagePath = emissiveTextureImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["emissiveTexture"]["imagePath"] = emissiveTextureImagePath;
+	if (emissiveTextureImageWidget->getPath() != "") {
+		j["emissiveTexture"]["imagePath"] = emissiveTextureImageWidget->getPath();
 	}
-	if (emissiveTextureImageSamplerWidget->filePathButton->path != "") {
-		std::string emissiveTextureImageSamplerPath = emissiveTextureImageSamplerWidget->filePathButton->path;
-		std::replace(emissiveTextureImageSamplerPath.begin(), emissiveTextureImageSamplerPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(emissiveTextureImageSamplerPath).is_absolute()) {
-				if (emissiveTextureImageSamplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					emissiveTextureImageSamplerPath = emissiveTextureImageSamplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["emissiveTexture"]["imageSamplerPath"] = emissiveTextureImageSamplerPath;
+	if (emissiveTextureImageSamplerWidget->getPath() != "") {
+		j["emissiveTexture"]["imageSamplerPath"] = emissiveTextureImageSamplerWidget->getPath();
 	}
-	j["emissiveFactor"] = emissiveFactorWidget->value;
-	j["alphaCutoff"] = alphaCutoffWidget->value;
-	j["indexOfRefraction"] = indexOfRefractionWidget->value;
+	j["emissiveFactor"] = emissiveFactorWidget->getValue();
+	j["alphaCutoff"] = alphaCutoffWidget->getValue();
+	j["indexOfRefraction"] = indexOfRefractionWidget->getValue();
 
 	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {

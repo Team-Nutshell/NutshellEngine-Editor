@@ -35,10 +35,21 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name): m
 	connect(zLineEdit, &QLineEdit::editingFinished, this, &Vector3Widget::onEditingFinished);
 }
 
+void Vector3Widget::setValue(const nml::vec3& value) {
+	m_value = value;
+	xLineEdit->setText(QString::number(m_value.x, 'f', 3));
+	yLineEdit->setText(QString::number(m_value.y, 'f', 3));
+	zLineEdit->setText(QString::number(m_value.z, 'f', 3));
+}
+
+const nml::vec3& Vector3Widget::getValue() {
+	return m_value;
+}
+
 void Vector3Widget::onEditingFinished() {
 	nml::vec3 newValue = nml::vec3(std::atof(xLineEdit->text().toStdString().c_str()), std::atof(yLineEdit->text().toStdString().c_str()), std::atof(zLineEdit->text().toStdString().c_str()));
-	if (value != newValue) {
-		value = newValue;
-		emit valueChanged(value);
+	if (m_value != newValue) {
+		setValue(newValue);
+		emit valueChanged(m_value);
 	}
 }

@@ -21,6 +21,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	centerWidget = new Vector3Widget(m_globalInfo, "Center");
 	layout()->addWidget(centerWidget);
 	radiusWidget = new ScalarWidget(m_globalInfo, "Radius");
+	radiusWidget->setMin(0.0f);
 	layout()->addWidget(radiusWidget);
 	halfExtentWidget = new Vector3Widget(m_globalInfo, "Half Extent");
 	layout()->addWidget(halfExtentWidget);
@@ -56,58 +57,42 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 		const QSignalBlocker signalBlocker(typeWidget->comboBox);
 		typeWidget->comboBox->setCurrentText(QString::fromStdString(collidable.type));
 	}
-	centerWidget->value = collidable.center;
-	centerWidget->xLineEdit->setText(QString::number(collidable.center.x, 'f', 3));
-	centerWidget->yLineEdit->setText(QString::number(collidable.center.y, 'f', 3));
-	centerWidget->zLineEdit->setText(QString::number(collidable.center.z, 'f', 3));
+	centerWidget->setValue(collidable.center);
 	if ((collidable.type == "Box") || (collidable.type == "Sphere")) {
 		centerWidget->setEnabled(true);
 	}
 	else {
 		centerWidget->setEnabled(false);
 	}
-	radiusWidget->value = collidable.radius;
-	radiusWidget->valueLineEdit->setText(QString::number(collidable.radius, 'f', 3));
+	radiusWidget->setValue(collidable.radius);
 	if ((collidable.type == "Sphere") || (collidable.type == "Capsule")) {
 		radiusWidget->setEnabled(true);
 	}
 	else {
 		radiusWidget->setEnabled(false);
 	}
-	halfExtentWidget->value = collidable.halfExtent;
-	halfExtentWidget->xLineEdit->setText(QString::number(collidable.halfExtent.x, 'f', 3));
-	halfExtentWidget->yLineEdit->setText(QString::number(collidable.halfExtent.y, 'f', 3));
-	halfExtentWidget->zLineEdit->setText(QString::number(collidable.halfExtent.z, 'f', 3));
+	halfExtentWidget->setValue(collidable.halfExtent);
 	if (collidable.type == "Box") {
 		halfExtentWidget->setEnabled(true);
 	}
 	else {
 		halfExtentWidget->setEnabled(false);
 	}
-	rotationWidget->value = collidable.rotation;
-	rotationWidget->xLineEdit->setText(QString::number(collidable.rotation.x, 'f', 3));
-	rotationWidget->yLineEdit->setText(QString::number(collidable.rotation.y, 'f', 3));
-	rotationWidget->zLineEdit->setText(QString::number(collidable.rotation.z, 'f', 3));
+	rotationWidget->setValue(collidable.rotation);
 	if (collidable.type == "Box") {
 		rotationWidget->setEnabled(true);
 	}
 	else {
 		rotationWidget->setEnabled(false);
 	}
-	baseWidget->value = collidable.base;
-	baseWidget->xLineEdit->setText(QString::number(collidable.base.x, 'f', 3));
-	baseWidget->yLineEdit->setText(QString::number(collidable.base.y, 'f', 3));
-	baseWidget->zLineEdit->setText(QString::number(collidable.base.z, 'f', 3));
+	baseWidget->setValue(collidable.base);
 	if (collidable.type == "Capsule") {
 		baseWidget->setEnabled(true);
 	}
 	else {
 		baseWidget->setEnabled(false);
 	}
-	tipWidget->value = collidable.tip;
-	tipWidget->xLineEdit->setText(QString::number(collidable.tip.x, 'f', 3));
-	tipWidget->yLineEdit->setText(QString::number(collidable.tip.y, 'f', 3));
-	tipWidget->zLineEdit->setText(QString::number(collidable.tip.z, 'f', 3));
+	tipWidget->setValue(collidable.tip);
 	if (collidable.type == "Capsule") {
 		tipWidget->setEnabled(true);
 	}

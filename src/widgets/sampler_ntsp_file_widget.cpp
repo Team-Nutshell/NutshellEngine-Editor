@@ -1,4 +1,5 @@
 #include "sampler_ntsp_file_widget.h"
+#include "../common/asset_helper.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
@@ -37,8 +38,9 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 	std::vector<std::string> borderColorElements = { "FloatTransparentBlack", "IntTransparentBlack", "FloatOpaqueBlack", "IntOpaqueBlack", "FloatOpaqueWhite", "IntOpaqueWhite", "Unknown" };
 	borderColorWidget = new ComboBoxWidget(globalInfo, "Border Color", borderColorElements);
 	layout()->addWidget(borderColorWidget);
-	anisotropyLevelWidget = new ScalarWidget(globalInfo, "Anisotropy Level");
-
+	anisotropyLevelWidget = new IntegerWidget(globalInfo, "Anisotropy Level");
+	anisotropyLevelWidget->setMin(0);
+	layout()->addWidget(anisotropyLevelWidget);
 
 	std::fstream optionsFile(samplerFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
@@ -105,9 +107,8 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 		}
 	}
 	if (j.contains("anistropyLevel")) {
-		float anisotropyLevel = j["anistropyLevel"];
-		anisotropyLevelWidget->value = anisotropyLevel;
-		anisotropyLevelWidget->valueLineEdit->setText(QString::number(anisotropyLevel));
+		int anisotropyLevel = j["anistropyLevel"];
+		anisotropyLevelWidget->setValue(anisotropyLevel);
 	}
 
 	connect(magFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
@@ -117,7 +118,7 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 	connect(addressModeVWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(addressModeWWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(borderColorWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
-	connect(anisotropyLevelWidget, &ScalarWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(anisotropyLevelWidget, &IntegerWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
 }
 
 void SamplerNtspFileWidget::onValueChanged() {
@@ -147,7 +148,7 @@ void SamplerNtspFileWidget::save() {
 	if (borderColorWidget->comboBox->currentText() != "") {
 		j["borderColor"] = borderColorWidget->comboBox->currentText().toStdString();
 	}
-	j["anisotropyLevel"] = anisotropyLevelWidget->value;
+	j["anisotropyLevel"] = anisotropyLevelWidget->getValue();
 
 	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -158,15 +159,7 @@ void SamplerNtspFileWidget::save() {
 	}
 	samplerFile.close();
 
-	std::string samplerPath = m_samplerFilePath;
-	std::replace(samplerPath.begin(), samplerPath.end(), '\\', '/');
-	if (m_globalInfo.projectDirectory != "") {
-		if (std::filesystem::path(samplerPath).is_absolute()) {
-			if (samplerPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-				samplerPath = samplerPath.substr(m_globalInfo.projectDirectory.size() + 1);
-			}
-		}
-	}
+	std::string samplerPath = AssetHelper::absoluteToRelative(m_samplerFilePath, m_globalInfo.projectDirectory);
 	m_globalInfo.rendererResourceManager.loadSampler(m_samplerFilePath, samplerPath);
 
 	SaveTitleChanger::reset(this);

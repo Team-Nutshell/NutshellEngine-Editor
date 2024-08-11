@@ -29,10 +29,20 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name): m
 	connect(yLineEdit, &QLineEdit::editingFinished, this, &Vector2Widget::onEditingFinished);
 }
 
+void Vector2Widget::setValue(const nml::vec2& value) {
+	m_value = value;
+	xLineEdit->setText(QString::number(m_value.x, 'f', 3));
+	yLineEdit->setText(QString::number(m_value.y, 'f', 3));
+}
+
+const nml::vec2& Vector2Widget::getValue() {
+	return m_value;
+}
+
 void Vector2Widget::onEditingFinished() {
 	nml::vec2 newValue = nml::vec2(std::atof(xLineEdit->text().toStdString().c_str()), std::atof(yLineEdit->text().toStdString().c_str()));
-	if (value != newValue) {
-		value = newValue;
-		emit valueChanged(value);
+	if (m_value != newValue) {
+		setValue(newValue);
+		emit valueChanged(m_value);
 	}
 }

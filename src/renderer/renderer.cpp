@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "../common/asset_helper.h"
 #include "../undo_commands/destroy_entities_command.h"
 #include "../undo_commands/change_entities_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
@@ -1689,23 +1690,21 @@ void Renderer::dropEvent(QDropEvent* event) {
 	QList<QUrl> sources = event->mimeData()->urls();
 	if (!sources.isEmpty()) {
 		std::string path = sources[0].toLocalFile().toStdString();
-		std::string relativePath = path;
-		std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
-		if (relativePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-			relativePath = relativePath.substr(m_globalInfo.projectDirectory.size() + 1);
-		}
-		m_globalInfo.rendererResourceManager.loadModel(path, relativePath);
-		if (m_globalInfo.rendererResourceManager.models.find(relativePath) != m_globalInfo.rendererResourceManager.models.end()) {
-			std::string name = relativePath;
-			size_t lastSlashPosition = name.find_last_of('/');
-			if (lastSlashPosition != std::string::npos) {
-				name = name.substr(lastSlashPosition + 1);
+		std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
+		if (!path.empty()) {
+			m_globalInfo.rendererResourceManager.loadModel(path, relativePath);
+			if (m_globalInfo.rendererResourceManager.models.find(relativePath) != m_globalInfo.rendererResourceManager.models.end()) {
+				std::string name = relativePath;
+				size_t lastSlashPosition = name.find_last_of('/');
+				if (lastSlashPosition != std::string::npos) {
+					name = name.substr(lastSlashPosition + 1);
+				}
+				size_t dotPosition = name.find_last_of('.');
+				if (dotPosition != std::string::npos) {
+					name = name.substr(0, dotPosition);
+				}
+				m_globalInfo.undoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
 			}
-			size_t dotPosition = name.find_last_of('.');
-			if (dotPosition != std::string::npos) {
-				name = name.substr(0, dotPosition);
-			}
-			m_globalInfo.undoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
 		}
 	}
 }

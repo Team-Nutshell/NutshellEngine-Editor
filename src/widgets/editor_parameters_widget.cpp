@@ -175,7 +175,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	buildParametersTab = new QTabWidget();
 	buildParametersTab->setLayout(new QVBoxLayout());
 	cMakePathWidget = new StringWidget(m_globalInfo, "CMake executable");
-	cMakePathWidget->valueLineEdit->setText(QString::fromStdString(m_globalInfo.editorParameters.build.cMakePath));
+	cMakePathWidget->setText(m_globalInfo.editorParameters.build.cMakePath);
 	cMakePathWidget->valueLineEdit->setFixedWidth(400);
 	cMakePathWidget->layout()->setAlignment(cMakePathWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cMakePathWidget->layout()->setAlignment(cMakePathWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
@@ -186,7 +186,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	codeParametersTab = new QTabWidget();
 	codeParametersTab->setLayout(new QVBoxLayout());
 	codeEditorCommandWidget = new StringWidget(m_globalInfo, "Code editor command");
-	codeEditorCommandWidget->valueLineEdit->setText(QString::fromStdString(m_globalInfo.editorParameters.code.codeEditorCommand));
+	cMakePathWidget->setText(m_globalInfo.editorParameters.code.codeEditorCommand);
 	codeEditorCommandWidget->valueLineEdit->setFixedWidth(400);
 	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
@@ -220,10 +220,9 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(multiSelectionKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onCurrentEntityOutlineColorChanged);
-	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onOtherEntitiesOutlineColorChanged);
-	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCMakePathChanged);
-	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onCodeEditorCommandChanged);
+	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
+	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
+	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
 }
 
 void EditorParametersWidget::onKeyChanged(const std::string& key) {
@@ -400,26 +399,26 @@ void EditorParametersWidget::onScalarChanged(float value) {
 	save();
 }
 
-void EditorParametersWidget::onCMakePathChanged(const std::string& cMakePath) {
-	m_globalInfo.editorParameters.build.cMakePath = cMakePath;
+void EditorParametersWidget::onStringChanged(const std::string& text) {
+	QObject* senderWidget = sender();
+	if (senderWidget == cMakePathWidget) {
+		m_globalInfo.editorParameters.build.cMakePath = text;
+	}
+	else if (senderWidget == codeEditorCommandWidget) {
+		m_globalInfo.editorParameters.code.codeEditorCommand = text;
+	}
 
 	save();
 }
 
-void EditorParametersWidget::onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged) {
-	m_globalInfo.editorParameters.code.codeEditorCommand = codeEditorCommandChanged;
-
-	save();
-}
-
-void EditorParametersWidget::onCurrentEntityOutlineColorChanged(const nml::vec4& currentEntityOutlineColor) {
-	m_globalInfo.editorParameters.renderer.currentEntityOutlineColor = nml::vec3(currentEntityOutlineColor);
-
-	save();
-}
-
-void EditorParametersWidget::onOtherEntitiesOutlineColorChanged(const nml::vec4& otherEntitiesOutlineColor) {
-	m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor = nml::vec3(otherEntitiesOutlineColor);
+void EditorParametersWidget::onColorChanged(const nml::vec4& color) {
+	QObject* senderWidget = sender();
+	if (senderWidget == currentEntityOutlineColorWidget) {
+		m_globalInfo.editorParameters.renderer.currentEntityOutlineColor = nml::vec3(color);
+	}
+	else if (senderWidget == otherEntitiesOutlineColorWidget) {
+		m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor = nml::vec3(color);
+	}
 
 	save();
 }

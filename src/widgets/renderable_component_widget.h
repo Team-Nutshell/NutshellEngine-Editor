@@ -18,7 +18,7 @@ private slots:
 	void onAddEntityRenderable(EntityID entityID);
 	void onRemoveEntityRenderable(EntityID entityID);
 	void onChangeEntityRenderable(EntityID entityID, const Renderable& renderable);
-	void onStringChanged(const std::string& string);
+	void onPathChanged(const std::string& path);
 	void onElementChanged(const std::string& element);
 
 private:

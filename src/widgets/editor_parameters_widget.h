@@ -19,10 +19,8 @@ public:
 private slots:
 	void onKeyChanged(const std::string& key);
 	void onScalarChanged(float value);
-	void onCMakePathChanged(const std::string& cMakePath);
-	void onCodeEditorCommandChanged(const std::string& codeEditorCommandChanged);
-	void onCurrentEntityOutlineColorChanged(const nml::vec4& currentEntityOutlineColor);
-	void onOtherEntitiesOutlineColorChanged(const nml::vec4& otherEntitiesOutlineColor);
+	void onStringChanged(const std::string& text);
+	void onColorChanged(const nml::vec4& color);
 
 private:
 	void save();

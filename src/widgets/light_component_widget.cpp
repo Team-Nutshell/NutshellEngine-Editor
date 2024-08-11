@@ -40,20 +40,15 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 		const QSignalBlocker signalBlocker(typeWidget->comboBox);
 		typeWidget->comboBox->setCurrentText(QString::fromStdString(light.type));
 	}
-	colorWidget->updateColor(nml::vec4(light.color, 1.0f));
-	directionWidget->value = light.direction;
-	directionWidget->xLineEdit->setText(QString::number(light.direction.x, 'f', 3));
-	directionWidget->yLineEdit->setText(QString::number(light.direction.y, 'f', 3));
-	directionWidget->zLineEdit->setText(QString::number(light.direction.z, 'f', 3));
+	colorWidget->setColor(nml::vec4(light.color, 1.0f));
+	directionWidget->setValue(light.direction);
 	if ((light.type == "Directional") || (light.type == "Spot")) {
 		directionWidget->setEnabled(true);
 	}
 	else {
 		directionWidget->setEnabled(false);
 	}
-	cutoffWidget->value = light.cutoff;
-	cutoffWidget->xLineEdit->setText(QString::number(light.cutoff.x, 'f', 3));
-	cutoffWidget->yLineEdit->setText(QString::number(light.cutoff.y, 'f', 3));
+	cutoffWidget->setValue(light.cutoff);
 	if (light.type == "Spot") {
 		cutoffWidget->setEnabled(true);
 	}

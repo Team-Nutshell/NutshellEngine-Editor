@@ -1,10 +1,11 @@
 #include "renderable_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "main_window.h"
+#include "../common/asset_helper.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entities_component_command.h"
 #include "../renderer/collider_mesh.h"
-#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -23,7 +24,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(primitiveIndexWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
-	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onStringChanged);
+	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onAddEntityRenderable);
@@ -33,18 +34,8 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 
 void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	if (renderable.modelPath != "") {
-		std::string modelPath = renderable.modelPath;
-		std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(modelPath).is_absolute()) {
-				if (modelPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					modelPath = modelPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		modelPathWidget->filePathButton->path = modelPath;
-		modelPathWidget->filePathButton->setText(QString::fromStdString(modelPath.substr(modelPath.rfind('/') + 1)));
-		modelPathWidget->filePathButton->setToolTip(QString::fromStdString(modelPath));
+		std::string modelPath = AssetHelper::absoluteToRelative(renderable.modelPath, m_globalInfo.projectDirectory);
+		modelPathWidget->setPath(modelPath);
 
 		{
 			const QSignalBlocker signalBlocker(primitiveIndexWidget->comboBox);
@@ -73,9 +64,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 		}
 	}
 	else {
-		modelPathWidget->filePathButton->path = "";
-		modelPathWidget->filePathButton->setText("No model selected");
-		modelPathWidget->filePathButton->setToolTip("");
+		modelPathWidget->setPath("");
 
 		{
 			const QSignalBlocker signalBlocker(primitiveIndexWidget->comboBox);
@@ -132,18 +121,14 @@ void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, cons
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void RenderableComponentWidget::onStringChanged(const std::string& string) {
+void RenderableComponentWidget::onPathChanged(const std::string& path) {
 	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 
 	QObject* senderWidget = sender();
 	if (senderWidget == modelPathWidget) {
-		std::string fullModelPath = string;
-		newRenderable.modelPath = fullModelPath;
+		std::string fullModelPath = path;
+		newRenderable.modelPath = AssetHelper::absoluteToRelative(fullModelPath, m_globalInfo.projectDirectory);
 		if (!fullModelPath.empty()) {
-			std::replace(newRenderable.modelPath.begin(), newRenderable.modelPath.end(), '\\', '/');
-			if (newRenderable.modelPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-				newRenderable.modelPath = newRenderable.modelPath.substr(m_globalInfo.projectDirectory.size() + 1);
-			}
 			m_globalInfo.rendererResourceManager.loadModel(fullModelPath, newRenderable.modelPath);
 			if (newRenderable.modelPath != m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath) {
 				newRenderable.primitiveIndex = 0;

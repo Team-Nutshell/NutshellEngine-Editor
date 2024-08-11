@@ -1,5 +1,6 @@
 #include "model_ntmd_primitive_widget.h"
 #include "separator_line.h"
+#include "../common/asset_helper.h"
 #include <QVBoxLayout>
 
 ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
@@ -22,28 +23,12 @@ ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo): m_gl
 
 nlohmann::json ModelNtmdPrimitiveWidget::toJson() const {
 	nlohmann::json j;
-	if (primitiveMeshWidget->filePathButton->path != "") {
-		std::string meshPath = primitiveMeshWidget->filePathButton->path;
-		std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(meshPath).is_absolute()) {
-				if (meshPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					meshPath = meshPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
+	if (primitiveMeshWidget->getPath() != "") {
+		std::string meshPath = AssetHelper::absoluteToRelative(primitiveMeshWidget->getPath(), m_globalInfo.projectDirectory);
 		j["meshPath"] = meshPath;
 	}
-	if (primitiveMaterialWidget->filePathButton->path != "") {
-		std::string materialPath = primitiveMaterialWidget->filePathButton->path;
-		std::replace(materialPath.begin(), materialPath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(materialPath).is_absolute()) {
-				if (materialPath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					materialPath = materialPath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
+	if (primitiveMaterialWidget->getPath() != "") {
+		std::string materialPath = AssetHelper::absoluteToRelative(primitiveMaterialWidget->getPath(), m_globalInfo.projectDirectory);
 		j["materialPath"] = materialPath;
 	}
 

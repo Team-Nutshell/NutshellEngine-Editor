@@ -14,10 +14,19 @@ StringWidget::StringWidget(GlobalInfo& globalInfo, const std::string& name): m_g
 	connect(valueLineEdit, &QLineEdit::editingFinished, this, &StringWidget::onEditingFinished);
 }
 
+void StringWidget::setText(const std::string& text) {
+	m_text = text;
+	valueLineEdit->setText(QString::fromStdString(m_text));
+}
+
+const std::string& StringWidget::getText() {
+	return m_text;
+}
+
 void StringWidget::onEditingFinished() {
 	std::string newValue = valueLineEdit->text().toStdString();
-	if (value != newValue) {
-		value = newValue;
-		emit valueChanged(value);
+	if (m_text != newValue) {
+		setText(newValue);
+		emit valueChanged(m_text);
 	}
 }

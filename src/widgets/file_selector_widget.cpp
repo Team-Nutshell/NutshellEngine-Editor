@@ -25,15 +25,35 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 	connect(resetFilePathButton, &QPushButton::clicked, this, &FileSelectorWidget::onResetFilePathClicked);
 }
 
+void FileSelectorWidget::setPath(const std::string& path) {
+	if (path == "") {
+		m_path = "";
+		filePathButton->path = "";
+		filePathButton->setText(QString::fromStdString(m_noFileText));
+		filePathButton->setToolTip("");
+	}
+	else {
+		m_path = path;
+		filePathButton->path = path;
+		filePathButton->setText(QString::fromStdString(path.substr(path.rfind('/') + 1)));
+		filePathButton->setToolTip(QString::fromStdString(path));
+	}
+}
+
+const std::string& FileSelectorWidget::getPath() {
+	return m_path;
+}
+
 void FileSelectorWidget::onPathChanged(const std::string& path) {
-	filePathButton->setText(QString::fromStdString(path.substr(path.rfind('/') + 1)));
-	filePathButton->setToolTip(QString::fromStdString(path));
-	emit fileSelected(path);
+	if (m_path != path) {
+		setPath(path);
+		emit fileSelected(path);
+	}
 }
 
 void FileSelectorWidget::onResetFilePathClicked() {
-	filePathButton->setText(QString::fromStdString(m_noFileText));
-	filePathButton->setToolTip("");
-	filePathButton->path = "";
-	emit fileSelected("");
+	if (m_path != "") {
+		setPath("");
+		emit fileSelected("");
+	}
 }

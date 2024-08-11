@@ -1,7 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include "combo_box_widget.h"
-#include "scalar_widget.h"
+#include "integer_widget.h"
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
@@ -34,5 +34,5 @@ public:
 	ComboBoxWidget* addressModeVWidget;
 	ComboBoxWidget* addressModeWWidget;
 	ComboBoxWidget* borderColorWidget;
-	ScalarWidget* anisotropyLevelWidget;
+	IntegerWidget* anisotropyLevelWidget;
 };

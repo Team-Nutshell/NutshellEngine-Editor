@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLocale>
 #include <QIntValidator>
+#include <algorithm>
 #include <cstdlib>
 
 IntegerWidget::IntegerWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
@@ -19,10 +20,33 @@ IntegerWidget::IntegerWidget(GlobalInfo& globalInfo, const std::string& name): m
 	connect(valueLineEdit, &QLineEdit::editingFinished, this, &IntegerWidget::onEditingFinished);
 }
 
+void IntegerWidget::setValue(int value) {
+	value = std::clamp(value, m_min, m_max);
+	if (m_value != value) {
+		m_value = value;
+		valueLineEdit->setText(QString::number(m_value));
+	}
+}
+
+int IntegerWidget::getValue() {
+	return m_value;
+}
+
+void IntegerWidget::setMin(int min) {
+	m_min = min;
+	setValue(m_value);
+}
+
+void IntegerWidget::setMax(int max) {
+	m_max = max;
+	setValue(m_value);
+}
+
 void IntegerWidget::onEditingFinished() {
 	int newValue = std::atoi(valueLineEdit->text().toStdString().c_str());
-	if (value != newValue) {
-		value = newValue;
-		emit valueChanged(value);
+	newValue = std::clamp(newValue, m_min, m_max);
+	if (m_value != newValue) {
+		setValue(newValue);
+		emit valueChanged(m_value);
 	}
 }

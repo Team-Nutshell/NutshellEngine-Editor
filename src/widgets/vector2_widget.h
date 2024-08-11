@@ -10,6 +10,9 @@ class Vector2Widget : public QWidget {
 public:
 	Vector2Widget(GlobalInfo& globalInfo, const std::string& name);
 
+	void setValue(const nml::vec2& value);
+	const nml::vec2& getValue();
+
 signals:
 	void valueChanged(const nml::vec2&);
 
@@ -19,10 +22,10 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
+	nml::vec2 m_value = nml::vec2(0.0f);
+
 public:
 	QLabel* nameLabel;
 	QLineEdit* xLineEdit;
 	QLineEdit* yLineEdit;
-
-	nml::vec2 value = nml::vec2(0.0f);
 };

@@ -1,4 +1,5 @@
 #include "options_ntop_file_widget.h"
+#include "../common/asset_helper.h"
 #include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
@@ -28,6 +29,7 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "Window Icon", "No window icon selected", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(windowIconImageWidget);
 	maxFPSWidget = new IntegerWidget(m_globalInfo, "Max FPS");
+	maxFPSWidget->setMin(0);
 	layout()->addWidget(maxFPSWidget);
 	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "First Scene", "No first scene selected", m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(firstSceneWidget);
@@ -51,26 +53,20 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 
 	if (j.contains("windowTitle")) {
 		std::string windowTitle = j["windowTitle"];
-		windowTitleWidget->value = windowTitle;
-		windowTitleWidget->valueLineEdit->setText(QString::fromStdString(windowTitle));
+		windowTitleWidget->setText(windowTitle);
 	}
 	if (j.contains("windowIconImagePath")) {
 		std::string windowIconImagePath = j["windowIconImagePath"];
-		windowIconImageWidget->filePathButton->path = windowIconImagePath;
-		windowIconImageWidget->filePathButton->setText(QString::fromStdString(windowIconImagePath.substr(windowIconImagePath.rfind('/') + 1)));
-		windowIconImageWidget->filePathButton->setToolTip(QString::fromStdString(windowIconImagePath));
+		windowIconImageWidget->setPath(windowIconImagePath);
 	}
 	if (j.contains("maxFPS")) {
 		float maxFPSFloat = j["maxFPS"];
 		int maxFPS = static_cast<int>(std::floor(maxFPSFloat));
-		maxFPSWidget->value = maxFPS;
-		maxFPSWidget->valueLineEdit->setText(QString::number(maxFPS));
+		maxFPSWidget->setValue(maxFPS);
 	}
 	if (j.contains("firstScenePath")) {
 		std::string firstScenePath = j["firstScenePath"];
-		firstSceneWidget->filePathButton->path = firstScenePath;
-		firstSceneWidget->filePathButton->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
-		firstSceneWidget->filePathButton->setToolTip(QString::fromStdString(firstScenePath));
+		firstSceneWidget->setPath(firstScenePath);
 	}
 	if (j.contains("startProfiling")) {
 		bool startProfiling = j["startProfiling"]; 
@@ -90,36 +86,12 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 void OptionsNtopFileWidget::onValueChanged() {
 	QObject* senderWidget = sender();
 	if (senderWidget == windowIconImageWidget) {
-		std::string iconImagePath = windowIconImageWidget->filePathButton->path;
-		if (!iconImagePath.empty()) {
-			std::replace(iconImagePath.begin(), iconImagePath.end(), '\\', '/');
-			if (m_globalInfo.projectDirectory != "") {
-				if (std::filesystem::path(iconImagePath).is_absolute()) {
-					if (iconImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-						iconImagePath = iconImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-					}
-				}
-			}
-			windowIconImageWidget->filePathButton->path = iconImagePath;
-			windowIconImageWidget->filePathButton->setText(QString::fromStdString(iconImagePath.substr(iconImagePath.rfind('/') + 1)));
-			windowIconImageWidget->filePathButton->setToolTip(QString::fromStdString(iconImagePath));
-		}
+		std::string iconImagePath = AssetHelper::absoluteToRelative(windowIconImageWidget->getPath(), m_globalInfo.projectDirectory);
+		windowIconImageWidget->setPath(iconImagePath);
 	}
 	else if (senderWidget == firstSceneWidget) {
-		std::string firstScenePath = firstSceneWidget->filePathButton->path;
-		if (!firstScenePath.empty()) {
-			std::replace(firstScenePath.begin(), firstScenePath.end(), '\\', '/');
-			if (m_globalInfo.projectDirectory != "") {
-				if (std::filesystem::path(firstScenePath).is_absolute()) {
-					if (firstScenePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-						firstScenePath = firstScenePath.substr(m_globalInfo.projectDirectory.size() + 1);
-					}
-				}
-			}
-			firstSceneWidget->filePathButton->path = firstScenePath;
-			firstSceneWidget->filePathButton->setText(QString::fromStdString(firstScenePath.substr(firstScenePath.rfind('/') + 1)));
-			firstSceneWidget->filePathButton->setToolTip(QString::fromStdString(firstScenePath));
-		}
+		std::string firstScenePath = AssetHelper::absoluteToRelative(firstSceneWidget->getPath(), m_globalInfo.projectDirectory);
+		firstSceneWidget->setPath(firstScenePath);
 	}
 
 	SaveTitleChanger::change(this);
@@ -127,35 +99,15 @@ void OptionsNtopFileWidget::onValueChanged() {
 
 void OptionsNtopFileWidget::save() {
 	nlohmann::json j;
-	if (windowTitleWidget->value != "") {
-		j["windowTitle"] = windowTitleWidget->value;
+	if (windowTitleWidget->getText() != "") {
+		j["windowTitle"] = windowTitleWidget->getText();
 	}
-	if (windowIconImageWidget->filePathButton->path != "") {
-		std::string windowIconImagePath = windowIconImageWidget->filePathButton->path;
-		std::replace(windowIconImagePath.begin(), windowIconImagePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(windowIconImagePath).is_absolute()) {
-				if (windowIconImagePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					windowIconImagePath = windowIconImagePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["windowIconImagePath"] = windowIconImagePath;
+	if (windowIconImageWidget->getPath() != "") {
+		j["windowIconImagePath"] = windowIconImageWidget->getPath();
 	}
-	if (maxFPSWidget->value > 0) {
-		j["maxFPS"] = maxFPSWidget->value;
-	}
-	if (firstSceneWidget->filePathButton->path != "") {
-		std::string firstScenePath = firstSceneWidget->filePathButton->path;
-		std::replace(firstScenePath.begin(), firstScenePath.end(), '\\', '/');
-		if (m_globalInfo.projectDirectory != "") {
-			if (std::filesystem::path(firstScenePath).is_absolute()) {
-				if (firstScenePath.substr(0, m_globalInfo.projectDirectory.size()) == m_globalInfo.projectDirectory) {
-					firstScenePath = firstScenePath.substr(m_globalInfo.projectDirectory.size() + 1);
-				}
-			}
-		}
-		j["firstScenePath"] = firstScenePath;
+	j["maxFPS"] = maxFPSWidget->getValue();
+	if (firstSceneWidget->getPath() != "") {
+		j["firstScenePath"] = firstSceneWidget->getPath();
 	}
 	j["startProfiling"] = startProfilingWidget->checkBox->isChecked();
 

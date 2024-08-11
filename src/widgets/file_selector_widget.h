@@ -11,6 +11,9 @@ class FileSelectorWidget : public QWidget {
 public:
 	FileSelectorWidget(GlobalInfo& globalInfo, const std::string& labelText, const std::string& noFileText, const std::string& defaultPath);
 
+	void setPath(const std::string& path);
+	const std::string& getPath();
+
 signals:
 	void fileSelected(const std::string&);
 
@@ -21,6 +24,7 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
+	std::string m_path = "";
 	std::string m_noFileText;
 
 public:
