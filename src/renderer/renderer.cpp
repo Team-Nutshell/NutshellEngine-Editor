@@ -1476,6 +1476,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			m_globalInfo.currentEntityID = NO_ENTITY;
 			m_globalInfo.otherSelectedEntityIDs.clear();
 			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
+			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
 	}
 	event->accept();

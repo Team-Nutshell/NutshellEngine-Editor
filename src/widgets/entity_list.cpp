@@ -151,6 +151,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 					m_globalInfo.currentEntityID = entityListItem->entityID;
 				}
 			}
+			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
 		else if (event->key() == Qt::Key::Key_Up) {
 			if (!m_moveEntityOrderKeyPressed) {
