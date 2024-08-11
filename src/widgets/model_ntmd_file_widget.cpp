@@ -51,7 +51,7 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo, const std::stri
 	nlohmann::json j = nlohmann::json::parse(optionsFile);
 
 	if (j.contains("primitives")) {
-		for (const auto primitive : j["primitives"]) {
+		for (const auto& primitive : j["primitives"]) {
 			ModelNtmdPrimitiveWidget* newPrimitiveWidget = new ModelNtmdPrimitiveWidget(m_globalInfo);
 			if (primitive.contains("meshPath")) {
 				std::string meshPath = primitive["meshPath"];
