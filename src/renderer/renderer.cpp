@@ -1322,6 +1322,7 @@ void Renderer::cancelTransform() {
 		m_translateEntityMode = false;
 		m_rotateEntityMode = false;
 		m_scaleEntityMode = false;
+		m_selectionMeanPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 		m_entityMoveTransforms.clear();
 	}
 }
@@ -1442,6 +1443,11 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
+			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
+			}
+			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
@@ -1453,6 +1459,11 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
+			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
+			}
+			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
@@ -1464,6 +1475,11 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 			QPoint cursorPos = mapFromGlobal(QCursor::pos());
 			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
+			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
+			}
+			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
@@ -1478,6 +1494,9 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
 			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
+	}
+	else if (event->key() == Qt::Key_Control) {
+		cancelTransform();
 	}
 	event->accept();
 }
@@ -1530,6 +1549,7 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 			m_rotateEntityMode = false;
 			m_scaleEntityMode = false;
 			m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
+			m_selectionMeanPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 			if (m_globalInfo.currentEntityID != NO_ENTITY) {
 				std::vector<EntityID> changedEntityIDs = { m_globalInfo.currentEntityID };
 				std::vector<Component*> changedEntityTransforms = { &m_entityMoveTransforms[m_globalInfo.currentEntityID] };
@@ -1583,14 +1603,9 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 			selectedEntityIDs.insert(m_globalInfo.currentEntityID);
-			nml::vec3 meanPosition = nml::vec3(0.0f, 0.0f, 0.0f);
-			for (EntityID selectedEntityID : selectedEntityIDs) {
-				meanPosition += m_entityMoveTransforms[selectedEntityID].position;
-			}
-			meanPosition /= static_cast<float>(selectedEntityIDs.size());
 			nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
 			if (m_translateEntityMode) {
-				nml::vec3 cameraEntityDifference = meanPosition - m_camera.perspectivePosition;
+				nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.perspectivePosition;
 				float cameraEntityDifferenceLength = (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) ? cameraEntityDifference.length() : 0.0f;
 				nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
@@ -1609,16 +1624,15 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				}
 			}
 			else if (m_rotateEntityMode) {
-				nml::mat4 rotationMatrix;
+				nml::vec3 rotationAxis = (!m_camera.useOrthographicProjection) ? m_camera.perspectiveDirection : m_camera.orthographicDirection;
+				nml::mat4 rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), rotationAxis);
+				nml::vec3 rotationAngles = nml::rotationMatrixToEulerAngles(rotationMatrix);
+				rotationAngles.x = nml::toDeg(rotationAngles.x);
+				rotationAngles.y = nml::toDeg(rotationAngles.y);
+				rotationAngles.z = nml::toDeg(rotationAngles.z);
 				for (EntityID selectedEntityID : selectedEntityIDs) {
-					if (!m_camera.useOrthographicProjection) {
-						rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.perspectiveDirection);
-					}
-					else {
-						rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), m_camera.orthographicDirection);
-					}
-					nml::vec3 rotationAngles = nml::vec3(nml::toDeg(std::atan2(rotationMatrix.z.y, rotationMatrix.z.z)), nml::toDeg(std::atan2(-rotationMatrix.z.x, std::sqrt((rotationMatrix.z.y * rotationMatrix.z.y) + (rotationMatrix.z.z * rotationMatrix.z.z)))), nml::toDeg(std::atan2(rotationMatrix.y.x, rotationMatrix.x.x)));
-					m_entityMoveTransforms[selectedEntityID].rotation -= rotationAngles;
+					m_entityMoveTransforms[selectedEntityID].position = nml::vec3((nml::translate(-m_selectionMeanPosition) * rotationMatrix * nml::translate(m_selectionMeanPosition)) * m_entityMoveTransforms[selectedEntityID].position);
+					m_entityMoveTransforms[selectedEntityID].rotation += rotationAngles;
 					m_entityMoveTransforms[selectedEntityID].rotation = nml::vec3(std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.x, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.y, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.z, 360.0f));
 				}
 			}
@@ -1626,18 +1640,20 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
 				nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec2 objectPositionProjected = project(meanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
+				nml::vec2 objectPositionProjected = project(m_selectionMeanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
 				nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
 				nml::vec3 previousToCurrentPosition3D = worldSpaceCurrentMouse - worldSpacePreviousMouse;
 				float previousToCurrentPosition3DLength = (nml::dot(previousToCurrentPosition3D, previousToCurrentPosition3D) != 0.0f) ? previousToCurrentPosition3D.length() : 0.0f;
-				nml::vec3 objectToCurrentMousePosition3D = worldSpaceCurrentMouse - meanPosition;
+				nml::vec3 objectToCurrentMousePosition3D = worldSpaceCurrentMouse - m_selectionMeanPosition;
 				float objectToCurrentMousePosition3DLength = (nml::dot(objectToCurrentMousePosition3D, objectToCurrentMousePosition3D) != 0.0f) ? objectToCurrentMousePosition3D.length() : 0.01f;
 				float scaleFactor = 1.0f;
 				if (!m_camera.useOrthographicProjection) {
 					scaleFactor = 1000.0f;
 				}
+				float scaleDifference = ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 				for (EntityID selectedEntityID : selectedEntityIDs) {
-					m_entityMoveTransforms[selectedEntityID].scale += ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
+					m_entityMoveTransforms[selectedEntityID].position = (1.0f + scaleDifference) * (m_entityMoveTransforms[selectedEntityID].position - m_selectionMeanPosition) + m_selectionMeanPosition;
+					m_entityMoveTransforms[selectedEntityID].scale *= 1.0f + scaleDifference;
 				}
 			}
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
