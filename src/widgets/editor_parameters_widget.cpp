@@ -185,8 +185,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	codeParametersTab = new QTabWidget();
 	codeParametersTab->setLayout(new QVBoxLayout());
-	codeEditorCommandWidget = new StringWidget(m_globalInfo, "Code editor command");
-	cMakePathWidget->setText(m_globalInfo.editorParameters.code.codeEditorCommand);
+	codeEditorCommandWidget = new StringWidget(m_globalInfo, "Code editor command (use \"${FILE_PATH}\" for file path)");
+	codeEditorCommandWidget->setText(m_globalInfo.editorParameters.code.codeEditorCommand);
 	codeEditorCommandWidget->valueLineEdit->setFixedWidth(400);
 	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
@@ -223,6 +223,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
+	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
 }
 
 void EditorParametersWidget::onKeyChanged(const std::string& key) {
