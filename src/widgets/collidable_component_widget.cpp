@@ -43,6 +43,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	connect(baseWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
 	connect(tipWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
 	connect(fromRenderableWidget, &QPushButton::clicked, this, &CollidableComponentWidget::onFromRenderableButtonClicked);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &CollidableComponentWidget::onEntityCreated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CollidableComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCollidableSignal, this, &CollidableComponentWidget::onEntityCollidableAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCollidableSignal, this, &CollidableComponentWidget::onEntityCollidableRemoved);
@@ -112,6 +113,13 @@ void CollidableComponentWidget::updateFromRenderableWidget() {
 	}
 	else {
 		fromRenderableWidget->setEnabled(false);
+	}
+}
+
+void CollidableComponentWidget::onEntityCreated(EntityID entityID) {
+	Entity& entity = m_globalInfo.entities[entityID];
+	if (entity.collidable) {
+		ColliderMesh::update(m_globalInfo, entityID);
 	}
 }
 

@@ -18,6 +18,7 @@ private:
 	void updateFromRenderableWidget();
 
 private slots:
+	void onEntityCreated(EntityID entityID);
 	void onEntitySelected();
 	void onEntityCollidableAdded(EntityID entityID);
 	void onEntityCollidableRemoved(EntityID entityID);
