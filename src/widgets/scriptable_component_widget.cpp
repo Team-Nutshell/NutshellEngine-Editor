@@ -46,10 +46,12 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 			const QSignalBlocker signalBlocker(scriptNameWidget->comboBox);
 			if (scriptNameWidget->comboBox->findText(QString::fromStdString(scriptable.scriptName)) != -1) {
 				scriptNameWidget->comboBox->setCurrentText(QString::fromStdString(scriptable.scriptName));
+				openCodeEditorButton->setEnabled(true);
 			}
 			else {
 				scriptNameWidget->comboBox->addItem(QString::fromStdString(scriptable.scriptName));
 				scriptNameWidget->comboBox->setCurrentText(QString::fromStdString(scriptable.scriptName));
+				openCodeEditorButton->setEnabled(false);
 			}
 		}
 	}
@@ -58,6 +60,7 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 			const QSignalBlocker signalBlocker(scriptNameWidget->comboBox);
 			scriptNameWidget->comboBox->setCurrentText("No script selected");
 		}
+		openCodeEditorButton->setEnabled(false);
 	}
 }
 
