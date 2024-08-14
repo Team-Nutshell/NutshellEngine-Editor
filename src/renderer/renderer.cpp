@@ -1562,9 +1562,9 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 			if (m_globalInfo.currentEntityID != NO_ENTITY) {
 				std::vector<EntityID> changedEntityIDs = { m_globalInfo.currentEntityID };
 				std::vector<Component*> changedEntityTransforms = { &m_entityMoveTransforms[m_globalInfo.currentEntityID] };
-				for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
-					changedEntityIDs.push_back(otherSelectedEntityIDs);
-					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityIDs]);
+				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+					changedEntityIDs.push_back(otherSelectedEntityID);
+					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityID]);
 				}
 				m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
 				m_entityMoveTransforms.clear();
