@@ -207,22 +207,24 @@ void CollidableComponentWidget::onFromRenderableButtonClicked() {
 			m_globalInfo.rendererResourceManager.loadMeshColliders(mesh);
 		}
 
-		Collidable& collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
+		const Collidable& collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
+		Collidable newCollidable = collidable;
 		if (collidable.type == "Box") {
-			collidable.center = mesh.obb.center;
-			collidable.halfExtent = mesh.obb.halfExtent;
-			collidable.rotation = mesh.obb.rotation;
+			newCollidable.center = mesh.obb.center;
+			newCollidable.halfExtent = mesh.obb.halfExtent;
+			newCollidable.rotation = mesh.obb.rotation;
 		}
 		else if (collidable.type == "Sphere") {
-			collidable.center = mesh.sphere.center;
-			collidable.radius = mesh.sphere.radius;
+			newCollidable.center = mesh.sphere.center;
+			newCollidable.radius = mesh.sphere.radius;
 		}
 		else if (collidable.type == "Capsule") {
-			collidable.base = mesh.capsule.base;
-			collidable.tip = mesh.capsule.tip;
-			collidable.radius = mesh.capsule.radius;
+			newCollidable.base = mesh.capsule.base;
+			newCollidable.tip = mesh.capsule.tip;
+			newCollidable.radius = mesh.capsule.radius;
 		}
-		updateWidgets(collidable);
+		updateComponent(m_globalInfo.currentEntityID, &newCollidable);
+		updateWidgets(newCollidable);
 
 		ColliderMesh::update(m_globalInfo, m_globalInfo.currentEntityID);
 	}
