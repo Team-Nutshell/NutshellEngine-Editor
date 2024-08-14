@@ -438,10 +438,12 @@ void Renderer::initializeGL() {
 	std::string colliderFragmentShaderCode = R"GLSL(
 	#version 460
 
+	uniform vec3 colliderColor;
+
 	out vec4 outColor;
 
 	void main() {
-		outColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		outColor = vec4(colliderColor, 1.0f);
 	}
 	)GLSL";
 	GLuint colliderFragmentShader = compileShader(GL_FRAGMENT_SHADER, colliderFragmentShaderCode);
@@ -714,6 +716,13 @@ void Renderer::paintGL() {
 					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
+
+					if (entity.second.rigidbody) {
+						gl.glUniform3f(gl.glGetUniformLocation(m_colliderProgram, "colliderColor"), 1.0f, 0.0f, 0.0f);
+					}
+					else {
+						gl.glUniform3f(gl.glGetUniformLocation(m_colliderProgram, "colliderColor"), 0.5f, 0.0f, 0.0f);
+					}
 
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.first)];
 					const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
