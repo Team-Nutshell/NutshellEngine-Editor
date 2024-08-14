@@ -15,7 +15,6 @@ public:
 
 	EntityListItem* findItemWithEntityID(EntityID entityID);
 
-private:
 	void updateSelection();
 
 private slots:

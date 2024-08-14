@@ -1,6 +1,8 @@
 #include "edit_menu.h"
-#include "../undo_commands/copy_entity_command.h"
+#include "../undo_commands/copy_entities_command.h"
 #include <QKeySequence>
+#include <algorithm>
+#include <iterator>
 
 EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalInfo) {
 	m_undoAction = m_globalInfo.undoStack->createUndoAction(this, "&Undo");
@@ -10,34 +12,47 @@ EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalI
 	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
 	addAction(m_redoAction);
 	addSeparator();
-	m_copyEntityAction = addAction("Copy Entity", this, &EditMenu::copyEntity);
-	m_copyEntityAction->setShortcut(QKeySequence::fromString("Ctrl+C"));
-	m_copyEntityAction->setEnabled(false);
-	m_pasteEntityAction = addAction("Paste Entity", this, &EditMenu::pasteEntity);
-	m_pasteEntityAction->setShortcut(QKeySequence::fromString("Ctrl+V"));
-	m_pasteEntityAction->setEnabled(false);
+	m_copyEntitiesAction = addAction("Copy Entity", this, &EditMenu::copyEntities);
+	m_copyEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+C"));
+	m_copyEntitiesAction->setEnabled(false);
+	m_pasteEntitiesAction = addAction("Paste Entity", this, &EditMenu::pasteEntities);
+	m_pasteEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+V"));
+	m_pasteEntitiesAction->setEnabled(false);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EditMenu::onEntitySelected);
 }
 
-void EditMenu::copyEntity() {
+void EditMenu::copyEntities() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_globalInfo.copiedEntity = m_globalInfo.entities[m_globalInfo.currentEntityID];
-		m_pasteEntityAction->setEnabled(true);
+		m_globalInfo.copiedEntities.clear();
+		m_globalInfo.copiedEntities.push_back(m_globalInfo.entities[m_globalInfo.currentEntityID]);
+		for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+			m_globalInfo.copiedEntities.push_back(m_globalInfo.entities[otherSelectedEntityID]);
+		}
+		m_pasteEntitiesAction->setEnabled(true);
 	}
 }
 
-void EditMenu::pasteEntity() {
-	if (m_globalInfo.copiedEntity) {
-		m_globalInfo.undoStack->push(new CopyEntityCommand(m_globalInfo, m_globalInfo.copiedEntity.value()));
+void EditMenu::pasteEntities() {
+	if (!m_globalInfo.copiedEntities.empty()) {
+		m_globalInfo.undoStack->push(new CopyEntitiesCommand(m_globalInfo, m_globalInfo.copiedEntities));
 	}
 }
 
 void EditMenu::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		m_copyEntityAction->setEnabled(true);
+		m_copyEntitiesAction->setEnabled(true);
 	}
 	else {
-		m_copyEntityAction->setEnabled(false);
+		m_copyEntitiesAction->setEnabled(false);
+	}
+
+	if (m_globalInfo.otherSelectedEntityIDs.empty()) {
+		m_copyEntitiesAction->setText("Copy Entity");
+		m_pasteEntitiesAction->setText("Paste Entity");
+	}
+	else {
+		m_copyEntitiesAction->setText("Copy Entities");
+		m_pasteEntitiesAction->setText("Paste Entities");
 	}
 }

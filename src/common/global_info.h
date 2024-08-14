@@ -11,7 +11,7 @@
 #include <set>
 #include <algorithm>
 #include <string>
-#include <optional>
+#include <vector>
 #include <cstdint>
 
 class MainWindow;
@@ -24,7 +24,7 @@ struct GlobalInfo {
 	EntityID currentEntityID = NO_ENTITY;
 	std::set<EntityID> otherSelectedEntityIDs;
 	EntityID globalEntityID = 0;
-	std::optional<Entity> copiedEntity;
+	std::vector<Entity> copiedEntities;
 
 	std::string currentScenePath = "";
 

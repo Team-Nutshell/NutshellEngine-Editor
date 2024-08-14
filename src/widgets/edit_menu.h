@@ -9,8 +9,8 @@ public:
 	EditMenu(GlobalInfo& globalInfo);
 
 private:
-	void copyEntity();
-	void pasteEntity();
+	void copyEntities();
+	void pasteEntities();
 
 private slots:
 	void onEntitySelected();
@@ -20,6 +20,6 @@ private:
 
 	QAction* m_undoAction;
 	QAction* m_redoAction;
-	QAction* m_copyEntityAction;
-	QAction* m_pasteEntityAction;
+	QAction* m_copyEntitiesAction;
+	QAction* m_pasteEntitiesAction;
 };
