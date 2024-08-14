@@ -19,18 +19,27 @@ DestroyEntitiesCommand::DestroyEntitiesCommand(GlobalInfo& globalInfo, const std
 }
 
 void DestroyEntitiesCommand::undo() {
+	m_globalInfo.otherSelectedEntityIDs.clear();
 	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
 	for (const auto& destroyEntity : m_destroyedEntities) {
 		m_globalInfo.entities[destroyEntity.first.entityID] = destroyEntity.first;
 		emit m_globalInfo.signalEmitter.createEntitySignal(destroyEntity.first.entityID);
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(entityList->takeItem(entityList->count() - 1));
 		entityList->insertItem(destroyEntity.second, entityListItem);
+		m_globalInfo.otherSelectedEntityIDs.insert(destroyEntity.first.entityID);
 	}
+	m_globalInfo.otherSelectedEntityIDs.erase(m_destroyedEntities.back().first.entityID);
+	m_globalInfo.currentEntityID = m_destroyedEntities.back().first.entityID;
+	emit m_globalInfo.signalEmitter.selectEntitySignal();
 }
 
 void DestroyEntitiesCommand::redo() {
 	for (const auto& destroyEntity : m_destroyedEntities) {
 		m_globalInfo.entities.erase(destroyEntity.first.entityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyEntity.first.entityID);
+		m_globalInfo.otherSelectedEntityIDs.erase(destroyEntity.first.entityID);
+		if (destroyEntity.first.entityID == m_globalInfo.currentEntityID) {
+			m_globalInfo.currentEntityID = NO_ENTITY;
+		}
 	}
 }
