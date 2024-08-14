@@ -15,7 +15,7 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onChangeEntityTransform(EntityID entityID, const Transform& transform);
+	void onEntityTransformChanged(EntityID entityID, const Transform& transform);
 	void onVec3Changed(const nml::vec3& value);
 
 private:

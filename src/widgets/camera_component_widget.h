@@ -15,9 +15,9 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onAddEntityCamera(EntityID entityID);
-	void onRemoveEntityCamera(EntityID entityID);
-	void onChangeEntityCamera(EntityID entityID, const Camera& camera);
+	void onEntityCameraAdded(EntityID entityID);
+	void onEntityCameraRemoved(EntityID entityID);
+	void onEntityCameraChanged(EntityID entityID, const Camera& camera);
 	void onVec3Changed(const nml::vec3& value);
 	void onScalarChanged(float value);
 

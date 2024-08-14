@@ -44,12 +44,12 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	connect(tipWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);
 	connect(fromRenderableWidget, &QPushButton::clicked, this, &CollidableComponentWidget::onFromRenderableButtonClicked);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CollidableComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCollidableSignal, this, &CollidableComponentWidget::onAddEntityCollidable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCollidableSignal, this, &CollidableComponentWidget::onRemoveEntityCollidable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityCollidableSignal, this, &CollidableComponentWidget::onChangeEntityCollidable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &CollidableComponentWidget::onAddEntityRenderable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &CollidableComponentWidget::onRemoveEntityRenderable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRenderableSignal, this, &CollidableComponentWidget::onChangeEntityRenderable);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCollidableSignal, this, &CollidableComponentWidget::onEntityCollidableAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCollidableSignal, this, &CollidableComponentWidget::onEntityCollidableRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityCollidableSignal, this, &CollidableComponentWidget::onEntityCollidableChanged);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &CollidableComponentWidget::onEntityRenderableAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &CollidableComponentWidget::onEntityRenderableRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRenderableSignal, this, &CollidableComponentWidget::onEntityRenderableChanged);
 }
 
 void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
@@ -125,7 +125,7 @@ void CollidableComponentWidget::onEntitySelected() {
 	}
 }
 
-void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
+void CollidableComponentWidget::onEntityCollidableAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Collidable& collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 		updateWidgets(collidable);
@@ -137,7 +137,7 @@ void CollidableComponentWidget::onAddEntityCollidable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
+void CollidableComponentWidget::onEntityCollidableRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -145,7 +145,7 @@ void CollidableComponentWidget::onRemoveEntityCollidable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void CollidableComponentWidget::onChangeEntityCollidable(EntityID entityID, const Collidable& collidable) {
+void CollidableComponentWidget::onEntityCollidableChanged(EntityID entityID, const Collidable& collidable) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {
@@ -230,7 +230,7 @@ void CollidableComponentWidget::onFromRenderableButtonClicked() {
 	}
 }
 
-void CollidableComponentWidget::onAddEntityRenderable(EntityID entityID) {
+void CollidableComponentWidget::onEntityRenderableAdded(EntityID entityID) {
 	if (entityID != m_globalInfo.currentEntityID) {
 		return;
 	}
@@ -238,7 +238,7 @@ void CollidableComponentWidget::onAddEntityRenderable(EntityID entityID) {
 	updateFromRenderableWidget();
 }
 
-void CollidableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
+void CollidableComponentWidget::onEntityRenderableRemoved(EntityID entityID) {
 	if (entityID != m_globalInfo.currentEntityID) {
 		return;
 	}
@@ -246,7 +246,7 @@ void CollidableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
 	fromRenderableWidget->setEnabled(false);
 }
 
-void CollidableComponentWidget::onChangeEntityRenderable(EntityID entityID) {
+void CollidableComponentWidget::onEntityRenderableChanged(EntityID entityID) {
 	if (entityID != m_globalInfo.currentEntityID) {
 		return;
 	}

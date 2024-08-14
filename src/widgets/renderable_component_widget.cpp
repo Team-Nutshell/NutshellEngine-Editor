@@ -27,9 +27,9 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onAddEntityRenderable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onRemoveEntityRenderable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRenderableSignal, this, &RenderableComponentWidget::onChangeEntityRenderable);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableChanged);
 }
 
 void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
@@ -88,7 +88,7 @@ void RenderableComponentWidget::onEntitySelected() {
 	}
 }
 
-void RenderableComponentWidget::onAddEntityRenderable(EntityID entityID) {
+void RenderableComponentWidget::onEntityRenderableAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Renderable& renderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 		updateWidgets(renderable);
@@ -100,7 +100,7 @@ void RenderableComponentWidget::onAddEntityRenderable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
+void RenderableComponentWidget::onEntityRenderableRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -108,7 +108,7 @@ void RenderableComponentWidget::onRemoveEntityRenderable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void RenderableComponentWidget::onChangeEntityRenderable(EntityID entityID, const Renderable& renderable) {
+void RenderableComponentWidget::onEntityRenderableChanged(EntityID entityID, const Renderable& renderable) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

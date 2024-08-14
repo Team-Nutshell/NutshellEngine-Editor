@@ -34,9 +34,9 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementChanged);
 	connect(openCodeEditorButton, &QPushButton::clicked, this, &ScriptableComponentWidget::onOpenCodeEditorButtonClicked);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ScriptableComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityScriptableSignal, this, &ScriptableComponentWidget::onAddEntityScriptable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityScriptableSignal, this, &ScriptableComponentWidget::onRemoveEntityScriptable);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityScriptableSignal, this, &ScriptableComponentWidget::onChangeEntityScriptable);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityScriptableSignal, this, &ScriptableComponentWidget::onEntityScriptableAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityScriptableSignal, this, &ScriptableComponentWidget::onEntityScriptableRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityScriptableSignal, this, &ScriptableComponentWidget::onEntityScriptableChanged);
 	connect(&m_scriptsDirectoryWatcher, &QFileSystemWatcher::directoryChanged, this, &ScriptableComponentWidget::onDirectoryChanged);
 }
 
@@ -110,7 +110,7 @@ void ScriptableComponentWidget::onEntitySelected() {
 	}
 }
 
-void ScriptableComponentWidget::onAddEntityScriptable(EntityID entityID) {
+void ScriptableComponentWidget::onEntityScriptableAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Scriptable& scriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
 		updateWidgets(scriptable);
@@ -120,7 +120,7 @@ void ScriptableComponentWidget::onAddEntityScriptable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
+void ScriptableComponentWidget::onEntityScriptableRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -128,7 +128,7 @@ void ScriptableComponentWidget::onRemoveEntityScriptable(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void ScriptableComponentWidget::onChangeEntityScriptable(EntityID entityID, const Scriptable& scriptable) {
+void ScriptableComponentWidget::onEntityScriptableChanged(EntityID entityID, const Scriptable& scriptable) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

@@ -15,9 +15,9 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onAddEntityRigidbody(EntityID entityID);
-	void onRemoveEntityRigidbody(EntityID entityID);
-	void onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody);
+	void onEntityRigidbodyAdded(EntityID entityID);
+	void onEntityRigidbodyRemoved(EntityID entityID);
+	void onEntityRigidbodyChanged(EntityID entityID, const Rigidbody& rigidbody);
 	void onBooleanChanged(bool boolean);
 	void onScalarChanged(float value);
 

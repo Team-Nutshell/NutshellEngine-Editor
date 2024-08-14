@@ -15,9 +15,9 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onAddEntityRenderable(EntityID entityID);
-	void onRemoveEntityRenderable(EntityID entityID);
-	void onChangeEntityRenderable(EntityID entityID, const Renderable& renderable);
+	void onEntityRenderableAdded(EntityID entityID);
+	void onEntityRenderableRemoved(EntityID entityID);
+	void onEntityRenderableChanged(EntityID entityID, const Renderable& renderable);
 	void onPathChanged(const std::string& path);
 	void onElementChanged(const std::string& element);
 

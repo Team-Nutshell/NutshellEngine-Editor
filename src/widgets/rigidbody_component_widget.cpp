@@ -39,9 +39,9 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	connect(staticFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
 	connect(dynamicFrictionWidget, &ScalarWidget::valueChanged, this, &RigidbodyComponentWidget::onScalarChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RigidbodyComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRigidbodySignal, this, &RigidbodyComponentWidget::onAddEntityRigidbody);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onRemoveEntityRigidbody);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onChangeEntityRigidbody);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRigidbodySignal, this, &RigidbodyComponentWidget::onEntityRigidbodyAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onEntityRigidbodyRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRigidbodySignal, this, &RigidbodyComponentWidget::onEntityRigidbodyChanged);
 }
 
 void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
@@ -78,7 +78,7 @@ void RigidbodyComponentWidget::onEntitySelected() {
 	}
 }
 
-void RigidbodyComponentWidget::onAddEntityRigidbody(EntityID entityID) {
+void RigidbodyComponentWidget::onEntityRigidbodyAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Rigidbody& rigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
 		updateWidgets(rigidbody);
@@ -88,7 +88,7 @@ void RigidbodyComponentWidget::onAddEntityRigidbody(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
+void RigidbodyComponentWidget::onEntityRigidbodyRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -96,7 +96,7 @@ void RigidbodyComponentWidget::onRemoveEntityRigidbody(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void RigidbodyComponentWidget::onChangeEntityRigidbody(EntityID entityID, const Rigidbody& rigidbody) {
+void RigidbodyComponentWidget::onEntityRigidbodyChanged(EntityID entityID, const Rigidbody& rigidbody) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

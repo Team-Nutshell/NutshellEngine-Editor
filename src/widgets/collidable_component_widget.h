@@ -19,16 +19,16 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onAddEntityCollidable(EntityID entityID);
-	void onRemoveEntityCollidable(EntityID entityID);
-	void onChangeEntityCollidable(EntityID entityID, const Collidable& collidable);
+	void onEntityCollidableAdded(EntityID entityID);
+	void onEntityCollidableRemoved(EntityID entityID);
+	void onEntityCollidableChanged(EntityID entityID, const Collidable& collidable);
 	void onElementChanged(const std::string& element);
 	void onVec3Changed(const nml::vec3& value);
 	void onScalarChanged(float value);
 	void onFromRenderableButtonClicked();
-	void onAddEntityRenderable(EntityID entityID);
-	void onRemoveEntityRenderable(EntityID entityID);
-	void onChangeEntityRenderable(EntityID entityID);
+	void onEntityRenderableAdded(EntityID entityID);
+	void onEntityRenderableRemoved(EntityID entityID);
+	void onEntityRenderableChanged(EntityID entityID);
 
 private:
 	GlobalInfo& m_globalInfo;

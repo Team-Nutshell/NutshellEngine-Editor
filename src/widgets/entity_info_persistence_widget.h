@@ -11,7 +11,7 @@ public:
 private slots:
 	void onEntitySelected();
 	void onStateChanged(int state);
-	void onChangeEntityPersistence(EntityID entityID, bool isPersistent);
+	void onEntityPersistenceChanged(EntityID entityID, bool isPersistent);
 
 private:
 	GlobalInfo& m_globalInfo;

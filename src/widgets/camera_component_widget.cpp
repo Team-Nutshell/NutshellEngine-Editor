@@ -30,9 +30,9 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	connect(nearPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarChanged);
 	connect(farPlaneWidget, &ScalarWidget::valueChanged, this, &CameraComponentWidget::onScalarChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &CameraComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCameraSignal, this, &CameraComponentWidget::onAddEntityCamera);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCameraSignal, this, &CameraComponentWidget::onRemoveEntityCamera);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityCameraSignal, this, &CameraComponentWidget::onChangeEntityCamera);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityCameraSignal, this, &CameraComponentWidget::onEntityCameraAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityCameraSignal, this, &CameraComponentWidget::onEntityCameraRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityCameraSignal, this, &CameraComponentWidget::onEntityCameraChanged);
 }
 
 void CameraComponentWidget::updateWidgets(const Camera& camera) {
@@ -57,7 +57,7 @@ void CameraComponentWidget::onEntitySelected() {
 	}
 }
 
-void CameraComponentWidget::onAddEntityCamera(EntityID entityID) {
+void CameraComponentWidget::onEntityCameraAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Camera& camera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 		updateWidgets(camera);
@@ -67,7 +67,7 @@ void CameraComponentWidget::onAddEntityCamera(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
+void CameraComponentWidget::onEntityCameraRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -75,7 +75,7 @@ void CameraComponentWidget::onRemoveEntityCamera(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void CameraComponentWidget::onChangeEntityCamera(EntityID entityID, const Camera& camera) {
+void CameraComponentWidget::onEntityCameraChanged(EntityID entityID, const Camera& camera) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

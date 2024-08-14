@@ -24,7 +24,7 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onChangeEntityTransform);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onEntityTransformChanged);
 }
 
 void TransformComponentWidget::updateWidgets(const Transform& transform) {
@@ -47,7 +47,7 @@ void TransformComponentWidget::onEntitySelected() {
 	}
 }
 
-void TransformComponentWidget::onChangeEntityTransform(EntityID entityID, const Transform& transform) {
+void TransformComponentWidget::onEntityTransformChanged(EntityID entityID, const Transform& transform) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

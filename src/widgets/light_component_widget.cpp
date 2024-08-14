@@ -30,9 +30,9 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
 	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onAddEntityLight);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onRemoveEntityLight);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityLightSignal, this, &LightComponentWidget::onChangeEntityLight);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onEntityLightAdded);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onEntityLightRemoved);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityLightSignal, this, &LightComponentWidget::onEntityLightChanged);
 }
 
 void LightComponentWidget::updateWidgets(const Light& light) {
@@ -71,7 +71,7 @@ void LightComponentWidget::onEntitySelected() {
 	}
 }
 
-void LightComponentWidget::onAddEntityLight(EntityID entityID) {
+void LightComponentWidget::onEntityLightAdded(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		const Light& light = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 		updateWidgets(light);
@@ -81,7 +81,7 @@ void LightComponentWidget::onAddEntityLight(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void LightComponentWidget::onRemoveEntityLight(EntityID entityID) {
+void LightComponentWidget::onEntityLightRemoved(EntityID entityID) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		hide();
 	}
@@ -89,7 +89,7 @@ void LightComponentWidget::onRemoveEntityLight(EntityID entityID) {
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void LightComponentWidget::onChangeEntityLight(EntityID entityID, const Light& light) {
+void LightComponentWidget::onEntityLightChanged(EntityID entityID, const Light& light) {
 	QObject* senderWidget = sender();
 	if (senderWidget != this) {
 		if (entityID == m_globalInfo.currentEntityID) {

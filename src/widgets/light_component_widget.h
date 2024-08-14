@@ -17,9 +17,9 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onAddEntityLight(EntityID entityID);
-	void onRemoveEntityLight(EntityID entityID);
-	void onChangeEntityLight(EntityID entityID, const Light& light);
+	void onEntityLightAdded(EntityID entityID);
+	void onEntityLightRemoved(EntityID entityID);
+	void onEntityLightChanged(EntityID entityID, const Light& light);
 	void onElementChanged(const std::string& element);
 	void onColorChanged(const nml::vec4& color);
 	void onVec3Changed(const nml::vec3& value);

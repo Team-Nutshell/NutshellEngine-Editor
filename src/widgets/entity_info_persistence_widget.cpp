@@ -14,7 +14,7 @@ EntityInfoPersistenceWidget::EntityInfoPersistenceWidget(GlobalInfo& globalInfo)
 
 	connect(m_persistenceCheckBox, &QCheckBox::stateChanged, this, &EntityInfoPersistenceWidget::onStateChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPersistenceWidget::onEntitySelected);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityInfoPersistenceWidget::onChangeEntityPersistence);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityInfoPersistenceWidget::onEntityPersistenceChanged);
 }
 
 void EntityInfoPersistenceWidget::onEntitySelected() {
@@ -30,7 +30,7 @@ void EntityInfoPersistenceWidget::onStateChanged(int state) {
 	m_globalInfo.undoStack->push(new ChangeEntityPersistenceCommand(m_globalInfo, m_globalInfo.currentEntityID, Qt::CheckState(state) == Qt::CheckState::Checked));
 }
 
-void EntityInfoPersistenceWidget::onChangeEntityPersistence(EntityID entityID, bool isPersistent) {
+void EntityInfoPersistenceWidget::onEntityPersistenceChanged(EntityID entityID, bool isPersistent) {
 	if (entityID == m_globalInfo.currentEntityID) {
 		{
 			const QSignalBlocker signalBlocker(m_persistenceCheckBox);
