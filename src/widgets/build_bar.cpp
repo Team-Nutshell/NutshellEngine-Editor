@@ -21,6 +21,8 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	layout()->addWidget(buildTypeComboBox);
 
 	connect(buildButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &BuildBar::onBuildAndRunStarted);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &BuildBar::onBuildAndRunEnded);
 }
 
 void BuildBar::launchBuild() {
@@ -30,10 +32,12 @@ void BuildBar::launchBuild() {
 
 	std::thread buildThread([this]() {
 		m_isBuilding = true;
+		emit m_globalInfo.signalEmitter.startBuildAndRunSignal();
 		if (build()) {
 			run();
 		}
 		m_isBuilding = false;
+		emit m_globalInfo.signalEmitter.endBuildAndRunSignal();
 	});
 	buildThread.detach();
 }
@@ -384,4 +388,12 @@ void BuildBar::run() {
 
 	// Reset current path
 	std::filesystem::current_path(previousCurrentPath);
+}
+
+void BuildBar::onBuildAndRunStarted() {
+	buildButton->setEnabled(false);
+}
+
+void BuildBar::onBuildAndRunEnded() {
+	buildButton->setEnabled(true);
 }

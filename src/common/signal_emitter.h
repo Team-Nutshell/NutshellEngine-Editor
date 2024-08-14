@@ -49,4 +49,7 @@ signals:
 	void switchCameraProjectionSignal(bool);
 	void resetCameraSignal();
 	void orthographicCameraToAxisSignal(const nml::vec3&);
+
+	void startBuildAndRunSignal();
+	void endBuildAndRunSignal();
 };

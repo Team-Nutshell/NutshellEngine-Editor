@@ -15,6 +15,10 @@ private:
 	bool build();
 	void run();
 
+private slots:
+	void onBuildAndRunStarted();
+	void onBuildAndRunEnded();
+
 private:
 	GlobalInfo& m_globalInfo;
 	
