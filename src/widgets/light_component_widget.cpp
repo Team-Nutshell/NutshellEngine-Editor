@@ -14,7 +14,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Light"));
-	std::vector<std::string> elementList = { "Directional", "Point", "Spot" };
+	std::vector<std::string> elementList = { "Directional", "Point", "Spot", "Ambient" };
 	typeWidget = new ComboBoxWidget(m_globalInfo, "Type", elementList);
 	layout()->addWidget(typeWidget);
 	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec4(1.0f, 1.0f, 1.0f, 1.0f));

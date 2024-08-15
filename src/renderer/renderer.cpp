@@ -132,7 +132,7 @@ void Renderer::initializeGL() {
 	uniform float alphaCutoff;
 	uniform bool enableShading;
 	restrict readonly buffer LightBuffer {
-		uvec3 count;
+		uvec4 count;
 		Light info[];
 	} lights;
 
@@ -180,6 +180,13 @@ void Renderer::initializeGL() {
 				vec3 radiance = lights.info[lightIndex].color * intensity;
 
 				outColor += vec4(diffuseTextureSample.rgb * radiance * dot(l, fragNormal), 0.0);
+
+				lightIndex++;
+			}
+
+			// Ambient Lights
+			for (uint i = 0; i < lights.count.w; i++) {
+				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color, 0.0);
 
 				lightIndex++;
 			}
@@ -1164,6 +1171,7 @@ void Renderer::updateLights() {
 	std::vector<nml::vec4> directionalLightsInfos;
 	std::vector<nml::vec4> pointLightsInfos;
 	std::vector<nml::vec4> spotLightsInfos;
+	std::vector<nml::vec4> ambientLightsInfos;
 
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.light) {
@@ -1213,6 +1221,14 @@ void Renderer::updateLights() {
 				spotLightsInfos.push_back(nml::vec4(light.color, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), 0.0f, 0.0f));
 			}
+			else if (light.type == "Ambient") {
+				lightsCount[3]++;
+
+				ambientLightsInfos.push_back(nml::vec4());
+				ambientLightsInfos.push_back(nml::vec4());
+				ambientLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				ambientLightsInfos.push_back(nml::vec4());
+			}
 		}
 	}
 
@@ -1220,6 +1236,7 @@ void Renderer::updateLights() {
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t), directionalLightsInfos.size() * sizeof(nml::vec4), directionalLightsInfos.data());
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.data());
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4) + pointLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.data());
+	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4) + pointLightsInfos.size() * sizeof(nml::vec4) + spotLightsInfos.size() * sizeof(nml::vec4), ambientLightsInfos.size() * sizeof(nml::vec4), ambientLightsInfos.data());
 }
 
 void Renderer::loadResourcesToGPU() {
