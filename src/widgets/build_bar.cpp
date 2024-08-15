@@ -14,7 +14,7 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
-	buildButton = new QPushButton("Build");
+	buildButton = new QPushButton("Build and Run");
 	layout()->addWidget(buildButton);
 	std::vector<std::string> buildTypeList{ "Debug", "Release" };
 	buildTypeComboBox = new ComboBoxWidget(m_globalInfo, "Build Type", buildTypeList);
