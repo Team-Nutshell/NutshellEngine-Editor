@@ -503,8 +503,8 @@ void BuildBar::exportApplication() {
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + m_globalInfo.projectName);
 	
 	const std::string exportCommand = "tar -zcvf " + exportedFileName + " export_tmp/" + m_globalInfo.projectName;
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Launching export with command: " + runCommand);
-	FILE* fp = popen(runCommand.c_str(), "r");
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Launching export with command: " + exportCommand);
+	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {
 		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Cannot export the application.");
 
@@ -515,12 +515,7 @@ void BuildBar::exportApplication() {
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		std::string log = std::string(stdOutBuffer);
-
-		std::stringstream syntaxSugarRegexResult;
-		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
-
-		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
+		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
