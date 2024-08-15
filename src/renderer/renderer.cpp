@@ -1657,7 +1657,9 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				rotationAngles.y = nml::toDeg(rotationAngles.y);
 				rotationAngles.z = nml::toDeg(rotationAngles.z);
 				for (EntityID selectedEntityID : selectedEntityIDs) {
-					m_entityMoveTransforms[selectedEntityID].position = nml::vec3((nml::translate(-m_selectionMeanPosition) * rotationMatrix * nml::translate(m_selectionMeanPosition)) * m_entityMoveTransforms[selectedEntityID].position);
+					if (selectedEntityIDs.size() != 1) {
+						m_entityMoveTransforms[selectedEntityID].position = nml::vec3((nml::translate(m_selectionMeanPosition) * rotationMatrix * nml::translate(-m_selectionMeanPosition)) * m_entityMoveTransforms[selectedEntityID].position);
+					}
 					m_entityMoveTransforms[selectedEntityID].rotation += rotationAngles;
 					m_entityMoveTransforms[selectedEntityID].rotation = nml::vec3(std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.x, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.y, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.z, 360.0f));
 				}
