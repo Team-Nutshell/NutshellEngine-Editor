@@ -541,10 +541,12 @@ void BuildBar::exportApplication() {
 
 void BuildBar::onBuildRunExportStarted() {
 	buildAndRunButton->setEnabled(false);
+	buildTypeComboBox->comboBox->setEnabled(false);
 	exportButton->setEnabled(false);
 }
 
 void BuildBar::onBuildRunExportEnded() {
 	buildAndRunButton->setEnabled(true);
+	buildTypeComboBox->comboBox->setEnabled(true);
 	exportButton->setEnabled(true);
 }
