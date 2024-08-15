@@ -160,12 +160,12 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
-	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor, 1.0f));
+	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Current Entity Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor, 1.0f));
 	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
 	rendererVerticalLayout->addWidget(currentEntityOutlineColorWidget);
 
-	otherEntitiesOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor, 1.0f));
+	otherEntitiesOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Other selected Entities Outline Color", nml::vec4(m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor, 1.0f));
 	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
 	rendererVerticalLayout->addWidget(otherEntitiesOutlineColorWidget);
