@@ -8,6 +8,7 @@ namespace NtshEngn {
 		Directional,
 		Point,
 		Spot,
+		Ambient,
 		Unknown
 	};
 
