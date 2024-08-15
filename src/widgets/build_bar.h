@@ -11,20 +11,21 @@ public:
 
 private:
 	void launchBuild();
+	void launchExport();
 
 	bool build();
 	void run();
+	void exportApplication();
 
 private slots:
-	void onBuildAndRunStarted();
-	void onBuildAndRunEnded();
+	void onBuildRunExportStarted();
+	void onBuildRunExportEnded();
 
 private:
 	GlobalInfo& m_globalInfo;
-	
-	bool m_isBuilding = false;
 
 public:
-	QPushButton* buildButton;
+	QPushButton* buildAndRunButton;
+	QPushButton* exportButton;
 	ComboBoxWidget* buildTypeComboBox;
 };

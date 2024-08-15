@@ -14,31 +14,41 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
-	buildButton = new QPushButton("Build and Run");
-	layout()->addWidget(buildButton);
+	buildAndRunButton = new QPushButton("Build and Run");
+	layout()->addWidget(buildAndRunButton);
 	std::vector<std::string> buildTypeList{ "Debug", "Release" };
 	buildTypeComboBox = new ComboBoxWidget(m_globalInfo, "Build Type", buildTypeList);
 	layout()->addWidget(buildTypeComboBox);
+	exportButton = new QPushButton("Export");
+	layout()->addWidget(exportButton);
 
-	connect(buildButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &BuildBar::onBuildAndRunStarted);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &BuildBar::onBuildAndRunEnded);
+	connect(buildAndRunButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
+	connect(exportButton, &QPushButton::clicked, this, &BuildBar::launchExport);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &BuildBar::onBuildRunExportStarted);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &BuildBar::onBuildRunExportEnded);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startExportSignal, this, &BuildBar::onBuildRunExportStarted);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endExportSignal, this, &BuildBar::onBuildRunExportEnded);
 }
 
 void BuildBar::launchBuild() {
-	if (m_isBuilding) {
-		return;
-	}
-
 	std::thread buildThread([this]() {
-		m_isBuilding = true;
 		emit m_globalInfo.signalEmitter.startBuildAndRunSignal();
 		if (build()) {
 			run();
 		}
-		m_isBuilding = false;
 		emit m_globalInfo.signalEmitter.endBuildAndRunSignal();
 	});
+	buildThread.detach();
+}
+
+void BuildBar::launchExport() {
+	std::thread buildThread([this]() {
+		emit m_globalInfo.signalEmitter.startExportSignal();
+		if (build()) {
+			exportApplication();
+		}
+		emit m_globalInfo.signalEmitter.endExportSignal();
+		});
 	buildThread.detach();
 }
 
@@ -390,10 +400,151 @@ void BuildBar::run() {
 	std::filesystem::current_path(previousCurrentPath);
 }
 
-void BuildBar::onBuildAndRunStarted() {
-	buildButton->setEnabled(false);
+void BuildBar::exportApplication() {
+	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Exporting the application.");
+
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] There is no build to export.");
+
+		return;
+	}
+
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/export_tmp")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build/export_tmp");
+	}
+
+	// Copy runtime
+	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
+	// Copy to another directory
+	const std::string tmpExportDirectory = m_globalInfo.projectDirectory + "/editor_build/export_tmp/" + m_globalInfo.projectName;
+	std::filesystem::create_directory(tmpExportDirectory);
+	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/" + buildType, tmpExportDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
+	// Set current path
+	const std::string previousCurrentPath = std::filesystem::current_path().string();
+	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
+
+#if defined(NTSHENGN_OS_WINDOWS)
+	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".zip";
+	const std::string exportedFullPath = m_globalInfo.projectDirectory + "/editor_build/" + exportedFileName;
+
+	// Rename executable
+	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine.exe", tmpExportDirectory + "/" + m_globalInfo.projectName + ".exe");
+
+	HANDLE pipeRead = NULL;
+	HANDLE pipeWrite = NULL;
+	DWORD exitCode;
+
+	SECURITY_ATTRIBUTES securityAttributes;
+	ZeroMemory(&securityAttributes, sizeof(SECURITY_ATTRIBUTES));
+	securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+	securityAttributes.bInheritHandle = TRUE;
+	securityAttributes.lpSecurityDescriptor = NULL;
+
+	CreatePipe(&pipeRead, &pipeWrite, &securityAttributes, 0);
+	SetHandleInformation(pipeRead, HANDLE_FLAG_INHERIT, 0);
+
+	STARTUPINFOA startupInfo;
+	ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.hStdOutput = pipeWrite;
+	startupInfo.hStdError = pipeWrite;
+	startupInfo.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+	startupInfo.wShowWindow = SW_HIDE;
+
+	PROCESS_INFORMATION processInformation;
+	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
+
+	const std::string exportCommand = "powershell Compress-Archive export_tmp/" + m_globalInfo.projectName + " " + exportedFileName + " -Force";
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export application with command: " + exportCommand);
+	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
+		CloseHandle(pipeWrite);
+
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
+		CHAR stdOutBuffer[4096];
+		DWORD bytesRead;
+		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
+			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
+		}
+		
+		WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+		GetExitCodeProcess(processInformation.hProcess, &exitCode);
+
+		CloseHandle(processInformation.hProcess);
+		CloseHandle(processInformation.hThread);
+
+		if (exitCode == 0) {
+			m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Successfully exported the application at " + exportedFullPath + ".");
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Error when exporting the application.");
+		}
+	}
+	else {
+		CloseHandle(pipeWrite);
+		CloseHandle(pipeRead);
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Cannot export the application.");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
+		return;
+	}
+	CloseHandle(pipeRead);
+#elif defined(NTSHENGN_OS_LINUX)
+	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".tar.gz";
+	const std::string exportedFullPath = m_globalInfo.projectDirectory + "/editor_build/" + exportedFileName;
+
+	// Rename executable
+	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + m_globalInfo.projectName);
+	
+	const std::string exportCommand = "tar -zcvf " + exportedFileName + " export_tmp/" + m_globalInfo.projectName;
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Launching export with command: " + runCommand);
+	FILE* fp = popen(runCommand.c_str(), "r");
+	if (fp == NULL) {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Cannot export the application.");
+
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+	}
+
+	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
+	char stdOutBuffer[4096];
+	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
+		std::string log = std::string(stdOutBuffer);
+
+		std::stringstream syntaxSugarRegexResult;
+		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
+
+		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
+	}
+
+	if (pclose(fp) == 0) {
+		m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Successfully exported the application at " + exportedFullPath + ".");
+	}
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Error when exporting the application.");
+	}
+#endif
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
+
+	// Destroy temporary directory
+	std::filesystem::remove_all(tmpExportDirectory);
+	std::filesystem::remove(tmpExportDirectory);
 }
 
-void BuildBar::onBuildAndRunEnded() {
-	buildButton->setEnabled(true);
+void BuildBar::onBuildRunExportStarted() {
+	buildAndRunButton->setEnabled(false);
+	exportButton->setEnabled(false);
+}
+
+void BuildBar::onBuildRunExportEnded() {
+	buildAndRunButton->setEnabled(true);
+	exportButton->setEnabled(true);
 }

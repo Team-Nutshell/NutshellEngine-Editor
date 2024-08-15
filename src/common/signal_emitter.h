@@ -52,4 +52,6 @@ signals:
 
 	void startBuildAndRunSignal();
 	void endBuildAndRunSignal();
+	void startExportSignal();
+	void endExportSignal();
 };
