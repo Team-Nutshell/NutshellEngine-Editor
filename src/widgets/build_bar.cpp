@@ -47,6 +47,8 @@ void BuildBar::launchBuild() {
 }
 
 void BuildBar::launchExport() {
+	SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
+	SaveTitleChanger::reset(m_globalInfo.mainWindow);
 	std::thread buildThread([this]() {
 		emit m_globalInfo.signalEmitter.startExportSignal();
 		if (build()) {
