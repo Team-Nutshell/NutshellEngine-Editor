@@ -153,7 +153,13 @@ void Renderer::initializeGL() {
 			for (uint i = 0; i < lights.count.x; i++) {
 				vec3 l = -lights.info[lightIndex].direction;
 
-				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color * dot(l, fragNormal), 0.0);
+				float LdotN = dot(l, fragNormal);
+				if (LdotN < 0.0f) {
+					lightIndex++;
+					continue;
+				}
+
+				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color * LdotN, 0.0);
 
 				lightIndex++;
 			}
@@ -161,11 +167,18 @@ void Renderer::initializeGL() {
 			// Point Lights
 			for (uint i = 0; i < lights.count.y; i++) {
 				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
+
+				float LdotN = dot(l, fragNormal);
+				if (LdotN < 0.0f) {
+					lightIndex++;
+					continue;
+				}
+
 				float distance = length(lights.info[lightIndex].position - fragPosition);
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = lights.info[lightIndex].color * attenuation;
 
-				outColor += vec4(diffuseTextureSample.rgb * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
 
 				lightIndex++;
 			}
@@ -173,13 +186,20 @@ void Renderer::initializeGL() {
 			// Spot Lights
 			for (uint i = 0; i < lights.count.z; i++) {
 				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
+
+				float LdotN = dot(l, fragNormal);
+				if (LdotN < 0.0f) {
+					lightIndex++;
+					continue;
+				}
+
 				float theta = dot(l, -lights.info[lightIndex].direction);
 				float epsilon = cos(lights.info[lightIndex].cutoff.y) - cos(lights.info[lightIndex].cutoff.x);
 				float intensity = clamp((theta - cos(lights.info[lightIndex].cutoff.x)) / epsilon, 0.0, 1.0);
 				intensity = 1.0 - intensity;
 				vec3 radiance = lights.info[lightIndex].color * intensity;
 
-				outColor += vec4(diffuseTextureSample.rgb * radiance * dot(l, fragNormal), 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
 
 				lightIndex++;
 			}
