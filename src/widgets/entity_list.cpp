@@ -1,7 +1,7 @@
 #include "entity_list.h"
+#include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/destroy_entities_command.h"
-#include "../widgets/main_window.h"
 #include <QSizePolicy>
 #include <QLabel>
 #include <QSignalBlocker>

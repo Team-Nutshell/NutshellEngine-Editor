@@ -9,6 +9,9 @@
 #elif defined(NTSHENGN_OS_LINUX)
 #include <stdio.h>
 #endif
+#include "main_window.h"
+#include "../common/save_title_changer.h"
+#include "../common/scene_manager.h"
 
 BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
@@ -31,6 +34,8 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void BuildBar::launchBuild() {
+	SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
+	SaveTitleChanger::reset(m_globalInfo.mainWindow);
 	std::thread buildThread([this]() {
 		emit m_globalInfo.signalEmitter.startBuildAndRunSignal();
 		if (build()) {

@@ -1,9 +1,9 @@
 #include "rigidbody_component_widget.h"
 #include "component_title_widget.h"
 #include "separator_line.h"
+#include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entities_component_command.h"
-#include "../widgets/main_window.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 

@@ -2,9 +2,9 @@
 #include "component_title_widget.h"
 #include "separator_line.h"
 #include "new_script_message_box.h"
+#include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entities_component_command.h"
-#include "../widgets/main_window.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSignalBlocker>
