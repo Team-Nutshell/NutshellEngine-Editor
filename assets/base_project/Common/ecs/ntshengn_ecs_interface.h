@@ -23,11 +23,11 @@
 
 namespace NtshEngn {
 
-	using Entity = uint32_t;
+	typedef uint32_t Entity;
 	#define NTSHENGN_ENTITY_UNKNOWN 0xFFFFFFFF
 
-	using Component = uint8_t;
-	using ComponentMask = std::bitset<NTSHENGN_MAX_COMPONENTS>;
+	typedef uint8_t Component;
+	typedef std::bitset<NTSHENGN_MAX_COMPONENTS> ComponentMask;
 
 	class EntityManager {
 	public:

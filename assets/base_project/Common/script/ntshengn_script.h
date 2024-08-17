@@ -630,6 +630,22 @@ namespace NtshEngn {
 			return physicsModule->raycastAll(rayOrigin, rayDirection, tMin, tMax);
 		}
 
+		void setConstantForces(const Math::vec3& constantForces) {
+			if (!physicsModule) {
+				return;
+			}
+
+			physicsModule->setConstantForces(constantForces);
+		}
+
+		Math::vec3 getConstantForces() {
+			if (!physicsModule) {
+				return Math::vec3(0.0f, 0.0f, 0.0f);
+			}
+
+			return physicsModule->getConstantForces();
+		}
+
 		// Audio
 		SoundSourceID playSound(SoundID soundID, float gain = 1.0f, float pitch = 1.0f) {
 			if (!audioModule) {

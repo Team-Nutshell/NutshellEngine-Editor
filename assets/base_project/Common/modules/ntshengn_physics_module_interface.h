@@ -23,6 +23,11 @@ namespace NtshEngn {
 		virtual RaycastInformation raycast(const Math::vec3& rayOrigin, const Math::vec3& rayDirection, float tMin, float tMax, const ColliderShape* shape) = 0;
 		// Returns a list of RaycastInformation structures containing information about the hit entities
 		virtual std::vector<std::pair<Entity, RaycastInformation>> raycastAll(const Math::vec3& rayOrigin, const Math::vec3& rayDirection, float tMin, float tMax) = 0;
+
+		// Sets the constant forces
+		virtual void setConstantForces(const Math::vec3& constantForces) = 0;
+		// Returns the constant forces
+		virtual Math::vec3 getConstantForces() = 0;
 	};
 
 }
