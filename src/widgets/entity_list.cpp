@@ -8,6 +8,7 @@
 #include <QFont>
 #include <algorithm>
 #include <iterator>
+#include <functional>
 
 EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	QSizePolicy sizePolicy;
@@ -165,15 +166,28 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				}
 			}
 			else {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(currentSelectionIndex));
-				int newPosition = 0;
-				if (currentSelectionIndex == 0) {
-					newPosition = count();
+				std::vector<int> entityIndexes = { currentSelectionIndex };
+				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+					entityIndexes.push_back(row(findItemWithEntityID(otherSelectedEntityID)));
 				}
-				else {
-					newPosition = currentSelectionIndex - 1;
+				std::sort(entityIndexes.begin(), entityIndexes.end());
+				bool stopMoving = false;
+				for (int entityIndex : entityIndexes) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(entityIndex));
+					int newPosition = 0;
+					if (entityIndex == 0) {
+						newPosition = count();
+						stopMoving = true;
+					}
+					else {
+						newPosition = entityIndex - 1;
+					}
+					insertItem(newPosition, entityListItem);
+
+					if (stopMoving) {
+						break;
+					}
 				}
-				insertItem(newPosition, entityListItem);
 			}
 		}
 		else if (event->key() == Qt::Key::Key_Down) {
@@ -188,15 +202,28 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				}
 			}
 			else {
-				EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(currentSelectionIndex));
-				int newPosition = 0;
-				if (currentSelectionIndex == count()) {
-					newPosition = 0;
+				std::vector<int> entityIndexes = { currentSelectionIndex };
+				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+					entityIndexes.push_back(row(findItemWithEntityID(otherSelectedEntityID)));
 				}
-				else {
-					newPosition = currentSelectionIndex + 1;
+				std::sort(entityIndexes.begin(), entityIndexes.end(), std::greater<int>());
+				bool stopMoving = false;
+				for (int entityIndex : entityIndexes) {
+					EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(entityIndex));
+					int newPosition = 0;
+					if (entityIndex == count()) {
+						newPosition = 0;
+						stopMoving = true;
+					}
+					else {
+						newPosition = entityIndex + 1;
+					}
+					insertItem(newPosition, entityListItem);
+
+					if (stopMoving) {
+						break;
+					}
 				}
-				insertItem(newPosition, entityListItem);
 			}
 		}
 		else if (event->key() == Qt::Key::Key_Alt) {
