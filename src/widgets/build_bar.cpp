@@ -1,17 +1,19 @@
 #include "build_bar.h"
+#include "main_window.h"
+#include "../common/save_title_changer.h"
+#include "../common/scene_manager.h"
 #include <QHBoxLayout>
 #include <sstream>
 #include <filesystem>
 #include <thread>
 #include <regex>
+#include <algorithm>
 #if defined(NTSHENGN_OS_WINDOWS)
 #include <windows.h>
 #elif defined(NTSHENGN_OS_LINUX)
 #include <stdio.h>
 #endif
-#include "main_window.h"
-#include "../common/save_title_changer.h"
-#include "../common/scene_manager.h"
+#include <cctype>
 
 BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
@@ -112,7 +114,17 @@ bool BuildBar::build() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
+			std::string log = std::string(stdOutBuffer, bytesRead);
+			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+				return !std::isspace(c);
+				}));
+			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+				return !std::isspace(c);
+				}).base(), log.end());
+
+			if (!log.empty()) {
+				m_globalInfo.logger.addLog(LogLevel::Info, log);
+			}
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -175,7 +187,17 @@ bool BuildBar::build() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
+			std::string log = std::string(stdOutBuffer, bytesRead);
+			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+				return !std::isspace(c);
+				}));
+			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+				return !std::isspace(c);
+				}).base(), log.end());
+
+			if (!log.empty()) {
+				m_globalInfo.logger.addLog(LogLevel::Info, log);
+			}
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -223,7 +245,17 @@ bool BuildBar::build() {
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
+		std::string log = std::string(stdOutBuffer);
+		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+			return !std::isspace(c);
+			}));
+		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+			return !std::isspace(c);
+			}).base(), log.end());
+
+		if (!log.empty()) {
+			m_globalInfo.logger.addLog(LogLevel::Info, log);
+		}
 	}
 
 	if (pclose(fp) == 0) {
@@ -257,7 +289,17 @@ bool BuildBar::build() {
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
+		std::string log = std::string(stdOutBuffer);
+		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+			return !std::isspace(c);
+			}));
+		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+			return !std::isspace(c);
+			}).base(), log.end());
+
+		if (!log.empty()) {
+			m_globalInfo.logger.addLog(LogLevel::Info, log);
+		}
 	}
 
 	if (pclose(fp) == 0) {
@@ -344,7 +386,17 @@ void BuildBar::run() {
 			std::stringstream syntaxSugarRegexResult;
 			std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
 
-			m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
+			log = syntaxSugarRegexResult.str();
+			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+				return !std::isspace(c);
+				}));
+			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+				return !std::isspace(c);
+				}).base(), log.end());
+
+			if (!log.empty()) {
+				m_globalInfo.logger.addLog(LogLevel::Info, log);
+			}
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -392,7 +444,17 @@ void BuildBar::run() {
 		std::stringstream syntaxSugarRegexResult;
 		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
 
-		m_globalInfo.logger.addLog(LogLevel::Info, syntaxSugarRegexResult.str());
+		log = syntaxSugarRegexResult.str();
+		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+			return !std::isspace(c);
+			}));
+		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+			return !std::isspace(c);
+			}).base(), log.end());
+
+		if (!log.empty()) {
+			m_globalInfo.logger.addLog(LogLevel::Info, log);
+		}
 	}
 
 	if (pclose(fp) == 0) {
@@ -474,7 +536,17 @@ void BuildBar::exportApplication() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer, bytesRead));
+			std::string log = std::string(stdOutBuffer, bytesRead);
+			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+				return !std::isspace(c);
+				}));
+			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+				return !std::isspace(c);
+				}).base(), log.end());
+
+			if (!log.empty()) {
+				m_globalInfo.logger.addLog(LogLevel::Info, log);
+			}
 		}
 		
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -522,7 +594,17 @@ void BuildBar::exportApplication() {
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Info, std::string(stdOutBuffer));
+		std::string log = std::string(stdOutBuffer);
+		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+			return !std::isspace(c);
+			}));
+		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+			return !std::isspace(c);
+			}).base(), log.end());
+
+		if (!log.empty()) {
+			m_globalInfo.logger.addLog(LogLevel::Info, log);
+		}
 	}
 
 	if (pclose(fp) == 0) {
