@@ -114,17 +114,7 @@ bool BuildBar::build() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			std::string log = std::string(stdOutBuffer, bytesRead);
-			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-				return !std::isspace(c);
-				}));
-			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-				return !std::isspace(c);
-				}).base(), log.end());
-
-			if (!log.empty()) {
-				m_globalInfo.logger.addLog(LogLevel::Info, log);
-			}
+			addLog(std::string(stdOutBuffer, bytesRead));
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -187,17 +177,7 @@ bool BuildBar::build() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			std::string log = std::string(stdOutBuffer, bytesRead);
-			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-				return !std::isspace(c);
-				}));
-			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-				return !std::isspace(c);
-				}).base(), log.end());
-
-			if (!log.empty()) {
-				m_globalInfo.logger.addLog(LogLevel::Info, log);
-			}
+			addLog(std::string(stdOutBuffer, bytesRead));
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -245,17 +225,7 @@ bool BuildBar::build() {
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		std::string log = std::string(stdOutBuffer);
-		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-			return !std::isspace(c);
-			}));
-		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-			return !std::isspace(c);
-			}).base(), log.end());
-
-		if (!log.empty()) {
-			m_globalInfo.logger.addLog(LogLevel::Info, log);
-		}
+		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
@@ -289,17 +259,7 @@ bool BuildBar::build() {
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		std::string log = std::string(stdOutBuffer);
-		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-			return !std::isspace(c);
-			}));
-		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-			return !std::isspace(c);
-			}).base(), log.end());
-
-		if (!log.empty()) {
-			m_globalInfo.logger.addLog(LogLevel::Info, log);
-		}
+		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
@@ -386,17 +346,7 @@ void BuildBar::run() {
 			std::stringstream syntaxSugarRegexResult;
 			std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
 
-			log = syntaxSugarRegexResult.str();
-			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-				return !std::isspace(c);
-				}));
-			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-				return !std::isspace(c);
-				}).base(), log.end());
-
-			if (!log.empty()) {
-				m_globalInfo.logger.addLog(LogLevel::Info, log);
-			}
+			addLog(syntaxSugarRegexResult.str());
 		}
 
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -444,17 +394,7 @@ void BuildBar::run() {
 		std::stringstream syntaxSugarRegexResult;
 		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
 
-		log = syntaxSugarRegexResult.str();
-		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-			return !std::isspace(c);
-			}));
-		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-			return !std::isspace(c);
-			}).base(), log.end());
-
-		if (!log.empty()) {
-			m_globalInfo.logger.addLog(LogLevel::Info, log);
-		}
+		addLog(syntaxSugarRegexResult.str());
 	}
 
 	if (pclose(fp) == 0) {
@@ -536,17 +476,7 @@ void BuildBar::exportApplication() {
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
-			std::string log = std::string(stdOutBuffer, bytesRead);
-			log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-				return !std::isspace(c);
-				}));
-			log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-				return !std::isspace(c);
-				}).base(), log.end());
-
-			if (!log.empty()) {
-				m_globalInfo.logger.addLog(LogLevel::Info, log);
-			}
+			addLog(std::string(stdOutBuffer, bytesRead));
 		}
 		
 		WaitForSingleObject(processInformation.hProcess, INFINITE);
@@ -594,17 +524,7 @@ void BuildBar::exportApplication() {
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
-		std::string log = std::string(stdOutBuffer);
-		log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
-			return !std::isspace(c);
-			}));
-		log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
-			return !std::isspace(c);
-			}).base(), log.end());
-
-		if (!log.empty()) {
-			m_globalInfo.logger.addLog(LogLevel::Info, log);
-		}
+		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
