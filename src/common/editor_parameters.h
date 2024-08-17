@@ -30,6 +30,8 @@ struct RendererParameters {
 	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
 	Qt::Key multiSelectionKey = Qt::Key_Z;
 
+	float cameraNearPlane = 0.01f;
+	float cameraFarPlane = 500.0f;
 	float cameraSpeed = 2.0f;
 	float cameraSensitivity = 0.5f;
 

@@ -772,8 +772,8 @@ void Renderer::paintGL() {
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
-			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_camera.nearPlane);
-			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_camera.farPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
 
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
@@ -1134,7 +1134,7 @@ void Renderer::updateCamera() {
 		}
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.perspectivePosition, m_camera.perspectivePosition + m_camera.perspectiveDirection, m_camera.perspectiveUp);
-		m_camera.projectionMatrix = nml::perspectiveRH(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_camera.nearPlane, m_camera.farPlane);
+		m_camera.projectionMatrix = nml::perspectiveRH(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 	else {
 		nml::vec3 t;
@@ -1171,7 +1171,7 @@ void Renderer::updateCamera() {
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.orthographicPosition, m_camera.orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_camera.nearPlane, m_camera.farPlane);
+		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
@@ -1657,7 +1657,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
 				float worldSpaceCursorDifferenceLength = (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) ? worldSpaceCursorDifference.length() : 0.0f;
-				float nearPlane = (m_camera.nearPlane != 0.0f) ? m_camera.nearPlane : 0.1f;
+				float nearPlane = (m_globalInfo.editorParameters.renderer.cameraNearPlane != 0.0f) ? m_globalInfo.editorParameters.renderer.cameraNearPlane : 0.1f;
 				float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / nearPlane;
 				for (EntityID selectedEntityID : selectedEntityIDs) {
 					if (!m_camera.useOrthographicProjection) {

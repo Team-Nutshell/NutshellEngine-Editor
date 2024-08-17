@@ -17,6 +17,8 @@ private:
 	void run();
 	void exportApplication();
 
+	void addLog(std::string log);
+
 private slots:
 	void onBuildRunExportStarted();
 	void onBuildRunExportEnded();

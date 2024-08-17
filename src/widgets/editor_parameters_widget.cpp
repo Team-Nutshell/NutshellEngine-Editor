@@ -146,6 +146,18 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
+	cameraNearPlaneWidget = new ScalarWidget(m_globalInfo, "Camera Near Plane");
+	cameraNearPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraNearPlane, 'f', 3));
+	cameraNearPlaneWidget->layout()->setAlignment(cameraNearPlaneWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	cameraNearPlaneWidget->layout()->setAlignment(cameraNearPlaneWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(cameraNearPlaneWidget);
+
+	cameraFarPlaneWidget = new ScalarWidget(m_globalInfo, "Camera Far Plane");
+	cameraFarPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraFarPlane, 'f', 3));
+	cameraFarPlaneWidget->layout()->setAlignment(cameraFarPlaneWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	cameraFarPlaneWidget->layout()->setAlignment(cameraFarPlaneWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererVerticalLayout->addWidget(cameraFarPlaneWidget);
+
 	cameraSpeedWidget = new ScalarWidget(m_globalInfo, "Camera Speed");
 	cameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSpeed, 'f', 3));
 	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
@@ -218,6 +230,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(multiSelectionKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
+	connect(cameraNearPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(cameraFarPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
@@ -390,7 +404,13 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 
 void EditorParametersWidget::onScalarChanged(float value) {
 	QObject* senderWidget = sender();
-	if (senderWidget == cameraSpeedWidget) {
+	if (senderWidget == cameraNearPlaneWidget) {
+		m_globalInfo.editorParameters.renderer.cameraNearPlane = value;
+	}
+	else if (senderWidget == cameraFarPlaneWidget) {
+		m_globalInfo.editorParameters.renderer.cameraFarPlane = value;
+	}
+	else if (senderWidget == cameraSpeedWidget) {
 		m_globalInfo.editorParameters.renderer.cameraSpeed = value;
 	}
 	else if (senderWidget == cameraSensitivityWidget) {

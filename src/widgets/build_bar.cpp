@@ -623,6 +623,19 @@ void BuildBar::exportApplication() {
 	std::filesystem::remove(tmpExportDirectory);
 }
 
+void BuildBar::addLog(std::string log) {
+	log.erase(log.begin(), std::find_if(log.begin(), log.end(), [](unsigned char c) {
+		return !std::isspace(c);
+		}));
+	log.erase(std::find_if(log.rbegin(), log.rend(), [](unsigned char c) {
+		return !std::isspace(c);
+		}).base(), log.end());
+
+	if (!log.empty()) {
+		m_globalInfo.logger.addLog(LogLevel::Info, log);
+	}
+}
+
 void BuildBar::onBuildRunExportStarted() {
 	buildAndRunButton->setEnabled(false);
 	buildTypeComboBox->comboBox->setEnabled(false);

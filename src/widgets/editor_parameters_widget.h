@@ -54,6 +54,8 @@ public:
 	KeySelectWidget* toggleLightingKeySelect;
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
 	KeySelectWidget* multiSelectionKeySelect;
+	ScalarWidget* cameraNearPlaneWidget;
+	ScalarWidget* cameraFarPlaneWidget;
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ColorPickerWidget* currentEntityOutlineColorWidget;

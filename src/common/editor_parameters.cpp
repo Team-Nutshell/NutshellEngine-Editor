@@ -166,6 +166,12 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			}
 		}
 
+		if (j["renderer"].contains("cameraNearPlane")) {
+			renderer.cameraNearPlane = j["renderer"]["cameraNearPlane"];
+		}
+		if (j["renderer"].contains("cameraFarPlane")) {
+			renderer.cameraFarPlane = j["renderer"]["cameraFarPlane"];
+		}
 		if (j["renderer"].contains("cameraSpeed")) {
 			renderer.cameraSpeed = j["renderer"]["cameraSpeed"];
 		}
@@ -225,6 +231,8 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["toggleLightingKey"] = QKeySequence(renderer.toggleLightingKey).toString().toStdString();
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
 	j["renderer"]["multiSelectionKey"] = QKeySequence(renderer.multiSelectionKey).toString().toStdString();
+	j["renderer"]["cameraNearPlane"] = renderer.cameraNearPlane;
+	j["renderer"]["cameraFarPlane"] = renderer.cameraFarPlane;
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };

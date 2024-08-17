@@ -28,9 +28,6 @@ struct RendererCamera {
 	nml::vec3 orthographicUp = nml::vec3(0.0f, 1.0f, 0.0f);
 	float orthographicHalfExtent = 10.0f;
 
-	float nearPlane = 0.01f;
-	float farPlane = 500.0f;
-
 	bool useOrthographicProjection = false;
 
 	nml::mat4 viewMatrix;
