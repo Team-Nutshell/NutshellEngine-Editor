@@ -36,6 +36,8 @@ void MainWindow::createMenuBar() {
 	menuBar()->addMenu(editMenu);
 	viewMenu = new ViewMenu(m_globalInfo);
 	menuBar()->addMenu(viewMenu);
+	projectMenu = new ProjectMenu(m_globalInfo);
+	menuBar()->addMenu(projectMenu);
 	optionsMenu = new OptionsMenu(m_globalInfo);
 	menuBar()->addMenu(optionsMenu);
 }
