@@ -4,7 +4,7 @@
 #include <QKeySequence>
 #include <QFileDialog>
 
-FileMenu::FileMenu(GlobalInfo& globalInfo): QMenu("&File"), m_globalInfo(globalInfo) {
+FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(globalInfo) {
 	m_newSceneAction = addAction("New Scene", this, &FileMenu::newScene);
 	m_newSceneAction->setShortcut(QKeySequence::fromString("Ctrl+N"));
 	m_openSceneAction = addAction("Open Scene...", this, &FileMenu::openScene);

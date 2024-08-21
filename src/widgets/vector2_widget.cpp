@@ -4,7 +4,7 @@
 #include <QDoubleValidator>
 #include <cstdlib>
 
-Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	QLocale useDotLocale = QLocale(QLocale::Language::English, QLocale::Country::UnitedStates);
 	QDoubleValidator* doubleValidator = new QDoubleValidator();
 	doubleValidator->setLocale(useDotLocale);

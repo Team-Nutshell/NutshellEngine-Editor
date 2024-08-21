@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iterator>
 
-EditMenu::EditMenu(GlobalInfo& globalInfo): QMenu("&Edit"), m_globalInfo(globalInfo) {
+EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&Edit"), m_globalInfo(globalInfo) {
 	m_undoAction = m_globalInfo.undoStack->createUndoAction(this, "&Undo");
 	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
 	addAction(m_undoAction);

@@ -1,7 +1,7 @@
 #include "add_component_menu.h"
 #include "../undo_commands/add_entity_component_command.h"
 
-AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo): QMenu("&File"), m_globalInfo(globalInfo) {
+AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(globalInfo) {
 	addCameraComponentAction = addAction("Add Camera Component", this, &AddComponentMenu::addCameraComponent);
 	addLightComponentAction = addAction("Add Light Component", this, &AddComponentMenu::addLightComponent);
 	addRenderableComponentAction = addAction("Add Renderable Component", this, &AddComponentMenu::addRenderableComponent);

@@ -2,7 +2,7 @@
 #include <QVBoxLayout>
 #include <filesystem>
 
-NewProjectWidget::NewProjectWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+NewProjectWidget::NewProjectWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	m_newProjectDirectoryPathWidget = new NewProjectDirectoryPathWidget(m_globalInfo);

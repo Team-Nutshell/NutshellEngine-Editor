@@ -1,7 +1,7 @@
 #include "view_menu.h"
 #include <QKeySequence>
 
-ViewMenu::ViewMenu(GlobalInfo& globalInfo): QMenu("&View"), m_globalInfo(globalInfo) {
+ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&View"), m_globalInfo(globalInfo) {
 	toggleCurrentEntityVisibilityAction = addAction("Toggle Entity Visibility", this, &ViewMenu::toggleCurrentEntityVisibility);
 	toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 	toggleCurrentEntityVisibilityAction->setEnabled(false);

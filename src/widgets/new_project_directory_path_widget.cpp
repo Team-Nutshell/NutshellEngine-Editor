@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QFileDialog>
 
-NewProjectDirectoryPathWidget::NewProjectDirectoryPathWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+NewProjectDirectoryPathWidget::NewProjectDirectoryPathWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new QLabel("New project directory:"));

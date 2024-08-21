@@ -8,7 +8,7 @@
 #include <fstream>
 #include <algorithm>
 
-ProjectWindow::ProjectWindow(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setFixedSize(550, 400);
 	setWindowTitle("NutshellEngine");
 	setWindowIcon(QIcon("assets/icon.png"));

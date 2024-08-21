@@ -2,7 +2,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-NewProjectNameWidget::NewProjectNameWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+NewProjectNameWidget::NewProjectNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new QLabel("New project name:"));

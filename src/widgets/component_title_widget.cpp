@@ -5,7 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	m_name = name;
 	
 	setLayout(new QHBoxLayout());

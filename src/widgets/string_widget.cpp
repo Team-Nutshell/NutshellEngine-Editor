@@ -2,7 +2,7 @@
 #include <QHBoxLayout>
 #include <stdlib.h>
 
-StringWidget::StringWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+StringWidget::StringWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	nameLabel = new QLabel(QString::fromStdString(name));

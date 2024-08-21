@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 
-ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+ScalarWidget::ScalarWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	QLocale useDotLocale = QLocale(QLocale::Language::English, QLocale::Country::UnitedStates);
 	QDoubleValidator* doubleValidator = new QDoubleValidator();
 	doubleValidator->setLocale(useDotLocale);

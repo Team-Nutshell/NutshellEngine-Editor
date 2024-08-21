@@ -2,7 +2,7 @@
 #include <QHBoxLayout>
 #include <filesystem>
 
-OpenProjectWidget::OpenProjectWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+OpenProjectWidget::OpenProjectWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	m_directoryPathButton = new FilePushButton(m_globalInfo, "Select a project directory", "", FilePushButton::PathType::Directory);

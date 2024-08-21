@@ -3,7 +3,7 @@
 #include "../common/asset_helper.h"
 #include <QVBoxLayout>
 
-ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo): m_globalInfo(globalInfo) {
+ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
 	removePrimitiveButton = new QPushButton("X");

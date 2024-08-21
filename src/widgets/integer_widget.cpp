@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 
-IntegerWidget::IntegerWidget(GlobalInfo& globalInfo, const std::string& name): m_globalInfo(globalInfo) {
+IntegerWidget::IntegerWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	QIntValidator* intValidator = new QIntValidator();
 
 	setLayout(new QHBoxLayout());
