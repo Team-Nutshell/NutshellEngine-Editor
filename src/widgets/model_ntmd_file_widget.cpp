@@ -35,6 +35,8 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo, const std::stri
 	addPrimitiveButton = new QPushButton("Add Primitive");
 	layout()->addWidget(addPrimitiveButton);
 
+	connect(addPrimitiveButton, &QPushButton::clicked, this, &ModelNtmdFileWidget::onAddPrimitiveButtonClicked);
+
 	std::fstream optionsFile(modelFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
@@ -71,8 +73,6 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo, const std::stri
 			connect(newPrimitiveWidget, &ModelNtmdPrimitiveWidget::removePrimitive, this, &ModelNtmdFileWidget::onRemovePrimitiveButtonClicked);
 		}
 	}
-
-	connect(addPrimitiveButton, &QPushButton::clicked, this, &ModelNtmdFileWidget::onAddPrimitiveButtonClicked);
 }
 
 void ModelNtmdFileWidget::onAddPrimitiveButtonClicked() {

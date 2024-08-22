@@ -36,6 +36,12 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 	startProfilingWidget = new BooleanWidget(m_globalInfo, "Start Profiling");
 	layout()->addWidget(startProfilingWidget);
 
+	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsNtopFileWidget::onValueChanged);
+
 	std::fstream optionsFile(optionsFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
@@ -75,12 +81,6 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 			startProfilingWidget->checkBox->setChecked(startProfiling);
 		}
 	}
-
-	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
-	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
-	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
-	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
-	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsNtopFileWidget::onValueChanged);
 }
 
 void OptionsNtopFileWidget::onValueChanged() {
