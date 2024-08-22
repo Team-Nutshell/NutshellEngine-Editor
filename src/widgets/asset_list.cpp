@@ -1,10 +1,10 @@
 #include "asset_list.h"
-#include "../common/scene_manager.h"
 #include "image_viewer.h"
 #include "material_ntml_file_widget.h"
 #include "model_ntmd_file_widget.h"
 #include "options_ntop_file_widget.h"
 #include "sampler_ntsp_file_widget.h"
+#include "../common/scene_manager.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QImage>
@@ -89,47 +89,8 @@ void AssetList::actionOnFile(const std::string& file) {
 		if (extension == "ntsn") {
 			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
 		}
-		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png")) {
-			QImage image = QImage(QString::fromStdString(m_currentDirectory) + "/" + QString::fromStdString(file));
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
-			imageViewer->show();
-		}
-		else if (extension == "ntim") {
-			int width = 1;
-			int height = 1;
-			std::vector<uint8_t> pixelData;
-
-			std::fstream imageFile(m_currentDirectory + "/" + file, std::ios::in);
-			if (imageFile.is_open()) {
-				if (!nlohmann::json::accept(imageFile)) {
-					m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + file + "\" is not a valid JSON file.");
-					return;
-				}
-			}
-			else {
-				m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_currentDirectory + "/" + file + "\" cannot be opened.");
-				return;
-			}
-
-			imageFile = std::fstream(m_currentDirectory + "/" + file, std::ios::in);
-
-			nlohmann::json j = nlohmann::json::parse(imageFile);
-
-			if (j.contains("width")) {
-				width = static_cast<uint32_t>(j["width"]);
-			}
-
-			if (j.contains("height")) {
-				height = static_cast<uint32_t>(j["height"]);
-			}
-
-			if (j.contains("data")) {
-				for (size_t i = 0; i < j["data"].size(); i++) {
-					pixelData.push_back(static_cast<uint8_t>(j["data"][i]));
-				}
-			}
-			QImage image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file, image);
+		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
+			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file);
 			imageViewer->show();
 		}
 		else if (extension == "ntmd") {

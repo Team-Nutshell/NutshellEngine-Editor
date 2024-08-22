@@ -8,7 +8,7 @@
 class ImageViewer : public QWidget {
 	Q_OBJECT
 public:
-	ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath, const QImage& image);
+	ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath);
 
 private:
 	GlobalInfo& m_globalInfo;
