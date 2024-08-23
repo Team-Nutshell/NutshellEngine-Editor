@@ -144,6 +144,8 @@ set(WIDGET_SOURCES
 	src/widgets/project_menu.cpp
 	src/widgets/project_ntpj_file_widget.cpp
 	src/widgets/project_window.cpp
+	src/widgets/recent_project_widget.cpp
+	src/widgets/recent_projects_widget.cpp
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
 	src/widgets/rigidbody_component_widget.cpp
@@ -203,6 +205,8 @@ set(WIDGET_HEADERS
 	src/widgets/project_menu.h
 	src/widgets/project_ntpj_file_widget.h
 	src/widgets/project_window.h
+	src/widgets/recent_project_widget.h
+	src/widgets/recent_projects_widget.h
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
 	src/widgets/rigidbody_component_widget.h
