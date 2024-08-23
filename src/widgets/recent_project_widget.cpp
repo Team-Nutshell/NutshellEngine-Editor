@@ -7,10 +7,10 @@
 RecentProjectWidget::RecentProjectWidget(GlobalInfo& globalInfo, const std::string& projectDirectory) : m_globalInfo(globalInfo), m_projectDirectory(projectDirectory) {
 	std::string projectName = projectDirectory.substr(projectDirectory.rfind('/') + 1);
 
-	std::fstream projectFile(projectDirectory, std::ios::in);
+	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::in);
 	if (projectFile.is_open()) {
 		if (nlohmann::json::accept(projectFile)) {
-			projectFile = std::fstream(projectDirectory, std::ios::in);
+			projectFile = std::fstream(projectDirectory + "/project.ntpj", std::ios::in);
 			nlohmann::json j = nlohmann::json::parse(projectFile);
 
 			if (j.contains("projectName")) {
