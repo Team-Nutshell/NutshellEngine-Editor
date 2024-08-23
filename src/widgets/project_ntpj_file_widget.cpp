@@ -15,6 +15,8 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 	projectNameWidget = new StringWidget(m_globalInfo, "Project Name");
 	layout()->addWidget(projectNameWidget);
 
+	connect(projectNameWidget, &StringWidget::valueChanged, this, &ProjectNtpjFileWidget::onValueChanged);
+
 	std::string projectFilePath = m_globalInfo.projectDirectory + "/project.ntpj";
 
 	std::fstream projectFile(projectFilePath, std::ios::in);
@@ -40,8 +42,6 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 		m_globalInfo.projectName = m_globalInfo.projectDirectory.substr(m_globalInfo.projectDirectory.rfind('/') + 1);
 		projectNameWidget->setText(m_globalInfo.projectName);
 	}
-
-	connect(projectNameWidget, &StringWidget::valueChanged, this, &ProjectNtpjFileWidget::onValueChanged);
 }
 
 void ProjectNtpjFileWidget::onValueChanged() {
