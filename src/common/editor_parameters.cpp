@@ -3,7 +3,7 @@
 #include <fstream>
 
 EditorParameters::EditorParameters() {
-	std::fstream optionsFile("assets/options.json", std::ios::in);
+	std::fstream optionsFile("options.json", std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
 			return;
@@ -13,7 +13,7 @@ EditorParameters::EditorParameters() {
 		return;
 	}
 
-	optionsFile = std::fstream("assets/options.json", std::ios::in);
+	optionsFile = std::fstream("options.json", std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(optionsFile);
 
 	fromJson(j);

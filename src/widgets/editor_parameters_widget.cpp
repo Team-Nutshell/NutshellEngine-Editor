@@ -454,7 +454,7 @@ void EditorParametersWidget::onColorChanged(const nml::vec4& color) {
 void EditorParametersWidget::save() {
 	nlohmann::json j = m_globalInfo.editorParameters.toJson();
 
-	std::fstream optionsFile("assets/options.json", std::ios::out | std::ios::trunc);
+	std::fstream optionsFile("options.json", std::ios::out | std::ios::trunc);
 	if (j.empty()) {
 		optionsFile << "{\n}";
 	}
