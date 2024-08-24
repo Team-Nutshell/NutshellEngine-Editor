@@ -54,8 +54,11 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 
 	std::fstream optionsFile(projectDirectory + "/assets/options/options.ntop", std::ios::out | std::ios::trunc);
 	if (optionsFile.is_open()) {
-		const std::string optionsFileContent = "{\n\t\"windowTitle\": \"" + projectName + "\"\n}";
-		optionsFile << optionsFileContent;
+		nlohmann::json j;
+		j["windowTitle"] = projectName;
+		j["maxFPS"] = 60;
+		j["firstScenePath"] = "assets/scenes/default_scene.ntsn";
+		optionsFile << j.dump(1, '\t');
 	}
 
 	nlohmann::json j;
