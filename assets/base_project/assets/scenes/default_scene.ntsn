@@ -1,0 +1,121 @@
+{
+	"entities": [
+		{
+			"camera": {
+				"farPlane": 100.0,
+				"forward": [
+					0.0,
+					0.0,
+					-1.0
+				],
+				"fov": 45.0,
+				"nearPlane": 0.029999999329447746,
+				"up": [
+					0.0,
+					1.0,
+					0.0
+				]
+			},
+			"isPersistent": false,
+			"name": "Camera",
+			"transform": {
+				"position": [
+					0.0,
+					2.0,
+					5.0
+				],
+				"rotation": [
+					22.5,
+					0.0,
+					0.0
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			}
+		},
+		{
+			"isPersistent": false,
+			"light": {
+				"color": [
+					1.0,
+					1.0,
+					1.0
+				],
+				"cutoff": [
+					10.0,
+					20.0
+				],
+				"direction": [
+					0.0,
+					-1.0,
+					-1.0
+				],
+				"type": "Directional"
+			},
+			"name": "DirectionalLight",
+			"transform": {
+				"position": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"rotation": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			}
+		},
+		{
+			"collidable": {
+				"center": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"halfExtent": [
+					0.5,
+					0.5,
+					0.5
+				],
+				"rotation": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"type": "Box"
+			},
+			"isPersistent": false,
+			"name": "Cube",
+			"renderable": {
+				"modelPath": "assets/models/default_cube_model.ntmd",
+				"primitiveIndex": 0
+			},
+			"transform": {
+				"position": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"rotation": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"scale": [
+					1.0,
+					1.0,
+					1.0
+				]
+			}
+		}
+	]
+}

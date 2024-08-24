@@ -1,0 +1,10 @@
+{
+	"magFilter": "Nearest",
+	"minFilter": "Nearest",
+	"mipmapFilter": "Nearest",
+	"addressModeU": "ClampToEdge",
+	"addressModeV": "ClampToEdge",
+	"addressModeW": "ClampToEdge",
+	"borderColor": "FloatOpaqueBlack",
+	"anisotropyLevel": 8.0
+}
