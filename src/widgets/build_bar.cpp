@@ -46,7 +46,7 @@ void BuildBar::launchBuild() {
 			run();
 		}
 		emit m_globalInfo.signalEmitter.endBuildAndRunSignal();
-	});
+		});
 	buildThread.detach();
 }
 
