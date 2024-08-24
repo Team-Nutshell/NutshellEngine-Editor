@@ -59,6 +59,22 @@ void LogsWidget::updateLogs() {
 		logItem->setFlags(logItem->flags() & ~Qt::ItemIsEditable);
 		logsTable->setItem(logsTable->rowCount() - 1, 2, logItem);
 		logsTable->resizeRowToContents(logsTable->rowCount() - 1);
+
+		if (logLevel == LogLevel::Info) {
+			timeItem->setForeground(QBrush(QColor(225, 225, 225)));
+			levelItem->setForeground(QBrush(QColor(225, 225, 225)));
+			logItem->setForeground(QBrush(QColor(225, 225, 225)));
+		}
+		else if (logLevel == LogLevel::Warning) {
+			timeItem->setForeground(QBrush(QColor(225, 115, 0)));
+			levelItem->setForeground(QBrush(QColor(225, 115, 0)));
+			logItem->setForeground(QBrush(QColor(225, 115, 0)));
+		}
+		else if (logLevel == LogLevel::Error) {
+			timeItem->setForeground(QBrush(QColor(225, 25, 0)));
+			levelItem->setForeground(QBrush(QColor(225, 25, 0)));
+			logItem->setForeground(QBrush(QColor(225, 25, 0)));
+		}
 	}
 	m_currentLog += logs.size() - m_currentLog;
 	logsTable->verticalScrollBar()->setSliderPosition(logsTable->verticalScrollBar()->maximum());

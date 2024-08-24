@@ -551,8 +551,27 @@ void BuildBar::addLog(std::string log) {
 		return !std::isspace(c);
 		}).base(), log.end());
 
+	LogLevel logLevel = LogLevel::Info;
+	const std::string warningString = "warning";
+	const std::string errorString = "error";
+
+	std::string::iterator errorSearch = std::search(log.begin(), log.end(), errorString.begin(), errorString.end(), [](unsigned char a, unsigned char b) {
+		return std::toupper(a) == std::toupper(b);
+		});
+	if (errorSearch != log.end()) {
+		logLevel = LogLevel::Error;
+	}
+	else {
+		std::string::iterator warningSearch = std::search(log.begin(), log.end(), warningString.begin(), warningString.end(), [](unsigned char a, unsigned char b) {
+			return std::toupper(a) == std::toupper(b);
+			});
+		if (warningSearch != log.end()) {
+			logLevel = LogLevel::Warning;
+		}
+	}
+
 	if (!log.empty()) {
-		m_globalInfo.logger.addLog(LogLevel::Info, log);
+		m_globalInfo.logger.addLog(logLevel, log);
 	}
 }
 
