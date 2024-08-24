@@ -36,8 +36,10 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void BuildBar::launchBuild() {
-	SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
-	SaveTitleChanger::reset(m_globalInfo.mainWindow);
+	if (!m_globalInfo.currentScenePath.empty()) {
+		SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
+		SaveTitleChanger::reset(m_globalInfo.mainWindow);
+	}
 	std::thread buildThread([this]() {
 		emit m_globalInfo.signalEmitter.startBuildAndRunSignal();
 		if (build()) {
@@ -49,8 +51,10 @@ void BuildBar::launchBuild() {
 }
 
 void BuildBar::launchExport() {
-	SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
-	SaveTitleChanger::reset(m_globalInfo.mainWindow);
+	if (!m_globalInfo.currentScenePath.empty()) {
+		SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
+		SaveTitleChanger::reset(m_globalInfo.mainWindow);
+	}
 	std::thread buildThread([this]() {
 		emit m_globalInfo.signalEmitter.startExportSignal();
 		if (build()) {
