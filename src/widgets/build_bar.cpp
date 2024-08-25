@@ -556,21 +556,34 @@ void BuildBar::addLog(std::string log) {
 		}).base(), log.end());
 
 	LogLevel logLevel = LogLevel::Info;
+	const std::string infoString = "info";
 	const std::string warningString = "warning";
 	const std::string errorString = "error";
 
+	std::string::iterator infoSearch = std::search(log.begin(), log.end(), infoString.begin(), infoString.end(), [](unsigned char a, unsigned char b) {
+		return std::toupper(a) == std::toupper(b);
+		});
+	std::string::iterator warningSearch = std::search(log.begin(), log.end(), warningString.begin(), warningString.end(), [](unsigned char a, unsigned char b) {
+		return std::toupper(a) == std::toupper(b);
+		});
 	std::string::iterator errorSearch = std::search(log.begin(), log.end(), errorString.begin(), errorString.end(), [](unsigned char a, unsigned char b) {
 		return std::toupper(a) == std::toupper(b);
 		});
-	if (errorSearch != log.end()) {
-		logLevel = LogLevel::Error;
+
+	if (infoSearch <= warningSearch) {
+		if (infoSearch <= errorSearch) {
+			logLevel = LogLevel::Info;
+		}
+		else {
+			logLevel = LogLevel::Error;
+		}
 	}
 	else {
-		std::string::iterator warningSearch = std::search(log.begin(), log.end(), warningString.begin(), warningString.end(), [](unsigned char a, unsigned char b) {
-			return std::toupper(a) == std::toupper(b);
-			});
-		if (warningSearch != log.end()) {
+		if (warningSearch <= errorSearch) {
 			logLevel = LogLevel::Warning;
+		}
+		else {
+			logLevel = LogLevel::Error;
 		}
 	}
 
