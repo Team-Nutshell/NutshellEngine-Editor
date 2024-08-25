@@ -22,10 +22,13 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	std::vector<std::string> primitiveIndexElements = { "No primitive index" };
 	primitiveIndexWidget = new ComboBoxWidget(m_globalInfo, "Primitive Index", primitiveIndexElements);
 	layout()->addWidget(primitiveIndexWidget);
+	materialPathWidget = new FileSelectorWidget(m_globalInfo, "Material", "No material selected", m_globalInfo.projectDirectory + "/assets");
+	layout()->addWidget(materialPathWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
 	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
+	connect(materialPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableRemoved);
@@ -71,6 +74,14 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 			primitiveIndexWidget->comboBox->clear();
 			primitiveIndexWidget->comboBox->addItem("No primitive index");
 		}
+	}
+
+	if (renderable.materialPath != "") {
+		std::string materialPath = AssetHelper::absoluteToRelative(renderable.materialPath, m_globalInfo.projectDirectory);
+		materialPathWidget->setPath(materialPath);
+	}
+	else {
+		materialPathWidget->setPath("");
 	}
 }
 
@@ -133,6 +144,13 @@ void RenderableComponentWidget::onPathChanged(const std::string& path) {
 			if (newRenderable.modelPath != m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath) {
 				newRenderable.primitiveIndex = 0;
 			}
+		}
+	}
+	else if (senderWidget == materialPathWidget) {
+		std::string fullMaterialPath = path;
+		newRenderable.materialPath = AssetHelper::absoluteToRelative(fullMaterialPath, m_globalInfo.projectDirectory);
+		if (!fullMaterialPath.empty()) {
+			m_globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newRenderable.materialPath);
 		}
 	}
 	updateComponent(m_globalInfo.currentEntityID, &newRenderable);

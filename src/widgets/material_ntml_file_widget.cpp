@@ -52,6 +52,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 	emissiveTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Emissive Image Sampler", "No image sampler selected", "");
 	layout()->addWidget(emissiveTextureImageSamplerWidget);
 	emissiveFactorWidget = new ScalarWidget(globalInfo, "Emissive Factor");
+	emissiveFactorWidget->setValue(1.0f);
 	layout()->addWidget(emissiveFactorWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
 	alphaCutoffWidget = new ScalarWidget(globalInfo, "Alpha Cutoff");
@@ -223,10 +224,10 @@ void MaterialNtmlFileWidget::onValueChanged() {
 void MaterialNtmlFileWidget::save() {
 	nlohmann::json j;
 	if (diffuseTextureImageWidget->getPath() != "") {
-	j["diffuseTexture"]["imagePath"] = diffuseTextureImageWidget->getPath();
+		j["diffuseTexture"]["imagePath"] = diffuseTextureImageWidget->getPath();
 	}
 	if (diffuseTextureImageSamplerWidget->getPath() != "") {
-	j["diffuseTexture"]["imageSamplerPath"] = diffuseTextureImageSamplerWidget->getPath();
+		j["diffuseTexture"]["imageSamplerPath"] = diffuseTextureImageSamplerWidget->getPath();
 	}
 	if (normalTextureImageWidget->getPath() != "") {
 		j["normalTexture"]["imagePath"] = normalTextureImageWidget->getPath();

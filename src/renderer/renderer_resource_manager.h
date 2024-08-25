@@ -111,6 +111,7 @@ public:
 
 public:
 	void loadModel(const std::string& modelPath, const std::string& name);
+	void loadMaterial(const std::string& materialPath, const std::string& name);
 	void loadImage(const std::string& imagePath, const std::string& name);
 	void loadSampler(const std::string& samplerPath, const std::string& name);
 
@@ -119,12 +120,14 @@ public:
 private:
 	void loadNtmd(const std::string& modelPath, Model& model);
 	Mesh loadNtmh(const std::string& meshPath);
+	void loadNtml(const std::string& materialPath, Material& material);
 	void loadNtim(const std::string& imagePath, ImageToGPU& image);
 	void loadNtsp(const std::string& samplerPath, SamplerToGPU& sampler);
 	void loadGltf(const std::string& modelPath, Model& model);
 	void loadGltfNode(const std::string& modelPath, Model& rendererModel, nml::mat4 modelMatrix, cgltf_node* node);
 	void loadImageStb(const std::string& imagePath, ImageToGPU& image);
 	void loadImageFromMemory(void* data, size_t size, const std::string& name);
+	void loadObj(const std::string& modelPath, Model& model);
 
 public:
 	std::unordered_map<std::string, RendererModel> rendererModels;
@@ -132,8 +135,8 @@ public:
 	std::unordered_map<std::string, RendererSampler> samplers;
 
 	std::unordered_map<std::string, Model> models;
+	std::unordered_map<std::string, Material> materials;
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
-	std::unordered_map<std::string, SamplerToGPU> materialsToGPU;
 	std::unordered_map<std::string, SamplerToGPU> samplersToGPU;
 
 	std::vector<std::string> modelsToLoad;

@@ -618,14 +618,27 @@ void Renderer::paintGL() {
 					gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
-					gl.glActiveTexture(GL_TEXTURE0);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.diffuseTextureName]);
-					m_globalInfo.rendererResourceManager.samplers[entityMaterial.diffuseTextureSamplerName].bind(gl);
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+					if (!entity.second.renderable->materialPath.empty()) {
+						const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
+						gl.glActiveTexture(GL_TEXTURE0);
+						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+						m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
+						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
-					gl.glActiveTexture(GL_TEXTURE1);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.emissiveTextureName]);
-					m_globalInfo.rendererResourceManager.samplers[entityMaterial.emissiveTextureSamplerName].bind(gl);
+						gl.glActiveTexture(GL_TEXTURE1);
+						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+						m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
+					}
+					else {
+						gl.glActiveTexture(GL_TEXTURE0);
+						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.diffuseTextureName]);
+						m_globalInfo.rendererResourceManager.samplers[entityMaterial.diffuseTextureSamplerName].bind(gl);
+						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+
+						gl.glActiveTexture(GL_TEXTURE1);
+						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.emissiveTextureName]);
+						m_globalInfo.rendererResourceManager.samplers[entityMaterial.emissiveTextureSamplerName].bind(gl);
+					}
 
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 

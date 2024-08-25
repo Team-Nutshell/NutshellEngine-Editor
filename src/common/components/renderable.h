@@ -9,12 +9,18 @@ struct Renderable : public Component {
 	
 	std::string modelPath = "";
 	uint32_t primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
+	std::string materialPath = "";
 
 	nlohmann::json toJson() const {
 		nlohmann::json j;
-		j["modelPath"] = modelPath;
+		if (!modelPath.empty()) {
+			j["modelPath"] = modelPath;
+		}
 		if (primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) {
 			j["primitiveIndex"] = primitiveIndex;
+		}
+		if (!materialPath.empty()) {
+			j["materialPath"] = materialPath;
 		}
 
 		return j;
@@ -27,6 +33,9 @@ struct Renderable : public Component {
 		}
 		if (j.contains("primitiveIndex")) {
 			renderable.primitiveIndex = j["primitiveIndex"];
+		}
+		if (j.contains("materialPath")) {
+			renderable.materialPath = j["materialPath"];
 		}
 
 		return renderable;

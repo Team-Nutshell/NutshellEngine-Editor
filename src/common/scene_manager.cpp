@@ -41,17 +41,33 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			Entity newEntity = Entity::fromJson(j["entities"][i]);
 			newEntity.entityID = globalInfo.globalEntityID++;
 			entities[newEntity.entityID] = newEntity;
-			if (newEntity.renderable && (newEntity.renderable->modelPath != "")) {
-				std::string fullModelPath = newEntity.renderable->modelPath;
-				std::filesystem::path path(fullModelPath);
-				if (!path.is_absolute()) {
-					if (std::filesystem::exists(globalInfo.projectDirectory + "/" + fullModelPath)) {
-						fullModelPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullModelPath).string();
+			if (newEntity.renderable) {
+				if (newEntity.renderable->modelPath != "") {
+					std::string fullModelPath = newEntity.renderable->modelPath;
+					std::filesystem::path path(fullModelPath);
+					if (!path.is_absolute()) {
+						if (std::filesystem::exists(globalInfo.projectDirectory + "/" + fullModelPath)) {
+							fullModelPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullModelPath).string();
+						}
+					}
+					std::replace(fullModelPath.begin(), fullModelPath.end(), '\\', '/');
+					if (std::filesystem::exists(fullModelPath)) {
+						globalInfo.rendererResourceManager.loadModel(fullModelPath, newEntity.renderable->modelPath);
 					}
 				}
-				std::replace(fullModelPath.begin(), fullModelPath.end(), '\\', '/');
-				if (std::filesystem::exists(fullModelPath)) {
-					globalInfo.rendererResourceManager.loadModel(fullModelPath, newEntity.renderable->modelPath);
+
+				if (newEntity.renderable->materialPath != "") {
+					std::string fullMaterialPath = newEntity.renderable->materialPath;
+					std::filesystem::path path(fullMaterialPath);
+					if (!path.is_absolute()) {
+						if (std::filesystem::exists(globalInfo.projectDirectory + "/" + fullMaterialPath)) {
+							fullMaterialPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullMaterialPath).string();
+						}
+					}
+					std::replace(fullMaterialPath.begin(), fullMaterialPath.end(), '\\', '/');
+					if (std::filesystem::exists(fullMaterialPath)) {
+						globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newEntity.renderable->materialPath);
+					}
 				}
 			}
 		}

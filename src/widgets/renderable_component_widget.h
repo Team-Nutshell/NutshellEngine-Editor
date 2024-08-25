@@ -27,4 +27,5 @@ private:
 public:
 	FileSelectorWidget* modelPathWidget;
 	ComboBoxWidget* primitiveIndexWidget;
+	FileSelectorWidget* materialPathWidget;
 };
