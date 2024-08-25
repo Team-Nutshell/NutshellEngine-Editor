@@ -8,7 +8,7 @@
 #if defined(NTSHENGN_DEBUG)
 #define NTSHENGN_ASSET_MANAGER_INFO(message) \
 	do { \
-		std::cerr << "\33[1m\33[94mASSET MANAGER \33[34mINFO\33[39m\33[0m: " << message << std::endl; \
+		std::cerr << "\33[1m\33[94mASSET MANAGER \33[34mINFO\33[39m\33[0m: " + std::string(message) << std::endl; \
 	} while(0)
 #else
 #define NTSHENGN_ASSET_MANAGER_INFO(message) \
@@ -19,7 +19,7 @@
 #if defined(NTSHENGN_DEBUG)
 #define NTSHENGN_ASSET_MANAGER_WARNING(message) \
 	do { \
-		std::cerr << "\33[1m\33[94mASSET MANAGER \33[93mWARNING\33[39m\33[0m: " << message << std::endl; \
+		std::cerr << "\33[1m\33[94mASSET MANAGER \33[93mWARNING\33[39m\33[0m: " + std::string(message) << std::endl; \
 	} while(0)
 #else
 #define NTSHENGN_ASSET_MANAGER_WARNING(message) \
@@ -30,7 +30,7 @@
 #if defined(NTSHENGN_DEBUG)
 #define NTSHENGN_ASSET_MANAGER_ERROR(message, code) \
 	do { \
-		std::cerr << "\33[1m\33[94mASSET MANAGER \33[31mERROR\33[39m\33[0m: " << message << " (" << #code << ")" << std::endl; \
+		std::cerr << "\33[1m\33[94mASSET MANAGER \33[31mERROR\33[39m\33[0m: " + std::string(message) + " (" + std::string(#code) + ")" << std::endl; \
 		exit(1); \
 	} while(0)
 #else
@@ -49,6 +49,9 @@ namespace NtshEngn {
 
 		virtual Model* createModel() = 0;
 		virtual Model* loadModel(const std::string& filePath) = 0;
+
+		virtual Material* createMaterial() = 0;
+		virtual Material* loadMaterial(const std::string& filePath) = 0;
 
 		virtual Image* createImage() = 0;
 		virtual Image* loadImage(const std::string& filePath) = 0;

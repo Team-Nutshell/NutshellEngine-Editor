@@ -22,6 +22,8 @@ namespace NtshEngn {
 		virtual Image loadImage(const std::string& filePath) = 0;
 		// Loads the model in file at path filePath
 		virtual Model loadModel(const std::string& filePath) = 0;
+		// Loads the material in file at path filePath
+		virtual Material loadMaterial(const std::string& filePath) = 0;
 		// Loads the font in file at path filePath
 		virtual Font loadFont(const std::string& filePath, float fontHeight) = 0;
 
