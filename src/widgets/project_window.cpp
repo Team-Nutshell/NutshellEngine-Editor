@@ -98,12 +98,10 @@ void ProjectWindow::openMainWindow(const std::string& projectDirectory, const st
 		j["projects"] = { projectDirectory };
 	}
 	else {
-		bool foundProject = false;
 		for (size_t i = 0; i < j["projects"].size(); i++) {
 			const auto& project = j["projects"][i];
 			if (project == projectDirectory) {
 				j["projects"].erase(i);
-				foundProject = true;
 			}
 		}
 		j["projects"].insert(j["projects"].begin(), projectDirectory);

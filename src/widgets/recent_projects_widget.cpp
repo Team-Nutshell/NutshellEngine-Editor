@@ -78,12 +78,10 @@ void RecentProjectsWidget::onRemoveRecentProjectButtonClicked() {
 
 	recentProjectsFile = std::fstream("recent_projects.json", std::ios::out | std::ios::trunc);
 	if (j.contains("projects")) {
-		bool foundProject = false;
 		for (size_t i = 0; i < j["projects"].size(); i++) {
 			const auto& project = j["projects"][i];
 			if (project == static_cast<RecentProjectWidget*>(senderWidget)->getProjectDirectory()) {
 				j["projects"].erase(i);
-				foundProject = true;
 			}
 		}
 	}
