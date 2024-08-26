@@ -102,7 +102,7 @@ void ModelNtmdFileWidget::save() {
 	nlohmann::json j;
 	for (int i = 0; i < primitivesWidget->layout()->count(); i++) {
 		ModelNtmdPrimitiveWidget* primitiveWidget = static_cast<ModelNtmdPrimitiveWidget*>(primitivesWidget->layout()->itemAt(i)->widget());
-		if ((primitiveWidget->primitiveMeshWidget->filePathButton->path != "") || (primitiveWidget->primitiveMaterialWidget->filePathButton->path != ""))
+		if ((!primitiveWidget->primitiveMeshWidget->filePathButton->path.empty()) || (!primitiveWidget->primitiveMaterialWidget->filePathButton->path.empty()))
 			j["primitives"].push_back(primitiveWidget->toJson());
 	}
 

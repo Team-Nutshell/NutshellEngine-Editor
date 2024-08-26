@@ -42,7 +42,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			newEntity.entityID = globalInfo.globalEntityID++;
 			entities[newEntity.entityID] = newEntity;
 			if (newEntity.renderable) {
-				if (newEntity.renderable->modelPath != "") {
+				if (!newEntity.renderable->modelPath.empty()) {
 					std::string fullModelPath = newEntity.renderable->modelPath;
 					std::filesystem::path path(fullModelPath);
 					if (!path.is_absolute()) {
@@ -56,7 +56,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 					}
 				}
 
-				if (newEntity.renderable->materialPath != "") {
+				if (!newEntity.renderable->materialPath.empty()) {
 					std::string fullMaterialPath = newEntity.renderable->materialPath;
 					std::filesystem::path path(fullMaterialPath);
 					if (!path.is_absolute()) {

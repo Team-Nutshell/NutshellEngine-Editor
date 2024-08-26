@@ -223,40 +223,40 @@ void MaterialNtmlFileWidget::onValueChanged() {
 
 void MaterialNtmlFileWidget::save() {
 	nlohmann::json j;
-	if (diffuseTextureImageWidget->getPath() != "") {
+	if (!diffuseTextureImageWidget->getPath().empty()) {
 		j["diffuseTexture"]["imagePath"] = diffuseTextureImageWidget->getPath();
 	}
-	if (diffuseTextureImageSamplerWidget->getPath() != "") {
+	if (!diffuseTextureImageSamplerWidget->getPath().empty()) {
 		j["diffuseTexture"]["imageSamplerPath"] = diffuseTextureImageSamplerWidget->getPath();
 	}
-	if (normalTextureImageWidget->getPath() != "") {
+	if (!normalTextureImageWidget->getPath().empty()) {
 		j["normalTexture"]["imagePath"] = normalTextureImageWidget->getPath();
 	}
-	if (normalTextureImageSamplerWidget->getPath() != "") {
+	if (!normalTextureImageSamplerWidget->getPath().empty()) {
 		j["normalTexture"]["imageSamplerPath"] = normalTextureImageSamplerWidget->getPath();
 	}
-	if (metalnessTextureImageWidget->getPath() != "") {
+	if (!metalnessTextureImageWidget->getPath().empty()) {
 		j["metalnessTexture"]["imagePath"] = metalnessTextureImageWidget->getPath();
 	}
-	if (metalnessTextureImageSamplerWidget->getPath() != "") {
+	if (!metalnessTextureImageSamplerWidget->getPath().empty()) {
 		j["metalnessTexture"]["imageSamplerPath"] = metalnessTextureImageSamplerWidget->getPath();
 	}
-	if (roughnessTextureImageWidget->getPath() != "") {
+	if (!roughnessTextureImageWidget->getPath().empty()) {
 		j["roughnessTexture"]["imagePath"] = roughnessTextureImageWidget->getPath();
 	}
-	if (roughnessTextureImageSamplerWidget->getPath() != "") {
+	if (!roughnessTextureImageSamplerWidget->getPath().empty()) {
 		j["roughnessTexture"]["imageSamplerPath"] = roughnessTextureImageSamplerWidget->getPath();
 	}
-	if (occlusionTextureImageWidget->getPath() != "") {
+	if (!occlusionTextureImageWidget->getPath().empty()) {
 		j["occlusionTexture"]["imagePath"] = occlusionTextureImageWidget->getPath();
 	}
-	if (occlusionTextureImageSamplerWidget->getPath() != "") {
+	if (!occlusionTextureImageSamplerWidget->getPath().empty()) {
 		j["occlusionTexture"]["imageSamplerPath"] = occlusionTextureImageSamplerWidget->getPath();
 	}
-	if (emissiveTextureImageWidget->getPath() != "") {
+	if (!emissiveTextureImageWidget->getPath().empty()) {
 		j["emissiveTexture"]["imagePath"] = emissiveTextureImageWidget->getPath();
 	}
-	if (emissiveTextureImageSamplerWidget->getPath() != "") {
+	if (!emissiveTextureImageSamplerWidget->getPath().empty()) {
 		j["emissiveTexture"]["imageSamplerPath"] = emissiveTextureImageSamplerWidget->getPath();
 	}
 	j["emissiveFactor"] = emissiveFactorWidget->getValue();

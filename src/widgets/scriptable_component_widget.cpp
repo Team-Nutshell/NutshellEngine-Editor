@@ -41,7 +41,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 }
 
 void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
-	if (scriptable.scriptName != "") {
+	if (!scriptable.scriptName.empty()) {
 		{
 			const QSignalBlocker signalBlocker(scriptNameWidget->comboBox);
 			if (scriptNameWidget->comboBox->findText(QString::fromStdString(scriptable.scriptName)) != -1) {
@@ -158,7 +158,7 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 					return !std::isspace(c);
 					}).base(), scriptName.end());
 
-				if (scriptName != "") {
+				if (!scriptName.empty()) {
 					if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
 						std::filesystem::create_directory(m_globalInfo.projectDirectory + "/scripts/");
 						m_scriptsDirectoryWatcher.addPath(QString::fromStdString(m_globalInfo.projectDirectory) + "/scripts/");

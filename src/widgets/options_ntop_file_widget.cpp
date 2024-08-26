@@ -99,14 +99,14 @@ void OptionsNtopFileWidget::onValueChanged() {
 
 void OptionsNtopFileWidget::save() {
 	nlohmann::json j;
-	if (windowTitleWidget->getText() != "") {
+	if (!windowTitleWidget->getText().empty()) {
 		j["windowTitle"] = windowTitleWidget->getText();
 	}
-	if (windowIconImageWidget->getPath() != "") {
+	if (!windowIconImageWidget->getPath().empty()) {
 		j["windowIconImagePath"] = windowIconImageWidget->getPath();
 	}
 	j["maxFPS"] = maxFPSWidget->getValue();
-	if (firstSceneWidget->getPath() != "") {
+	if (!firstSceneWidget->getPath().empty()) {
 		j["firstScenePath"] = firstSceneWidget->getPath();
 	}
 	j["startProfiling"] = startProfilingWidget->checkBox->isChecked();

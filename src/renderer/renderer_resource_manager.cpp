@@ -912,7 +912,7 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 				valueIndices.push_back(tmp);
 
 				for (size_t j = 0; j < valueIndices.size(); j++) {
-					if (valueIndices[j] != "") {
+					if (!valueIndices[j].empty()) {
 						// v/vt/vn
 						// Position index
 						if (j == 0) {

@@ -15,7 +15,7 @@ void FilePushButton::onButtonClicked() {
 	if (m_pathType == PathType::Directory) {
 		fileDialog.setFileMode(QFileDialog::FileMode::Directory);
 	}
-	if (path != "") {
+	if (!path.empty()) {
 		std::string pathDirectory;
 		if (std::filesystem::is_directory(path)) {
 			pathDirectory = path;
@@ -32,7 +32,7 @@ void FilePushButton::onButtonClicked() {
 		}
 	}
 	else {
-		if (m_defaultPath != "") {
+		if (!m_defaultPath.empty()) {
 			fileDialog.setDirectory(QString::fromStdString(m_defaultPath));
 		}
 	}

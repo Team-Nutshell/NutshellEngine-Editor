@@ -26,7 +26,7 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 }
 
 void FileSelectorWidget::setPath(const std::string& path) {
-	if (path == "") {
+	if (path.empty()) {
 		m_path = "";
 		filePathButton->path = "";
 		filePathButton->setText(QString::fromStdString(m_noFileText));
@@ -52,7 +52,7 @@ void FileSelectorWidget::onPathChanged(const std::string& path) {
 }
 
 void FileSelectorWidget::onResetFilePathClicked() {
-	if (m_path != "") {
+	if (!m_path.empty()) {
 		setPath("");
 		emit fileSelected("");
 	}

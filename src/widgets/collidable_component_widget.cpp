@@ -108,7 +108,7 @@ void CollidableComponentWidget::updateComponent(EntityID entityID, Component* co
 }
 
 void CollidableComponentWidget::updateFromRenderableWidget() {
-	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath != "") && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
+	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((!m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
 		fromRenderableWidget->setEnabled(true);
 	}
 	else {
@@ -209,7 +209,7 @@ void CollidableComponentWidget::onScalarChanged(float value) {
 }
 
 void CollidableComponentWidget::onFromRenderableButtonClicked() {
-	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath != "") && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
+	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((!m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
 		RendererResourceManager::Mesh& mesh = m_globalInfo.rendererResourceManager.models[m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath].primitives[m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex].mesh;
 		if (!mesh.collidersCalculated) {
 			m_globalInfo.rendererResourceManager.loadMeshColliders(mesh);

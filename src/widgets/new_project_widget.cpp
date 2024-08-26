@@ -35,14 +35,14 @@ void NewProjectWidget::onDirectorySelected(const std::string& directoryPath) {
 	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
 
 	std::string projectFullPath;
-	if (m_projectName != "") {
+	if (!m_projectName.empty()) {
 		projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 	}
 	else {
 		projectFullPath = m_projectDirectoryPath + "/? (missing project name)";
 	}
 
-	if ((m_projectDirectoryPath != "") && (m_projectName != "")) {
+	if ((!m_projectDirectoryPath.empty()) && (!m_projectName.empty())) {
 		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
 		if (directoryExists) {
 			projectFullPath = projectFullPath + " (directory already exists)";
@@ -66,8 +66,8 @@ void NewProjectWidget::onTextChanged(const std::string& text) {
 	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
 
 	std::string projectFullPath;
-	if (m_projectDirectoryPath != "") {
-		if (m_projectName != "") {
+	if (!m_projectDirectoryPath.empty()) {
+		if (!m_projectName.empty()) {
 			projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 		}
 		else {
@@ -75,7 +75,7 @@ void NewProjectWidget::onTextChanged(const std::string& text) {
 		}
 	}
 	else {
-		if (m_projectName != "") {
+		if (!m_projectName.empty()) {
 			projectFullPath = "?/" + projectNameNoSpace + " (missing directory)";
 		}
 		else {
@@ -83,7 +83,7 @@ void NewProjectWidget::onTextChanged(const std::string& text) {
 		}
 	}
 
-	if ((m_projectDirectoryPath != "") && (m_projectName != "")) {
+	if ((!m_projectDirectoryPath.empty()) && (!m_projectName.empty())) {
 		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
 		if (directoryExists) {
 			projectFullPath = projectFullPath + " (directory already exists)";

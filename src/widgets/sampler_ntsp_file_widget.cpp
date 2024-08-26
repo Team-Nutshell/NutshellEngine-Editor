@@ -149,25 +149,25 @@ void SamplerNtspFileWidget::onValueChanged() {
 
 void SamplerNtspFileWidget::save() {
 	nlohmann::json j;
-	if (magFilterWidget->comboBox->currentText() != "") {
+	if (!magFilterWidget->comboBox->currentText().toStdString().empty()) {
 		j["magFilter"] = magFilterWidget->comboBox->currentText().toStdString();
 	}
-	if (minFilterWidget->comboBox->currentText() != "") {
+	if (!minFilterWidget->comboBox->currentText().toStdString().empty()) {
 		j["minFilter"] = minFilterWidget->comboBox->currentText().toStdString();
 	}
-	if (mipmapFilterWidget->comboBox->currentText() != "") {
+	if (!mipmapFilterWidget->comboBox->currentText().toStdString().empty()) {
 		j["mipmapFilter"] = mipmapFilterWidget->comboBox->currentText().toStdString();
 	}
-	if (addressModeUWidget->comboBox->currentText() != "") {
+	if (!addressModeUWidget->comboBox->currentText().toStdString().empty()) {
 		j["addressModeU"] = addressModeUWidget->comboBox->currentText().toStdString();
 	}
-	if (addressModeVWidget->comboBox->currentText() != "") {
+	if (!addressModeVWidget->comboBox->currentText().toStdString().empty()) {
 		j["addressModeV"] = addressModeVWidget->comboBox->currentText().toStdString();
 	}
-	if (addressModeWWidget->comboBox->currentText() != "") {
+	if (!addressModeWWidget->comboBox->currentText().toStdString().empty()) {
 		j["addressModeW"] = addressModeWWidget->comboBox->currentText().toStdString();
 	}
-	if (borderColorWidget->comboBox->currentText() != "") {
+	if (!borderColorWidget->comboBox->currentText().toStdString().empty()) {
 		j["borderColor"] = borderColorWidget->comboBox->currentText().toStdString();
 	}
 	j["anisotropyLevel"] = anisotropyLevelWidget->getValue();

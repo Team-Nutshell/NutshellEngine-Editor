@@ -36,7 +36,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 }
 
 void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
-	if (renderable.modelPath != "") {
+	if (!renderable.modelPath.empty()) {
 		std::string modelPath = AssetHelper::absoluteToRelative(renderable.modelPath, m_globalInfo.projectDirectory);
 		modelPathWidget->setPath(modelPath);
 
@@ -50,7 +50,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 				RendererResourceManager::Model& model = m_globalInfo.rendererResourceManager.models[renderable.modelPath];
 				for (size_t i = 0; i < model.primitives.size(); i++) {
 					std::string primitiveIndexName = std::to_string(i);
-					if (model.primitives[i].name != "") {
+					if (!model.primitives[i].name.empty()) {
 						primitiveIndexName += " (" + model.primitives[i].name + ")";
 					}
 					primitiveIndexes.append(QString::fromStdString(primitiveIndexName));
@@ -76,7 +76,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 		}
 	}
 
-	if (renderable.materialPath != "") {
+	if (!renderable.materialPath.empty()) {
 		std::string materialPath = AssetHelper::absoluteToRelative(renderable.materialPath, m_globalInfo.projectDirectory);
 		materialPathWidget->setPath(materialPath);
 	}

@@ -45,7 +45,7 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 }
 
 void ProjectNtpjFileWidget::onValueChanged() {
-	if (projectNameWidget->getText() != "") {
+	if (!projectNameWidget->getText().empty()) {
 		m_globalInfo.projectName = projectNameWidget->getText();
 	}
 	else {
@@ -70,7 +70,7 @@ void ProjectNtpjFileWidget::save() {
 	std::string projectFilePath = m_globalInfo.projectDirectory + "/project.ntpj";
 
 	nlohmann::json j;
-	if (projectNameWidget->getText() != "") {
+	if (!projectNameWidget->getText().empty()) {
 		j["projectName"] = projectNameWidget->getText();
 	}
 

@@ -27,7 +27,7 @@ void FileMenu::openScene() {
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/assets/"));
 	}
-	else if (m_globalInfo.projectDirectory != "") {
+	else if (!m_globalInfo.projectDirectory.empty()) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
 	}
 
@@ -38,7 +38,7 @@ void FileMenu::openScene() {
 }
 
 void FileMenu::saveScene() {
-	if (m_globalInfo.currentScenePath == "") {
+	if (m_globalInfo.currentScenePath.empty()) {
 		saveSceneAs();
 	}
 	else {
@@ -53,7 +53,7 @@ void FileMenu::saveSceneAs() {
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/assets/"));
 	}
-	else if (m_globalInfo.projectDirectory != "") {
+	else if (!m_globalInfo.projectDirectory.empty()) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
 	}
 
