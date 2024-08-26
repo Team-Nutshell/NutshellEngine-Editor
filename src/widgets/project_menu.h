@@ -10,9 +10,11 @@ public:
 
 private:
 	void openProjectSettings();
+	void updateBaseProject();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	QAction* m_openProjectSettingsAction;
+	QAction* m_updateBaseProject;
 };
