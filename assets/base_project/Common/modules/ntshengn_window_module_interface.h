@@ -72,6 +72,8 @@ namespace NtshEngn {
 
 		// Sets the title of the window with identifier windowID
 		virtual void setWindowTitle(WindowID windowID, const std::string& title) = 0;
+		// Returns the title of the window with identifier windowID
+		virtual std::string getWindowTitle(WindowID windowID) = 0;
 		// Sets the icon of the window with identifier windowID
 		virtual void setWindowIcon(WindowID windowID, const Image& image) = 0;
 

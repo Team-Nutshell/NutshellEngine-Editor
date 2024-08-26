@@ -61,6 +61,7 @@ namespace NtshEngn {
 
 		virtual void destroySound(Sound* sound) = 0;
 		virtual void destroyModel(Model* model) = 0;
+		virtual void destroyMaterial(Material* material) = 0;
 		virtual void destroyImage(Image* image) = 0;
 		virtual void destroyFont(Font* font) = 0;
 
