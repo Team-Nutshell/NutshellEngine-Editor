@@ -10,11 +10,13 @@ public:
 
 private:
 	void openProjectSettings();
+	void importGlobalResources();
 	void updateBaseProject();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	QAction* m_openProjectSettingsAction;
+	QAction* m_importGlobalResources;
 	QAction* m_updateBaseProject;
 };

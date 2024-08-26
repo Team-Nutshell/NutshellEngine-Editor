@@ -57,7 +57,6 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 		nlohmann::json j;
 		j["windowTitle"] = projectName;
 		j["maxFPS"] = 60;
-		j["firstScenePath"] = "assets/scenes/default_scene.ntsn";
 		optionsFile << j.dump(1, '\t');
 	}
 
