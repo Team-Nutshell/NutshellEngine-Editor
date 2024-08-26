@@ -15,6 +15,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QSplitter>
+#include <QCloseEvent>
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -29,6 +30,9 @@ private:
 	void createEntityInfoPanel();
 	void createResourcePanel();
 	void createLogBar();
+
+private slots:
+	void closeEvent(QCloseEvent* event);
 
 private:
 	GlobalInfo& m_globalInfo;

@@ -2,6 +2,7 @@
 #include "separator_line.h"
 #include <QVBoxLayout>
 #include <QMenuBar>
+#include <QApplication>
 
 MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(1280, 720);
@@ -70,4 +71,9 @@ void MainWindow::createResourcePanel() {
 void MainWindow::createLogBar() {
 	logBar = new LogBar(m_globalInfo);
 	mainWidget->layout()->addWidget(logBar);
+}
+
+void MainWindow::closeEvent(QCloseEvent* event) {
+	(void)event;
+	QApplication::closeAllWindows();
 }
