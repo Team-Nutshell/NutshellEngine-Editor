@@ -128,6 +128,7 @@ private:
 	void loadImageStb(const std::string& imagePath, ImageToGPU& image);
 	void loadImageFromMemory(void* data, size_t size, const std::string& name);
 	void loadObj(const std::string& modelPath, Model& model);
+	std::unordered_map<std::string, Material> loadMtl(const std::string& materialPath);
 
 public:
 	std::unordered_map<std::string, RendererModel> rendererModels;

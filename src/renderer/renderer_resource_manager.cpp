@@ -664,7 +664,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 					}
 					else if (baseColorFactor != NULL) {
-						std::string mapKey = "srgb" + std::to_string(baseColorFactor[0]) + std::to_string(baseColorFactor[1]) + std::to_string(baseColorFactor[2]) + std::to_string(baseColorFactor[3]);
+						std::string mapKey = "srgb " + std::to_string(baseColorFactor[0]) + " " + std::to_string(baseColorFactor[1]) + " " + std::to_string(baseColorFactor[2]) + " " + std::to_string(baseColorFactor[3]);
 
 						if (textures.find(mapKey) == textures.end()) {
 							ImageToGPU image;
@@ -761,7 +761,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 				}
 				else if (emissiveFactor != NULL) {
-					std::string mapKey = "srgb" + std::to_string(emissiveFactor[0]) + std::to_string(emissiveFactor[1]) + std::to_string(emissiveFactor[2]) + std::to_string(emissiveFactor[3]);
+					std::string mapKey = "srgb " + std::to_string(emissiveFactor[0]) + " " + std::to_string(emissiveFactor[1]) + " " + std::to_string(emissiveFactor[2]) + " " + std::to_string(emissiveFactor[3]);
 
 					if (textures.find(mapKey) == textures.end()) {
 						ImageToGPU image;
@@ -849,12 +849,17 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 		return;
 	}
 
-	std::vector<std::array<float, 3>> positions;
-	std::vector<std::array<float, 3>> normals;
-	std::vector<std::array<float, 2>> uvs;
+	std::vector<nml::vec3> positions;
+	std::vector<nml::vec3> normals;
+	std::vector<nml::vec2> uvs;
 
 	std::unordered_map<std::string, uint32_t> uniqueVertices;
-	ModelPrimitive primitive;
+
+	model.primitives.push_back(ModelPrimitive());
+	ModelPrimitive* currentPrimitive = &model.primitives.back();
+
+	std::string modelDirectory = modelPath.substr(0, modelPath.rfind('/'));
+	std::unordered_map<std::string, Material> mtlMaterials;
 
 	std::string line;
 	while (std::getline(file, line)) {
@@ -896,6 +901,35 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 				static_cast<float>(std::atof(tokens[2].c_str()))
 				});
 		}
+		// Object
+		else if (tokens[0] == "o") {
+			if (!currentPrimitive->mesh.indices.empty()) {
+				model.primitives.push_back(ModelPrimitive());
+				currentPrimitive = &model.primitives.back();
+				uniqueVertices.clear();
+			}
+			if (tokens.size() > 1) {
+				currentPrimitive->name = tokens[1];
+			}
+		}
+		// Material
+		else if (tokens[0] == "mtllib") {
+			std::string materialFile = modelDirectory + "/" + tokens[1];
+			mtlMaterials = loadMtl(materialFile);
+		}
+		else if (tokens[0] == "usemtl") {
+			if (!currentPrimitive->mesh.indices.empty()) {
+				model.primitives.push_back(ModelPrimitive());
+				currentPrimitive = &model.primitives.back();
+				uniqueVertices.clear();
+			}
+			if ((tokens.size() > 1) && currentPrimitive->name.empty()) {
+				currentPrimitive->name = tokens[1];
+			}
+			if (mtlMaterials.find(tokens[1]) != mtlMaterials.end()) {
+				currentPrimitive->material = mtlMaterials[tokens[1]];
+			}
+		}
 		// Face
 		else if (tokens[0] == "f") {
 			std::vector<uint32_t> tmpIndices;
@@ -916,27 +950,22 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 						// v/vt/vn
 						// Position index
 						if (j == 0) {
-							vertex.position[0] = positions[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][0];
-							vertex.position[1] = positions[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][1];
-							vertex.position[2] = positions[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][2];
+							vertex.position = positions[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1];
 						}
 						// UV index
 						else if (j == 1) {
-							vertex.uv[0] = uvs[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][0];
-							vertex.uv[1] = uvs[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][1];
+							vertex.uv = uvs[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1];
 						}
 						// Normal index
 						else if (j == 2) {
-							vertex.normal[0] = normals[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][0];
-							vertex.normal[1] = normals[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][1];
-							vertex.normal[2] = normals[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1][2];
+							vertex.normal = normals[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1];
 						}
 					}
 				}
 
 				if (uniqueVertices.count(tokens[i]) == 0) {
-					uniqueVertices[tokens[i]] = static_cast<uint32_t>(primitive.mesh.vertices.size());
-					primitive.mesh.vertices.push_back(vertex);
+					uniqueVertices[tokens[i]] = static_cast<uint32_t>(currentPrimitive->mesh.vertices.size());
+					currentPrimitive->mesh.vertices.push_back(vertex);
 				}
 				tmpIndices.push_back(uniqueVertices[tokens[i]]);
 			}
@@ -944,26 +973,119 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 			// Face can be a triangle or a rectangle
 			// Triangle
 			if (tmpIndices.size() == 3) {
-				primitive.mesh.indices.insert(primitive.mesh.indices.end(), std::make_move_iterator(tmpIndices.begin()), std::make_move_iterator(tmpIndices.end()));
+				currentPrimitive->mesh.indices.insert(currentPrimitive->mesh.indices.end(), std::make_move_iterator(tmpIndices.begin()), std::make_move_iterator(tmpIndices.end()));
 			}
 			// Rectangle
 			else if (tmpIndices.size() == 4) {
 				// Triangle 1
-				primitive.mesh.indices.push_back(tmpIndices[0]);
-				primitive.mesh.indices.push_back(tmpIndices[1]);
-				primitive.mesh.indices.push_back(tmpIndices[2]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[0]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[1]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[2]);
 
 				// Triangle 2
-				primitive.mesh.indices.push_back(tmpIndices[0]);
-				primitive.mesh.indices.push_back(tmpIndices[2]);
-				primitive.mesh.indices.push_back(tmpIndices[3]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[0]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[2]);
+				currentPrimitive->mesh.indices.push_back(tmpIndices[3]);
 			}
 		}
 	}
 
-	model.primitives.push_back(primitive);
+	file.close();
+}
+
+std::unordered_map<std::string, RendererResourceManager::Material> RendererResourceManager::loadMtl(const std::string& materialPath) {
+	std::unordered_map<std::string, Material> mtlMaterials;
+
+	std::ifstream file(materialPath);
+
+	// Open file
+	if (!file.is_open()) {
+		logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" cannot be opened.");
+		return mtlMaterials;
+	}
+
+	Material* currentMaterial = nullptr;
+
+	std::string materialDirectory = materialPath.substr(0, materialPath.rfind('/'));
+
+	std::string line;
+	while (std::getline(file, line)) {
+		// Ignore comment
+		if (line[0] == '#') {
+			continue;
+		}
+
+		// Parse line
+		std::vector<std::string> tokens;
+		size_t spacePosition = 0;
+		while ((spacePosition = line.find(' ')) != std::string::npos) {
+			tokens.push_back(line.substr(0, spacePosition));
+			line.erase(0, spacePosition + 1);
+		}
+		tokens.push_back(line);
+
+		// Parse tokens
+		if (tokens[0] == "newmtl") {
+			mtlMaterials[tokens[1]] = Material();
+			currentMaterial = &mtlMaterials[tokens[1]];
+		}
+		else if (tokens[0] == "Kd") {
+			std::string mapKey = "srgb " + tokens[1] + " " + tokens[2] + " " + tokens[3];
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { static_cast<uint8_t>(round(255.0f * std::atof(tokens[1].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[2].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[3].c_str()))),
+					255
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			if (currentMaterial) {
+				currentMaterial->diffuseTextureName = mapKey;
+			}
+		}
+		else if (tokens[0] == "map_Kd") {
+			loadImage(materialDirectory + "/" + tokens[1], materialDirectory + "/" + tokens[1]);
+			if (currentMaterial) {
+				currentMaterial->diffuseTextureName = materialDirectory + "/" + tokens[1];
+			}
+		}
+		else if (tokens[0] == "Ke") {
+			std::string mapKey = "srgb " + tokens[1] + " " + tokens[2] + " " + tokens[3];
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { static_cast<uint8_t>(round(255.0f * std::atof(tokens[1].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[2].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[3].c_str()))),
+					255
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			if (currentMaterial) {
+				currentMaterial->emissiveTextureName = mapKey;
+			}
+		}
+		else if (tokens[0] == "map_Ke") {
+			loadImage(materialDirectory + "/" + tokens[1], materialDirectory + "/" + tokens[1]);
+			if (currentMaterial) {
+				currentMaterial->emissiveTextureName = materialDirectory + "/" + tokens[1];
+			}
+		}
+	}
 
 	file.close();
+
+	return mtlMaterials;
 }
 
 void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
