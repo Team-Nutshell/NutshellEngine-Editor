@@ -7,13 +7,13 @@
 class ColorPickerWidget : public QWidget {
 	Q_OBJECT
 public:
-	ColorPickerWidget(GlobalInfo& globalInfo, const std::string& name, const nml::vec4& defaultColor);
+	ColorPickerWidget(GlobalInfo& globalInfo, const std::string& name, const nml::vec3& defaultColor);
 
-	void setColor(const nml::vec4& color);
-	const nml::vec4& getColor();
+	void setColor(const nml::vec3& color);
+	const nml::vec3& getColor();
 
 signals:
-	void colorChanged(const nml::vec4&);
+	void colorChanged(const nml::vec3&);
 
 private slots:
 	void onColorButtonClicked();
@@ -21,7 +21,7 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	nml::vec4 m_color;
+	nml::vec3 m_color;
 
 public:
 	QLabel* nameLabel;

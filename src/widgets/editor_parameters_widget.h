@@ -20,7 +20,7 @@ private slots:
 	void onKeyChanged(const std::string& key);
 	void onScalarChanged(float value);
 	void onStringChanged(const std::string& text);
-	void onColorChanged(const nml::vec4& color);
+	void onColorChanged(const nml::vec3& color);
 
 private:
 	void save();

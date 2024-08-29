@@ -17,7 +17,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	std::vector<std::string> elementList = { "Directional", "Point", "Spot", "Ambient" };
 	typeWidget = new ComboBoxWidget(m_globalInfo, "Type", elementList);
 	layout()->addWidget(typeWidget);
-	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec3(1.0f, 1.0f, 1.0f));
 	layout()->addWidget(colorWidget);
 	directionWidget = new Vector3Widget(m_globalInfo, "Direction");
 	layout()->addWidget(directionWidget);
@@ -110,7 +110,7 @@ void LightComponentWidget::onElementChanged(const std::string& element) {
 	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }
 
-void LightComponentWidget::onColorChanged(const nml::vec4& color) {
+void LightComponentWidget::onColorChanged(const nml::vec3& color) {
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
 	QObject* senderWidget = sender();
