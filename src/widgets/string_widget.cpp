@@ -29,4 +29,5 @@ void StringWidget::onEditingFinished() {
 		setText(newValue);
 		emit valueChanged(m_text);
 	}
+	valueLineEdit->clearFocus();
 }
