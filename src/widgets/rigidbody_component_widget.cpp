@@ -45,18 +45,9 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 }
 
 void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
-	{
-		const QSignalBlocker signalBlocker(isStaticWidget->checkBox);
-		isStaticWidget->checkBox->setChecked(rigidbody.isStatic);
-	}
-	{
-		const QSignalBlocker signalBlocker(isAffectedByConstantsWidget->checkBox);
-		isAffectedByConstantsWidget->checkBox->setChecked(rigidbody.isAffectedByConstants);
-	}
-	{
-		const QSignalBlocker signalBlocker(lockRotationWidget->checkBox);
-		lockRotationWidget->checkBox->setChecked(rigidbody.lockRotation);
-	}
+	isStaticWidget->setValue(rigidbody.isStatic);
+	isAffectedByConstantsWidget->setValue(rigidbody.isAffectedByConstants);
+	lockRotationWidget->setValue(rigidbody.lockRotation);
 	massWidget->setValue(rigidbody.mass);
 	inertiaWidget->setValue(rigidbody.inertia);
 	restitutionWidget->setValue(rigidbody.restitution);

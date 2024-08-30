@@ -13,6 +13,17 @@ BooleanWidget::BooleanWidget(GlobalInfo& globalInfo, const std::string& name) : 
 	connect(checkBox, &QCheckBox::stateChanged, this, &BooleanWidget::onStateChanged);
 }
 
+void BooleanWidget::setValue(bool value) {
+	{
+		const QSignalBlocker signalBlocker(checkBox);
+		checkBox->setChecked(value);
+	}
+}
+
+bool BooleanWidget::getValue() {
+	return checkBox->isChecked();
+}
+
 void BooleanWidget::onStateChanged() {
 	emit stateChanged(checkBox->isChecked());
 }

@@ -10,6 +10,9 @@ class BooleanWidget : public QWidget {
 public:
 	BooleanWidget(GlobalInfo& globalInfo, const std::string& name);
 
+	void setValue(bool value);
+	bool getValue();
+
 signals:
 	void stateChanged(bool);
 
