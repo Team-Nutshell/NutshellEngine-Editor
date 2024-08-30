@@ -13,8 +13,7 @@ void ClearSceneCommand::undo() {
 }
 
 void ClearSceneCommand::redo() {
-	m_globalInfo.currentEntityID = NO_ENTITY;
-	m_globalInfo.otherSelectedEntityIDs.clear();
+	m_globalInfo.clearSelectedEntities();
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);

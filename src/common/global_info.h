@@ -47,4 +47,10 @@ struct GlobalInfo {
 
 		return NO_ENTITY;
 	}
+
+	void clearSelectedEntities() {
+		currentEntityID = NO_ENTITY;
+		otherSelectedEntityIDs.clear();
+		emit signalEmitter.selectEntitySignal();
+	}
 };

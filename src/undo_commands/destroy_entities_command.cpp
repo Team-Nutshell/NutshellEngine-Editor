@@ -39,7 +39,7 @@ void DestroyEntitiesCommand::redo() {
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyEntity.first.entityID);
 		m_globalInfo.otherSelectedEntityIDs.erase(destroyEntity.first.entityID);
 		if (destroyEntity.first.entityID == m_globalInfo.currentEntityID) {
-			m_globalInfo.currentEntityID = NO_ENTITY;
+			m_globalInfo.clearSelectedEntities();
 		}
 	}
 }

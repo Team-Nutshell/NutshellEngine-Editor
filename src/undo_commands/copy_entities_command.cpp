@@ -33,7 +33,7 @@ void CopyEntitiesCommand::undo() {
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(pastedEntityID);
 		m_globalInfo.otherSelectedEntityIDs.erase(pastedEntityID);
 		if (pastedEntityID == m_globalInfo.currentEntityID) {
-			m_globalInfo.currentEntityID = NO_ENTITY;
+			m_globalInfo.clearSelectedEntities();
 		}
 	}
 }

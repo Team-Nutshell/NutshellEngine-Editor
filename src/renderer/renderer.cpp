@@ -881,12 +881,11 @@ void Renderer::paintGL() {
 					m_globalInfo.currentEntityID = pickedEntityID;
 				}
 			}
+			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
 		else {
-			m_globalInfo.currentEntityID = NO_ENTITY;
-			m_globalInfo.otherSelectedEntityIDs.clear();
+			m_globalInfo.clearSelectedEntities();
 		}
-		emit m_globalInfo.signalEmitter.selectEntitySignal();
 
 		m_doPicking = false;
 	}
@@ -1548,10 +1547,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
-			m_globalInfo.currentEntityID = NO_ENTITY;
-			m_globalInfo.otherSelectedEntityIDs.clear();
 			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
-			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
 	}
 	else if (event->key() == Qt::Key_Control) {

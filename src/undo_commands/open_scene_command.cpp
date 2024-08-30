@@ -11,8 +11,7 @@ void OpenSceneCommand::undo() {
 		m_globalInfo.entities.erase(destroyedEntityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyedEntityID);
 	}
-	m_globalInfo.currentEntityID = NO_ENTITY;
-	m_globalInfo.otherSelectedEntityIDs.clear();
+	m_globalInfo.clearSelectedEntities();
 }
 
 void OpenSceneCommand::redo() {
@@ -20,4 +19,5 @@ void OpenSceneCommand::redo() {
 	for (const auto& newEntity : m_newEntities) {
 		emit m_globalInfo.signalEmitter.createEntitySignal(newEntity.first);
 	}
+	m_globalInfo.clearSelectedEntities();
 }
