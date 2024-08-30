@@ -24,24 +24,22 @@ private:
 	void orthographicCameraToZM();
 	void orthographicCameraToZP();
 
+	void setGridVisibility(bool showGrid);
+	void setBackfaceCulling(bool backfaceCullingEnabled);
+	void setCamerasVisibility(bool showCameras);
+	void setLighting(bool lightingEnabled);
+	void setCollidersVisibility(bool showCameras);
+
+	void save();
+
 private slots:
 	void onEntitySelected();
 	void onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible);
-	void onGridVisibilityToggled(bool showGrid);
-	void onBackfaceCullingToggled(bool backfaceCullingEnabled);
-	void onCamerasVisibilityToggled(bool showCameras);
-	void onLightingToggled(bool lightingEnabled);
-	void onCollidersVisibilityToggled(bool showCameras);
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	bool m_showGrid = true;
-	bool m_backfaceCullingEnabled = false;
-	bool m_showCameras = false;
-	bool m_lightingEnabled = false;
-	bool m_showColliders = false;
 	bool m_cameraProjectionOrthographic = false;
 
 public:

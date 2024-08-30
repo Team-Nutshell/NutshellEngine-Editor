@@ -40,12 +40,7 @@ signals:
 	void removeEntityScriptableSignal(EntityID);
 	void changeEntityScriptableSignal(EntityID, const Scriptable&);
 
-	void toggleBackfaceCullingSignal(bool);
-	void toggleGridVisibilitySignal(bool);
 	void toggleEntityVisibilitySignal(EntityID, bool);
-	void toggleCamerasVisibilitySignal(bool);
-	void toggleLightingSignal(bool);
-	void toggleCollidersVisibilitySignal(bool);
 	void switchCameraProjectionSignal(bool);
 	void resetCameraSignal();
 	void orthographicCameraToAxisSignal(const nml::vec3&);

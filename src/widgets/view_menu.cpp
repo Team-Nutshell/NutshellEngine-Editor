@@ -1,5 +1,6 @@
 #include "view_menu.h"
 #include <QKeySequence>
+#include <fstream>
 
 ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&View"), m_globalInfo(globalInfo) {
 	toggleCurrentEntityVisibilityAction = addAction("Toggle Entity Visibility", this, &ViewMenu::toggleCurrentEntityVisibility);
@@ -33,13 +34,14 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&View"), m_globalInfo(global
 	orthographicCameraToZPAction = addAction("Orthographic Camera Z+", this, &ViewMenu::orthographicCameraToZP);
 	orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 
+	setGridVisibility(m_globalInfo.editorParameters.renderer.showGrid);
+	setBackfaceCulling(m_globalInfo.editorParameters.renderer.enableBackfaceCulling);
+	setCamerasVisibility(m_globalInfo.editorParameters.renderer.showCameras);
+	setLighting(m_globalInfo.editorParameters.renderer.enableLighting);
+	setCollidersVisibility(m_globalInfo.editorParameters.renderer.showColliders);
+
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onEntitySelected);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &ViewMenu::onEntityVisibilityToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &ViewMenu::onGridVisibilityToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &ViewMenu::onBackfaceCullingToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &ViewMenu::onCamerasVisibilityToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &ViewMenu::onLightingToggled);
-	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleCollidersVisibilitySignal, this, &ViewMenu::onCollidersVisibilityToggled);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &ViewMenu::onCameraProjectionSwitched);
 }
 
@@ -53,23 +55,33 @@ void ViewMenu::toggleCurrentEntityVisibility() {
 }
 
 void ViewMenu::toggleGridVisibility() {
-	emit m_globalInfo.signalEmitter.toggleGridVisibilitySignal(!m_showGrid);
+	setGridVisibility(!m_globalInfo.editorParameters.renderer.showGrid);
+
+	save();
 }
 
 void ViewMenu::toggleBackfaceCulling() {
-	emit m_globalInfo.signalEmitter.toggleBackfaceCullingSignal(!m_backfaceCullingEnabled);
+	setBackfaceCulling(!m_globalInfo.editorParameters.renderer.enableBackfaceCulling);
+
+	save();
 }
 
 void ViewMenu::toggleCamerasVisibility() {
-	emit m_globalInfo.signalEmitter.toggleCamerasVisibilitySignal(!m_showCameras);
+	setCamerasVisibility(!m_globalInfo.editorParameters.renderer.showCameras);
+
+	save();
 }
 
 void ViewMenu::toggleLighting() {
-	emit m_globalInfo.signalEmitter.toggleLightingSignal(!m_lightingEnabled);
+	setLighting(!m_globalInfo.editorParameters.renderer.enableLighting);
+
+	save();
 }
 
 void ViewMenu::toggleCollidersVisibility() {
-	emit m_globalInfo.signalEmitter.toggleCollidersVisibilitySignal(!m_showColliders);
+	setCollidersVisibility(!m_globalInfo.editorParameters.renderer.showColliders);
+
+	save();
 }
 
 void ViewMenu::switchCameraProjection() {
@@ -122,6 +134,18 @@ void ViewMenu::orthographicCameraToZP() {
 	emit m_globalInfo.signalEmitter.orthographicCameraToAxisSignal(nml::vec3(0.0f, 0.0f, 1.0f));
 }
 
+void ViewMenu::save() {
+	nlohmann::json j = m_globalInfo.editorParameters.toJson();
+
+	std::fstream optionsFile("options.json", std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
+}
+
 void ViewMenu::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		toggleCurrentEntityVisibilityAction->setEnabled(true);
@@ -145,29 +169,29 @@ void ViewMenu::onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible
 	}
 }
 
-void ViewMenu::onGridVisibilityToggled(bool showGrid) {
-	m_showGrid = showGrid;
-	toggleGridVisibilityAction->setText(m_showGrid ? "Hide Grid" : "Show Grid");
+void ViewMenu::setGridVisibility(bool showGrid) {
+	m_globalInfo.editorParameters.renderer.showGrid = showGrid;
+	toggleGridVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showGrid ? "Hide Grid" : "Show Grid");
 }
 
-void ViewMenu::onBackfaceCullingToggled(bool backfaceCulling) {
-	m_backfaceCullingEnabled = backfaceCulling;
-	toggleBackfaceCullingAction->setText(m_backfaceCullingEnabled ? "Disable Backface Culling" : "Enable Backface Culling");
+void ViewMenu::setBackfaceCulling(bool backfaceCulling) {
+	m_globalInfo.editorParameters.renderer.enableBackfaceCulling = backfaceCulling;
+	toggleBackfaceCullingAction->setText(m_globalInfo.editorParameters.renderer.enableBackfaceCulling ? "Disable Backface Culling" : "Enable Backface Culling");
 }
 
-void ViewMenu::onCamerasVisibilityToggled(bool showCameras) {
-	m_showCameras = showCameras;
-	toggleCamerasVisibilityAction->setText(m_showCameras ? "Hide Cameras" : "Show Cameras");
+void ViewMenu::setCamerasVisibility(bool showCameras) {
+	m_globalInfo.editorParameters.renderer.showCameras = showCameras;
+	toggleCamerasVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showCameras ? "Hide Cameras" : "Show Cameras");
 }
 
-void ViewMenu::onLightingToggled(bool lightingEnabled) {
-	m_lightingEnabled = lightingEnabled;
-	toggleLightingAction->setText(m_lightingEnabled ? "Disable Lighting" : "Enable Lighting");
+void ViewMenu::setLighting(bool lightingEnabled) {
+	m_globalInfo.editorParameters.renderer.enableLighting = lightingEnabled;
+	toggleLightingAction->setText(m_globalInfo.editorParameters.renderer.enableLighting ? "Disable Lighting" : "Enable Lighting");
 }
 
-void ViewMenu::onCollidersVisibilityToggled(bool showColliders) {
-	m_showColliders = showColliders;
-	toggleCollidersVisibilityAction->setText(m_showColliders ? "Hide Colliders" : "Show Colliders");
+void ViewMenu::setCollidersVisibility(bool showColliders) {
+	m_globalInfo.editorParameters.renderer.showColliders = showColliders;
+	toggleCollidersVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showColliders ? "Hide Colliders" : "Show Colliders");
 }
 
 void ViewMenu::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {

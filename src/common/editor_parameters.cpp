@@ -189,6 +189,22 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.otherEntitiesOutlineColor.y = j["renderer"]["otherEntitiesOutlineColor"][1];
 			renderer.otherEntitiesOutlineColor.z = j["renderer"]["otherEntitiesOutlineColor"][2];
 		}
+		
+		if (j["renderer"].contains("showGrid")) {
+			renderer.showGrid = j["renderer"]["showGrid"];
+		}
+		if (j["renderer"].contains("enableBackfaceCulling")) {
+			renderer.enableBackfaceCulling = j["renderer"]["enableBackfaceCulling"];
+		}
+		if (j["renderer"].contains("showCameras")) {
+			renderer.showCameras = j["renderer"]["showCameras"];
+		}
+		if (j["renderer"].contains("enableLighting")) {
+			renderer.enableLighting = j["renderer"]["enableLighting"];
+		}
+		if (j["renderer"].contains("showColliders")) {
+			renderer.showColliders = j["renderer"]["showColliders"];
+		}
 	}
 
 	if (j.contains("build")) {
@@ -237,6 +253,11 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
 	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
+	j["renderer"]["showGrid"] = renderer.showGrid;
+	j["renderer"]["enableBackfaceCulling"] = renderer.enableBackfaceCulling;
+	j["renderer"]["showCameras"] = renderer.showCameras;
+	j["renderer"]["enableLighting"] = renderer.enableLighting;
+	j["renderer"]["showColliders"] = renderer.showColliders;
 
 	j["build"]["cMakePath"] = build.cMakePath;
 

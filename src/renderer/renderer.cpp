@@ -20,11 +20,6 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
 	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &Renderer::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &Renderer::onEntitySelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleGridVisibilitySignal, this, &Renderer::onGridVisibilityToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleBackfaceCullingSignal, this, &Renderer::onBackfaceCullingToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCamerasVisibilitySignal, this, &Renderer::onCamerasVisibilityToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleLightingSignal, this, &Renderer::onLightingToggled);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleCollidersVisibilitySignal, this, &Renderer::onCollidersVisibilityToggled);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::switchCameraProjectionSignal, this, &Renderer::onCameraProjectionSwitched);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
@@ -566,11 +561,11 @@ void Renderer::paintGL() {
 
 	updateCamera();
 
-	if (m_lightingEnabled) {
+	if (m_globalInfo.editorParameters.renderer.enableLighting) {
 		updateLights();
 	}
 
-	if (m_backfaceCullingEnabled) {
+	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
 		gl.glEnable(GL_CULL_FACE);
 	}
 	else {
@@ -644,7 +639,7 @@ void Renderer::paintGL() {
 
 					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMaterial.alphaCutoff);
 
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_lightingEnabled);
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
 
 					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -715,7 +710,7 @@ void Renderer::paintGL() {
 	gl.glDisable(GL_CULL_FACE);
 	
 	// Entities Cameras
-	if (m_showCameras) {
+	if (m_globalInfo.editorParameters.renderer.showCameras) {
 		gl.glUseProgram(m_cameraFrustumProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
@@ -743,7 +738,7 @@ void Renderer::paintGL() {
 	}
 
 	// Entities Colliders
-	if (m_showColliders) {
+	if (m_globalInfo.editorParameters.renderer.showColliders) {
 		gl.glUseProgram(m_colliderProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
@@ -779,7 +774,7 @@ void Renderer::paintGL() {
 	}
 
 	// Grid
-	if (m_showGrid) {
+	if (m_globalInfo.editorParameters.renderer.showGrid) {
 		if (!m_camera.useOrthographicProjection) {
 			gl.glUseProgram(m_gridProgram);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
@@ -792,7 +787,7 @@ void Renderer::paintGL() {
 		}
 	}
 
-	if (m_backfaceCullingEnabled) {
+	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
 		gl.glEnable(GL_CULL_FACE);
 	}
 	else {
@@ -954,7 +949,7 @@ void Renderer::paintGL() {
 			}
 
 			// Entity Camera
-			if (m_showCameras) {
+			if (m_globalInfo.editorParameters.renderer.showCameras) {
 				if (entity.camera) {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.camera->forward, entity.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
@@ -973,7 +968,7 @@ void Renderer::paintGL() {
 			}
 
 			// Entity Collider
-			if (m_showColliders) {
+			if (m_globalInfo.editorParameters.renderer.showColliders) {
 				if (entity.isVisible) {
 					if (entity.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
 						const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.entityID)];
@@ -1409,26 +1404,6 @@ void Renderer::onEntityDestroyed(EntityID entityID) {
 
 void Renderer::onEntitySelected() {
 	cancelTransform();
-}
-
-void Renderer::onGridVisibilityToggled(bool showGrid) {
-	m_showGrid = showGrid;
-}
-
-void Renderer::onBackfaceCullingToggled(bool backfaceCullingEnabled) {
-	m_backfaceCullingEnabled = backfaceCullingEnabled;
-}
-
-void Renderer::onCamerasVisibilityToggled(bool showCameras) {
-	m_showCameras = showCameras;
-}
-
-void Renderer::onLightingToggled(bool lightingEnabled) {
-	m_lightingEnabled = lightingEnabled;
-}
-
-void Renderer::onCollidersVisibilityToggled(bool showColliders) {
-	m_showColliders = showColliders;
 }
 
 void Renderer::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {
