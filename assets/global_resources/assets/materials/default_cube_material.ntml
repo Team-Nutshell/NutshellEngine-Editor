@@ -1,6 +1,0 @@
-{
-	"diffuseTexture": {
-		"imagePath": "assets/images/default_cube_texture.ntim",
-		"imageSamplerPath": "assets/image_samplers/default_cube_image_sampler.ntsp"
-	}
-}

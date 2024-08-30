@@ -21,8 +21,8 @@
 			"transform": {
 				"position": [
 					0.0,
-					2.0,
-					5.0
+					3.0,
+					7.0
 				],
 				"rotation": [
 					22.5,
@@ -49,7 +49,7 @@
 					20.0
 				],
 				"direction": [
-					0.0,
+					1.0,
 					-1.0,
 					-1.0
 				],
@@ -75,34 +75,16 @@
 			}
 		},
 		{
-			"collidable": {
-				"center": [
-					0.0,
-					0.0,
-					0.0
-				],
-				"halfExtent": [
-					0.5,
-					0.5,
-					0.5
-				],
-				"rotation": [
-					0.0,
-					0.0,
-					0.0
-				],
-				"type": "Box"
-			},
 			"isPersistent": false,
 			"name": "Cube",
 			"renderable": {
-				"modelPath": "assets/models/default_cube_model.ntmd",
+				"modelPath": "assets/models/cube_model.ntmd",
 				"primitiveIndex": 0
 			},
 			"transform": {
 				"position": [
 					0.0,
-					0.0,
+					1.0,
 					0.0
 				],
 				"rotation": [
@@ -114,6 +96,31 @@
 					1.0,
 					1.0,
 					1.0
+				]
+			}
+		},
+		{
+			"isPersistent": false,
+			"name": "Plane",
+			"renderable": {
+				"modelPath": "assets/models/plane_model.ntmd",
+				"primitiveIndex": 0
+			},
+			"transform": {
+				"position": [
+					0.0,
+					0.0,
+					0.0
+				],
+				"rotation": [
+					-0.0,
+					0.0,
+					-0.0
+				],
+				"scale": [
+					5.0,
+					1.0,
+					5.0
 				]
 			}
 		}

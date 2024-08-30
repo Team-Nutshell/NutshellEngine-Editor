@@ -1,8 +1,0 @@
-{
-	"primitives": [
-		{
-			"meshPath": "assets/meshes/default_cube_mesh.ntmh",
-			"materialPath": "assets/materials/default_cube_material.ntml"
-		}
-	]
-}
