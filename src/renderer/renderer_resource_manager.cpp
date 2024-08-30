@@ -277,27 +277,69 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 
 	nlohmann::json j = nlohmann::json::parse(materialFile);
 
-	if (j.contains("diffuseTexture")) {
-		if (j["diffuseTexture"].contains("imagePath")) {
-			material.diffuseTextureName = j["diffuseTexture"]["imagePath"];
-			loadImage(projectDirectory + "/" + std::string(j["diffuseTexture"]["imagePath"]), material.diffuseTextureName);
-		}
+	if (j.contains("diffuse")) {
+		if (j["diffuse"].contains("texture")) {
+			if (j["diffuse"]["texture"].contains("imagePath")) {
+				material.diffuseTextureName = j["diffuse"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["diffuse"]["texture"]["imagePath"]), material.diffuseTextureName);
+			}
 
-		if (j["diffuseTexture"].contains("imageSamplerPath")) {
-			material.diffuseTextureSamplerName = j["diffuseTexture"]["imageSamplerPath"];
-			loadSampler(projectDirectory + "/" + std::string(j["diffuseTexture"]["imageSamplerPath"]), material.diffuseTextureSamplerName);
+			if (j["diffuse"]["texture"].contains("imageSamplerPath")) {
+				material.diffuseTextureSamplerName = j["diffuse"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["diffuse"]["texture"]["imageSamplerPath"]), material.diffuseTextureSamplerName);
+			}
+		}
+		else if (j["diffuse"].contains("color")) {
+			nml::vec3 diffuseColor = { j["diffuse"]["color"][0], j["diffuse"]["color"][1], j["diffuse"]["color"][2] };
+			std::string mapKey = "srgb " + std::to_string(diffuseColor.x) + " " + std::to_string(diffuseColor.y) + " " + std::to_string(diffuseColor.z) + " " + std::to_string(1.0f);
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { static_cast<uint8_t>(round(255.0f * diffuseColor.x)),
+					static_cast<uint8_t>(round(255.0f * diffuseColor.y)),
+					static_cast<uint8_t>(round(255.0f * diffuseColor.z)),
+					255
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			material.diffuseTextureName = mapKey;
 		}
 	}
+	
+	if (j.contains("emissive")) {
+		if (j["emissive"].contains("texture")) {
+			if (j["emissive"]["texture"].contains("imagePath")) {
+				material.emissiveTextureName = j["emissive"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["emissive"]["texture"]["imagePath"]), material.emissiveTextureName);
+			}
 
-	if (j.contains("emissiveTexture")) {
-		if (j["emissiveTexture"].contains("imagePath")) {
-			material.emissiveTextureName = j["emissiveTexture"]["imagePath"];
-			loadImage(projectDirectory + "/" + std::string(j["emissiveTexture"]["imagePath"]), material.emissiveTextureName);
+			if (j["emissive"]["texture"].contains("imageSamplerPath")) {
+				material.emissiveTextureSamplerName = j["emissive"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["emissive"]["texture"]["imageSamplerPath"]), material.emissiveTextureSamplerName);
+			}
 		}
+		else if (j["emissive"].contains("color")) {
+			nml::vec3 emissiveColor = { j["emissive"]["color"][0], j["emissive"]["color"][1], j["emissive"]["color"][2] };
+			std::string mapKey = "srgb " + std::to_string(emissiveColor.x) + " " + std::to_string(emissiveColor.y) + " " + std::to_string(emissiveColor.z) + " " + std::to_string(1.0f);
 
-		if (j["emissiveTexture"].contains("imageSamplerPath")) {
-			material.emissiveTextureSamplerName = j["emissiveTexture"]["imageSamplerPath"];
-			loadSampler(projectDirectory + "/" + std::string(j["emissiveTexture"]["imageSamplerPath"]), material.emissiveTextureSamplerName);
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { static_cast<uint8_t>(round(255.0f * emissiveColor.x)),
+					static_cast<uint8_t>(round(255.0f * emissiveColor.y)),
+					static_cast<uint8_t>(round(255.0f * emissiveColor.z)),
+					255
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			material.emissiveTextureName = mapKey;
 		}
 	}
 }
