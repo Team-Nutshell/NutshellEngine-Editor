@@ -11,6 +11,9 @@ class ComboBoxWidget : public QWidget {
 public:
 	ComboBoxWidget(GlobalInfo& globalInfo, const std::string& name, std::vector<std::string>& elements);
 
+	void setElementByText(const std::string& text);
+	std::string getElementText();
+
 signals:
 	void elementSelected(const std::string&);
 

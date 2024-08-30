@@ -15,9 +15,16 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 	setAttribute(Qt::WA_DeleteOnClose);
 
 	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("File");
+	m_fileMenu = m_menuBar->addMenu("&File");
 	m_fileSaveAction = m_fileMenu->addAction("Save", this, &OptionsNtopFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
+	m_editMenu = m_menuBar->addMenu("&Edit");
+	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
+	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
+	m_editMenu->addAction(m_undoAction);
+	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
+	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
+	m_editMenu->addAction(m_redoAction);
 
 	setLayout(new QVBoxLayout());
 	QMargins contentMargins = layout()->contentsMargins();
@@ -59,57 +66,79 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 
 	if (j.contains("windowTitle")) {
 		std::string windowTitle = j["windowTitle"];
-		windowTitleWidget->setText(windowTitle);
+		optionsNtop.windowTitle = windowTitle;
 	}
 	if (j.contains("windowIconImagePath")) {
 		std::string windowIconImagePath = j["windowIconImagePath"];
-		windowIconImageWidget->setPath(windowIconImagePath);
+		optionsNtop.windowIconImagePath = windowIconImagePath;
 	}
 	if (j.contains("maxFPS")) {
 		float maxFPSFloat = j["maxFPS"];
 		int maxFPS = static_cast<int>(std::floor(maxFPSFloat));
-		maxFPSWidget->setValue(maxFPS);
+		optionsNtop.maxFPS = maxFPS;
 	}
 	if (j.contains("firstScenePath")) {
 		std::string firstScenePath = j["firstScenePath"];
-		firstSceneWidget->setPath(firstScenePath);
+		optionsNtop.firstScenePath = firstScenePath;
 	}
 	if (j.contains("startProfiling")) {
-		bool startProfiling = j["startProfiling"]; 
-		{
-			const QSignalBlocker signalBlocker(startProfilingWidget->checkBox);
-			startProfilingWidget->checkBox->setChecked(startProfiling);
-		}
+		bool startProfiling = j["startProfiling"];
+		optionsNtop.startProfiling = startProfiling;
 	}
+
+	updateWidgets();
+}
+
+void OptionsNtopFileWidget::updateWidgets() {
+	windowTitleWidget->setText(optionsNtop.windowTitle);
+	windowIconImageWidget->setPath(optionsNtop.windowIconImagePath);
+	maxFPSWidget->setValue(optionsNtop.maxFPS);
+	firstSceneWidget->setPath(optionsNtop.firstScenePath);
+	startProfilingWidget->setValue(optionsNtop.startProfiling);
 }
 
 void OptionsNtopFileWidget::onValueChanged() {
+	OptionsNtop newOptionsNtop = optionsNtop;
+
 	QObject* senderWidget = sender();
-	if (senderWidget == windowIconImageWidget) {
+	if (senderWidget == windowTitleWidget) {
+		newOptionsNtop.windowTitle = windowTitleWidget->getText();
+	}
+	else if (senderWidget == windowIconImageWidget) {
 		std::string iconImagePath = AssetHelper::absoluteToRelative(windowIconImageWidget->getPath(), m_globalInfo.projectDirectory);
-		windowIconImageWidget->setPath(iconImagePath);
+		newOptionsNtop.windowIconImagePath = iconImagePath;
+	}
+	else if (senderWidget == maxFPSWidget) {
+		newOptionsNtop.maxFPS = maxFPSWidget->getValue();
 	}
 	else if (senderWidget == firstSceneWidget) {
 		std::string firstScenePath = AssetHelper::absoluteToRelative(firstSceneWidget->getPath(), m_globalInfo.projectDirectory);
-		firstSceneWidget->setPath(firstScenePath);
+		newOptionsNtop.firstScenePath = firstScenePath;
+	}
+	else if (senderWidget == startProfilingWidget) {
+		newOptionsNtop.startProfiling = startProfilingWidget->getValue();
 	}
 
-	SaveTitleChanger::change(this);
+	if (newOptionsNtop != optionsNtop) {
+		m_undoStack.push(new ChangeOptionsNtopFile(this, newOptionsNtop));
+
+		SaveTitleChanger::change(this);
+	}
 }
 
 void OptionsNtopFileWidget::save() {
 	nlohmann::json j;
-	if (!windowTitleWidget->getText().empty()) {
-		j["windowTitle"] = windowTitleWidget->getText();
+	if (!optionsNtop.windowTitle.empty()) {
+		j["windowTitle"] = optionsNtop.windowTitle;
 	}
-	if (!windowIconImageWidget->getPath().empty()) {
-		j["windowIconImagePath"] = windowIconImageWidget->getPath();
+	if (!optionsNtop.windowIconImagePath.empty()) {
+		j["windowIconImagePath"] = optionsNtop.windowIconImagePath;
 	}
-	j["maxFPS"] = maxFPSWidget->getValue();
-	if (!firstSceneWidget->getPath().empty()) {
-		j["firstScenePath"] = firstSceneWidget->getPath();
+	j["maxFPS"] = optionsNtop.maxFPS;
+	if (!optionsNtop.firstScenePath.empty()) {
+		j["firstScenePath"] = optionsNtop.firstScenePath;
 	}
-	j["startProfiling"] = startProfilingWidget->checkBox->isChecked();
+	j["startProfiling"] = optionsNtop.startProfiling;
 
 	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -120,4 +149,26 @@ void OptionsNtopFileWidget::save() {
 	}
 
 	SaveTitleChanger::reset(this);
+}
+
+ChangeOptionsNtopFile::ChangeOptionsNtopFile(OptionsNtopFileWidget* optionsNtopFileWidget, OptionsNtop newOptionsNtop) {
+	setText("Change Options Ntop");
+
+	m_optionsNtopFileWidget = optionsNtopFileWidget;
+	m_oldOptionsNtop = m_optionsNtopFileWidget->optionsNtop;
+	m_newOptionsNtop = newOptionsNtop;
+}
+
+void ChangeOptionsNtopFile::undo() {
+	m_optionsNtopFileWidget->optionsNtop = m_oldOptionsNtop;
+	m_optionsNtopFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_optionsNtopFileWidget);
+}
+
+void ChangeOptionsNtopFile::redo() {
+	m_optionsNtopFileWidget->optionsNtop = m_newOptionsNtop;
+	m_optionsNtopFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_optionsNtopFileWidget);
 }

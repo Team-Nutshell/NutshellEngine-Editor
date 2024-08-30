@@ -39,10 +39,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 }
 
 void LightComponentWidget::updateWidgets(const Light& light) {
-	{
-		const QSignalBlocker signalBlocker(typeWidget->comboBox);
-		typeWidget->comboBox->setCurrentText(QString::fromStdString(light.type));
-	}
+	typeWidget->setElementByText(light.type);
 	colorWidget->setColor(nml::vec4(light.color, 1.0f));
 	intensityWidget->setValue(light.intensity);
 	directionWidget->setValue(light.direction);

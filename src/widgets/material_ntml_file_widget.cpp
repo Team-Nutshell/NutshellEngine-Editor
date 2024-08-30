@@ -13,9 +13,16 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 	setAttribute(Qt::WA_DeleteOnClose);
 
 	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("File");
+	m_fileMenu = m_menuBar->addMenu("&File");
 	m_fileSaveAction = m_fileMenu->addAction("Save", this, &MaterialNtmlFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
+	m_editMenu = m_menuBar->addMenu("&Edit");
+	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
+	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
+	m_editMenu->addAction(m_undoAction);
+	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
+	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
+	m_editMenu->addAction(m_redoAction);
 
 	setLayout(new QVBoxLayout());
 	QMargins contentMargins = layout()->contentsMargins();
@@ -127,11 +134,11 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 		if (j["diffuse"].contains("texture")) {
 			if (j["diffuse"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["diffuse"]["texture"]["imagePath"];
-				diffuseTextureImageWidget->setPath(imagePath);
+				materialNtml.diffuseTextureImagePath = imagePath;
 			}
 			if (j["diffuse"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["diffuse"]["texture"]["imageSamplerPath"];
-				diffuseTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.diffuseTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 		if (j["diffuse"].contains("color")) {
@@ -139,19 +146,19 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 			diffuseColor.x = j["diffuse"]["color"][0];
 			diffuseColor.y = j["diffuse"]["color"][1];
 			diffuseColor.z = j["diffuse"]["color"][2];
-			diffuseColorWidget->setColor(diffuseColor);
-			opacityValueWidget->setValue(j["diffuse"]["color"][3]);
+			materialNtml.diffuseColor = diffuseColor;
+			materialNtml.opacity = j["diffuse"]["color"][3];
 		}
 	}
 	if (j.contains("normal")) {
 		if (j["normal"].contains("texture")) {
 			if (j["normal"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["normal"]["texture"]["imagePath"];
-				normalTextureImageWidget->setPath(imagePath);
+				materialNtml.normalTextureImagePath = imagePath;
 			}
 			if (j["normal"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["normal"]["texture"]["imageSamplerPath"];
-				normalTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.normalTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 	}
@@ -159,59 +166,59 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 		if (j["metalness"].contains("texture")) {
 			if (j["metalness"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["metalness"]["texture"]["imagePath"];
-				metalnessTextureImageWidget->setPath(imagePath);
+				materialNtml.metalnessTextureImagePath = imagePath;
 			}
 			if (j["metalness"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["metalness"]["texture"]["imageSamplerPath"];
-				metalnessTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.metalnessTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 		if (j["metalness"].contains("value")) {
 			float metalnessValue = j["metalness"]["value"];
-			metalnessValueWidget->setValue(metalnessValue);
+			materialNtml.metalnessValue = metalnessValue;
 		}
 	}
 	if (j.contains("roughness")) {
 		if (j["roughness"].contains("texture")) {
 			if (j["roughness"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["roughness"]["texture"]["imagePath"];
-				roughnessTextureImageWidget->setPath(imagePath);
+				materialNtml.roughnessTextureImagePath = imagePath;
 			}
 			if (j["roughness"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["roughness"]["texture"]["imageSamplerPath"];
-				roughnessTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.roughnessTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 		if (j["roughness"].contains("value")) {
 			float roughnessValue = j["roughness"]["value"];
-			roughnessValueWidget->setValue(roughnessValue);
+			materialNtml.roughnessValue = roughnessValue;
 		}
 	}
 	if (j.contains("occlusion")) {
 		if (j["occlusion"].contains("texture")) {
 			if (j["occlusion"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["occlusion"]["texture"]["imagePath"];
-				occlusionTextureImageWidget->setPath(imagePath);
+				materialNtml.occlusionTextureImagePath = imagePath;
 			}
 			if (j["occlusion"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["occlusion"]["texture"]["imageSamplerPath"];
-				occlusionTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.occlusionTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 		if (j["occlusion"].contains("value")) {
 			float occlusionValue = j["occlusion"]["value"];
-			occlusionValueWidget->setValue(occlusionValue);
+			materialNtml.occlusionValue = occlusionValue;
 		}
 	}
 	if (j.contains("emissive")) {
 		if (j["emissive"].contains("texture")) {
 			if (j["emissive"]["texture"].contains("imagePath")) {
 				std::string imagePath = j["emissive"]["texture"]["imagePath"];
-				emissiveTextureImageWidget->setPath(imagePath);
+				materialNtml.emissiveTextureImagePath = imagePath;
 			}
 			if (j["emissive"]["texture"].contains("imageSamplerPath")) {
 				std::string imageSamplerPath = j["emissive"]["texture"]["imageSamplerPath"];
-				emissiveTextureImageSamplerWidget->setPath(imageSamplerPath);
+				materialNtml.emissiveTextureImageSamplerPath = imageSamplerPath;
 			}
 		}
 		if (j["emissive"].contains("color")) {
@@ -219,126 +226,185 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 			emissiveColor.x = j["emissive"]["color"][0];
 			emissiveColor.y = j["emissive"]["color"][1];
 			emissiveColor.z = j["emissive"]["color"][2];
-			emissiveColorWidget->setColor(emissiveColor);
+			materialNtml.emissiveColor = emissiveColor;
 		}
 		if (j["emissive"].contains("factor")) {
 			float emissiveFactor = j["emissive"]["factor"];
-			emissiveFactorWidget->setValue(emissiveFactor);
+			materialNtml.emissiveFactor = emissiveFactor;
 		}
 	}
 	if (j.contains("alphaCutoff")) {
 		float alphaCutoff = j["alphaCutoff"];
-		alphaCutoffWidget->setValue(alphaCutoff);
+		materialNtml.alphaCutoff = alphaCutoff;
 	}
 	if (j.contains("indexOfRefraction")) {
 		float indexOfRefraction = j["indexOfRefraction"];
-		indexOfRefractionWidget->setValue(indexOfRefraction);
+		materialNtml.indexOfRefraction = indexOfRefraction;
 	}
+
+	updateWidgets();
+}
+
+void MaterialNtmlFileWidget::updateWidgets() {
+	diffuseTextureImageWidget->setPath(materialNtml.diffuseTextureImagePath);
+	diffuseTextureImageSamplerWidget->setPath(materialNtml.diffuseTextureImageSamplerPath);
+	diffuseColorWidget->setColor(materialNtml.diffuseColor);
+	opacityValueWidget->setValue(materialNtml.opacity);
+	normalTextureImageWidget->setPath(materialNtml.normalTextureImagePath);
+	normalTextureImageSamplerWidget->setPath(materialNtml.normalTextureImageSamplerPath);
+	metalnessTextureImageWidget->setPath(materialNtml.metalnessTextureImagePath);
+	metalnessTextureImageSamplerWidget->setPath(materialNtml.metalnessTextureImageSamplerPath);
+	metalnessValueWidget->setValue(materialNtml.metalnessValue);
+	roughnessTextureImageWidget->setPath(materialNtml.roughnessTextureImagePath);
+	roughnessTextureImageSamplerWidget->setPath(materialNtml.roughnessTextureImageSamplerPath);
+	roughnessValueWidget->setValue(materialNtml.roughnessValue);
+	occlusionTextureImageWidget->setPath(materialNtml.occlusionTextureImagePath);
+	occlusionTextureImageSamplerWidget->setPath(materialNtml.occlusionTextureImageSamplerPath);
+	occlusionValueWidget->setValue(materialNtml.occlusionValue);
+	emissiveTextureImageWidget->setPath(materialNtml.emissiveTextureImagePath);
+	emissiveTextureImageSamplerWidget->setPath(materialNtml.emissiveTextureImageSamplerPath);
+	emissiveColorWidget->setColor(materialNtml.emissiveColor);
+	emissiveFactorWidget->setValue(materialNtml.emissiveFactor);
+	alphaCutoffWidget->setValue(materialNtml.alphaCutoff);
+	indexOfRefractionWidget->setValue(materialNtml.indexOfRefraction);
 }
 
 void MaterialNtmlFileWidget::onValueChanged() {
+	MaterialNtml newMaterialNtml = materialNtml;
+
 	QObject* senderWidget = sender();
 	if (senderWidget == diffuseTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(diffuseTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		diffuseTextureImageWidget->setPath(path);
+		newMaterialNtml.diffuseTextureImagePath = path;
 	}
 	else if (senderWidget == diffuseTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(diffuseTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		diffuseTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.diffuseTextureImageSamplerPath = path;
+	}
+	else if (senderWidget == diffuseColorWidget) {
+		newMaterialNtml.diffuseColor = diffuseColorWidget->getColor();
+	}
+	else if (senderWidget == opacityValueWidget) {
+		newMaterialNtml.opacity = opacityValueWidget->getValue();
 	}
 	else if (senderWidget == normalTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(normalTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		normalTextureImageWidget->setPath(path);
+		newMaterialNtml.normalTextureImagePath = path;
 	}
 	else if (senderWidget == normalTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(normalTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		normalTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.normalTextureImageSamplerPath = path;
 	}
 	else if (senderWidget == metalnessTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(metalnessTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		metalnessTextureImageWidget->setPath(path);
+		newMaterialNtml.metalnessTextureImagePath = path;
 	}
 	else if (senderWidget == metalnessTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(metalnessTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		metalnessTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.metalnessTextureImageSamplerPath = path;
+	}
+	else if (senderWidget == metalnessValueWidget) {
+		newMaterialNtml.metalnessValue = metalnessValueWidget->getValue();
 	}
 	else if (senderWidget == roughnessTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(roughnessTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		roughnessTextureImageWidget->setPath(path);
+		newMaterialNtml.roughnessTextureImagePath = path;
 	}
 	else if (senderWidget == roughnessTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(roughnessTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		roughnessTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.roughnessTextureImageSamplerPath = path;
+	}
+	else if (senderWidget == roughnessValueWidget) {
+		newMaterialNtml.roughnessValue = roughnessValueWidget->getValue();
 	}
 	else if (senderWidget == occlusionTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(occlusionTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		occlusionTextureImageWidget->setPath(path);
+		newMaterialNtml.occlusionTextureImagePath = path;
 	}
 	else if (senderWidget == occlusionTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(occlusionTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		occlusionTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.occlusionTextureImageSamplerPath = path;
+	}
+	else if (senderWidget == occlusionValueWidget) {
+		newMaterialNtml.occlusionValue = occlusionValueWidget->getValue();
 	}
 	else if (senderWidget == emissiveTextureImageWidget) {
 		std::string path = AssetHelper::absoluteToRelative(emissiveTextureImageWidget->getPath(), m_globalInfo.projectDirectory);
-		emissiveTextureImageWidget->setPath(path);
+		newMaterialNtml.emissiveTextureImagePath = path;
 	}
 	else if (senderWidget == emissiveTextureImageSamplerWidget) {
 		std::string path = AssetHelper::absoluteToRelative(emissiveTextureImageSamplerWidget->getPath(), m_globalInfo.projectDirectory);
-		emissiveTextureImageSamplerWidget->setPath(path);
+		newMaterialNtml.emissiveTextureImageSamplerPath = path;
+	}
+	else if (senderWidget == emissiveColorWidget) {
+		newMaterialNtml.emissiveColor = emissiveColorWidget->getColor();
+	}
+	else if (senderWidget == emissiveFactorWidget) {
+		newMaterialNtml.emissiveFactor = emissiveFactorWidget->getValue();
+	}
+	else if (senderWidget == alphaCutoffWidget) {
+		newMaterialNtml.alphaCutoff = alphaCutoffWidget->getValue();
+	}
+	else if (senderWidget == indexOfRefractionWidget) {
+		newMaterialNtml.indexOfRefraction = indexOfRefractionWidget->getValue();
 	}
 
-	SaveTitleChanger::change(this);
+	if (newMaterialNtml != materialNtml) {
+		m_undoStack.push(new ChangeMaterialNtmlFile(this, newMaterialNtml));
+
+		SaveTitleChanger::change(this);
+	}
 }
 
 void MaterialNtmlFileWidget::save() {
 	nlohmann::json j;
-	if (!diffuseTextureImageWidget->getPath().empty()) {
-		j["diffuse"]["texture"]["imagePath"] = diffuseTextureImageWidget->getPath();
+	if (!materialNtml.diffuseTextureImagePath.empty()) {
+		j["diffuse"]["texture"]["imagePath"] = materialNtml.diffuseTextureImagePath;
 	}
-	if (!diffuseTextureImageSamplerWidget->getPath().empty()) {
-		j["diffuse"]["texture"]["imageSamplerPath"] = diffuseTextureImageSamplerWidget->getPath();
+	if (!materialNtml.diffuseTextureImageSamplerPath.empty()) {
+		j["diffuse"]["texture"]["imageSamplerPath"] = materialNtml.diffuseTextureImageSamplerPath;
 	}
-	nml::vec3 diffuseColor = diffuseColorWidget->getColor();
-	float opacityValue = opacityValueWidget->getValue();
+	nml::vec3 diffuseColor = materialNtml.diffuseColor;
+	float opacityValue = materialNtml.opacity;
 	j["diffuse"]["color"] = { diffuseColor.x, diffuseColor.y, diffuseColor.z, opacityValue };
-	if (!normalTextureImageWidget->getPath().empty()) {
-		j["normal"]["texture"]["imagePath"] = normalTextureImageWidget->getPath();
+	if (!materialNtml.normalTextureImagePath.empty()) {
+		j["normal"]["texture"]["imagePath"] = materialNtml.normalTextureImagePath;
 	}
-	if (!normalTextureImageSamplerWidget->getPath().empty()) {
-		j["normal"]["texture"]["imageSamplerPath"] = normalTextureImageSamplerWidget->getPath();
+	if (!materialNtml.normalTextureImageSamplerPath.empty()) {
+		j["normal"]["texture"]["imageSamplerPath"] = materialNtml.normalTextureImageSamplerPath;
 	}
-	if (!metalnessTextureImageWidget->getPath().empty()) {
-		j["metalness"]["texture"]["imagePath"] = metalnessTextureImageWidget->getPath();
+	if (!materialNtml.metalnessTextureImagePath.empty()) {
+		j["metalness"]["texture"]["imagePath"] = materialNtml.metalnessTextureImagePath;
 	}
-	if (!metalnessTextureImageSamplerWidget->getPath().empty()) {
-		j["metalness"]["texture"]["imageSamplerPath"] = metalnessTextureImageSamplerWidget->getPath();
+	if (!materialNtml.metalnessTextureImageSamplerPath.empty()) {
+		j["metalness"]["texture"]["imageSamplerPath"] = materialNtml.metalnessTextureImageSamplerPath;
 	}
-	j["metalness"]["value"] = metalnessValueWidget->getValue();
-	if (!roughnessTextureImageWidget->getPath().empty()) {
-		j["roughness"]["texture"]["imagePath"] = roughnessTextureImageWidget->getPath();
+	j["metalness"]["value"] = materialNtml.metalnessValue;
+	if (!materialNtml.roughnessTextureImagePath.empty()) {
+		j["roughness"]["texture"]["imagePath"] = materialNtml.roughnessTextureImagePath;
 	}
-	if (!roughnessTextureImageSamplerWidget->getPath().empty()) {
-		j["roughness"]["texture"]["imageSamplerPath"] = roughnessTextureImageSamplerWidget->getPath();
+	if (!materialNtml.roughnessTextureImageSamplerPath.empty()) {
+		j["roughness"]["texture"]["imageSamplerPath"] = materialNtml.roughnessTextureImageSamplerPath;
 	}
-	j["roughness"]["value"] = roughnessValueWidget->getValue();
-	if (!occlusionTextureImageWidget->getPath().empty()) {
-		j["occlusion"]["texture"]["imagePath"] = occlusionTextureImageWidget->getPath();
+	j["roughness"]["value"] = materialNtml.roughnessValue;
+	if (!materialNtml.occlusionTextureImagePath.empty()) {
+		j["occlusion"]["texture"]["imagePath"] = materialNtml.occlusionTextureImagePath;
 	}
-	if (!occlusionTextureImageSamplerWidget->getPath().empty()) {
-		j["occlusion"]["texture"]["imageSamplerPath"] = occlusionTextureImageSamplerWidget->getPath();
+	if (!materialNtml.occlusionTextureImageSamplerPath.empty()) {
+		j["occlusion"]["texture"]["imageSamplerPath"] = materialNtml.occlusionTextureImageSamplerPath;
 	}
-	j["occlusion"]["value"] = occlusionValueWidget->getValue();
-	if (!emissiveTextureImageWidget->getPath().empty()) {
-		j["emissive"]["texture"]["imagePath"] = emissiveTextureImageWidget->getPath();
+	j["occlusion"]["value"] = materialNtml.occlusionValue;
+	if (!materialNtml.emissiveTextureImagePath.empty()) {
+		j["emissive"]["texture"]["imagePath"] = materialNtml.emissiveTextureImagePath;
 	}
-	if (!emissiveTextureImageSamplerWidget->getPath().empty()) {
-		j["emissive"]["texture"]["imageSamplerPath"] = emissiveTextureImageSamplerWidget->getPath();
+	if (!materialNtml.emissiveTextureImageSamplerPath.empty()) {
+		j["emissive"]["texture"]["imageSamplerPath"] = materialNtml.emissiveTextureImageSamplerPath;
 	}
-	nml::vec3 emissiveColor = emissiveColorWidget->getColor();
+	nml::vec3 emissiveColor = materialNtml.emissiveColor;
 	j["emissive"]["color"] = { emissiveColor.x, emissiveColor.y, emissiveColor.z };
-	j["emissive"]["factor"] = emissiveFactorWidget->getValue();
-	j["alphaCutoff"] = alphaCutoffWidget->getValue();
-	j["indexOfRefraction"] = indexOfRefractionWidget->getValue();
+	j["emissive"]["factor"] = materialNtml.emissiveFactor;
+	j["alphaCutoff"] = materialNtml.alphaCutoff;
+	j["indexOfRefraction"] = materialNtml.indexOfRefraction;
 
 	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -353,4 +419,26 @@ void MaterialNtmlFileWidget::save() {
 	m_globalInfo.rendererResourceManager.loadMaterial(m_materialFilePath, materialPath);
 
 	SaveTitleChanger::reset(this);
+}
+
+ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(MaterialNtmlFileWidget* materialNtmlFileWidget, MaterialNtml newMaterialNtml) {
+	setText("Change Material Ntml");
+
+	m_materialNtmlFileWidget = materialNtmlFileWidget;
+	m_oldMaterialNtml = m_materialNtmlFileWidget->materialNtml;
+	m_newMaterialNtml = newMaterialNtml;
+}
+
+void ChangeMaterialNtmlFile::undo() {
+	m_materialNtmlFileWidget->materialNtml = m_oldMaterialNtml;
+	m_materialNtmlFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_materialNtmlFileWidget);
+}
+
+void ChangeMaterialNtmlFile::redo() {
+	m_materialNtmlFileWidget->materialNtml = m_newMaterialNtml;
+	m_materialNtmlFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_materialNtmlFileWidget);
 }

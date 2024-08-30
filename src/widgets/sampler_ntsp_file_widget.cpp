@@ -13,9 +13,16 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 	setAttribute(Qt::WA_DeleteOnClose);
 
 	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("File");
+	m_fileMenu = m_menuBar->addMenu("&File");
 	m_fileSaveAction = m_fileMenu->addAction("Save", this, &SamplerNtspFileWidget::save);
 	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
+	m_editMenu = m_menuBar->addMenu("&Edit");
+	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
+	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
+	m_editMenu->addAction(m_undoAction);
+	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
+	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
+	m_editMenu->addAction(m_redoAction);
 
 	setLayout(new QVBoxLayout());
 	QMargins contentMargins = layout()->contentsMargins();
@@ -69,108 +76,97 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 
 	if (j.contains("magFilter")) {
 		std::string magFilter = j["magFilter"];
-		int index = magFilterWidget->comboBox->findText(QString::fromStdString(magFilter));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(magFilterWidget->comboBox);
-				magFilterWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.magFilter = magFilter;
 	}
 	if (j.contains("minFilter")) {
 		std::string minFilter = j["minFilter"];
-		int index = minFilterWidget->comboBox->findText(QString::fromStdString(minFilter));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(minFilterWidget->comboBox);
-				minFilterWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.minFilter = minFilter;
 	}
 	if (j.contains("mipmapFilter")) {
 		std::string mipmapFilter = j["mipmapFilter"];
-		int index = mipmapFilterWidget->comboBox->findText(QString::fromStdString(mipmapFilter));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(mipmapFilterWidget->comboBox);
-				mipmapFilterWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.mipmapFilter = mipmapFilter;
 	}
 	if (j.contains("addressModeU")) {
 		std::string addressModeU = j["addressModeU"];
-		int index = addressModeUWidget->comboBox->findText(QString::fromStdString(addressModeU));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(addressModeUWidget->comboBox);
-				addressModeUWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.addressModeU = addressModeU;
 	}
 	if (j.contains("addressModeV")) {
 		std::string addressModeV = j["addressModeV"];
-		int index = addressModeVWidget->comboBox->findText(QString::fromStdString(addressModeV));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(addressModeVWidget->comboBox);
-				addressModeVWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.addressModeV = addressModeV;
 	}
 	if (j.contains("addressModeW")) {
 		std::string addressModeW = j["addressModeW"];
-		int index = addressModeWWidget->comboBox->findText(QString::fromStdString(addressModeW));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(addressModeWWidget->comboBox);
-				addressModeWWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.addressModeW = addressModeW;
 	}
 	if (j.contains("borderColor")) {
 		std::string borderColor = j["borderColor"];
-		int index = borderColorWidget->comboBox->findText(QString::fromStdString(borderColor));
-		if (index != -1) {
-			{
-				const QSignalBlocker signalBlocker(borderColorWidget->comboBox);
-				borderColorWidget->comboBox->setCurrentIndex(index);
-			}
-		}
+		samplerNtsp.borderColor = borderColor;
 	}
 	if (j.contains("anistropyLevel")) {
-		int anisotropyLevel = j["anistropyLevel"];
-		anisotropyLevelWidget->setValue(anisotropyLevel);
+		int anisotropyLevel = j["anisotropyLevel"];
+		samplerNtsp.anisotropyLevel = anisotropyLevel;
 	}
+
+	updateWidgets();
+}
+
+void SamplerNtspFileWidget::updateWidgets() {
+	magFilterWidget->setElementByText(samplerNtsp.magFilter);
+	minFilterWidget->setElementByText(samplerNtsp.minFilter);
+	mipmapFilterWidget->setElementByText(samplerNtsp.mipmapFilter);
+	addressModeUWidget->setElementByText(samplerNtsp.addressModeU);
+	addressModeVWidget->setElementByText(samplerNtsp.addressModeV);
+	addressModeWWidget->setElementByText(samplerNtsp.addressModeW);
+	borderColorWidget->setElementByText(samplerNtsp.borderColor);
+	anisotropyLevelWidget->setValue(samplerNtsp.anisotropyLevel);
 }
 
 void SamplerNtspFileWidget::onValueChanged() {
-	SaveTitleChanger::change(this);
+	SamplerNtsp newSamplerNtsp = samplerNtsp;
+
+	QObject* senderWidget = sender();
+	if (senderWidget == magFilterWidget) {
+		newSamplerNtsp.magFilter = magFilterWidget->getElementText();
+	}
+	else if (senderWidget == minFilterWidget) {
+		newSamplerNtsp.minFilter = minFilterWidget->getElementText();
+	}
+	else if (senderWidget == mipmapFilterWidget) {
+		newSamplerNtsp.mipmapFilter = mipmapFilterWidget->getElementText();
+	}
+	else if (senderWidget == addressModeUWidget) {
+		newSamplerNtsp.addressModeU = addressModeUWidget->getElementText();
+	}
+	else if (senderWidget == addressModeVWidget) {
+		newSamplerNtsp.addressModeV = addressModeVWidget->getElementText();
+	}
+	else if (senderWidget == addressModeWWidget) {
+		newSamplerNtsp.addressModeW = addressModeWWidget->getElementText();
+	}
+	else if (senderWidget == borderColorWidget) {
+		newSamplerNtsp.borderColor = borderColorWidget->getElementText();
+	}
+	else if (senderWidget == anisotropyLevelWidget) {
+		newSamplerNtsp.anisotropyLevel = anisotropyLevelWidget->getValue();
+	}
+
+	if (newSamplerNtsp != samplerNtsp) {
+		m_undoStack.push(new ChangeSamplerNtspFile(this, newSamplerNtsp));
+
+		SaveTitleChanger::change(this);
+	}
 }
 
 void SamplerNtspFileWidget::save() {
 	nlohmann::json j;
-	if (!magFilterWidget->comboBox->currentText().toStdString().empty()) {
-		j["magFilter"] = magFilterWidget->comboBox->currentText().toStdString();
-	}
-	if (!minFilterWidget->comboBox->currentText().toStdString().empty()) {
-		j["minFilter"] = minFilterWidget->comboBox->currentText().toStdString();
-	}
-	if (!mipmapFilterWidget->comboBox->currentText().toStdString().empty()) {
-		j["mipmapFilter"] = mipmapFilterWidget->comboBox->currentText().toStdString();
-	}
-	if (!addressModeUWidget->comboBox->currentText().toStdString().empty()) {
-		j["addressModeU"] = addressModeUWidget->comboBox->currentText().toStdString();
-	}
-	if (!addressModeVWidget->comboBox->currentText().toStdString().empty()) {
-		j["addressModeV"] = addressModeVWidget->comboBox->currentText().toStdString();
-	}
-	if (!addressModeWWidget->comboBox->currentText().toStdString().empty()) {
-		j["addressModeW"] = addressModeWWidget->comboBox->currentText().toStdString();
-	}
-	if (!borderColorWidget->comboBox->currentText().toStdString().empty()) {
-		j["borderColor"] = borderColorWidget->comboBox->currentText().toStdString();
-	}
-	j["anisotropyLevel"] = anisotropyLevelWidget->getValue();
+	j["magFilter"] = samplerNtsp.magFilter;
+	j["minFilter"] = samplerNtsp.minFilter;
+	j["mipmapFilter"] = samplerNtsp.mipmapFilter;
+	j["addressModeU"] = samplerNtsp.addressModeU;
+	j["addressModeV"] = samplerNtsp.addressModeV;
+	j["addressModeW"] = samplerNtsp.addressModeW;
+	j["borderColor"] = samplerNtsp.borderColor;
+	j["anisotropyLevel"] = samplerNtsp.anisotropyLevel;
 
 	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -185,4 +181,26 @@ void SamplerNtspFileWidget::save() {
 	m_globalInfo.rendererResourceManager.loadSampler(m_samplerFilePath, samplerPath);
 
 	SaveTitleChanger::reset(this);
+}
+
+ChangeSamplerNtspFile::ChangeSamplerNtspFile(SamplerNtspFileWidget* samplerNtspFileWidget, SamplerNtsp newSamplerNtsp) {
+	setText("Change Sampler Ntsp");
+
+	m_samplerNtspFileWidget = samplerNtspFileWidget;
+	m_oldSamplerNtsp = m_samplerNtspFileWidget->samplerNtsp;
+	m_newSamplerNtsp = newSamplerNtsp;
+}
+
+void ChangeSamplerNtspFile::undo() {
+	m_samplerNtspFileWidget->samplerNtsp = m_oldSamplerNtsp;
+	m_samplerNtspFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_samplerNtspFileWidget);
+}
+
+void ChangeSamplerNtspFile::redo() {
+	m_samplerNtspFileWidget->samplerNtsp = m_newSamplerNtsp;
+	m_samplerNtspFileWidget->updateWidgets();
+
+	SaveTitleChanger::change(m_samplerNtspFileWidget);
 }

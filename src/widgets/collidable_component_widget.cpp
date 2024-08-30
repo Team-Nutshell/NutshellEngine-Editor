@@ -54,10 +54,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 }
 
 void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
-	{
-		const QSignalBlocker signalBlocker(typeWidget->comboBox);
-		typeWidget->comboBox->setCurrentText(QString::fromStdString(collidable.type));
-	}
+	typeWidget->setElementByText(collidable.type);
 	centerWidget->setValue(collidable.center);
 	if ((collidable.type == "Box") || (collidable.type == "Sphere")) {
 		centerWidget->setEnabled(true);

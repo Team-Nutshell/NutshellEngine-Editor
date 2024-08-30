@@ -16,6 +16,20 @@ ComboBoxWidget::ComboBoxWidget(GlobalInfo& globalInfo, const std::string& name, 
 	connect(comboBox, &QComboBox::currentTextChanged, this, &ComboBoxWidget::onElementSelected);
 }
 
+void ComboBoxWidget::setElementByText(const std::string& text) {
+	int index = comboBox->findText(QString::fromStdString(text));
+	if (index != -1) {
+		{
+			const QSignalBlocker signalBlocker(comboBox);
+			comboBox->setCurrentIndex(index);
+		}
+	}
+}
+
+std::string ComboBoxWidget::getElementText() {
+	return comboBox->currentText().toStdString();
+}
+
 void ComboBoxWidget::onElementSelected(const QString& element) {
 	emit elementSelected(element.toStdString());
 }
