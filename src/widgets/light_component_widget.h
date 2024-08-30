@@ -4,6 +4,7 @@
 #include "color_picker_widget.h"
 #include "vector3_widget.h"
 #include "vector2_widget.h"
+#include "scalar_widget.h"
 #include <QWidget>
 
 class LightComponentWidget : public QWidget {
@@ -22,6 +23,7 @@ private slots:
 	void onEntityLightChanged(EntityID entityID, const Light& light);
 	void onElementChanged(const std::string& element);
 	void onColorChanged(const nml::vec3& color);
+	void onScalarChanged(float value);
 	void onVec3Changed(const nml::vec3& value);
 	void onVec2Changed(const nml::vec2& value);
 
@@ -31,6 +33,7 @@ private:
 public:
 	ComboBoxWidget* typeWidget;
 	ColorPickerWidget* colorWidget;
+	ScalarWidget* intensityWidget;
 	Vector3Widget* directionWidget;
 	Vector2Widget* cutoffWidget;
 };

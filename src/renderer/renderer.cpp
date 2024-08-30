@@ -115,6 +115,7 @@ void Renderer::initializeGL() {
 		vec3 position;
 		vec3 direction;
 		vec3 color;
+		float intensity;
 		vec2 cutoff;
 	};
 
@@ -154,7 +155,7 @@ void Renderer::initializeGL() {
 					continue;
 				}
 
-				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color * LdotN, 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * LdotN, 0.0);
 
 				lightIndex++;
 			}
@@ -171,7 +172,7 @@ void Renderer::initializeGL() {
 
 				float distance = length(lights.info[lightIndex].position - fragPosition);
 				float attenuation = 1.0 / (distance * distance);
-				vec3 radiance = lights.info[lightIndex].color * attenuation;
+				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * attenuation;
 
 				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
 
@@ -192,7 +193,7 @@ void Renderer::initializeGL() {
 				float epsilon = cos(lights.info[lightIndex].cutoff.y) - cos(lights.info[lightIndex].cutoff.x);
 				float intensity = clamp((theta - cos(lights.info[lightIndex].cutoff.x)) / epsilon, 0.0, 1.0);
 				intensity = 1.0 - intensity;
-				vec3 radiance = lights.info[lightIndex].color * intensity;
+				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * intensity;
 
 				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
 
@@ -201,7 +202,7 @@ void Renderer::initializeGL() {
 
 			// Ambient Lights
 			for (uint i = 0; i < lights.count.w; i++) {
-				outColor += vec4(diffuseTextureSample.rgb * lights.info[lightIndex].color, 0.0);
+				outColor += vec4(diffuseTextureSample.rgb * (lights.info[lightIndex].color * lights.info[lightIndex].intensity), 0.0);
 
 				lightIndex++;
 			}
@@ -1220,7 +1221,7 @@ void Renderer::updateLights() {
 
 				directionalLightsInfos.push_back(nml::vec4());
 				directionalLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
-				directionalLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				directionalLightsInfos.push_back(nml::vec4(light.color, light.intensity));
 				directionalLightsInfos.push_back(nml::vec4());
 			}
 			else if (light.type == "Point") {
@@ -1228,7 +1229,7 @@ void Renderer::updateLights() {
 
 				pointLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				pointLightsInfos.push_back(nml::vec4());
-				pointLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				pointLightsInfos.push_back(nml::vec4(light.color, light.intensity));
 				pointLightsInfos.push_back(nml::vec4());
 			}
 			else if (light.type == "Spot") {
@@ -1245,7 +1246,7 @@ void Renderer::updateLights() {
 
 				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
-				spotLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				spotLightsInfos.push_back(nml::vec4(light.color, light.intensity));
 				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), 0.0f, 0.0f));
 			}
 			else if (light.type == "Ambient") {
@@ -1253,7 +1254,7 @@ void Renderer::updateLights() {
 
 				ambientLightsInfos.push_back(nml::vec4());
 				ambientLightsInfos.push_back(nml::vec4());
-				ambientLightsInfos.push_back(nml::vec4(light.color, 0.0f));
+				ambientLightsInfos.push_back(nml::vec4(light.color, light.intensity));
 				ambientLightsInfos.push_back(nml::vec4());
 			}
 		}

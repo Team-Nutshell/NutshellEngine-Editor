@@ -19,6 +19,8 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->addWidget(typeWidget);
 	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec3(1.0f, 1.0f, 1.0f));
 	layout()->addWidget(colorWidget);
+	intensityWidget = new ScalarWidget(m_globalInfo, "Intensity");
+	layout()->addWidget(intensityWidget);
 	directionWidget = new Vector3Widget(m_globalInfo, "Direction");
 	layout()->addWidget(directionWidget);
 	cutoffWidget = new Vector2Widget(m_globalInfo, "Cutoff");
@@ -27,6 +29,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 
 	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementChanged);
 	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorChanged);
+	connect(intensityWidget, &ScalarWidget::valueChanged, this, &LightComponentWidget::onScalarChanged);
 	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
 	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onEntitySelected);
@@ -41,6 +44,7 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 		typeWidget->comboBox->setCurrentText(QString::fromStdString(light.type));
 	}
 	colorWidget->setColor(nml::vec4(light.color, 1.0f));
+	intensityWidget->setValue(light.intensity);
 	directionWidget->setValue(light.direction);
 	if ((light.type == "Directional") || (light.type == "Spot")) {
 		directionWidget->setEnabled(true);
@@ -116,6 +120,16 @@ void LightComponentWidget::onColorChanged(const nml::vec3& color) {
 	QObject* senderWidget = sender();
 	if (senderWidget == colorWidget) {
 		newLight.color = color;
+	}
+	updateComponent(m_globalInfo.currentEntityID, &newLight);
+}
+
+void LightComponentWidget::onScalarChanged(float value) {
+	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
+
+	QObject* senderWidget = sender();
+	if (senderWidget == intensityWidget) {
+		newLight.intensity = value;
 	}
 	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }

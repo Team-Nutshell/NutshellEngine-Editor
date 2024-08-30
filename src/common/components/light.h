@@ -8,6 +8,7 @@ struct Light : public Component {
 
 	std::string type = "Directional";
 	nml::vec3 color = nml::vec3(1.0f, 1.0f, 1.0f);
+	float intensity = 1.0f;
 	nml::vec3 direction = nml::vec3(0.0f, -1.0f, 0.0f);
 	nml::vec2 cutoff = nml::vec2(10.0f, 20.0f);
 
@@ -15,6 +16,7 @@ struct Light : public Component {
 		nlohmann::json j;
 		j["type"] = type;
 		j["color"] = { color.x, color.y, color.z };
+		j["intensity"] = intensity;
 		j["direction"] = { direction.x, direction.y, direction.z };
 		j["cutoff"] = { cutoff.x, cutoff.y };
 
@@ -30,6 +32,9 @@ struct Light : public Component {
 			light.color.x = j["color"][0];
 			light.color.y = j["color"][1];
 			light.color.z = j["color"][2];
+		}
+		if (j.contains("intensity")) {
+			light.intensity = j["intensity"];
 		}
 		if (j.contains("direction")) {
 			light.direction.x = j["direction"][0];
