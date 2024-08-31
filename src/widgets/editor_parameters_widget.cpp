@@ -177,6 +177,12 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraSensitivityWidget, 1, 1);
 
+	gridScaleWidget = new ScalarWidget(m_globalInfo, "Grid Scale");
+	gridScaleWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridScale, 'f', 3));
+	gridScaleWidget->layout()->setAlignment(gridScaleWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	gridScaleWidget->layout()->setAlignment(gridScaleWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(gridScaleWidget, 0, 2);
+
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
 	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, "Current Entity Outline Color", nml::vec3(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor));
@@ -241,6 +247,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(cameraFarPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(gridScaleWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
@@ -422,6 +429,9 @@ void EditorParametersWidget::onScalarChanged(float value) {
 	}
 	else if (senderWidget == cameraSensitivityWidget) {
 		m_globalInfo.editorParameters.renderer.cameraSensitivity = value;
+	}
+	else if (senderWidget == gridScaleWidget) {
+		m_globalInfo.editorParameters.renderer.gridScale = value;
 	}
 
 	save();

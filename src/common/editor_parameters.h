@@ -35,6 +35,8 @@ struct RendererParameters {
 	float cameraSpeed = 2.0f;
 	float cameraSensitivity = 0.5f;
 
+	float gridScale = 10.0f;
+
 	nml::vec3 currentEntityOutlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
 	nml::vec3 otherEntitiesOutlineColor = nml::vec3(1.0f, 0.7f, 0.0f);
 

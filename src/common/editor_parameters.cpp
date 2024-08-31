@@ -179,6 +179,10 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.cameraSensitivity = j["renderer"]["cameraSensitivity"];
 		}
 
+		if (j["renderer"].contains("gridScale")) {
+			renderer.gridScale = j["renderer"]["gridScale"];
+		}
+
 		if (j["renderer"].contains("currentEntityOutlineColor")) {
 			renderer.currentEntityOutlineColor.x = j["renderer"]["currentEntityOutlineColor"][0];
 			renderer.currentEntityOutlineColor.y = j["renderer"]["currentEntityOutlineColor"][1];
@@ -251,6 +255,7 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraFarPlane"] = renderer.cameraFarPlane;
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
+	j["renderer"]["gridScale"] = renderer.gridScale;
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
 	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
 	j["renderer"]["showGrid"] = renderer.showGrid;

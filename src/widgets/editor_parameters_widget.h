@@ -58,6 +58,7 @@ public:
 	ScalarWidget* cameraFarPlaneWidget;
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
+	ScalarWidget* gridScaleWidget;
 	ColorPickerWidget* currentEntityOutlineColorWidget;
 	ColorPickerWidget* otherEntitiesOutlineColorWidget;
 

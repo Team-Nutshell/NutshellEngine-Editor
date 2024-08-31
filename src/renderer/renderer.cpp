@@ -291,6 +291,7 @@ void Renderer::initializeGL() {
 	uniform mat4 viewProj;
 	uniform float near;
 	uniform float far;
+	uniform float gridScale;
 
 	out vec4 outColor;
 
@@ -332,7 +333,7 @@ void Renderer::initializeGL() {
 		gl_FragDepth = (gl_DepthRange.diff * depth(fragPos) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
 		float fading = max(0.5 - linearizeDepth(gl_FragDepth), 0.0);
 
-		outColor = grid(fragPos, 10.0) * float(t > 0.0);
+		outColor = grid(fragPos, gridScale) * float(t > 0.0);
 		outColor.a *= fading;
 	}
 	)GLSL";
@@ -783,6 +784,7 @@ void Renderer::paintGL() {
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
 			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
 
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
