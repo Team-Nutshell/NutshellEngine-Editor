@@ -147,6 +147,8 @@ public:
 	std::unordered_map<std::string, std::filesystem::file_time_type> imageLastWriteTime;
 	std::unordered_map<std::string, std::filesystem::file_time_type> samplerLastWriteTime;
 
+	std::unordered_map<std::string, std::vector<std::string>> modelNtmdPrimitiveToMaterialPath;
+
 	std::string projectDirectory = "";
 
 	Logger* logger;

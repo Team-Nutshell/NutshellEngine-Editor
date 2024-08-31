@@ -1,4 +1,5 @@
 #include "renderer_resource_manager.h"
+#include "../common/asset_helper.h"
 #include "../common/logger.h"
 #if defined(NTSHENGN_COMPILER_MSVC)
 #pragma warning(push)
@@ -184,6 +185,8 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 
 	nlohmann::json j = nlohmann::json::parse(modelFile);
 
+	std::string relativeModelPath = AssetHelper::absoluteToRelative(modelPath, projectDirectory);
+	modelNtmdPrimitiveToMaterialPath[relativeModelPath] = std::vector<std::string>();
 	if (j.contains("primitives")) {
 		for (size_t i = 0; i < j["primitives"].size(); i++) {
 			ModelPrimitive primitive;
@@ -195,6 +198,10 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 					std::string fullMaterialPath = projectDirectory + "/" + materialPath;
 					loadMaterial(fullMaterialPath, materialPath);
 					primitive.material = materials[materialPath];
+					modelNtmdPrimitiveToMaterialPath[relativeModelPath].push_back(materialPath);
+				}
+				else {
+					modelNtmdPrimitiveToMaterialPath[relativeModelPath].push_back("");
 				}
 			}
 

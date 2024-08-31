@@ -81,6 +81,9 @@ void CreateEntitiesFromModelCommand::redo() {
 		Renderable newEntityRenderable;
 		newEntityRenderable.modelPath = m_modelPath;
 		newEntityRenderable.primitiveIndex = static_cast<uint32_t>(i);
+		if (m_modelPath.substr(m_modelPath.rfind('.') + 1) == "ntmd") {
+			newEntityRenderable.materialPath = m_globalInfo.rendererResourceManager.modelNtmdPrimitiveToMaterialPath[m_modelPath][i];
+		}
 		m_globalInfo.entities[m_entityIDs[i]].renderable = newEntityRenderable;
 		emit m_globalInfo.signalEmitter.addEntityRenderableSignal(m_entityIDs[i]);
 	}
