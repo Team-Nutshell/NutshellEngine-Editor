@@ -190,7 +190,7 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 			if (j["primitives"][i].contains("meshPath")) {
 				primitive.mesh = loadNtmh(projectDirectory + "/" + std::string(j["primitives"][i]["meshPath"]));
 
-				if (j["primitives"][i].contains("materialPath")) {j["primitives"][i]["materialPath"];
+				if (j["primitives"][i].contains("materialPath")) {
 					std::string materialPath = j["primitives"][i]["materialPath"];
 					std::string fullMaterialPath = projectDirectory + "/" + materialPath;
 					loadMaterial(fullMaterialPath, materialPath);
