@@ -24,6 +24,8 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAcceptDrops(true);
 	setDragDropMode(QListWidget::DragDrop);
 	setResizeMode(QListWidget::Adjust);
+	menu = new AssetListMenu(m_globalInfo);
+	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 
 	QSizePolicy sizePolicy;
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
@@ -44,6 +46,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 		m_directoryWatcher.addPath(QString::fromStdString(m_assetsDirectory));
 	}
 
+	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
 	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
@@ -166,6 +169,26 @@ void AssetList::onDirectoryChanged(const QString& path) {
 	}
 
 	emit directoryChanged(directoryPath.substr(m_globalInfo.projectDirectory.size() + 1));
+}
+
+void AssetList::showMenu(const QPoint& pos) {
+	QListWidgetItem* item = itemAt(pos);
+	if (!item) {
+		menu->directory = m_currentDirectory;
+		menu->renameAction->setEnabled(false);
+	}
+	else {
+		if (item->text() != "../") {
+			menu->directory = m_currentDirectory;
+			menu->filename = item->text().toStdString();
+			menu->renameAction->setEnabled(true);
+		}
+		else {
+			menu->directory = m_currentDirectory;
+			menu->renameAction->setEnabled(false);
+		}
+	}
+	menu->popup(QCursor::pos());
 }
 
 QStringList AssetList::mimeTypes() const {

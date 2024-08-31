@@ -1,4 +1,5 @@
 #pragma once
+#include "asset_list_menu.h"
 #include "../common/global_info.h"
 #include <QListWidget>
 #include <QFileSystemWatcher>
@@ -26,6 +27,8 @@ private slots:
 	void onItemDoubleClicked(QListWidgetItem* listWidgetItem);
 	void onDirectoryChanged(const QString& path);
 
+	void showMenu(const QPoint& pos);
+
 	QStringList mimeTypes() const;
 	QMimeData* mimeData(const QList<QListWidgetItem*>& items) const;
 
@@ -42,4 +45,7 @@ private:
 	QFileSystemWatcher m_directoryWatcher;
 
 	bool m_movingMouse = false;
+
+public:
+	AssetListMenu* menu;
 };
