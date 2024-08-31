@@ -142,7 +142,10 @@ public:
 
 	std::vector<std::string> modelsToLoad;
 
-	std::unordered_map<std::string, std::filesystem::file_time_type> resourceLastWriteTime;
+	std::unordered_map<std::string, std::filesystem::file_time_type> modelLastWriteTime;
+	std::unordered_map<std::string, std::filesystem::file_time_type> materialLastWriteTime;
+	std::unordered_map<std::string, std::filesystem::file_time_type> imageLastWriteTime;
+	std::unordered_map<std::string, std::filesystem::file_time_type> samplerLastWriteTime;
 
 	std::string projectDirectory = "";
 

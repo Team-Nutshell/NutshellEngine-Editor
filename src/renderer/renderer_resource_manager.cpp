@@ -39,8 +39,8 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		return;
 	}
 
-	if (resourceLastWriteTime.find(modelPath) != resourceLastWriteTime.end()) {
-		if (resourceLastWriteTime[modelPath] == std::filesystem::last_write_time(modelPath)) {
+	if (modelLastWriteTime.find(modelPath) != modelLastWriteTime.end()) {
+		if (modelLastWriteTime[modelPath] == std::filesystem::last_write_time(modelPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -65,7 +65,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 	}
 
-	resourceLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
+	modelLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
 
 	if (!model.primitives.empty()) {
 		models[name] = model;
@@ -79,8 +79,8 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 		return;
 	}
 
-	if (resourceLastWriteTime.find(materialPath) != resourceLastWriteTime.end()) {
-		if (resourceLastWriteTime[materialPath] == std::filesystem::last_write_time(materialPath)) {
+	if (materialLastWriteTime.find(materialPath) != materialLastWriteTime.end()) {
+		if (materialLastWriteTime[materialPath] == std::filesystem::last_write_time(materialPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -99,7 +99,7 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 		}
 	}
 
-	resourceLastWriteTime[materialPath] = std::filesystem::last_write_time(materialPath);
+	materialLastWriteTime[materialPath] = std::filesystem::last_write_time(materialPath);
 
 	materials[name] = material;
 }
@@ -110,8 +110,8 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		return;
 	}
 
-	if (resourceLastWriteTime.find(imagePath) != resourceLastWriteTime.end()) {
-		if (resourceLastWriteTime[imagePath] == std::filesystem::last_write_time(imagePath)) {
+	if (imageLastWriteTime.find(imagePath) != imageLastWriteTime.end()) {
+		if (imageLastWriteTime[imagePath] == std::filesystem::last_write_time(imagePath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -129,7 +129,7 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		}
 	}
 
-	resourceLastWriteTime[imagePath] = std::filesystem::last_write_time(imagePath);
+	imageLastWriteTime[imagePath] = std::filesystem::last_write_time(imagePath);
 
 	if (!image.data.empty()) {
 		imagesToGPU[name] = image;
@@ -142,8 +142,8 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 		return;
 	}
 
-	if (resourceLastWriteTime.find(samplerPath) != resourceLastWriteTime.end()) {
-		if (resourceLastWriteTime[samplerPath] == std::filesystem::last_write_time(samplerPath)) {
+	if (samplerLastWriteTime.find(samplerPath) != samplerLastWriteTime.end()) {
+		if (samplerLastWriteTime[samplerPath] == std::filesystem::last_write_time(samplerPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -162,7 +162,7 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 		}
 	}
 
-	resourceLastWriteTime[samplerPath] = std::filesystem::last_write_time(samplerPath);
+	samplerLastWriteTime[samplerPath] = std::filesystem::last_write_time(samplerPath);
 
 	samplersToGPU[name] = sampler;
 }
