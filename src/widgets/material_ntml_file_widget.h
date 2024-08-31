@@ -28,7 +28,7 @@ struct MaterialNtml {
 	float occlusionValue = 1.0f;
 	std::string emissiveTextureImagePath = "";
 	std::string emissiveTextureImageSamplerPath = "";
-	nml::vec3 emissiveColor = nml::vec3(1.0f, 1.0f, 1.0f);
+	nml::vec3 emissiveColor = nml::vec3(0.0f, 0.0f, 0.0f);
 	float emissiveFactor = 1.0f;
 	float alphaCutoff = 0.0f;
 	float indexOfRefraction = 0.0f;
