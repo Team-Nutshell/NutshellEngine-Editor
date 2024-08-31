@@ -19,6 +19,7 @@ void CreateEntitiesFromModelCommand::undo() {
 		m_globalInfo.entities.erase(entityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(entityID);
 	}
+	m_globalInfo.clearSelectedEntities();
 }
 
 void CreateEntitiesFromModelCommand::redo() {
