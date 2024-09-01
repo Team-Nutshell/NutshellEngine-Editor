@@ -18,6 +18,7 @@ public:
 private:
 	void enterDirectory(const std::string& directory);
 	void actionOnFile(const std::string& file);
+	void updateAssetList();
 
 signals:
 	void directoryChanged(const std::string& directory);
@@ -25,7 +26,7 @@ signals:
 private slots:
 	void onItemClicked(QListWidgetItem* listWidgetItem);
 	void onItemDoubleClicked(QListWidgetItem* listWidgetItem);
-	void onDirectoryChanged(const QString& path);
+	void onDirectoryChanged();
 
 	void showMenu(const QPoint& pos);
 

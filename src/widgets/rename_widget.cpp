@@ -67,7 +67,7 @@ void RenameWidget::keyPressEvent(QKeyEvent* event) {
 		return;
 	}
 
-	if (event->key() == Qt::Key_Return) {
+	if ((event->key() == Qt::Key_Return) || (event->key() == Qt::Key_Enter)) {
 		if (applyButton->isEnabled()) {
 			onButtonClicked();
 		}

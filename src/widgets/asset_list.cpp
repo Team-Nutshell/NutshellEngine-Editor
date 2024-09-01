@@ -4,6 +4,7 @@
 #include "model_ntmd_file_widget.h"
 #include "options_ntop_file_widget.h"
 #include "sampler_ntsp_file_widget.h"
+#include "rename_widget.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
@@ -59,25 +60,7 @@ void AssetList::enterDirectory(const std::string& directory) {
 	}
 	m_directoryWatcher.addPath(QString::fromStdString(m_currentDirectory));
 
-	{
-		const QSignalBlocker signalBlocker(this);
-		clear();
-	}
-
-	if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
-		addItem("../");
-	}
-
-	for (const auto& entry : std::filesystem::directory_iterator(m_currentDirectory)) {
-		std::string entryPath = entry.path().string();
-		std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
-		if (std::filesystem::is_directory(entry)) {
-			addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
-		}
-		else {
-			addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
-		}
-	}
+	updateAssetList();
 
 	setCurrentRow(0);
 
@@ -115,6 +98,41 @@ void AssetList::actionOnFile(const std::string& file) {
 	}
 }
 
+void AssetList::updateAssetList() {
+	{
+		const QSignalBlocker signalBlocker(this);
+		clear();
+	}
+
+	if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
+		addItem("../");
+	}
+
+	std::vector<std::string> directoryNames;
+	std::vector<std::string> fileNames;
+	for (const auto& entry : std::filesystem::directory_iterator(m_currentDirectory)) {
+		std::string entryPath = entry.path().string();
+		std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
+
+		if (std::filesystem::is_directory(entry)) {
+			directoryNames.push_back(entryPath.substr(entryPath.find_last_of('/') + 1) + '/');
+		}
+		else {
+			fileNames.push_back(entryPath.substr(entryPath.find_last_of('/') + 1));
+		}
+	}
+
+	std::sort(directoryNames.begin(), directoryNames.end());
+	std::sort(fileNames.begin(), fileNames.end());
+
+	for (const std::string& directoryName : directoryNames) {
+		addItem(QString::fromStdString(directoryName));
+	}
+	for (const std::string& fileName : fileNames) {
+		addItem(QString::fromStdString(fileName));
+	}
+}
+
 void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
 	std::string itemFileName = listWidgetItem->text().toStdString();
 
@@ -141,34 +159,8 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 	}
 }
 
-void AssetList::onDirectoryChanged(const QString& path) {
-	{
-		const QSignalBlocker signalBlocker(this);
-		clear();
-	}
-
-	std::string directoryPath = std::filesystem::canonical(path.toStdString()).string();
-	std::replace(directoryPath.begin(), directoryPath.end(), '\\', '/');
-
-	if (!std::filesystem::equivalent(m_currentDirectory, m_assetsDirectory)) {
-		addItem("../");
-	}
-
-	if (std::filesystem::exists(directoryPath)) {
-		for (const auto& entry : std::filesystem::directory_iterator(path.toStdString())) {
-			std::string entryPath = entry.path().string();
-			std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
-
-			if (std::filesystem::is_directory(entry)) {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
-			}
-			else {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
-			}
-		}
-	}
-
-	emit directoryChanged(directoryPath.substr(m_globalInfo.projectDirectory.size() + 1));
+void AssetList::onDirectoryChanged() {
+	updateAssetList();
 }
 
 void AssetList::showMenu(const QPoint& pos) {
@@ -238,6 +230,12 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			}
 			else {
 				actionOnFile(itemFileName);
+			}
+		}
+		else if (event->key() == Qt::Key::Key_F2) {
+			if (listItem && (listItem->text() != "../")) {
+				RenameWidget* renameWidget = new RenameWidget(m_globalInfo, m_currentDirectory, listItem->text().toStdString());
+				renameWidget->show();
 			}
 		}
 	}
