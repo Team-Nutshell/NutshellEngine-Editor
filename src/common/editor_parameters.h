@@ -37,6 +37,10 @@ struct RendererParameters {
 
 	float gridScale = 10.0f;
 
+	nml::vec3 guizmoTranslationStep = nml::vec3(0.25f, 0.25f, 0.25f);
+	nml::vec3 guizmoRotationStep = nml::vec3(10.0f, 10.0f, 10.0f);
+	nml::vec3 guizmoScaleStep = nml::vec3(0.1f, 0.1f, 0.1f);
+
 	nml::vec3 currentEntityOutlineColor = nml::vec3(1.0f, 1.0f, 0.0f);
 	nml::vec3 otherEntitiesOutlineColor = nml::vec3(1.0f, 0.7f, 0.0f);
 

@@ -84,6 +84,10 @@ private:
 	bool m_rotateEntityMode = false;
 	bool m_scaleEntityMode = false;
 
+	float m_guizmoTranslationStepAccumulation = 0.0f;
+	float m_guizmoRotationStepAccumulation = 0.0f;
+	float m_guizmoScaleStepAccumulation = 0.0f;
+
 	enum class GuizmoMode {
 		Translate,
 		Rotate,

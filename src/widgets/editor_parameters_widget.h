@@ -5,6 +5,7 @@
 #include "key_select_widget.h"
 #include "color_picker_widget.h"
 #include "scalar_widget.h"
+#include "vector3_widget.h"
 #include <QTabWidget>
 #include <QWidget>
 #include <QMenuBar>
@@ -20,6 +21,7 @@ private slots:
 	void onKeyChanged(const std::string& key);
 	void onScalarChanged(float value);
 	void onStringChanged(const std::string& text);
+	void onVector3Changed(const nml::vec3& value);
 	void onColorChanged(const nml::vec3& color);
 
 private:
@@ -59,6 +61,9 @@ public:
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridScaleWidget;
+	Vector3Widget* guizmoTranslationStepWidget;
+	Vector3Widget* guizmoRotationStepWidget;
+	Vector3Widget* guizmoScaleStepWidget;
 	ColorPickerWidget* currentEntityOutlineColorWidget;
 	ColorPickerWidget* otherEntitiesOutlineColorWidget;
 

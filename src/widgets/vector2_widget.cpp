@@ -14,12 +14,16 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name) : 
 	layout()->setContentsMargins(0, 0, 0, 0);
 	nameLabel = new QLabel(QString::fromStdString(name));
 	layout()->addWidget(nameLabel);
-	layout()->addWidget(new QLabel("x:"));
+	xLabel = new QLabel("x:");
+	layout()->addWidget(xLabel);
+	layout()->setAlignment(xLabel, Qt::AlignmentFlag::AlignRight);
 	xLineEdit = new QLineEdit("0.0");
 	xLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(xLineEdit);
 	layout()->setAlignment(xLineEdit, Qt::AlignmentFlag::AlignRight);
-	layout()->addWidget(new QLabel("y:"));
+	yLabel = new QLabel("y:");
+	layout()->addWidget(yLabel);
+	layout()->setAlignment(yLabel, Qt::AlignmentFlag::AlignRight);
 	yLineEdit = new QLineEdit("0.0");
 	yLineEdit->setValidator(doubleValidator);
 	layout()->addWidget(yLineEdit);

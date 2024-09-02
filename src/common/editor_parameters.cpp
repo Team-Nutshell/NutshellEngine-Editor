@@ -194,6 +194,22 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.otherEntitiesOutlineColor.z = j["renderer"]["otherEntitiesOutlineColor"][2];
 		}
 		
+		if (j["renderer"].contains("guizmoTranslationStep")) {
+			renderer.guizmoTranslationStep.x = j["renderer"]["guizmoTranslationStep"][0];
+			renderer.guizmoTranslationStep.y = j["renderer"]["guizmoTranslationStep"][1];
+			renderer.guizmoTranslationStep.z = j["renderer"]["guizmoTranslationStep"][2];
+		}
+		if (j["renderer"].contains("guizmoRotationStep")) {
+			renderer.guizmoRotationStep.x = j["renderer"]["guizmoRotationStep"][0];
+			renderer.guizmoRotationStep.y = j["renderer"]["guizmoRotationStep"][1];
+			renderer.guizmoRotationStep.z = j["renderer"]["guizmoRotationStep"][2];
+		}
+		if (j["renderer"].contains("guizmoScaleStep")) {
+			renderer.guizmoScaleStep.x = j["renderer"]["guizmoScaleStep"][0];
+			renderer.guizmoScaleStep.y = j["renderer"]["guizmoScaleStep"][1];
+			renderer.guizmoScaleStep.z = j["renderer"]["guizmoScaleStep"][2];
+		}
+
 		if (j["renderer"].contains("showGrid")) {
 			renderer.showGrid = j["renderer"]["showGrid"];
 		}
@@ -256,6 +272,9 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridScale"] = renderer.gridScale;
+	j["renderer"]["guizmoTranslationStep"] = { renderer.guizmoTranslationStep.x, renderer.guizmoTranslationStep.y, renderer.guizmoTranslationStep.z };
+	j["renderer"]["guizmoRotationStep"] = { renderer.guizmoRotationStep.x, renderer.guizmoRotationStep.y, renderer.guizmoRotationStep.z };
+	j["renderer"]["guizmoScaleStep"] = { renderer.guizmoScaleStep.x, renderer.guizmoScaleStep.y, renderer.guizmoScaleStep.z };
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
 	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
 	j["renderer"]["showGrid"] = renderer.showGrid;

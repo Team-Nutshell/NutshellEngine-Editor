@@ -26,7 +26,10 @@ private:
 
 public:
 	QLabel* nameLabel;
+	QLabel* xLabel;
 	QLineEdit* xLineEdit;
+	QLabel* yLabel;
 	QLineEdit* yLineEdit;
+	QLabel* zLabel;
 	QLineEdit* zLineEdit;
 };
