@@ -9,7 +9,6 @@ class LogsWidget : public QWidget {
 public:
 	LogsWidget(GlobalInfo& globalInfo);
 
-public:
 	void updateLogs();
 
 private slots:
