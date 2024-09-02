@@ -1019,7 +1019,7 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 				tmpIndices.push_back(uniqueVertices[tokens[i]]);
 			}
 
-			// Face can be a triangle, a rectangle or a n-gons
+			// Face can be a triangle, a rectangle or a N-gons
 			// Triangle
 			if (tmpIndices.size() == 3) {
 				currentPrimitive->mesh.indices.insert(currentPrimitive->mesh.indices.end(), std::make_move_iterator(tmpIndices.begin()), std::make_move_iterator(tmpIndices.end()));
