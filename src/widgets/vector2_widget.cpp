@@ -45,4 +45,5 @@ void Vector2Widget::onEditingFinished() {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
+	static_cast<QWidget*>(sender())->clearFocus();
 }

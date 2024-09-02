@@ -49,4 +49,5 @@ void IntegerWidget::onEditingFinished() {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
+	valueLineEdit->clearFocus();
 }

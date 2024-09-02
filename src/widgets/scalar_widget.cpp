@@ -52,4 +52,5 @@ void ScalarWidget::onEditingFinished() {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
+	valueLineEdit->clearFocus();
 }
