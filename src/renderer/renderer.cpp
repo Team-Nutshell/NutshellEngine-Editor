@@ -341,6 +341,36 @@ void Renderer::initializeGL() {
 
 	m_gridProgram = compileProgram(gridVertexShader, gridFragmentShader);
 
+	// Guizmo
+	std::string guizmoVertexShaderCode = R"GLSL(
+	#version 460
+
+	in vec3 position;
+
+	uniform mat4 viewProj;
+	uniform mat4 model;
+
+	void main() {
+		gl_Position = viewProj * model * vec4(position, 1.0);
+	}
+	)GLSL";
+	GLuint guizmoVertexShader = compileShader(GL_VERTEX_SHADER, guizmoVertexShaderCode);
+
+	std::string guizmoFragmentShaderCode = R"GLSL(
+	#version 460
+
+	uniform vec3 axisColor;
+
+	out vec4 outColor;
+
+	void main() {
+		outColor = vec4(axisColor, 1.0);
+	}
+	)GLSL";
+	GLuint guizmoFragmentShader = compileShader(GL_FRAGMENT_SHADER, guizmoFragmentShaderCode);
+
+	m_guizmoProgram = compileProgram(guizmoVertexShader, guizmoFragmentShader);
+
 	// Picking
 	std::string pickingVertexShaderCode = R"GLSL(
 	#version 460
@@ -542,6 +572,43 @@ void Renderer::initializeGL() {
 	RendererModel cameraFrustumCubeModel;
 	cameraFrustumCubeModel.primitives.push_back(cameraFrustumCubePrimitive);
 	m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"] = cameraFrustumCubeModel;
+
+	// Guizmo
+	std::array<std::string, 3> guizmoNames = { "Guizmo-Translate", "Guizmo-Rotate", "Guizmo-Scale" };
+
+	m_globalInfo.rendererResourceManager.loadModel("assets/guizmo-translate.obj", guizmoNames[0]);
+	m_globalInfo.rendererResourceManager.loadModel("assets/guizmo-rotate.obj", guizmoNames[1]);
+	m_globalInfo.rendererResourceManager.loadModel("assets/guizmo-scale.obj", guizmoNames[2]);
+	for (const std::string& guizmoName : guizmoNames) {
+		if (m_globalInfo.rendererResourceManager.models.find(guizmoName) != m_globalInfo.rendererResourceManager.models.end()) {
+			std::array<uint8_t, 3> axisIndices;
+			RendererResourceManager::Model& guizmoModel = m_globalInfo.rendererResourceManager.models[guizmoName];
+			for (size_t i = 0; i < guizmoModel.primitives.size(); i++) {
+				if (guizmoModel.primitives[i].name == "AxisX") {
+					axisIndices[0] = static_cast<uint8_t>(i);
+				}
+				else if (guizmoModel.primitives[i].name == "AxisY") {
+					axisIndices[1] = static_cast<uint8_t>(i);
+				}
+				else if (guizmoModel.primitives[i].name == "AxisZ") {
+					axisIndices[2] = static_cast<uint8_t>(i);
+				}
+			}
+
+			if (axisIndices[0] != 0) {
+				std::swap(guizmoModel.primitives[0], guizmoModel.primitives[axisIndices[0]]);
+				std::swap(axisIndices[0], axisIndices[axisIndices[0]]);
+			}
+			if (axisIndices[1] != 1) {
+				std::swap(guizmoModel.primitives[1], guizmoModel.primitives[axisIndices[1]]);
+				std::swap(axisIndices[1], axisIndices[axisIndices[1]]);
+			}
+			if (axisIndices[2] != 2) {
+				std::swap(guizmoModel.primitives[2], guizmoModel.primitives[axisIndices[2]]);
+				std::swap(axisIndices[2], axisIndices[axisIndices[2]]);
+			}
+		}
+	}
 
 	// Light
 	createLightBuffer();
@@ -859,33 +926,169 @@ void Renderer::paintGL() {
 			}
 		}
 
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			std::string guizmoModelName = "";
+			if (m_guizmoMode == GuizmoMode::Translate) {
+				guizmoModelName = "Guizmo-Translate";
+			}
+			else if (m_guizmoMode == GuizmoMode::Rotate) {
+				guizmoModelName = "Guizmo-Rotate";
+			}
+			else if (m_guizmoMode == GuizmoMode::Scale) {
+				guizmoModelName = "Guizmo-Scale";
+			}
+			else if (m_guizmoMode == GuizmoMode::None) {
+				guizmoModelName = "";
+			}
+			if (m_guizmoMode != GuizmoMode::None) {
+				if (m_globalInfo.rendererResourceManager.rendererModels.find(guizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
+					gl.glEnable(GL_CULL_FACE);
+					gl.glDisable(GL_DEPTH_TEST);
+
+					bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
+					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+					nml::mat4 modelMatrix = nml::translate(transform.position);
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
+
+					const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
+					for (size_t i = 0; i < guizmoModel.primitives.size(); i++) {
+						glex.glUniform1ui(gl.glGetUniformLocation(m_pickingProgram, "entityID"), NO_ENTITY - (3 - static_cast<GLuint>(i)));
+
+						const RendererPrimitive& guizmoPrimitive = guizmoModel.primitives[i];
+						gl.glBindBuffer(GL_ARRAY_BUFFER, guizmoPrimitive.mesh.vertexBuffer);
+						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
+						gl.glEnableVertexAttribArray(positionPos);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, guizmoPrimitive.mesh.indexBuffer);
+
+						gl.glDrawElements(GL_TRIANGLES, guizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+					}
+				}
+			}
+		}
+
 		QPoint cursorPosition = mapFromGlobal(QCursor::pos());
 		uint32_t pickedEntityID;
 		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, ((height() - 1) - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
 		if (pickedEntityID != NO_ENTITY) {
-			if (m_globalInfo.currentEntityID != pickedEntityID) {
-				if (m_multiSelectionKeyPressed) {
-					if (m_globalInfo.currentEntityID != NO_ENTITY) {
-						m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+			if (pickedEntityID < (NO_ENTITY - 3)) {
+				if (m_globalInfo.currentEntityID != pickedEntityID) {
+					if (m_multiSelectionKeyPressed) {
+						if (m_globalInfo.currentEntityID != NO_ENTITY) {
+							m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+						}
+						m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
+						m_globalInfo.currentEntityID = pickedEntityID;
 					}
-					m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
-					m_globalInfo.currentEntityID = pickedEntityID;
+					else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+						m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
+					}
+					else {
+						m_globalInfo.otherSelectedEntityIDs.clear();
+						m_globalInfo.currentEntityID = pickedEntityID;
+					}
 				}
-				else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-					m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
-				}
-				else {
-					m_globalInfo.otherSelectedEntityIDs.clear();
-					m_globalInfo.currentEntityID = pickedEntityID;
-				}
+				emit m_globalInfo.signalEmitter.selectEntitySignal();
 			}
-			emit m_globalInfo.signalEmitter.selectEntitySignal();
+			else {
+				if (pickedEntityID == (NO_ENTITY - 3)) {
+					m_guizmoAxis = GuizmoAxis::X;
+				}
+				else if (pickedEntityID == (NO_ENTITY - 2)) {
+					m_guizmoAxis = GuizmoAxis::Y;
+				}
+				else if (pickedEntityID == (NO_ENTITY - 1)) {
+					m_guizmoAxis = GuizmoAxis::Z;
+				}
+				m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+				for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+					m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+				}
+				QPoint cursorPos = mapFromGlobal(QCursor::pos());
+				m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
+				m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
+				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+					m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
+				}
+				m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+			}
 		}
 		else {
 			m_globalInfo.clearSelectedEntities();
 		}
 
 		m_doPicking = false;
+	}
+
+	gl.glDisable(GL_CULL_FACE);
+
+	// Guizmo
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		std::string guizmoModelName = "";
+		if (m_guizmoMode == GuizmoMode::Translate) {
+			guizmoModelName = "Guizmo-Translate";
+		}
+		else if (m_guizmoMode == GuizmoMode::Rotate) {
+			guizmoModelName = "Guizmo-Rotate";
+		}
+		else if (m_guizmoMode == GuizmoMode::Scale) {
+			guizmoModelName = "Guizmo-Scale";
+		}
+		else if (m_guizmoMode == GuizmoMode::None) {
+			guizmoModelName = "";
+		}
+		if (guizmoModelName != "") {
+			if (m_globalInfo.rendererResourceManager.rendererModels.find(guizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
+				gl.glUseProgram(m_guizmoProgram);
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+
+				gl.glEnable(GL_CULL_FACE);
+				gl.glDisable(GL_DEPTH_TEST);
+
+				bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
+				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+				nml::mat4 modelMatrix = nml::translate(transform.position);
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
+
+				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
+				for (size_t i = 0; i < guizmoModel.primitives.size(); i++) {
+					const RendererPrimitive& guizmoPrimitive = guizmoModel.primitives[i];
+					nml::vec3 guizmoAxisColor = nml::vec3(0.0f, 0.0f, 0.0f);
+					if (i == 0) {
+						if (m_guizmoAxis == GuizmoAxis::X) {
+							guizmoAxisColor.x = 1.0f;
+						}
+						else {
+							guizmoAxisColor.x = 0.5f;
+						}
+					}
+					else if (i == 1) {
+						if (m_guizmoAxis == GuizmoAxis::Y) {
+							guizmoAxisColor.y = 1.0f;
+						}
+						else {
+							guizmoAxisColor.y = 0.5f;
+						}
+					}
+					else if (i == 2) {
+						if (m_guizmoAxis == GuizmoAxis::Z) {
+							guizmoAxisColor.z = 1.0f;
+						}
+						else {
+							guizmoAxisColor.z = 0.5f;
+						}
+					}
+					gl.glUniform3f(gl.glGetUniformLocation(m_guizmoProgram, "axisColor"), guizmoAxisColor.x, guizmoAxisColor.y, guizmoAxisColor.z);
+					gl.glBindBuffer(GL_ARRAY_BUFFER, guizmoPrimitive.mesh.vertexBuffer);
+					GLint positionPos = gl.glGetAttribLocation(m_guizmoProgram, "position");
+					gl.glEnableVertexAttribArray(positionPos);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, guizmoPrimitive.mesh.indexBuffer);
+
+					gl.glDrawElements(GL_TRIANGLES, guizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
+			}
+		}
 	}
 
 	gl.glDisable(GL_CULL_FACE);
@@ -1373,6 +1576,122 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 }
 
+void Renderer::calculateTranslation(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition) {
+	nml::vec3 translationAxis = nml::vec3(0.0f, 0.0f, 0.0f);
+	if (m_guizmoAxis == GuizmoAxis::X) {
+		translationAxis.x = 1.0f;
+	}
+	else if (m_guizmoAxis == GuizmoAxis::Y) {
+		translationAxis.y = 1.0f;
+	}
+	else if (m_guizmoAxis == GuizmoAxis::Z) {
+		translationAxis.z = 1.0f;
+	}
+
+	nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.perspectivePosition;
+	float cameraEntityDifferenceLength = (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) ? cameraEntityDifference.length() : 0.0f;
+	nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+	nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+	nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
+	if ((m_guizmoMode == GuizmoMode::Translate) && !m_translateEntityMode) {
+		worldSpaceCursorDifference = nml::vec3(worldSpaceCursorDifference.x * translationAxis.x, worldSpaceCursorDifference.y * translationAxis.y, worldSpaceCursorDifference.z * translationAxis.z);
+	}
+	float worldSpaceCursorDifferenceLength = (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) ? worldSpaceCursorDifference.length() : 0.0f;
+	float nearPlane = (m_globalInfo.editorParameters.renderer.cameraNearPlane != 0.0f) ? m_globalInfo.editorParameters.renderer.cameraNearPlane : 0.1f;
+	float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / nearPlane;
+	for (EntityID entityID : entityIDs) {
+		if (!m_camera.useOrthographicProjection) {
+			nml::vec3 worldSpaceCursorDifferenceNormalized = (worldSpaceCursorDifferenceLength != 0.0f) ? nml::normalize(worldSpaceCursorDifference) : nml::vec3(0.0f, 0.0f, 0.0f);
+			m_entityMoveTransforms[entityID].position += worldSpaceCursorDifferenceNormalized * coefficient;
+		}
+		else {
+			m_entityMoveTransforms[entityID].position += worldSpaceCursorDifference;
+		}
+	}
+}
+
+void Renderer::calculateRotation(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition) {
+	nml::vec3 rotationAxis = nml::vec3(0.0f, 0.0f, 0.0f);
+	if ((m_guizmoMode == GuizmoMode::Rotate) && !m_rotateEntityMode) {
+		if (m_guizmoAxis == GuizmoAxis::X) {
+			rotationAxis.x = 1.0f;
+		}
+		else if (m_guizmoAxis == GuizmoAxis::Y) {
+			rotationAxis.y = 1.0f;
+		}
+		else if (m_guizmoAxis == GuizmoAxis::Z) {
+			rotationAxis.z = 1.0f;
+		}
+	}
+	else {
+		rotationAxis = (!m_camera.useOrthographicProjection) ? m_camera.perspectiveDirection : m_camera.orthographicDirection;
+	}
+	
+	nml::mat4 rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), rotationAxis);
+	nml::vec3 rotationAngles = nml::rotationMatrixToEulerAngles(rotationMatrix);
+	rotationAngles.x = nml::toDeg(rotationAngles.x);
+	rotationAngles.y = nml::toDeg(rotationAngles.y);
+	rotationAngles.z = nml::toDeg(rotationAngles.z);
+	for (EntityID entityID : entityIDs) {
+		if (entityIDs.size() != 1) {
+			m_entityMoveTransforms[entityID].position = nml::vec3((nml::translate(m_selectionMeanPosition) * rotationMatrix * nml::translate(-m_selectionMeanPosition)) * m_entityMoveTransforms[entityID].position);
+		}
+		m_entityMoveTransforms[entityID].rotation += rotationAngles;
+		m_entityMoveTransforms[entityID].rotation = nml::vec3(std::fmod(m_entityMoveTransforms[entityID].rotation.x, 360.0f), std::fmod(m_entityMoveTransforms[entityID].rotation.y, 360.0f), std::fmod(m_entityMoveTransforms[entityID].rotation.z, 360.0f));
+	}
+}
+
+void Renderer::calculateScale(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition) {
+	nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
+	nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+	nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+	nml::vec2 objectPositionProjected = project(m_selectionMeanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
+	nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
+	nml::vec3 previousToCurrentPosition3D = worldSpaceCurrentMouse - worldSpacePreviousMouse;
+	float previousToCurrentPosition3DLength = (nml::dot(previousToCurrentPosition3D, previousToCurrentPosition3D) != 0.0f) ? previousToCurrentPosition3D.length() : 0.0f;
+	nml::vec3 objectToCurrentMousePosition3D = worldSpaceCurrentMouse - m_selectionMeanPosition;
+	float objectToCurrentMousePosition3DLength = (nml::dot(objectToCurrentMousePosition3D, objectToCurrentMousePosition3D) != 0.0f) ? objectToCurrentMousePosition3D.length() : 0.01f;
+	float scaleFactor = 1.0f;
+	if (!m_camera.useOrthographicProjection) {
+		scaleFactor = 1000.0f;
+	}
+	float scaleDifference = ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
+	for (EntityID entityID : entityIDs) {
+		if ((m_guizmoMode == GuizmoMode::Scale) && !m_scaleEntityMode) {
+			size_t axisIndex = 0;
+			if (m_guizmoAxis == GuizmoAxis::X) {
+				axisIndex = 0;
+			}
+			else if (m_guizmoAxis == GuizmoAxis::Y) {
+				axisIndex = 1;
+			}
+			else if (m_guizmoAxis == GuizmoAxis::Z) {
+				axisIndex = 2;
+			}
+			m_entityMoveTransforms[entityID].position[axisIndex] = (1.0f + scaleDifference) * (m_entityMoveTransforms[entityID].position[axisIndex] - m_selectionMeanPosition[axisIndex]) + m_selectionMeanPosition[axisIndex];
+			m_entityMoveTransforms[entityID].scale[axisIndex] *= 1.0f + scaleDifference;
+		}
+		else {
+			m_entityMoveTransforms[entityID].position = (1.0f + scaleDifference) * (m_entityMoveTransforms[entityID].position - m_selectionMeanPosition) + m_selectionMeanPosition;
+			m_entityMoveTransforms[entityID].scale *= 1.0f + scaleDifference;
+		}
+	}
+}
+
+void Renderer::startTransform() {
+	m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+	for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
+		m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+	}
+	QPoint cursorPos = mapFromGlobal(QCursor::pos());
+	m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
+	m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
+	}
+	m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+}
+
 void Renderer::cancelTransform() {
 	if (anyEntityTransformMode()) {
 		m_translateEntityMode = false;
@@ -1471,51 +1790,39 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		m_cameraDownKeyPressed = true;
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.translateEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
-			m_translateEntityMode = true;
-			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
-				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+		if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+			if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+				m_translateEntityMode = true;
+				startTransform();
 			}
-			QPoint cursorPos = mapFromGlobal(QCursor::pos());
-			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
-			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
-			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
-			}
-			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+		}
+		else {
+			m_guizmoMode = GuizmoMode::Translate;
+			m_guizmoAxis = GuizmoAxis::None;
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.rotateEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
-			m_rotateEntityMode = true;
-			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
-				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+		if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+			if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+				m_rotateEntityMode = true;
+				startTransform();
 			}
-			QPoint cursorPos = mapFromGlobal(QCursor::pos());
-			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
-			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
-			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
-			}
-			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+		}
+		else {
+			m_guizmoMode = GuizmoMode::Rotate;
+			m_guizmoAxis = GuizmoAxis::None;
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.scaleEntityKey) {
-		if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
-			m_scaleEntityMode = true;
-			m_entityMoveTransforms[m_globalInfo.currentEntityID] = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-			for (EntityID otherSelectedEntityIDs : m_globalInfo.otherSelectedEntityIDs) {
-				m_entityMoveTransforms[otherSelectedEntityIDs] = m_globalInfo.entities[otherSelectedEntityIDs].transform;
+		if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+			if ((m_globalInfo.currentEntityID != NO_ENTITY) && !m_moveCameraButtonPressed && !anyEntityTransformMode()) {
+				m_scaleEntityMode = true;
+				startTransform();
 			}
-			QPoint cursorPos = mapFromGlobal(QCursor::pos());
-			m_mouseCursorPreviousPosition = nml::vec2(static_cast<float>(cursorPos.x()), static_cast<float>(height() - cursorPos.y()));
-			m_selectionMeanPosition = m_entityMoveTransforms[m_globalInfo.currentEntityID].position;
-			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-				m_selectionMeanPosition += m_entityMoveTransforms[otherSelectedEntityID].position;
-			}
-			m_selectionMeanPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+		}
+		else {
+			m_guizmoMode = GuizmoMode::Scale;
+			m_guizmoAxis = GuizmoAxis::None;
 		}
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
@@ -1613,12 +1920,50 @@ void Renderer::mouseReleaseEvent(QMouseEvent* event) {
 			}
 		}
 	}
+	if (event->button() == Qt::LeftButton) {
+		if (m_guizmoAxis != GuizmoAxis::None) {
+			m_guizmoAxis = GuizmoAxis::None;
+
+			if (m_globalInfo.currentEntityID != NO_ENTITY) {
+				std::vector<EntityID> changedEntityIDs = { m_globalInfo.currentEntityID };
+				std::vector<Component*> changedEntityTransforms = { &m_entityMoveTransforms[m_globalInfo.currentEntityID] };
+				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+					changedEntityIDs.push_back(otherSelectedEntityID);
+					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityID]);
+				}
+				m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
+				m_entityMoveTransforms.clear();
+			}
+		}
+	}
 	event->accept();
 }
 
 void Renderer::mouseMoveEvent(QMouseEvent* event) {
 	if (!anyEntityTransformMode()) {
-		if (event->buttons() & Qt::RightButton) {
+		if (event->buttons() & Qt::LeftButton) {
+			if (m_guizmoAxis != GuizmoAxis::None) {
+				nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
+				std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+				selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+				if (m_guizmoMode == GuizmoMode::Translate) {
+					calculateTranslation(selectedEntityIDs, mouseCursorCurrentPosition);
+				}
+				else if (m_guizmoMode == GuizmoMode::Rotate) {
+					calculateRotation(selectedEntityIDs, mouseCursorCurrentPosition);
+				}
+				else if (m_guizmoMode == GuizmoMode::Scale) {
+					calculateScale(selectedEntityIDs, mouseCursorCurrentPosition);
+				}
+				m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
+
+				// Update Transform Widget
+				MainWindow* mainWindow = m_globalInfo.mainWindow;
+				mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
+			}
+		}
+		else if (event->buttons() & Qt::RightButton) {
 			if (m_moveCameraButtonPressed) {
 				if (!m_mouseMoveFlag) {
 					nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
@@ -1638,58 +1983,13 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 			selectedEntityIDs.insert(m_globalInfo.currentEntityID);
 			nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
 			if (m_translateEntityMode) {
-				nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.perspectivePosition;
-				float cameraEntityDifferenceLength = (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) ? cameraEntityDifference.length() : 0.0f;
-				nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
-				float worldSpaceCursorDifferenceLength = (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) ? worldSpaceCursorDifference.length() : 0.0f;
-				float nearPlane = (m_globalInfo.editorParameters.renderer.cameraNearPlane != 0.0f) ? m_globalInfo.editorParameters.renderer.cameraNearPlane : 0.1f;
-				float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / nearPlane;
-				for (EntityID selectedEntityID : selectedEntityIDs) {
-					if (!m_camera.useOrthographicProjection) {
-						nml::vec3 worldSpaceCursorDifferenceNormalized = (worldSpaceCursorDifferenceLength != 0.0f) ? nml::normalize(worldSpaceCursorDifference) : nml::vec3(0.0f, 0.0f, 0.0f);
-						m_entityMoveTransforms[selectedEntityID].position += worldSpaceCursorDifferenceNormalized * coefficient;
-					}
-					else {
-						m_entityMoveTransforms[selectedEntityID].position += worldSpaceCursorDifference;
-					}
-				}
+				calculateTranslation(selectedEntityIDs, mouseCursorCurrentPosition);
 			}
 			else if (m_rotateEntityMode) {
-				nml::vec3 rotationAxis = (!m_camera.useOrthographicProjection) ? m_camera.perspectiveDirection : m_camera.orthographicDirection;
-				nml::mat4 rotationMatrix = nml::rotate((mouseCursorCurrentPosition.x - m_mouseCursorPreviousPosition.x) / static_cast<float>(width()), rotationAxis);
-				nml::vec3 rotationAngles = nml::rotationMatrixToEulerAngles(rotationMatrix);
-				rotationAngles.x = nml::toDeg(rotationAngles.x);
-				rotationAngles.y = nml::toDeg(rotationAngles.y);
-				rotationAngles.z = nml::toDeg(rotationAngles.z);
-				for (EntityID selectedEntityID : selectedEntityIDs) {
-					if (selectedEntityIDs.size() != 1) {
-						m_entityMoveTransforms[selectedEntityID].position = nml::vec3((nml::translate(m_selectionMeanPosition) * rotationMatrix * nml::translate(-m_selectionMeanPosition)) * m_entityMoveTransforms[selectedEntityID].position);
-					}
-					m_entityMoveTransforms[selectedEntityID].rotation += rotationAngles;
-					m_entityMoveTransforms[selectedEntityID].rotation = nml::vec3(std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.x, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.y, 360.0f), std::fmod(m_entityMoveTransforms[selectedEntityID].rotation.z, 360.0f));
-				}
+				calculateRotation(selectedEntityIDs, mouseCursorCurrentPosition);
 			}
 			else if (m_scaleEntityMode) {
-				nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
-				nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-				nml::vec2 objectPositionProjected = project(m_selectionMeanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
-				nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
-				nml::vec3 previousToCurrentPosition3D = worldSpaceCurrentMouse - worldSpacePreviousMouse;
-				float previousToCurrentPosition3DLength = (nml::dot(previousToCurrentPosition3D, previousToCurrentPosition3D) != 0.0f) ? previousToCurrentPosition3D.length() : 0.0f;
-				nml::vec3 objectToCurrentMousePosition3D = worldSpaceCurrentMouse - m_selectionMeanPosition;
-				float objectToCurrentMousePosition3DLength = (nml::dot(objectToCurrentMousePosition3D, objectToCurrentMousePosition3D) != 0.0f) ? objectToCurrentMousePosition3D.length() : 0.01f;
-				float scaleFactor = 1.0f;
-				if (!m_camera.useOrthographicProjection) {
-					scaleFactor = 1000.0f;
-				}
-				float scaleDifference = ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
-				for (EntityID selectedEntityID : selectedEntityIDs) {
-					m_entityMoveTransforms[selectedEntityID].position = (1.0f + scaleDifference) * (m_entityMoveTransforms[selectedEntityID].position - m_selectionMeanPosition) + m_selectionMeanPosition;
-					m_entityMoveTransforms[selectedEntityID].scale *= 1.0f + scaleDifference;
-				}
+				calculateScale(selectedEntityIDs, mouseCursorCurrentPosition);
 			}
 			m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
 

@@ -39,6 +39,10 @@ private:
 
 	void loadResourcesToGPU();
 
+	void calculateTranslation(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition);
+	void calculateRotation(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition);
+	void calculateScale(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition);
+	void startTransform();
 	void cancelTransform();
 
 	nml::vec2 project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix);
@@ -80,6 +84,22 @@ private:
 	bool m_rotateEntityMode = false;
 	bool m_scaleEntityMode = false;
 
+	enum class GuizmoMode {
+		Translate,
+		Rotate,
+		Scale,
+		None
+	};
+	GuizmoMode m_guizmoMode = GuizmoMode::None;
+
+	enum class GuizmoAxis {
+		X,
+		Y,
+		Z,
+		None
+	};
+	GuizmoAxis m_guizmoAxis = GuizmoAxis::None;
+
 	bool m_multiSelectionKeyPressed = false;
 
 	bool m_moveCameraButtonPressed = false;
@@ -105,6 +125,7 @@ private:
 	GLuint m_entityProgram;
 	GLuint m_cameraFrustumProgram;
 	GLuint m_gridProgram;
+	GLuint m_guizmoProgram;
 	GLuint m_pickingProgram;
 	GLuint m_outlineSoloProgram;
 	GLuint m_outlineProgram;
