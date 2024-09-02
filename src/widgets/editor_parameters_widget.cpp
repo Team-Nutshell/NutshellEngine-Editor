@@ -289,162 +289,274 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
 }
 
+void EditorParametersWidget::save() {
+	nlohmann::json j = m_globalInfo.editorParameters.toJson();
+
+	std::fstream optionsFile("options.json", std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
+}
+
+bool EditorParametersWidget::authorizedKey(Qt::Key key) {
+	return (key != Qt::Key_Shift) && (key != Qt::Key_Control) && (key != Qt::Key_Alt);
+}
+
 void EditorParametersWidget::onKeyChanged(const std::string& key) {
-	QObject* senderWidget = sender();
+	KeySelectWidget* senderWidget = static_cast<KeySelectWidget*>(sender());
 	if (senderWidget == cameraForwardKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraForwardKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Forward cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraForwardKey);
 		}
 	}
 	else if (senderWidget == cameraBackwardKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraBackwardKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Backward cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraBackwardKey);
 		}
 	}
 	else if (senderWidget == cameraLeftKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraLeftKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Left cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraLeftKey);
 		}
 	}
 	else if (senderWidget == cameraRightKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraRightKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Right cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraRightKey);
 		}
 	}
 	else if (senderWidget == cameraUpKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraUpKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Up cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraUpKey);
 		}
 	}
 	else if (senderWidget == cameraDownKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.cameraDownKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Camera Down cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraDownKey);
 		}
 	}
 	else if (senderWidget == switchCameraProjectionKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.switchCameraProjectionKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Switch Camera Projection cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.switchCameraProjectionKey);
 		}
 	}
 	else if (senderWidget == resetCameraKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.resetCameraKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Reset Camera cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.resetCameraKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToXMKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToXMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To X- cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToXMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToXPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToXPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To X+ cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToXPKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToYMKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
-			m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey = sequence[0].key();
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
+			m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToYMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To Y- cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToYMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToYPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToYPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To Y+ cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToYPKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToZMKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
-			m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey = sequence[0].key();
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
+			m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To Z- cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
 		}
 	}
 	else if (senderWidget == orthographicCameraToZPKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Orthographic Camera To Z+ cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
 		}
 	}
 	else if (senderWidget == translateEntityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.translateEntityKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Translate Entity cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.translateEntityKey);
 		}
 	}
 	else if (senderWidget == rotateEntityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.rotateEntityKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Rotate Entity cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.rotateEntityKey);
 		}
 	}
 	else if (senderWidget == scaleEntityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.scaleEntityKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Scale Entity cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.scaleEntityKey);
 		}
 	}
 	else if (senderWidget == toggleCurrentEntityVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleCurrentEntityVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Current Entity Visibility cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleGridVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Grid Visibility cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleBackfaceCullingKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Backface Culling cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
 		}
 	}
 	else if (senderWidget == toggleCamerasVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Cameras Visibility cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 		}
 	}
 	else if (senderWidget == toggleLightingKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleLightingKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightingKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Lighting cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 		}
 	}
 	else if (senderWidget == toggleCollidersVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey = sequence[0].key();
 			m_globalInfo.mainWindow->viewMenu->toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Colliders Visibility cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 		}
 	}
 	else if (senderWidget == multiSelectionKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty()) {
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.multiSelectionKey = sequence[0].key();
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "Multi Selection cannot be bound to the " + key + " key (Unauthorized key).");
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.multiSelectionKey);
 		}
 	}
 
@@ -524,16 +636,4 @@ void EditorParametersWidget::onColorChanged(const nml::vec3& color) {
 	}
 
 	save();
-}
-
-void EditorParametersWidget::save() {
-	nlohmann::json j = m_globalInfo.editorParameters.toJson();
-
-	std::fstream optionsFile("options.json", std::ios::out | std::ios::trunc);
-	if (j.empty()) {
-		optionsFile << "{\n}";
-	}
-	else {
-		optionsFile << j.dump(1, '\t');
-	}
 }

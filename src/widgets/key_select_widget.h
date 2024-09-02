@@ -12,6 +12,9 @@ class KeySelectWidget : public QWidget {
 public:
 	KeySelectWidget(GlobalInfo& globalInfo, const std::string& name, const std::string& key);
 
+	void setKey(Qt::Key key);
+	Qt::Key getKey();
+
 signals:
 	void keyChanged(const std::string&);
 

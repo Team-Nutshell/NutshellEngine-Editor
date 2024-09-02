@@ -16,6 +16,20 @@ KeySelectWidget::KeySelectWidget(GlobalInfo& globalInfo, const std::string& name
 	connect(button, &QPushButton::clicked, this, &KeySelectWidget::onButtonClicked);
 }
 
+void KeySelectWidget::setKey(Qt::Key key) {
+	QKeySequence keySequence = QKeySequence(key);
+	button->setText(keySequence.toString());
+}
+
+Qt::Key KeySelectWidget::getKey() {
+	QKeySequence sequence = QKeySequence::fromString(button->text());
+	if (!sequence.isEmpty()) {
+		return sequence[0].key();
+	}
+
+	return Qt::Key_unknown;
+}
+
 void KeySelectWidget::keyPressEvent(QKeyEvent* event) {
 	if (!m_changeKey) {
 		return;

@@ -17,15 +17,17 @@ class EditorParametersWidget : public QTabWidget {
 public:
 	EditorParametersWidget(GlobalInfo& globalInfo);
 
+private:
+	void save();
+	
+	bool authorizedKey(Qt::Key key);
+
 private slots:
 	void onKeyChanged(const std::string& key);
 	void onScalarChanged(float value);
 	void onStringChanged(const std::string& text);
 	void onVector3Changed(const nml::vec3& value);
 	void onColorChanged(const nml::vec3& color);
-
-private:
-	void save();
 
 private:
 	GlobalInfo& m_globalInfo;
