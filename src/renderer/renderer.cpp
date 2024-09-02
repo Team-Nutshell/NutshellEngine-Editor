@@ -1593,7 +1593,7 @@ void Renderer::calculateTranslation(const std::set<EntityID> entityIDs, const nm
 	float worldSpaceCursorDifferenceLength = (nml::dot(worldSpaceCursorDifference, worldSpaceCursorDifference) != 0.0f) ? worldSpaceCursorDifference.length() : 0.0f;
 	float nearPlane = (m_globalInfo.editorParameters.renderer.cameraNearPlane != 0.0f) ? m_globalInfo.editorParameters.renderer.cameraNearPlane : 0.1f;
 	float coefficient = (cameraEntityDifferenceLength * worldSpaceCursorDifferenceLength) / nearPlane;
-	if ((m_guizmoMode == GuizmoMode::Translate) && !m_translateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::AltModifier) && (m_globalInfo.editorParameters.renderer.guizmoTranslationStep[guizmoAxisIndex] > 0.0f)) {
+	if ((m_guizmoMode == GuizmoMode::Translate) && !m_translateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) && (m_globalInfo.editorParameters.renderer.guizmoTranslationStep[guizmoAxisIndex] > 0.0f)) {
 		if (!m_camera.useOrthographicProjection) {
 			m_guizmoTranslationStepAccumulation += coefficient;
 		}
@@ -1660,7 +1660,7 @@ void Renderer::calculateRotation(const std::set<EntityID> entityIDs, const nml::
 	rotationAngles.x = nml::toDeg(rotationAngles.x);
 	rotationAngles.y = nml::toDeg(rotationAngles.y);
 	rotationAngles.z = nml::toDeg(rotationAngles.z);
-	if ((m_guizmoMode == GuizmoMode::Rotate) && !m_rotateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::AltModifier) && (m_globalInfo.editorParameters.renderer.guizmoRotationStep[guizmoAxisIndex] > 0.0f)) {
+	if ((m_guizmoMode == GuizmoMode::Rotate) && !m_rotateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) && (m_globalInfo.editorParameters.renderer.guizmoRotationStep[guizmoAxisIndex] > 0.0f)) {
 		m_guizmoRotationStepAccumulation += std::abs(rotationAngles[guizmoAxisIndex]);
 		float rotationStepDifference = 0.0f;
 		float mouseCursorDifferenceSign = (mouseCursorDifference > 0.0f) ? 1.0f : -1.0f;
@@ -1716,7 +1716,7 @@ void Renderer::calculateScale(const std::set<EntityID> entityIDs, const nml::vec
 	}
 	float scaleSign = ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 	float scaleDifference = ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * scaleSign;
-	if ((m_guizmoMode == GuizmoMode::Scale) && !m_rotateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::AltModifier) && (m_globalInfo.editorParameters.renderer.guizmoRotationStep[guizmoAxisIndex] > 0.0f)) {
+	if ((m_guizmoMode == GuizmoMode::Scale) && !m_rotateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) && (m_globalInfo.editorParameters.renderer.guizmoRotationStep[guizmoAxisIndex] > 0.0f)) {
 		m_guizmoScaleStepAccumulation += std::abs(scaleDifference);
 		float scaleStepDifference = 0.0f;
 		while (m_guizmoScaleStepAccumulation >= m_globalInfo.editorParameters.renderer.guizmoScaleStep[guizmoAxisIndex]) {
