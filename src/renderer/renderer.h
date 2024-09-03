@@ -8,6 +8,7 @@
 #include <QOpenGLExtraFunctions>
 #include <QTimer>
 #include <QMouseEvent>
+#include <QKeyEvent>
 #include <QWheelEvent>
 #include <QFocusEvent>
 #include <QResizeEvent>
