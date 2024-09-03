@@ -8,9 +8,9 @@
 #include "build_bar.h"
 #include "entity_panel.h"
 #include "log_bar.h"
-#include "../renderer/renderer.h"
 #include "entity_info_panel.h"
 #include "resource_panel.h"
+#include "../renderer/renderer.h"
 #include <QMainWindow>
 #include <QVBoxLayout>
 #include <QWidget>
