@@ -942,8 +942,8 @@ void Renderer::paintGL() {
 			}
 			if (m_guizmoMode != GuizmoMode::None) {
 				if (m_globalInfo.rendererResourceManager.rendererModels.find(guizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
+					gl.glClear(GL_DEPTH_BUFFER_BIT);
 					gl.glEnable(GL_CULL_FACE);
-					gl.glDisable(GL_DEPTH_TEST);
 
 					bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
 					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
@@ -1032,8 +1032,12 @@ void Renderer::paintGL() {
 				gl.glUseProgram(m_guizmoProgram);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
+				gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+				gl.glClear(GL_DEPTH_BUFFER_BIT);
+				gl.glEnable(GL_DEPTH_TEST);
+				gl.glDepthFunc(GL_LESS);
+				gl.glDepthMask(GL_TRUE);
 				gl.glEnable(GL_CULL_FACE);
-				gl.glDisable(GL_DEPTH_TEST);
 
 				bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
 				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
