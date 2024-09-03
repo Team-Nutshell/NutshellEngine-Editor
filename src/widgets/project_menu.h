@@ -9,6 +9,7 @@ public:
 	ProjectMenu(GlobalInfo& globalInfo);
 
 private:
+	void launchBuild();
 	void openProjectSettings();
 	void importGlobalResources();
 	void updateBaseProject();
@@ -16,6 +17,7 @@ private:
 private:
 	GlobalInfo& m_globalInfo;
 
+	QAction* m_buildAction;
 	QAction* m_openProjectSettingsAction;
 	QAction* m_importGlobalResources;
 	QAction* m_updateBaseProject;

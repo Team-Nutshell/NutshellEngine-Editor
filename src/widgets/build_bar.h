@@ -9,8 +9,9 @@ class BuildBar : public QWidget {
 public:
 	BuildBar(GlobalInfo& globalInfo);
 
-private:
 	void launchBuild();
+
+private:
 	void launchExport();
 
 	bool build();
