@@ -1895,7 +1895,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 	}
-	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
+	else if (event->key() == Qt::Key_Shift) {
 		m_multiSelectionKeyPressed = true;
 	}
 	else if (event->key() == Qt::Key::Key_Delete) {
@@ -1935,7 +1935,7 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraDownKey) {
 		m_cameraDownKeyPressed = false;
 	}
-	else if (event->key() == m_globalInfo.editorParameters.renderer.multiSelectionKey) {
+	else if (event->key() == Qt::Key_Shift) {
 		m_multiSelectionKeyPressed = false;
 	}
 	event->accept();

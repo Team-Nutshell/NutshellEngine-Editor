@@ -9,7 +9,7 @@ struct RendererParameters {
 	Qt::Key cameraBackwardKey = Qt::Key_S;
 	Qt::Key cameraLeftKey = Qt::Key_A;
 	Qt::Key cameraRightKey = Qt::Key_D;
-	Qt::Key cameraUpKey = Qt::Key_E;
+	Qt::Key cameraUpKey = Qt::Key_Space;
 	Qt::Key cameraDownKey = Qt::Key_Q;
 	Qt::Key switchCameraProjectionKey = Qt::Key_P;
 	Qt::Key resetCameraKey = Qt::Key_0;
@@ -21,14 +21,13 @@ struct RendererParameters {
 	Qt::Key orthographicCameraToZPKey = Qt::Key_2;
 	Qt::Key translateEntityKey = Qt::Key_T;
 	Qt::Key rotateEntityKey = Qt::Key_R;
-	Qt::Key scaleEntityKey = Qt::Key_Y;
+	Qt::Key scaleEntityKey = Qt::Key_E;
 	Qt::Key toggleCurrentEntityVisibilityKey = Qt::Key_V;
 	Qt::Key toggleGridVisibilityKey = Qt::Key_G;
 	Qt::Key toggleBackfaceCullingKey = Qt::Key_F;
 	Qt::Key toggleCamerasVisibilityKey = Qt::Key_C;
 	Qt::Key toggleLightingKey = Qt::Key_L;
 	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
-	Qt::Key multiSelectionKey = Qt::Key_Z;
 
 	float cameraNearPlane = 0.01f;
 	float cameraFarPlane = 500.0f;

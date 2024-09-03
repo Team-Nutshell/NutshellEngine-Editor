@@ -159,12 +159,6 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 				renderer.toggleCollidersVisibilityKey = sequence[0].key();
 			}
 		}
-		if (j["renderer"].contains("multiSelectionKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["multiSelectionKey"]));
-			if (!sequence.isEmpty()) {
-				renderer.multiSelectionKey = sequence[0].key();
-			}
-		}
 
 		if (j["renderer"].contains("cameraNearPlane")) {
 			renderer.cameraNearPlane = j["renderer"]["cameraNearPlane"];
@@ -266,7 +260,6 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["toggleCamerasVisibilityKey"] = QKeySequence(renderer.toggleCamerasVisibilityKey).toString().toStdString();
 	j["renderer"]["toggleLightingKey"] = QKeySequence(renderer.toggleLightingKey).toString().toStdString();
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
-	j["renderer"]["multiSelectionKey"] = QKeySequence(renderer.multiSelectionKey).toString().toStdString();
 	j["renderer"]["cameraNearPlane"] = renderer.cameraNearPlane;
 	j["renderer"]["cameraFarPlane"] = renderer.cameraFarPlane;
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;

@@ -140,11 +140,6 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
 
-	QKeySequence multiSelectionKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.multiSelectionKey);
-	multiSelectionKeySelect = new KeySelectWidget(m_globalInfo, "Multi Selection", multiSelectionKeySequence.toString().toStdString());
-	multiSelectionKeySelect->layout()->setAlignment(multiSelectionKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(multiSelectionKeySelect, 7, 2);
-
 	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
 
 	QWidget* rendererCameraGridLayoutWidget = new QWidget();
@@ -274,7 +269,6 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCamerasVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
-	connect(multiSelectionKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(cameraNearPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraFarPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
@@ -547,16 +541,6 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		else {
 			m_globalInfo.logger.addLog(LogLevel::Warning, "Toggle Colliders Visibility cannot be bound to the " + key + " key (Unauthorized key).");
 			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
-		}
-	}
-	else if (senderWidget == multiSelectionKeySelect) {
-		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
-			m_globalInfo.editorParameters.renderer.multiSelectionKey = sequence[0].key();
-		}
-		else {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "Multi Selection cannot be bound to the " + key + " key (Unauthorized key).");
-			senderWidget->setKey(m_globalInfo.editorParameters.renderer.multiSelectionKey);
 		}
 	}
 
