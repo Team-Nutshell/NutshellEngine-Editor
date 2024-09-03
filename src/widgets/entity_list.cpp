@@ -132,7 +132,7 @@ void EntityList::onItemPressed(QListWidgetItem* listWidgetItem) {
 void EntityList::keyPressEvent(QKeyEvent* event) {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		int currentSelectionIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
-		if (event->key() == Qt::Key::Key_Delete) {
+		if (event->key() == Qt::Key_Delete) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
 			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
@@ -152,7 +152,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			}
 			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
-		else if (event->key() == Qt::Key::Key_Up) {
+		else if (event->key() == Qt::Key_Up) {
 			if (!m_moveEntityOrderKeyPressed) {
 				m_globalInfo.clearSelectedEntities();
 				if (currentSelectionIndex == 0) {
@@ -189,7 +189,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				}
 			}
 		}
-		else if (event->key() == Qt::Key::Key_Down) {
+		else if (event->key() == Qt::Key_Down) {
 			if (!m_moveEntityOrderKeyPressed) {
 				m_globalInfo.clearSelectedEntities();
 				if (currentSelectionIndex == (count() - 1)) {
@@ -226,7 +226,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				}
 			}
 		}
-		else if (event->key() == Qt::Key::Key_Alt) {
+		else if (event->key() == Qt::Key_Alt) {
 			m_moveEntityOrderKeyPressed = true;
 		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
@@ -239,7 +239,7 @@ void EntityList::keyReleaseEvent(QKeyEvent* event) {
 		return;
 	}
 
-	if (event->key() == Qt::Key::Key_Alt) {
+	if (event->key() == Qt::Key_Alt) {
 		m_moveEntityOrderKeyPressed = false;
 	}
 }

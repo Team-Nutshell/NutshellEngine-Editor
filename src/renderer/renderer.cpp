@@ -1902,7 +1902,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 	else if (event->key() == Qt::Key_Shift) {
 		m_multiSelectionKeyPressed = true;
 	}
-	else if (event->key() == Qt::Key::Key_Delete) {
+	else if (event->key() == Qt::Key_Delete) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));

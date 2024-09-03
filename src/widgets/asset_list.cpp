@@ -202,7 +202,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 	if (!selectedItems().empty()) {
 		QListWidgetItem* listItem = selectedItems()[0];
 		int currentSelectionIndex = row(listItem);
-		if (event->key() == Qt::Key::Key_Up) {
+		if (event->key() == Qt::Key_Up) {
 			clearSelection();
 			if (currentSelectionIndex == 0) {
 				setCurrentItem(item(count() - 1));
@@ -211,7 +211,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 				setCurrentItem(item(currentSelectionIndex - 1));
 			}
 		}
-		else if (event->key() == Qt::Key::Key_Down) {
+		else if (event->key() == Qt::Key_Down) {
 			clearSelection();
 			if (currentSelectionIndex == (count() - 1)) {
 				setCurrentItem(item(0));
@@ -220,7 +220,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 				setCurrentItem(item(currentSelectionIndex + 1));
 			}
 		}
-		else if ((event->key() == Qt::Key::Key_Return) || (event->key() == Qt::Key::Key_Enter)) {
+		else if ((event->key() == Qt::Key_Return) || (event->key() == Qt::Key_Enter)) {
 			std::string itemFileName = listItem->text().toStdString();
 			std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
 			std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
@@ -232,7 +232,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 				actionOnFile(itemFileName);
 			}
 		}
-		else if (event->key() == Qt::Key::Key_F2) {
+		else if (event->key() == Qt::Key_F2) {
 			if (listItem && (listItem->text() != "../")) {
 				RenameWidget* renameWidget = new RenameWidget(m_globalInfo, m_currentDirectory, listItem->text().toStdString());
 				renameWidget->show();
