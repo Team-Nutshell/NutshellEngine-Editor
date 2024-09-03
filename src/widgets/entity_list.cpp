@@ -229,6 +229,9 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 		else if (event->key() == Qt::Key_Alt) {
 			m_moveEntityOrderKeyPressed = true;
 		}
+		else if (event->key() == Qt::Key_F2) {
+			m_globalInfo.mainWindow->entityInfoPanel->entityInfoNameWidget->setFocus();
+		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
 	}
 }
