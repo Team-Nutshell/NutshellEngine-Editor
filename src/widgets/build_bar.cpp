@@ -17,7 +17,7 @@
 
 BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(0, 5, 0, 0);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
 	buildAndRunButton = new QPushButton("Build and Run");
 	layout()->addWidget(buildAndRunButton);

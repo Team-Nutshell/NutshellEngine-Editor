@@ -106,7 +106,7 @@ void AssetListMenu::newMaterial() {
 		"factor": 1.0
 	},
 	"alphaCutoff": 0.0,
-	"indexOfRefraction": 1.0
+	"indexOfRefraction": 0.0
 })";
 	newMaterialFile.close();
 }
