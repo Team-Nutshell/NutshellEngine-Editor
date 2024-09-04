@@ -1865,9 +1865,13 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else {
-			if ((m_guizmoMode == GuizmoMode::Translate) || (m_guizmoAxis == GuizmoAxis::None)) {
-				m_guizmoMode = GuizmoMode::Translate;
-				m_guizmoAxis = GuizmoAxis::None;
+			if (m_guizmoAxis == GuizmoAxis::None) {
+				if (m_guizmoMode != GuizmoMode::Translate) {
+						m_guizmoMode = GuizmoMode::Translate;
+				}
+				else {
+					m_guizmoMode = GuizmoMode::None;
+				}
 			}
 		}
 	}
@@ -1879,9 +1883,13 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else {
-			if ((m_guizmoMode == GuizmoMode::Rotate) || (m_guizmoAxis == GuizmoAxis::None)) {
-				m_guizmoMode = GuizmoMode::Rotate;
-				m_guizmoAxis = GuizmoAxis::None;
+			if (m_guizmoAxis == GuizmoAxis::None) {
+				if (m_guizmoMode != GuizmoMode::Rotate) {
+					m_guizmoMode = GuizmoMode::Rotate;
+				}
+				else {
+					m_guizmoMode = GuizmoMode::None;
+				}
 			}
 		}
 	}
@@ -1893,9 +1901,13 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else {
-			if ((m_guizmoMode == GuizmoMode::Scale) || (m_guizmoAxis == GuizmoAxis::None)) {
-				m_guizmoMode = GuizmoMode::Scale;
-				m_guizmoAxis = GuizmoAxis::None;
+			if (m_guizmoAxis == GuizmoAxis::None) {
+				if (m_guizmoMode != GuizmoMode::Scale) {
+					m_guizmoMode = GuizmoMode::Scale;
+				}
+				else {
+					m_guizmoMode = GuizmoMode::None;
+				}
 			}
 		}
 	}
