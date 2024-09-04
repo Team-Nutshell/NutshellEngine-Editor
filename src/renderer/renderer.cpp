@@ -1675,7 +1675,7 @@ void Renderer::calculateRotation(const std::set<EntityID> entityIDs, const nml::
 		nml::mat4 stepRotationMatrix = nml::rotate(mouseCursorDifferenceSign * nml::toRad(rotationStepDifference), rotationAxis);
 		for (EntityID entityID : entityIDs) {
 			if (entityIDs.size() != 1) {
-				m_entityMoveTransforms[entityID].position = nml::vec3(nml::translate(m_selectionMeanPosition) * rotationMatrix * nml::translate(-m_selectionMeanPosition) * nml::vec4(m_entityMoveTransforms[entityID].position, 1.0f));
+				m_entityMoveTransforms[entityID].position = nml::vec3(nml::translate(m_selectionMeanPosition) * stepRotationMatrix * nml::translate(-m_selectionMeanPosition) * nml::vec4(m_entityMoveTransforms[entityID].position, 1.0f));
 			}
 			m_entityMoveTransforms[entityID].rotation[guizmoAxisIndex] += mouseCursorDifferenceSign * rotationStepDifference;
 			m_entityMoveTransforms[entityID].rotation[guizmoAxisIndex] = std::fmod(m_entityMoveTransforms[entityID].rotation[guizmoAxisIndex], 360.0f);
