@@ -56,6 +56,7 @@ void BuildBar::launchExport() {
 	fileDialog.setWindowTitle("NutshellEngine - Export To...");
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	fileDialog.setFileMode(QFileDialog::FileMode::Directory);
+	fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
 	if (fileDialog.exec()) {
 		if (!m_globalInfo.currentScenePath.empty()) {
 			SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
@@ -451,6 +452,20 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
 #if defined(NTSHENGN_OS_WINDOWS)
+	// Remove some files
+	const std::string scriptsExp = tmpExportDirectory + "/NutshellEngine-Scripts.exp";
+	if (std::filesystem::exists(scriptsExp)) {
+		std::filesystem::remove(scriptsExp);
+	}
+	const std::string scriptsLib = tmpExportDirectory + "/NutshellEngine-Scripts.lib";
+	if (std::filesystem::exists(scriptsLib)) {
+		std::filesystem::remove(scriptsLib);
+	}
+	const std::string scriptsPdb = tmpExportDirectory + "/NutshellEngine-Scripts.pdb";
+	if (std::filesystem::exists(scriptsPdb)) {
+		std::filesystem::remove(scriptsPdb);
+	}
+
 	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".zip";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
