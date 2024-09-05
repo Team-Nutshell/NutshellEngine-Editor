@@ -14,6 +14,10 @@ private:
 	void importGlobalResources();
 	void updateBaseProject();
 
+private slots:
+	void onBuildRunExportStarted();
+	void onBuildRunExportEnded();
+
 private:
 	GlobalInfo& m_globalInfo;
 

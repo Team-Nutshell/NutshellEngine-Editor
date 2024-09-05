@@ -12,6 +12,9 @@ ProjectMenu::ProjectMenu(GlobalInfo& globalInfo) : QMenu("&Project"), m_globalIn
 	addSeparator();
 	m_importGlobalResources = addAction("Import global resources", this, &ProjectMenu::importGlobalResources);
 	m_updateBaseProject = addAction("Update base project", this, &ProjectMenu::updateBaseProject);
+
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportStarted);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportEnded);
 }
 
 void ProjectMenu::launchBuild() {
@@ -50,4 +53,12 @@ void ProjectMenu::importGlobalResources() {
 
 void ProjectMenu::updateBaseProject() {
 	std::filesystem::copy("assets/base_project", m_globalInfo.projectDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+}
+
+void ProjectMenu::onBuildRunExportStarted() {
+	m_buildAction->setEnabled(false);
+}
+
+void ProjectMenu::onBuildRunExportEnded() {
+	m_buildAction->setEnabled(true);
 }
