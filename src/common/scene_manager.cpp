@@ -8,13 +8,8 @@
 #include <fstream>
 
 void SceneManager::newScene(GlobalInfo& globalInfo) {
-	std::string previousScenePath = globalInfo.currentScenePath;
-	globalInfo.currentScenePath = "";
-	globalInfo.mainWindow->updateTitle();
-	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo, previousScenePath));
+	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo));
 	emit globalInfo.signalEmitter.resetCameraSignal();
-
-	SaveTitleChanger::reset(globalInfo.mainWindow);
 }
 
 void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {
@@ -33,11 +28,6 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	sceneFile = std::fstream(sceneFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(sceneFile);
 
-	std::string previousScenePath = globalInfo.currentScenePath;
-	bool previousSceneModified = globalInfo.mainWindow->windowTitle()[0] == '*';
-	globalInfo.currentScenePath = sceneFilePath;
-	globalInfo.mainWindow->updateTitle();
-	std::unordered_map<EntityID, Entity> previousEntities = globalInfo.entities;
 	std::unordered_map<EntityID, Entity> newEntities;
 	if (j.contains("entities")) {
 		for (size_t i = 0; i < j["entities"].size(); i++) {
@@ -75,13 +65,11 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			}
 		}
 	}
-	globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, previousEntities, newEntities, previousScenePath, sceneFilePath, previousSceneModified));
+	globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, newEntities, sceneFilePath));
 
 	for (const auto& newEntity : newEntities) {
 		ColliderMesh::update(globalInfo, newEntity.first);
 	}
-
-	SaveTitleChanger::reset(globalInfo.mainWindow);
 }
 
 void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {

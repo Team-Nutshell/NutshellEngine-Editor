@@ -2,9 +2,8 @@
 #include "../common/save_title_changer.h"
 #include "../widgets/main_window.h"
 
-ClearSceneCommand::ClearSceneCommand(GlobalInfo& globalInfo, const std::string& previousScenePath) : m_globalInfo(globalInfo), m_previousScenePath(previousScenePath) {
+ClearSceneCommand::ClearSceneCommand(GlobalInfo& globalInfo) : m_globalInfo(globalInfo), m_previousEntities(globalInfo.entities), m_previousScenePath(globalInfo.currentScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
 	setText("Clear Scene");
-	m_previousEntities = globalInfo.entities;
 }
 
 void ClearSceneCommand::undo() {
@@ -14,6 +13,13 @@ void ClearSceneCommand::undo() {
 	}
 	m_globalInfo.currentScenePath = m_previousScenePath;
 	m_globalInfo.mainWindow->updateTitle();
+
+	if (m_previousSceneModified) {
+		SaveTitleChanger::change(m_globalInfo.mainWindow);
+	}
+	else {
+		SaveTitleChanger::reset(m_globalInfo.mainWindow);
+	}
 }
 
 void ClearSceneCommand::redo() {

@@ -4,7 +4,7 @@
 
 class ClearSceneCommand : public QUndoCommand {
 public:
-	ClearSceneCommand(GlobalInfo& globalInfo, const std::string& previousScenePath);
+	ClearSceneCommand(GlobalInfo& globalInfo);
 
 	void undo();
 	void redo();
@@ -14,4 +14,5 @@ private:
 
 	std::unordered_map<EntityID, Entity> m_previousEntities;
 	std::string m_previousScenePath;
+	bool m_previousSceneModified;
 };
