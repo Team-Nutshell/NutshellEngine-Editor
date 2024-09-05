@@ -57,6 +57,7 @@ void RenameWidget::onTextChanged() {
 void RenameWidget::onButtonClicked() {
 	if (m_newFilename != m_filename) {
 		std::filesystem::rename(m_directory + "/" + m_filename, m_directory + "/" + m_newFilename);
+		emit renameFileSignal(m_directory + "/" + m_filename, m_directory + "/" + m_newFilename);
 	}
 	close();
 }

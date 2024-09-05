@@ -11,6 +11,9 @@ class RenameWidget : public QWidget {
 public:
 	RenameWidget(GlobalInfo& globalInfo, const std::string& directory, const std::string& filename);
 
+signals:
+	void renameFileSignal(const std::string&, const std::string&);
+
 private slots:
 	void onTextChanged();
 	void onButtonClicked();

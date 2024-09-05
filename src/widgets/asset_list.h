@@ -28,6 +28,8 @@ private slots:
 	void onItemDoubleClicked(QListWidgetItem* listWidgetItem);
 	void onDirectoryChanged();
 
+	void onFileRenamed(const std::string& oldFilename, const std::string& newFilename);
+
 	void showMenu(const QPoint& pos);
 
 	QStringList mimeTypes() const;

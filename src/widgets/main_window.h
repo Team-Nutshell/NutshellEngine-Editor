@@ -22,6 +22,8 @@ class MainWindow : public QMainWindow {
 public:
 	MainWindow(GlobalInfo& globalInfo);
 
+	void updateTitle();
+
 private:
 	void createMenuBar();
 	void createBuildBar();

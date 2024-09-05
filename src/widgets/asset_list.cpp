@@ -5,6 +5,7 @@
 #include "options_ntop_file_widget.h"
 #include "sampler_ntsp_file_widget.h"
 #include "rename_widget.h"
+#include "main_window.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
@@ -163,6 +164,13 @@ void AssetList::onDirectoryChanged() {
 	updateAssetList();
 }
 
+void AssetList::onFileRenamed(const std::string& oldFilename, const std::string& newFilename) {
+	if (oldFilename == m_globalInfo.currentScenePath) {
+		m_globalInfo.currentScenePath = newFilename;
+		m_globalInfo.mainWindow->updateTitle();
+	}
+}
+
 void AssetList::showMenu(const QPoint& pos) {
 	QListWidgetItem* item = itemAt(pos);
 	if (!item) {
@@ -234,8 +242,10 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 		}
 		else if (event->key() == Qt::Key_F2) {
 			if (listItem && (listItem->text() != "../")) {
-				RenameWidget* renameWidget = new RenameWidget(m_globalInfo, m_currentDirectory, listItem->text().toStdString());
+				std::string filePath = listItem->text().toStdString();
+				RenameWidget* renameWidget = new RenameWidget(m_globalInfo, m_currentDirectory, filePath);
 				renameWidget->show();
+				connect(renameWidget, &RenameWidget::renameFileSignal, this, &AssetList::onFileRenamed);
 			}
 		}
 	}

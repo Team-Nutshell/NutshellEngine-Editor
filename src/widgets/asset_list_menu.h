@@ -17,6 +17,8 @@ private slots:
 	void newMaterial();
 	void newScene();
 
+	void onFileRenamed(const std::string& oldFilename, const std::string& newFilename);
+
 private:
 	GlobalInfo& m_globalInfo;
 

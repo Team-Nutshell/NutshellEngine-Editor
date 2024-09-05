@@ -8,11 +8,13 @@
 #include <fstream>
 
 void SceneManager::newScene(GlobalInfo& globalInfo) {
+	std::string previousScenePath = globalInfo.currentScenePath;
 	globalInfo.currentScenePath = "";
-	MainWindow* mainWindow = globalInfo.mainWindow;
-	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName));
-	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo));
+	globalInfo.mainWindow->updateTitle();
+	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo, previousScenePath));
 	emit globalInfo.signalEmitter.resetCameraSignal();
+
+	SaveTitleChanger::reset(globalInfo.mainWindow);
 }
 
 void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {
@@ -31,16 +33,17 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	sceneFile = std::fstream(sceneFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(sceneFile);
 
-	SceneManager::newScene(globalInfo);
+	std::string previousScenePath = globalInfo.currentScenePath;
+	bool previousSceneModified = globalInfo.mainWindow->windowTitle()[0] == '*';
 	globalInfo.currentScenePath = sceneFilePath;
-	MainWindow* mainWindow = globalInfo.mainWindow;
-	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName) + " - " + QString::fromStdString(sceneFilePath));
+	globalInfo.mainWindow->updateTitle();
+	std::unordered_map<EntityID, Entity> previousEntities = globalInfo.entities;
+	std::unordered_map<EntityID, Entity> newEntities;
 	if (j.contains("entities")) {
-		std::unordered_map<EntityID, Entity> entities;
 		for (size_t i = 0; i < j["entities"].size(); i++) {
 			Entity newEntity = Entity::fromJson(j["entities"][i]);
 			newEntity.entityID = globalInfo.globalEntityID++;
-			entities[newEntity.entityID] = newEntity;
+			newEntities[newEntity.entityID] = newEntity;
 			if (newEntity.renderable) {
 				if (!newEntity.renderable->modelPath.empty()) {
 					std::string fullModelPath = newEntity.renderable->modelPath;
@@ -71,25 +74,22 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 				}
 			}
 		}
-		if (!entities.empty()) {
-			globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, entities, sceneFilePath));
+	}
+	globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, previousEntities, newEntities, previousScenePath, sceneFilePath, previousSceneModified));
 
-			for (const auto& entity : entities) {
-				ColliderMesh::update(globalInfo, entity.first);
-			}
-		}
+	for (const auto& newEntity : newEntities) {
+		ColliderMesh::update(globalInfo, newEntity.first);
 	}
 
-	SaveTitleChanger::reset(mainWindow);
+	SaveTitleChanger::reset(globalInfo.mainWindow);
 }
 
 void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFilePath) {
 	globalInfo.currentScenePath = sceneFilePath;
-	MainWindow* mainWindow = globalInfo.mainWindow;
-	mainWindow->setWindowTitle("NutshellEngine - " + QString::fromStdString(globalInfo.projectName) + " - " + QString::fromStdString(sceneFilePath));
+	globalInfo.mainWindow->updateTitle();
 	nlohmann::json j;
-	for (int i = 0; i < mainWindow->entityPanel->entityList->count(); i++) {
-		EntityListItem* entityListItem = static_cast<EntityListItem*>(mainWindow->entityPanel->entityList->item(i));
+	for (int i = 0; i < globalInfo.mainWindow->entityPanel->entityList->count(); i++) {
+		EntityListItem* entityListItem = static_cast<EntityListItem*>(globalInfo.mainWindow->entityPanel->entityList->item(i));
 
 		j["entities"].push_back(globalInfo.entities[entityListItem->entityID].toJson());
 	}
@@ -101,4 +101,6 @@ void SceneManager::saveScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	else {
 		sceneFile << j.dump(1, '\t');
 	}
+
+	SaveTitleChanger::reset(globalInfo.mainWindow);
 }

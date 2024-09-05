@@ -30,6 +30,18 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	createLogBar();
 }
 
+void MainWindow::updateTitle() {
+	std::string title = "";
+	if (windowTitle()[0] == '*') {
+		title += '*';
+	}
+	title += "NutshellEngine - " + m_globalInfo.projectName;
+	if (!m_globalInfo.currentScenePath.empty()) {
+		title += " - " + m_globalInfo.currentScenePath;
+	}
+	setWindowTitle(QString::fromStdString(title));
+}
+
 void MainWindow::createMenuBar() {
 	fileMenu = new FileMenu(m_globalInfo);
 	menuBar()->addMenu(fileMenu);

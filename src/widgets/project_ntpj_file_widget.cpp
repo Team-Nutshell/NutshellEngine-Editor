@@ -53,15 +53,7 @@ void ProjectNtpjFileWidget::onValueChanged() {
 		projectNameWidget->setText(m_globalInfo.projectName);
 	}
 
-	std::string mainWindowTitle = "";
-	if (m_globalInfo.mainWindow->windowTitle().toStdString()[0] == '*') {
-		mainWindowTitle += '*';
-	}
-	mainWindowTitle += "NutshellEngine - " + m_globalInfo.projectName;
-	if (!m_globalInfo.currentScenePath.empty()) {
-		mainWindowTitle += " - " + m_globalInfo.currentScenePath;
-	}
-	m_globalInfo.mainWindow->setWindowTitle(QString::fromStdString(mainWindowTitle));
+	m_globalInfo.mainWindow->updateTitle();
 
 	save();
 }
