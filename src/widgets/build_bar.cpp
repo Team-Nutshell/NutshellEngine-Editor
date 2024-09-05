@@ -3,6 +3,7 @@
 #include "../common/save_title_changer.h"
 #include "../common/scene_manager.h"
 #include <QHBoxLayout>
+#include <QFileDialog>
 #include <sstream>
 #include <filesystem>
 #include <thread>
@@ -51,18 +52,27 @@ void BuildBar::launchBuild() {
 }
 
 void BuildBar::launchExport() {
-	if (!m_globalInfo.currentScenePath.empty()) {
-		SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
-		SaveTitleChanger::reset(m_globalInfo.mainWindow);
-	}
-	std::thread buildThread([this]() {
-		emit m_globalInfo.signalEmitter.startExportSignal();
-		if (build()) {
-			exportApplication();
+	QFileDialog fileDialog = QFileDialog();
+	fileDialog.setWindowTitle("NutshellEngine - Export To...");
+	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
+	fileDialog.setFileMode(QFileDialog::FileMode::Directory);
+	if (fileDialog.exec()) {
+		if (!m_globalInfo.currentScenePath.empty()) {
+			SceneManager::saveScene(m_globalInfo, m_globalInfo.currentScenePath);
+			SaveTitleChanger::reset(m_globalInfo.mainWindow);
 		}
-		emit m_globalInfo.signalEmitter.endExportSignal();
-		});
-	buildThread.detach();
+
+		std::string exportDirectory = fileDialog.selectedFiles()[0].toStdString();
+
+		std::thread buildThread([this, exportDirectory]() {
+			emit m_globalInfo.signalEmitter.startExportSignal();
+			if (build()) {
+				exportApplication(exportDirectory);
+			}
+			emit m_globalInfo.signalEmitter.endExportSignal();
+			});
+		buildThread.detach();
+	}
 }
 
 bool BuildBar::build() {
@@ -413,7 +423,7 @@ void BuildBar::run() {
 	std::filesystem::current_path(previousCurrentPath);
 }
 
-void BuildBar::exportApplication() {
+void BuildBar::exportApplication(const std::string& exportDirectory) {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Exporting the application.");
 
@@ -442,7 +452,7 @@ void BuildBar::exportApplication() {
 
 #if defined(NTSHENGN_OS_WINDOWS)
 	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".zip";
-	const std::string exportedFullPath = m_globalInfo.projectDirectory + "/editor_build/" + exportedFileName;
+	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	// Rename executable
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine.exe", tmpExportDirectory + "/" + m_globalInfo.projectName + ".exe");
@@ -471,7 +481,7 @@ void BuildBar::exportApplication() {
 	PROCESS_INFORMATION processInformation;
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string exportCommand = "powershell Compress-Archive export_tmp/" + m_globalInfo.projectName + " " + exportedFileName + " -Force";
+	const std::string exportCommand = "powershell Compress-Archive -Path export_tmp/" + m_globalInfo.projectName + " -DestinationPath " + exportedFullPath + " -Force";
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export application with command: " + exportCommand);
 	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
@@ -510,12 +520,12 @@ void BuildBar::exportApplication() {
 	CloseHandle(pipeRead);
 #elif defined(NTSHENGN_OS_LINUX)
 	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".tar.gz";
-	const std::string exportedFullPath = m_globalInfo.projectDirectory + "/editor_build/" + exportedFileName;
+	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	// Rename executable
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + m_globalInfo.projectName);
 	
-	const std::string exportCommand = "tar -zcvf " + exportedFileName + " export_tmp/" + m_globalInfo.projectName;
+	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " export_tmp/" + m_globalInfo.projectName;
 	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Launching export with command: " + exportCommand);
 	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {

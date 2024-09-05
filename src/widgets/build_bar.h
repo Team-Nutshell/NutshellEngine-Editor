@@ -16,7 +16,7 @@ private:
 
 	bool build();
 	void run();
-	void exportApplication();
+	void exportApplication(const std::string& exportDirectory);
 
 	void addLog(std::string log);
 
