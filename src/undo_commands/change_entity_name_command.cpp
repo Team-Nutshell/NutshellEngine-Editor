@@ -1,10 +1,19 @@
 #include "change_entity_name_command.h"
 
 ChangeEntityNameCommand::ChangeEntityNameCommand(GlobalInfo& globalInfo, EntityID entityID, const std::string& name) : m_globalInfo(globalInfo) {
-	setText("Change Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name) + " Name to " + QString::fromStdString(name));
 	m_entityID = entityID;
 	m_previousEntityName = m_globalInfo.entities[entityID].name;
-	m_newEntityName = name;
+	uint32_t entityNameIndex = 0;
+	if (m_globalInfo.findEntityByName(name) == NO_ENTITY) {
+		m_newEntityName = name;
+	}
+	else {
+		while (m_globalInfo.findEntityByName(name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
+			entityNameIndex++;
+		}
+		m_newEntityName = name + "_" + std::to_string(entityNameIndex);
+	}
+	setText("Change Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name) + " Name to " + QString::fromStdString(m_newEntityName));
 }
 
 void ChangeEntityNameCommand::undo() {
