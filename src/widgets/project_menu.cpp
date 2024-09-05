@@ -29,26 +29,33 @@ void ProjectMenu::openProjectSettings() {
 void ProjectMenu::importGlobalResources() {
 	std::filesystem::copy("assets/global_resources", m_globalInfo.projectDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
-	std::fstream optionsFile(m_globalInfo.projectDirectory + "/assets/options/options.ntop", std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			return;
-		}
-	}
-	else {
-		return;
+	if (!std::filesystem::exists("assets/options")) {
+		std::filesystem::create_directory("assets/options");
 	}
 
-	optionsFile = std::fstream(m_globalInfo.projectDirectory + "/assets/options/options.ntop", std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
+	bool optionsOpen = false;
+	std::fstream optionsFile = std::fstream(m_globalInfo.projectDirectory + "/assets/options/options.ntop", std::ios::in);
+	if (optionsFile.is_open()) {
+		optionsOpen = nlohmann::json::accept(optionsFile);
+	}
+
+	nlohmann::json j;
+	if (optionsOpen) {
+		optionsFile = std::fstream(m_globalInfo.projectDirectory + "/assets/options/options.ntop", std::ios::in);
+		j = nlohmann::json::parse(optionsFile);
+	}
 
 	optionsFile = std::fstream(m_globalInfo.projectDirectory + "/assets/options/options.ntop", std::ios::out | std::ios::trunc);
-	if (optionsFile.is_open()) {
-		if (!j.contains("firstScenePath")) {
-			j["firstScenePath"] = "assets/scenes/default_scene.ntsn";
-		}
-		optionsFile << j.dump(1, '\t');
+	if (!j.contains("windowTitle")) {
+		j["windowTitle"] = m_globalInfo.projectName;
 	}
+	if (!j.contains("maxFPS")) {
+		j["maxFPS"] = 60;
+	}
+	if (!j.contains("firstScenePath")) {
+		j["firstScenePath"] = "assets/scenes/default_scene.ntsn";
+	}
+	optionsFile << j.dump(1, '\t');
 }
 
 void ProjectMenu::updateBaseProject() {

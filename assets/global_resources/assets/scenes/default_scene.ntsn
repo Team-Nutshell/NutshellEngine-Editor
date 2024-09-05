@@ -18,6 +18,9 @@
 			},
 			"isPersistent": false,
 			"name": "Camera",
+			"scriptable": {
+				"scriptName": "CameraScript"
+			},
 			"transform": {
 				"position": [
 					0.0,
