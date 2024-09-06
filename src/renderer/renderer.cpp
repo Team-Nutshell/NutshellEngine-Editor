@@ -864,6 +864,8 @@ void Renderer::paintGL() {
 		gl.glDisable(GL_CULL_FACE);
 	}
 
+	nml::vec3 guizmoPosition = nml::vec3(0.0f, 0.0f, 0.0f);
+	bool guizmoPositionCalculated = false;
 	// Picking
 	if (m_doPicking) {
 		gl.glBindFramebuffer(GL_FRAMEBUFFER, m_pickingFramebuffer);
@@ -927,6 +929,16 @@ void Renderer::paintGL() {
 		}
 
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
+			guizmoPosition = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID].position : m_globalInfo.entities[m_globalInfo.currentEntityID].transform.position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				hasEntityMoveTransform = m_entityMoveTransforms.find(otherSelectedEntityID) != m_entityMoveTransforms.end();
+				guizmoPosition += hasEntityMoveTransform ? m_entityMoveTransforms[otherSelectedEntityID].position : m_globalInfo.entities[otherSelectedEntityID].transform.position;
+			}
+			guizmoPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+
+			guizmoPositionCalculated = true;
+
 			std::string guizmoModelName = "";
 			if (m_guizmoMode == GuizmoMode::Translate) {
 				guizmoModelName = "Guizmo-Translate";
@@ -945,9 +957,7 @@ void Renderer::paintGL() {
 					gl.glClear(GL_DEPTH_BUFFER_BIT);
 					gl.glEnable(GL_CULL_FACE);
 
-					bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
-					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-					nml::mat4 modelMatrix = nml::translate(transform.position);
+					nml::mat4 modelMatrix = nml::translate(guizmoPosition);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
 					const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
@@ -1014,6 +1024,18 @@ void Renderer::paintGL() {
 
 	// Guizmo
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		if (!guizmoPositionCalculated) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
+			guizmoPosition = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID].position : m_globalInfo.entities[m_globalInfo.currentEntityID].transform.position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				hasEntityMoveTransform = m_entityMoveTransforms.find(otherSelectedEntityID) != m_entityMoveTransforms.end();
+				guizmoPosition += hasEntityMoveTransform ? m_entityMoveTransforms[otherSelectedEntityID].position : m_globalInfo.entities[otherSelectedEntityID].transform.position;
+			}
+			guizmoPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+
+			guizmoPositionCalculated = true;
+		}
+
 		std::string guizmoModelName = "";
 		if (m_guizmoMode == GuizmoMode::Translate) {
 			guizmoModelName = "Guizmo-Translate";
@@ -1039,9 +1061,7 @@ void Renderer::paintGL() {
 				gl.glDepthMask(GL_TRUE);
 				gl.glEnable(GL_CULL_FACE);
 
-				bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
-				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID] : m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-				nml::mat4 modelMatrix = nml::translate(transform.position);
+				nml::mat4 modelMatrix = nml::translate(guizmoPosition);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
 
 				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
@@ -1963,10 +1983,12 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 			m_doPicking = true;
 		}
 		else if (event->button() == Qt::RightButton) {
-			m_moveCameraButtonPressed = true;
-			m_savedMousePosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
-			m_mouseCursorPreviousPosition = m_savedMousePosition;
-			setCursor(Qt::CursorShape::BlankCursor);
+			if (m_guizmoAxis == GuizmoAxis::None) {
+				m_moveCameraButtonPressed = true;
+				m_savedMousePosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
+				m_mouseCursorPreviousPosition = m_savedMousePosition;
+				setCursor(Qt::CursorShape::BlankCursor);
+			}
 		}
 	}
 	else {
