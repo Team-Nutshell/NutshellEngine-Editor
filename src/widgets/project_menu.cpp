@@ -29,8 +29,8 @@ void ProjectMenu::openProjectSettings() {
 void ProjectMenu::importGlobalResources() {
 	std::filesystem::copy("assets/global_resources", m_globalInfo.projectDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
-	if (!std::filesystem::exists("assets/options")) {
-		std::filesystem::create_directory("assets/options");
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/options")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/assets/options");
 	}
 
 	bool optionsOpen = false;
