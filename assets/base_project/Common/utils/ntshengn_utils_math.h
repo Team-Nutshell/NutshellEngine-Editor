@@ -4,6 +4,7 @@
 #include <string>
 #include <limits>
 #include <iostream>
+#include <algorithm>
 #include <cstdint>
 #include <cmath>
 #include <stdexcept>
@@ -44,8 +45,8 @@ namespace NtshEngn {
 			vec2(float _value);
 			vec2(float _x, float _y);
 			vec2(const float* _ptr);
-			vec2(vec3 _xyz);
-			vec2(vec4 _xyzw);
+			vec2(const vec3& _xyz);
+			vec2(const vec4& _xyzw);
 
 			// Operators
 			vec2& operator+=(const vec2& other);
@@ -73,10 +74,10 @@ namespace NtshEngn {
 			vec3();
 			vec3(float _value);
 			vec3(float _x, float _y, float _z);
-			vec3(float _x, vec2 _yz);
-			vec3(vec2 _xy, float _z);
+			vec3(float _x, const vec2& _yz);
+			vec3(const vec2& _xy, float _z);
 			vec3(const float* _ptr);
-			vec3(vec4 _xyzw);
+			vec3(const vec4& _xyzw);
 
 			// Operators
 			vec3& operator+=(const vec3& other);
@@ -105,12 +106,12 @@ namespace NtshEngn {
 			vec4();
 			vec4(float _value);
 			vec4(float _x, float _y, float _z, float _w);
-			vec4(float _x, vec3 _yzw);
-			vec4(vec3 _xyz, float _w);
-			vec4(float _x, float _y, vec2 _zw);
-			vec4(float _x, vec2 _yz, float _w);
-			vec4(vec2 _xy, float _z, float _w);
-			vec4(vec2 _xy, vec2 _zw);
+			vec4(float _x, const vec3& _yzw);
+			vec4(const vec3& _xyz, float _w);
+			vec4(float _x, float _y, const vec2& _zw);
+			vec4(float _x, const vec2& _yz, float _w);
+			vec4(const vec2& _xy, float _z, float _w);
+			vec4(const vec2& _xy, const vec2& _zw);
 			vec4(const float* _ptr);
 
 			// Operators
@@ -140,12 +141,12 @@ namespace NtshEngn {
 			mat2();
 			mat2(float _value);
 			mat2(float _xx, float _xy, float _yx, float _yy);
-			mat2(float _xx, float _xy, vec2 _y);
-			mat2(vec2 _x, float _yx, float _yy);
-			mat2(vec2 _x, vec2 _y);
+			mat2(float _xx, float _xy, const vec2& _y);
+			mat2(const vec2& _x, float _yx, float _yy);
+			mat2(const vec2& _x, const vec2& _y);
 			mat2(const float* _ptr);
-			mat2(mat3 _mat);
-			mat2(mat4 _mat);
+			mat2(const mat3& _mat);
+			mat2(const mat4& _mat);
 
 			// Operators
 			mat2& operator+=(const mat2& other);
@@ -180,15 +181,15 @@ namespace NtshEngn {
 			mat3();
 			mat3(float _value);
 			mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz);
-			mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, vec3 _z);
-			mat3(float _xx, float _xy, float _xz, vec3 _y, float _zx, float _zy, float _zz);
-			mat3(vec3 _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz);
-			mat3(float _xx, float _xy, float _xz, vec3 _y, vec3 _z);
-			mat3(vec3 _x, vec3 _y, float _zx, float _zy, float _zz);
-			mat3(vec3 _x, float _yx, float _yy, float _yz, vec3 _z);
-			mat3(vec3 _x, vec3 _y, vec3 _z);
+			mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, const vec3& _z);
+			mat3(float _xx, float _xy, float _xz, const vec3& _y, float _zx, float _zy, float _zz);
+			mat3(const vec3& _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz);
+			mat3(float _xx, float _xy, float _xz, const vec3& _y, const vec3& _z);
+			mat3(const vec3& _x, const vec3& _y, float _zx, float _zy, float _zz);
+			mat3(const vec3& _x, float _yx, float _yy, float _yz, const vec3& _z);
+			mat3(const vec3& _x, const vec3& _y, const vec3& _z);
 			mat3(const float* _ptr);
-			mat3(mat4 _mat);
+			mat3(const mat4& _mat);
 
 			// Operators
 			mat3& operator+=(const mat3& other);
@@ -227,21 +228,21 @@ namespace NtshEngn {
 			mat4();
 			mat4(float _value);
 			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-			mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-			mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w);
-			mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-			mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-			mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-			mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-			mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-			mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, vec4 _w);
-			mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w);
-			mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-			mat4(vec4 _x, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-			mat4(vec4 _x, vec4 _y, vec4 _z, vec4 _w);
+			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+			mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+			mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+			mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w);
+			mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+			mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+			mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+			mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+			mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+			mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, const vec4& _w);
+			mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w);
+			mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+			mat4(const vec4& _x, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+			mat4(const vec4& _x, const vec4& _y, const vec4& _z, const vec4& _w);
 			mat4(const float* _ptr);
 
 			// Operators
@@ -631,9 +632,18 @@ namespace NtshEngn {
 				0.0f, 0.0f, 0.0f, 1.0f);
 		}
 		inline vec3 rotationMatrixToEulerAngles(const mat4& mat) { // Defined early for quatToEulerAngles
-			return vec3(-std::atan2(mat.z.y, mat.z.z),
-				-std::atan2(-mat.z.x, std::sqrt((mat.z.y * mat.z.y) + (mat.z.z * mat.z.z))),
-				-std::atan2(mat.y.x, mat.x.x));
+			vec3 eulerAngles;
+			eulerAngles.y = std::asin(std::clamp(mat.z.x, -1.0f, 1.0f));
+			if (std::abs(mat.z.x) < (1.0f - std::numeric_limits<float>::epsilon())) {
+				eulerAngles.x = std::atan2(-mat.z.y, mat.z.z);
+				eulerAngles.z = std::atan2(-mat.y.x, mat.x.x);
+			}
+			else {
+				eulerAngles.x = std::atan2(mat.y.z, mat.y.y);
+				eulerAngles.z = 0.0f;
+			}
+
+			return eulerAngles;
 		}
 		inline vec3 quatToEulerAngles(const quat& qua) {
 			const mat4 rotationMatrix = quatToRotationMatrix(qua);
@@ -919,74 +929,74 @@ namespace NtshEngn {
 		inline vec2::vec2(float _value) : x(_value), y(_value) {}
 		inline vec2::vec2(float _x, float _y) : x(_x), y(_y) {}
 		inline vec2::vec2(const float* _ptr) : x(*_ptr), y(*(_ptr + 1)) {}
-		inline vec2::vec2(vec3 _xyz) : x(_xyz.x), y(_xyz.y) {}
-		inline vec2::vec2(vec4 _xyzw) : x(_xyzw.x), y(_xyzw.y) {}
+		inline vec2::vec2(const vec3& _xyz) : x(_xyz.x), y(_xyz.y) {}
+		inline vec2::vec2(const vec4& _xyzw) : x(_xyzw.x), y(_xyzw.y) {}
 
 		// vec3
 		inline vec3::vec3() : x(0.0f), y(0.0f), z(0.0f) {}
 		inline vec3::vec3(float _value) : x(_value), y(_value), z(_value) {}
 		inline vec3::vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-		inline vec3::vec3(float _x, vec2 _yz) : x(_x), y(_yz.x), z(_yz.y) {}
-		inline vec3::vec3(vec2 _xy, float _z) : x(_xy.x), y(_xy.y), z(_z) {}
+		inline vec3::vec3(float _x, const vec2& _yz) : x(_x), y(_yz.x), z(_yz.y) {}
+		inline vec3::vec3(const vec2& _xy, float _z) : x(_xy.x), y(_xy.y), z(_z) {}
 		inline vec3::vec3(const float* _ptr) : x(*_ptr), y(*(_ptr + 1)), z(*(_ptr + 2)) {}
-		inline vec3::vec3(vec4 _xyzw) : x(_xyzw.x), y(_xyzw.y), z(_xyzw.z) {}
+		inline vec3::vec3(const vec4& _xyzw) : x(_xyzw.x), y(_xyzw.y), z(_xyzw.z) {}
 
 		// vec4
 		inline vec4::vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 		inline vec4::vec4(float _value) : x(_value), y(_value), z(_value), w(_value) {}
 		inline vec4::vec4(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
-		inline vec4::vec4(float _x, vec3 _yzw) : x(_x), y(_yzw.x), z(_yzw.y), w(_yzw.z) {}
-		inline vec4::vec4(vec3 _xyz, float _w) : x(_xyz.x), y(_xyz.y), z(_xyz.z), w(_w) {}
-		inline vec4::vec4(float _x, float _y, vec2 _zw) : x(_x), y(_y), z(_zw.x), w(_zw.y) {}
-		inline vec4::vec4(float _x, vec2 _yz, float _w) : x(_x), y(_yz.x), z(_yz.y), w(_w) {}
-		inline vec4::vec4(vec2 _xy, float _z, float _w) : x(_xy.x), y(_xy.y), z(_z), w(_w) {}
-		inline vec4::vec4(vec2 _xy, vec2 _zw) : x(_xy.x), y(_xy.y), z(_zw.x), w(_zw.y) {}
+		inline vec4::vec4(float _x, const vec3& _yzw) : x(_x), y(_yzw.x), z(_yzw.y), w(_yzw.z) {}
+		inline vec4::vec4(const vec3& _xyz, float _w) : x(_xyz.x), y(_xyz.y), z(_xyz.z), w(_w) {}
+		inline vec4::vec4(float _x, float _y, const vec2& _zw) : x(_x), y(_y), z(_zw.x), w(_zw.y) {}
+		inline vec4::vec4(float _x, const vec2& _yz, float _w) : x(_x), y(_yz.x), z(_yz.y), w(_w) {}
+		inline vec4::vec4(const vec2& _xy, float _z, float _w) : x(_xy.x), y(_xy.y), z(_z), w(_w) {}
+		inline vec4::vec4(const vec2& _xy, const vec2& _zw) : x(_xy.x), y(_xy.y), z(_zw.x), w(_zw.y) {}
 		inline vec4::vec4(const float* _ptr) : x(*_ptr), y(*(_ptr + 1)), z(*(_ptr + 2)), w(*(_ptr + 3)) {}
 
 		// mat2
 		inline mat2::mat2() : x(0.0f, 0.0f), y(0.0f, 0.0f) {}
 		inline mat2::mat2(float _value) : x(_value), y(_value) {}
 		inline mat2::mat2(float _xx, float _xy, float _yx, float _yy) : x(_xx, _xy), y(_yx, _yy) {}
-		inline mat2::mat2(float _xx, float _xy, vec2 _y) : x(_xx, _xy), y(_y) {}
-		inline mat2::mat2(vec2 _x, float _yx, float _yy) : x(_x), y(_yx, _yy) {}
-		inline mat2::mat2(vec2 _x, vec2 _y) : x(_x), y(_y) {}
+		inline mat2::mat2(float _xx, float _xy, const vec2& _y) : x(_xx, _xy), y(_y) {}
+		inline mat2::mat2(const vec2& _x, float _yx, float _yy) : x(_x), y(_yx, _yy) {}
+		inline mat2::mat2(const vec2& _x, const vec2& _y) : x(_x), y(_y) {}
 		inline mat2::mat2(const float* _ptr) : x(_ptr), y(_ptr + 2) {}
-		inline mat2::mat2(mat3 _mat) : x(_mat.x), y(_mat.y) {}
-		inline mat2::mat2(mat4 _mat) : x(_mat.x), y(_mat.y) {}
+		inline mat2::mat2(const mat3& _mat) : x(_mat.x), y(_mat.y) {}
+		inline mat2::mat2(const mat4& _mat) : x(_mat.x), y(_mat.y) {}
 
 		// mat3
 		inline mat3::mat3() : x(0.0f, 0.0f, 0.0f), y(0.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 0.0f) {}
 		inline mat3::mat3(float _value) : x(_value), y(_value), z(_value) {}
 		inline mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz) : x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
-		inline mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, vec3 _z) : x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_z) {}
-		inline mat3::mat3(float _xx, float _xy, float _xz, vec3 _y, float _zx, float _zy, float _zz) : x(_xx, _xy, _xz), y(_y), z(_zx, _zy, _zz) {}
-		inline mat3::mat3(vec3 _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz) : x(_x), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
-		inline mat3::mat3(float _xx, float _xy, float _xz, vec3 _y, vec3 _z) : x(_xx, _xy, _xz), y(_y), z(_z) {}
-		inline mat3::mat3(vec3 _x, vec3 _y, float _zx, float _zy, float _zz) : x(_x), y(_y), z(_zx, _zy, _zz) {}
-		inline mat3::mat3(vec3 _x, float _yx, float _yy, float _yz, vec3 _z) : x(_x), y(_yx, _yy, _yz), z(_z) {}
-		inline mat3::mat3(vec3 _x, vec3 _y, vec3 _z) : x(_x), y(_y), z(_z) {}
+		inline mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, const vec3& _z) : x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_z) {}
+		inline mat3::mat3(float _xx, float _xy, float _xz, const vec3& _y, float _zx, float _zy, float _zz) : x(_xx, _xy, _xz), y(_y), z(_zx, _zy, _zz) {}
+		inline mat3::mat3(const vec3& _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz) : x(_x), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
+		inline mat3::mat3(float _xx, float _xy, float _xz, const vec3& _y, const vec3& _z) : x(_xx, _xy, _xz), y(_y), z(_z) {}
+		inline mat3::mat3(const vec3& _x, const vec3& _y, float _zx, float _zy, float _zz) : x(_x), y(_y), z(_zx, _zy, _zz) {}
+		inline mat3::mat3(const vec3& _x, float _yx, float _yy, float _yz, const vec3& _z) : x(_x), y(_yx, _yy, _yz), z(_z) {}
+		inline mat3::mat3(const vec3& _x, const vec3& _y, const vec3& _z) : x(_x), y(_y), z(_z) {}
 		inline mat3::mat3(const float* _ptr) : x(_ptr), y(_ptr + 3), z(_ptr + 6) {}
-		inline mat3::mat3(mat4 _mat) : x(_mat.x), y(_mat.y), z(_mat.z) {}
+		inline mat3::mat3(const mat4& _mat) : x(_mat.x), y(_mat.y), z(_mat.z) {}
 
 		// mat4
 		inline mat4::mat4() : x(0.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 0.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 0.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 0.0f) {}
 		inline mat4::mat4(float _value) : x(_value), y(_value), z(_value), w(_value) {}
 		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w) : x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
-		inline mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w) : x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, vec4 _w) : x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_w) {}
-		inline mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w) : x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
-		inline mat4::mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w) : x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
-		inline mat4::mat4(vec4 _x, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
-		inline mat4::mat4(vec4 _x, vec4 _y, vec4 _z, vec4 _w) : x(_x), y(_y), z(_z), w(_w) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w) : x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w) : x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
+		inline mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w) : x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww) : x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, const vec4& _w) : x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_w) {}
+		inline mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w) : x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
+		inline mat4::mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w) : x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
+		inline mat4::mat4(const vec4& _x, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww) : x(_x), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
+		inline mat4::mat4(const vec4& _x, const vec4& _y, const vec4& _z, const vec4& _w) : x(_x), y(_y), z(_z), w(_w) {}
 		inline mat4::mat4(const float* _ptr) : x(_ptr), y(_ptr + 4), z(_ptr + 8), w(_ptr + 12) {}
 
 		// quat
