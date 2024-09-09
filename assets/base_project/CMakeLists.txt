@@ -32,8 +32,12 @@ else()
 	FetchContent_MakeAvailable(Common)
 endif()
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR})
+set(NTSHENGN_BUILD_IN_EDITOR OFF BOOL "Whether this CMake is executed in NutshellEngine's Editor or not.")
+if(NOT NTSHENGN_BUILD_IN_EDITOR)
+	message(STATUS "Generate ntshengn_script_manager.cpp with CMake.")
+	find_package(Python3 REQUIRED COMPONENTS Interpreter)
+	execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 set(SCRIPTS_DIRECTORY "scripts")
 file(GLOB_RECURSE SCRIPTS "${SCRIPTS_DIRECTORY}/*.h")
@@ -87,15 +91,19 @@ elseif(NOT NTSHENGN_INSTALL_SCRIPTS_PATH STREQUAL "NtshEngn_InstallScripts_NOTFO
 	message(WARNING "Could not find NutshellEngine\'s directory at ${NTSHENGN_INSTALL_SCRIPTS_PATH}.")
 endif()
 
-add_custom_target(GenerateScriptManager
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_DIRECTORY}/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR}
-	COMMENT "Generate ${SCRIPTS_DIRECTORY}/script_manager/ntshengn_script_manager.cpp.")
+if(NOT NTSHENGN_BUILD_IN_EDITOR)
+	add_custom_target(GenerateScriptManager
+		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_DIRECTORY}/script_manager/generate_script_manager.py ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Generate ntshengn_script_manager.cpp during build.")
+endif()
 
 add_custom_target(CopyAssets
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/assets
 	COMMENT "Copy assets from ${CMAKE_SOURCE_DIR}/assets to project build folder ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/assets.")
 
-add_dependencies(${PROJECT_NAME} GenerateScriptManager)
+if(NOT NTSHENGN_BUILD_IN_EDITOR)
+	add_dependencies(${PROJECT_NAME} GenerateScriptManager)
+endif()
 add_dependencies(${PROJECT_NAME} CopyAssets)
 
 set(NTSHENGN_EXECUTABLE_PATH "NtshEngn_Executable_NOTFOUND" CACHE FILEPATH "Path to NutshellEngine\'s executable to launch the application.")

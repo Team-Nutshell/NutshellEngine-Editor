@@ -20,6 +20,8 @@ private:
 
 	void addLog(std::string log);
 
+	void generateScriptManager();
+
 private slots:
 	void onBuildRunExportStarted();
 	void onBuildRunExportEnded();
