@@ -32,7 +32,7 @@ else()
 	FetchContent_MakeAvailable(Common)
 endif()
 
-set(NTSHENGN_BUILD_IN_EDITOR OFF BOOL "Whether this CMake is executed in NutshellEngine's Editor or not.")
+set(NTSHENGN_BUILD_IN_EDITOR OFF CACHE BOOL "Whether this CMake is executed in NutshellEngine's Editor or not.")
 if(NOT NTSHENGN_BUILD_IN_EDITOR)
 	message(STATUS "Generate ntshengn_script_manager.cpp with CMake.")
 	find_package(Python3 REQUIRED COMPONENTS Interpreter)
