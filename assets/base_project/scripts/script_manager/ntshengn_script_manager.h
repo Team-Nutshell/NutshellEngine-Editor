@@ -14,7 +14,7 @@
 namespace NtshEngn {
 
 	class ScriptManager : public ScriptManagerInterface {
-		Scriptable createScriptable(const std::string& name);
+		Scriptable createScriptable(const std::string& scriptName);
 	};
 
 }
