@@ -20,6 +20,7 @@ private:
 
 	void addLog(std::string log);
 
+	std::pair<std::string, std::string> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
 	void generateScriptManager();
 
 private slots:
