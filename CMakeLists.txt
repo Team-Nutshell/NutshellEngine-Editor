@@ -145,6 +145,7 @@ set(WIDGET_SOURCES
 	src/widgets/project_menu.cpp
 	src/widgets/project_ntpj_file_widget.cpp
 	src/widgets/project_window.cpp
+	src/widgets/quaternion_widget.cpp
 	src/widgets/recent_project_widget.cpp
 	src/widgets/recent_projects_widget.cpp
 	src/widgets/rename_widget.cpp
@@ -159,6 +160,7 @@ set(WIDGET_SOURCES
 	src/widgets/transform_component_widget.cpp
 	src/widgets/vector2_widget.cpp
 	src/widgets/vector3_widget.cpp
+	src/widgets/vector4_widget.cpp
 	src/widgets/view_menu.cpp)
 set(WIDGET_HEADERS
 	src/widgets/add_component_button.h
@@ -208,6 +210,7 @@ set(WIDGET_HEADERS
 	src/widgets/project_menu.h
 	src/widgets/project_ntpj_file_widget.h
 	src/widgets/project_window.h
+	src/widgets/quaternion_widget.h
 	src/widgets/recent_project_widget.h
 	src/widgets/recent_projects_widget.h
 	src/widgets/rename_widget.h
@@ -222,6 +225,7 @@ set(WIDGET_HEADERS
 	src/widgets/transform_component_widget.h
 	src/widgets/vector2_widget.h
 	src/widgets/vector3_widget.h
+	src/widgets/vector4_widget.h
 	src/widgets/view_menu.h)
 
 set(SOURCES

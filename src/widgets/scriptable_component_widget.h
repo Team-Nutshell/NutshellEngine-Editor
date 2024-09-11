@@ -4,6 +4,10 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QFileSystemWatcher>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <variant>
 #include <unordered_map>
 
 class ScriptableComponentWidget : public QWidget {
@@ -17,6 +21,9 @@ private:
 
 	std::vector<std::string> getScriptEntries();
 
+	std::tuple<std::string, std::string, EditableScriptVariableValue> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
+	void updateEditableVariablesWidget(Scriptable& scriptable);
+
 private slots:
 	void onEntitySelected();
 	void onEntityScriptableAdded(EntityID entityID);
@@ -25,15 +32,22 @@ private slots:
 	void onElementChanged(const std::string& element);
 	void onOpenCodeEditorButtonClicked();
 	void onDirectoryChanged(const QString& path);
+	void onCurrentScriptChanged(const QString& path);
+	void onEditableVariableChanged();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	std::unordered_map<std::string, std::string> m_scriptToPath;
 
+	std::vector<std::tuple<std::string, std::string, EditableScriptVariableValue>> m_editableVariables;
+	std::unordered_map<QWidget*, std::string> m_widgetToEditableVariableName;
+
 	QFileSystemWatcher m_scriptsDirectoryWatcher;
+	QFileSystemWatcher m_currentScriptWatcher;
 
 public:
 	ComboBoxWidget* scriptNameWidget;
 	QPushButton* openCodeEditorButton;
+	QWidget* editableVariablesWidget;
 };

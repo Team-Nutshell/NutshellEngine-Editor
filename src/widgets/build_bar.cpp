@@ -624,6 +624,10 @@ void BuildBar::addLog(std::string log) {
 }
 
 std::pair<std::string, std::string> BuildBar::parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath) {
+	if (tokens.size() < 2) {
+		return { "" , "Unknown" };
+	}
+	
 	std::string type = tokens[0];
 	std::string name = tokens[1];
 	if (type == "bool") {
@@ -635,7 +639,7 @@ std::pair<std::string, std::string> BuildBar::parseVariableLineTokens(const std:
 	else if (type == "int16_t") {
 		return { name, "Int16" };
 	}
-	else if (type == "int32_t") {
+	else if ((type == "int") || (type == "int32_t")) {
 		return { name, "Int32" };
 	}
 	else if (type == "int64_t") {
@@ -650,7 +654,7 @@ std::pair<std::string, std::string> BuildBar::parseVariableLineTokens(const std:
 	else if (type == "uint32_t") {
 		return { name, "Uint32" };
 	}
-	else if (type == "uint64_t") {
+	else if ((type == "uint64_t") || (type == "size_t")) {
 		return { name, "Uint64" };
 	}
 	else if (type == "float") {
@@ -711,10 +715,15 @@ void BuildBar::generateScriptManager() {
 							std::vector<std::string> variableLineTokens;
 							size_t spacePosition = 0;
 							while ((spacePosition = variableLine.find(' ')) != std::string::npos) {
-								variableLineTokens.push_back(variableLine.substr(0, spacePosition));
+								std::string variableLineToken = variableLine.substr(0, spacePosition);
+								if (!variableLineToken.empty()) {
+									variableLineTokens.push_back(variableLineToken);
+								}
 								variableLine.erase(0, spacePosition + 1);
 							}
-							variableLineTokens.push_back(variableLine);
+							if (!variableLine.empty()) {
+								variableLineTokens.push_back(variableLine);
+							}
 							editableScriptVariables.push_back(parseVariableLineTokens(variableLineTokens, usingNamespaceStd, usingNamespaceNtshEngnMath));
 						}
 
