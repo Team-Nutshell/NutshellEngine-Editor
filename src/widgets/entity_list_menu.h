@@ -9,6 +9,7 @@ public:
 	EntityListMenu(GlobalInfo& globalInfo);
 
 private slots:
+	void renameEntity();
 	void newEntity();
 	void deleteEntity();
 
@@ -16,6 +17,7 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
+	QAction* renameEntityAction;
 	QAction* newEntityAction;
 	QAction* deleteEntityAction;
 };

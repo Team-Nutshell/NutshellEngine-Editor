@@ -89,11 +89,13 @@ void EntityList::onEntityVisibilityToggled(EntityID entityID, bool isVisible) {
 
 void EntityList::showMenu(const QPoint& pos) {
 	if (!itemAt(pos)) {
+		menu->renameEntityAction->setEnabled(false);
 		menu->deleteEntityAction->setEnabled(false);
 	}
 	else {
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(itemAt(pos));
 		m_globalInfo.currentEntityID = entityListItem->entityID;
+		menu->renameEntityAction->setEnabled(true);
 		menu->deleteEntityAction->setEnabled(true);
 	}
 	menu->popup(QCursor::pos());
