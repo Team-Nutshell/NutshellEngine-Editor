@@ -57,15 +57,11 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo, const std::stri
 			ModelNtmdPrimitiveWidget* newPrimitiveWidget = new ModelNtmdPrimitiveWidget(m_globalInfo);
 			if (primitive.contains("meshPath")) {
 				std::string meshPath = primitive["meshPath"];
-				newPrimitiveWidget->primitiveMeshWidget->filePathButton->path = meshPath;
-				newPrimitiveWidget->primitiveMeshWidget->filePathButton->setText(QString::fromStdString(meshPath.substr(meshPath.rfind('/') + 1)));
-				newPrimitiveWidget->primitiveMeshWidget->filePathButton->setToolTip(QString::fromStdString(meshPath));
+				newPrimitiveWidget->primitiveMeshWidget->setPath(meshPath);
 			}
 			if (primitive.contains("materialPath")) {
 				std::string materialPath = primitive["materialPath"];
-				newPrimitiveWidget->primitiveMaterialWidget->filePathButton->path = materialPath;
-				newPrimitiveWidget->primitiveMaterialWidget->filePathButton->setText(QString::fromStdString(materialPath.substr(materialPath.rfind('/') + 1)));
-				newPrimitiveWidget->primitiveMaterialWidget->filePathButton->setToolTip(QString::fromStdString(materialPath));
+				newPrimitiveWidget->primitiveMeshWidget->setPath(materialPath);
 			}
 			primitivesWidget->layout()->addWidget(newPrimitiveWidget);
 
