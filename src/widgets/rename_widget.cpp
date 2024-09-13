@@ -2,6 +2,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <filesystem>
+#include <regex>
 
 RenameWidget::RenameWidget(GlobalInfo& globalInfo, const std::string& directory, const std::string& filename) : m_globalInfo(globalInfo), m_directory(directory) {
 	setWindowTitle("NutshellEngine - Rename - " + QString::fromStdString(directory) + "/" + QString::fromStdString(filename));

@@ -4,7 +4,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QKeyEvent>
-#include <regex>
 
 class RenameWidget : public QWidget {
 	Q_OBJECT

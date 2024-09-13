@@ -6,8 +6,8 @@
 #include <QFileSystemWatcher>
 #include <string>
 #include <vector>
-#include <tuple>
 #include <variant>
+#include <set>
 #include <unordered_map>
 
 class ScriptableComponentWidget : public QWidget {
@@ -21,8 +21,10 @@ private:
 
 	std::vector<std::string> getScriptEntries();
 
-	std::tuple<std::string, std::string, EditableScriptVariableValue> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
-	void updateEditableVariablesWidget(Scriptable& scriptable);
+	std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
+	void updateEditableScriptVariables(const std::string& scriptName);
+	void createEditableScriptVariablesWidget(const std::string& scriptName);
+	void updateEditableScriptVariablesWidget(Scriptable& scriptable);
 
 private slots:
 	void onEntitySelected();
@@ -33,15 +35,17 @@ private slots:
 	void onOpenCodeEditorButtonClicked();
 	void onDirectoryChanged(const QString& path);
 	void onCurrentScriptChanged(const QString& path);
-	void onEditableVariableChanged();
+	void onEditableScriptVariableChanged();
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unordered_map<std::string, std::string> m_scriptToPath;
+	std::unordered_map<std::string, std::unordered_map<std::string, std::pair<std::string, EditableScriptVariableValue>>> m_editableScriptVariables;
+	std::unordered_map<QWidget*, std::string> m_widgetToEditableScriptVariableName;
+	std::unordered_map<std::string, QWidget*> m_editableScriptVariableNameToWidget;
 
-	std::vector<std::tuple<std::string, std::string, EditableScriptVariableValue>> m_editableVariables;
-	std::unordered_map<QWidget*, std::string> m_widgetToEditableVariableName;
+	std::unordered_map<std::string, std::string> m_scriptToPath;
+	std::set<std::string> m_scriptsNoCase;
 
 	QFileSystemWatcher m_scriptsDirectoryWatcher;
 	QFileSystemWatcher m_currentScriptWatcher;
@@ -49,5 +53,5 @@ private:
 public:
 	ComboBoxWidget* scriptNameWidget;
 	QPushButton* openCodeEditorButton;
-	QWidget* editableVariablesWidget;
+	QWidget* editableScriptVariablesWidget;
 };

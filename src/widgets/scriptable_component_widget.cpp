@@ -19,8 +19,10 @@
 #include <fstream>
 #include <filesystem>
 #include <limits>
+#include <regex>
 #include <cstdlib>
 #include <cstdint>
+#include <cctype>
 
 ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
@@ -37,11 +39,11 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	openCodeEditorButton->setFixedWidth(20);
 	scriptSelectorWidget->layout()->addWidget(openCodeEditorButton);
 	layout()->addWidget(scriptSelectorWidget);
-	editableVariablesWidget = new QWidget();
-	editableVariablesWidget->setLayout(new QVBoxLayout());
-	editableVariablesWidget->layout()->setContentsMargins(0, 0, 0, 0);
-	editableVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
-	layout()->addWidget(editableVariablesWidget);
+	editableScriptVariablesWidget = new QWidget();
+	editableScriptVariablesWidget->setLayout(new QVBoxLayout());
+	editableScriptVariablesWidget->layout()->setContentsMargins(0, 0, 0, 0);
+	editableScriptVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
+	layout()->addWidget(editableScriptVariablesWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
 	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementChanged);
@@ -63,8 +65,10 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 				scriptNameWidget->comboBox->setCurrentText(QString::fromStdString(scriptable.scriptName));
 				openCodeEditorButton->setEnabled(true);
 				if (scriptable.scriptName != currentScript) {
-					updateEditableVariablesWidget(const_cast<Scriptable&>(scriptable));
+					updateEditableScriptVariables(scriptable.scriptName);
+					createEditableScriptVariablesWidget(scriptable.scriptName);
 				}
+				updateEditableScriptVariablesWidget(const_cast<Scriptable&>(scriptable));
 				if (!m_currentScriptWatcher.files().empty()) {
 					m_currentScriptWatcher.removePaths(m_currentScriptWatcher.files());
 				}
@@ -76,7 +80,7 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 				scriptNameWidget->comboBox->addItem(QString::fromStdString(scriptable.scriptName));
 				scriptNameWidget->comboBox->setCurrentText(QString::fromStdString(scriptable.scriptName));
 				openCodeEditorButton->setEnabled(false);
-				editableVariablesWidget->hide();
+				editableScriptVariablesWidget->hide();
 				if (!m_currentScriptWatcher.files().empty()) {
 					m_currentScriptWatcher.removePaths(m_currentScriptWatcher.files());
 				}
@@ -89,7 +93,7 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 			scriptNameWidget->comboBox->setCurrentText("No script selected");
 		}
 		openCodeEditorButton->setEnabled(false);
-		editableVariablesWidget->hide();
+		editableScriptVariablesWidget->hide();
 		if (!m_currentScriptWatcher.files().empty()) {
 			m_currentScriptWatcher.removePaths(m_currentScriptWatcher.files());
 		}
@@ -121,6 +125,12 @@ std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
 						std::string scriptName = scriptContent.substr(scriptNameStartPos, scriptNameLength);
 						scriptEntries.push_back(scriptName);
 						m_scriptToPath[scriptName] = entry.path().string();
+
+						std::string scriptNoCase = "";
+						for (char c : scriptName) {
+							scriptNoCase += std::toupper(static_cast<unsigned char>(c));
+						}
+						m_scriptsNoCase.insert(scriptNoCase);
 					}
 				}
 			}
@@ -132,12 +142,12 @@ std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
 	return scriptEntries;
 }
 
-std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComponentWidget::parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath) {
-	EditableScriptVariableValue editableVariableValue;
+std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> ScriptableComponentWidget::parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath) {
+	EditableScriptVariableValue editableScriptVariableValue;
 	
 	size_t tokenCount = tokens.size();
 	if (tokenCount < 2) {
-		return { "" , "Unknown", editableVariableValue };
+		return { "" , { "Unknown", editableScriptVariableValue } };
 	}
 
 	std::string type = tokens[0];
@@ -145,127 +155,127 @@ std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComp
 	if (type == "bool") {
 		if (tokenCount >= 4) {
 			if (tokens[3] == "true") {
-				editableVariableValue = true;
+				editableScriptVariableValue = true;
 			}
 			else if (tokens[3] == "false") {
-				editableVariableValue = false;
+				editableScriptVariableValue = false;
 			}
 		}
 		else {
-			editableVariableValue = false;
+			editableScriptVariableValue = false;
 		}
 
-		return { name, "Boolean", editableVariableValue };
+		return { name, { "Boolean", editableScriptVariableValue } };
 	}
 	else if (type == "int8_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Int8", editableVariableValue };
+		return { name, { "Int8", editableScriptVariableValue } };
 	}
 	else if (type == "int16_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Int16", editableVariableValue };
+		return { name, { "Int16", editableScriptVariableValue } };
 	}
 	else if ((type == "int") || (type == "int32_t")) {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Int32", editableVariableValue };
+		return { name, { "Int32", editableScriptVariableValue } };
 	}
 	else if (type == "int64_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Int64", editableVariableValue };
+		return { name, { "Int64", editableScriptVariableValue } };
 	}
 	else if (type == "uint8_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Uint8", editableVariableValue };
+		return { name, { "Uint8", editableScriptVariableValue } };
 	}
 	else if (type == "uint16_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Uint16", editableVariableValue };
+		return { name, { "Uint16", editableScriptVariableValue } };
 	}
 	else if (type == "uint32_t") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Uint32", editableVariableValue };
+		return { name, { "Uint32", editableScriptVariableValue } };
 	}
 	else if ((type == "uint64_t") || (type == "size_t")) {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atoi(tokens[3].c_str());
+			editableScriptVariableValue = std::atoi(tokens[3].c_str());
 		}
 		else {
-			editableVariableValue = 0;
+			editableScriptVariableValue = 0;
 		}
 
-		return { name, "Uint64", editableVariableValue };
+		return { name, { "Uint64", editableScriptVariableValue } };
 	}
 	else if (type == "float") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atof(tokens[3].c_str());
+			editableScriptVariableValue = static_cast<float>(std::atof(tokens[3].c_str()));
 		}
 		else {
-			editableVariableValue = 0.0;
+			editableScriptVariableValue = 0.0f;
 		}
 
-		return { name, "Float32", editableVariableValue };
+		return { name, { "Float32", editableScriptVariableValue } };
 	}
 	else if (type == "double") {
 		if (tokenCount >= 4) {
-			editableVariableValue = std::atof(tokens[3].c_str());
+			editableScriptVariableValue = static_cast<float>(std::atof(tokens[3].c_str()));
 		}
 		else {
-			editableVariableValue = 0.0;
+			editableScriptVariableValue = 0.0f;
 		}
 
-		return { name, "Float64", editableVariableValue };
+		return { name, { "Float64", editableScriptVariableValue } };
 	}
 	else if ((usingNamespaceStd && (type == "string")) || (!usingNamespaceStd && (type == "std::string"))) {
 		if (tokenCount >= 4) {
-			editableVariableValue = tokens[3];
+			editableScriptVariableValue = tokens[3];
 		}
 		else {
-			editableVariableValue = std::string("");
+			editableScriptVariableValue = std::string("");
 		}
 
-		return { name, "String", editableVariableValue };
+		return { name, { "String", editableScriptVariableValue } };
 	}
 	else if ((usingNamespaceNtshEngnMath && (type == "vec2")) || (!usingNamespaceNtshEngnMath && (type == "Math::vec2"))) {
 		if (tokenCount >= 4) {
@@ -298,13 +308,13 @@ std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComp
 				value.y = static_cast<float>(std::atof(valueYString.c_str()));
 			}
 
-			editableVariableValue = value;
+			editableScriptVariableValue = value;
 		}
 		else {
-			editableVariableValue = nml::vec2(0.0f, 0.0f);
+			editableScriptVariableValue = nml::vec2(0.0f, 0.0f);
 		}
 
-		return { name, "Vector2", editableVariableValue };
+		return { name, { "Vector2", editableScriptVariableValue } };
 	}
 	else if ((usingNamespaceNtshEngnMath && (type == "vec3")) || (!usingNamespaceNtshEngnMath && (type == "Math::vec3"))) {
 		if (tokenCount >= 4) {
@@ -344,13 +354,13 @@ std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComp
 				}
 			}
 
-			editableVariableValue = value;
+			editableScriptVariableValue = value;
 		}
 		else {
-			editableVariableValue = nml::vec3(0.0f, 0.0f, 0.0f);
+			editableScriptVariableValue = nml::vec3(0.0f, 0.0f, 0.0f);
 		}
 
-		return { name, "Vector3", editableVariableValue };
+		return { name, { "Vector3", editableScriptVariableValue } };
 	}
 	else if ((usingNamespaceNtshEngnMath && (type == "vec4")) || (!usingNamespaceNtshEngnMath && (type == "Math::vec4"))) {
 		if (tokenCount > 4) {
@@ -397,17 +407,17 @@ std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComp
 				}
 			}
 
-			editableVariableValue = value;
+			editableScriptVariableValue = value;
 		}
 		else {
-			editableVariableValue = nml::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			editableScriptVariableValue = nml::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 
-		return { name, "Vector4", editableVariableValue };
+		return { name, { "Vector4", editableScriptVariableValue } };
 	}
 	else if ((usingNamespaceNtshEngnMath && (type == "quat")) || (!usingNamespaceNtshEngnMath && (type == "Math::quat"))) {
 		if (tokenCount > 4) {
-			nml::quat value = nml::quat(0.0f, 0.0f, 0.0f, 0.0f);
+			nml::vec4 value = nml::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 			std::string fullVectorString = tokens[3];
 			for (size_t i = 4; i < tokens.size(); i++) {
@@ -426,48 +436,46 @@ std::tuple<std::string, std::string, EditableScriptVariableValue> ScriptableComp
 			if (commaPos != std::string::npos) {
 				// Multiple values for the quaternion
 				std::string valueAString = valueString.substr(0, commaPos);
-				value.a = static_cast<float>(std::atof(valueAString.c_str()));
+				value.x = static_cast<float>(std::atof(valueAString.c_str()));
 
 				valueString = valueString.substr(commaPos + 1);
 				commaPos = valueString.find(',');
 				if (commaPos != std::string::npos) {
 					std::string valueBString = valueString.substr(0, commaPos);
-					value.b = static_cast<float>(std::atof(valueBString.c_str()));
+					value.y = static_cast<float>(std::atof(valueBString.c_str()));
 
 					valueString = valueString.substr(commaPos + 1);
 					commaPos = valueString.find(',');
 					if (commaPos != std::string::npos) {
 						std::string valueCString = valueString.substr(0, commaPos);
 						std::string valueDString = valueString.substr(commaPos + 1);
-						value.c = static_cast<float>(std::atof(valueCString.c_str()));
-						value.d = static_cast<float>(std::atof(valueDString.c_str()));
+						value.z = static_cast<float>(std::atof(valueCString.c_str()));
+						value.w = static_cast<float>(std::atof(valueDString.c_str()));
 					}
 				}
 			}
+
+			editableScriptVariableValue = value;
 		}
 		else {
-			editableVariableValue = nml::quat(0.0f, 0.0f, 0.0f, 0.0f);
+			editableScriptVariableValue = nml::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 
-		return { name, "Quaternion", editableVariableValue };
+		return { name, { "Quaternion", editableScriptVariableValue } };
 	}
 
-	return { name, type, editableVariableValue };
+	return { name, { type, editableScriptVariableValue } };
 }
 
-void ScriptableComponentWidget::updateEditableVariablesWidget(Scriptable& scriptable) {
-	while (QLayoutItem* item = editableVariablesWidget->layout()->takeAt(0)) {
-		delete item->widget();
-		delete item;
+void ScriptableComponentWidget::updateEditableScriptVariables(const std::string& scriptName) {
+	if (m_editableScriptVariables.find(scriptName) != m_editableScriptVariables.end()) {
+		m_editableScriptVariables[scriptName].clear();
 	}
-	m_editableVariables.clear();
-	m_widgetToEditableVariableName.clear();
-	editableVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
 
-	const std::string editableVariableDefine = "NTSHENGN_EDITABLE_VARIABLE";
+	const std::string editableScriptVariableDefine = "NTSHENGN_EDITABLE_VARIABLE";
 
-	if (m_scriptToPath.find(scriptable.scriptName) != m_scriptToPath.end()) {
-		std::string scriptPath = m_scriptToPath[scriptable.scriptName];
+	if (m_scriptToPath.find(scriptName) != m_scriptToPath.end()) {
+		std::string scriptPath = m_scriptToPath[scriptName];
 
 		std::fstream scriptFile(scriptPath, std::ios::in);
 		if (scriptFile.is_open()) {
@@ -476,9 +484,9 @@ void ScriptableComponentWidget::updateEditableVariablesWidget(Scriptable& script
 			bool usingNamespaceStd = scriptContent.find("using namespace std;") != std::string::npos;
 			bool usingNamespaceNtshEngnMath = scriptContent.find("using namespace NtshEngn::Math;") != std::string::npos;
 			std::string currentParsing = scriptContent;
-			size_t editableVariableIndex;
-			while ((editableVariableIndex = currentParsing.find(editableVariableDefine)) != std::string::npos) {
-				currentParsing = currentParsing.substr(editableVariableIndex + editableVariableDefine.length() + 1);
+			size_t editableScriptVariableIndex;
+			while ((editableScriptVariableIndex = currentParsing.find(editableScriptVariableDefine)) != std::string::npos) {
+				currentParsing = currentParsing.substr(editableScriptVariableIndex + editableScriptVariableDefine.length() + 1);
 				std::string variableLine = currentParsing.substr(0, currentParsing.find(';'));
 				std::vector<std::string> variableLineTokens;
 				size_t spacePosition = 0;
@@ -492,322 +500,284 @@ void ScriptableComponentWidget::updateEditableVariablesWidget(Scriptable& script
 				if (!variableLine.empty()) {
 					variableLineTokens.push_back(variableLine);
 				}
-				m_editableVariables.push_back(parseVariableLineTokens(variableLineTokens, usingNamespaceStd, usingNamespaceNtshEngnMath));
+				std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> newEditableScriptVariable = parseVariableLineTokens(variableLineTokens, usingNamespaceStd, usingNamespaceNtshEngnMath);
+				m_editableScriptVariables[scriptName][newEditableScriptVariable.first] = newEditableScriptVariable.second;
 			}
+		}
+	}
+}
 
-			for (const auto& editableVariable : m_editableVariables) {
-				std::string name = std::get<0>(editableVariable);
-				std::string type = std::get<1>(editableVariable);
-				if (type != "Unknown") {
-					if (type == "Boolean") {
-						BooleanWidget* widget = new BooleanWidget(m_globalInfo, name);
-						widget->setValue(std::get<bool>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<bool>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
+void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::string& scriptName) {
+	while (QLayoutItem* item = editableScriptVariablesWidget->layout()->takeAt(0)) {
+		delete item->widget();
+		delete item;
+	}
+	m_widgetToEditableScriptVariableName.clear();
+	editableScriptVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
 
-						m_widgetToEditableVariableName[widget] = name;
+	if (m_scriptToPath.find(scriptName) != m_scriptToPath.end()) {
+		for (const auto& editableScriptVariable : m_editableScriptVariables[scriptName]) {
+			std::string name = editableScriptVariable.first;
+			std::string type = editableScriptVariable.second.first;
+			if (type != "Unknown") {
+				if (type == "Boolean") {
+					BooleanWidget* widget = new BooleanWidget(m_globalInfo, name);
+					widget->setValue(std::get<bool>(editableScriptVariable.second.second));
 
-						connect(widget, &BooleanWidget::stateChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Int8") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						widget->setMin(std::numeric_limits<int8_t>::min());
-						widget->setMax(std::numeric_limits<int8_t>::max());
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
 
-						m_widgetToEditableVariableName[widget] = name;
+					connect(widget, &BooleanWidget::stateChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Int16") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						widget->setMin(std::numeric_limits<int16_t>::min());
-						widget->setMax(std::numeric_limits<int16_t>::max());
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Int32") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Int64") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Uint8") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						widget->setMin(std::numeric_limits<uint8_t>::min());
-						widget->setMax(std::numeric_limits<uint8_t>::max());
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Uint16") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						widget->setMin(std::numeric_limits<uint16_t>::min());
-						widget->setMax(std::numeric_limits<uint16_t>::max());
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Uint32") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Uint64") {
-						IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
-						widget->setValue(std::get<int>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<int>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Float32") {
-						ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
-						widget->setValue(static_cast<float>(std::get<double>(std::get<2>(editableVariable))));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<double>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Float64") {
-						ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
-						widget->setValue(std::get<double>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<double>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "String") {
-						StringWidget* widget = new StringWidget(m_globalInfo, name);
-						widget->setText(std::get<std::string>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setText(std::get<std::string>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &StringWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Vector2") {
-						Vector2Widget* widget = new Vector2Widget(m_globalInfo, name);
-						widget->setValue(std::get<nml::vec2>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<nml::vec2>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &Vector2Widget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Vector3") {
-						Vector3Widget* widget = new Vector3Widget(m_globalInfo, name);
-						widget->setValue(std::get<nml::vec3>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<nml::vec3>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &Vector3Widget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Vector4") {
-						Vector4Widget* widget = new Vector4Widget(m_globalInfo, name);
-						widget->setValue(std::get<nml::vec4>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<nml::vec4>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &Vector4Widget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else if (type == "Quaternion") {
-						QuaternionWidget* widget = new QuaternionWidget(m_globalInfo, name);
-						widget->setValue(std::get<nml::quat>(std::get<2>(editableVariable)));
-						if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
-							if (scriptable.editableVariables[name].first == type) {
-								widget->setValue(std::get<nml::quat>(scriptable.editableVariables[name].second));
-							}
-							else {
-								scriptable.editableVariables.erase(name);
-							}
-						}
-						
-						m_widgetToEditableVariableName[widget] = name;
-						
-						connect(widget, &QuaternionWidget::valueChanged, this, &ScriptableComponentWidget::onEditableVariableChanged);
-						
-						editableVariablesWidget->layout()->addWidget(widget);
-					}
-					else {
-						m_globalInfo.logger.addLog(LogLevel::Warning, "In script \"" + scriptable.scriptName + "\", found variable \"" + name + "\" with an unsupported Editable Script Variable type (\"" + type + "\").");
-					}
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Int8") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+					widget->setMin(std::numeric_limits<int8_t>::min());
+					widget->setMax(std::numeric_limits<int8_t>::max());
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Int16") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+					widget->setMin(std::numeric_limits<int16_t>::min());
+					widget->setMax(std::numeric_limits<int16_t>::max());
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Int32") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Int64") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Uint8") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+					widget->setMin(std::numeric_limits<uint8_t>::min());
+					widget->setMax(std::numeric_limits<uint8_t>::max());
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Uint16") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+					widget->setMin(std::numeric_limits<uint16_t>::min());
+					widget->setMax(std::numeric_limits<uint16_t>::max());
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Uint32") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Uint64") {
+					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
+					widget->setValue(std::get<int>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Float32") {
+					ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
+					widget->setValue(std::get<float>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Float64") {
+					ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
+					widget->setValue(std::get<float>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "String") {
+					StringWidget* widget = new StringWidget(m_globalInfo, name);
+					widget->setText(std::get<std::string>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &StringWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Vector2") {
+					Vector2Widget* widget = new Vector2Widget(m_globalInfo, name);
+					widget->setValue(std::get<nml::vec2>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &Vector2Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Vector3") {
+					Vector3Widget* widget = new Vector3Widget(m_globalInfo, name);
+					widget->setValue(std::get<nml::vec3>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &Vector3Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Vector4") {
+					Vector4Widget* widget = new Vector4Widget(m_globalInfo, name);
+					widget->setValue(std::get<nml::vec4>(editableScriptVariable.second.second));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &Vector4Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else if (type == "Quaternion") {
+					QuaternionWidget* widget = new QuaternionWidget(m_globalInfo, name);
+					nml::vec4 value = std::get<nml::vec4>(editableScriptVariable.second.second);
+					widget->setValue(nml::quat(value.x, value.y, value.z, value.w));
+
+					m_widgetToEditableScriptVariableName[widget] = name;
+					m_editableScriptVariableNameToWidget[name] = widget;
+
+					connect(widget, &QuaternionWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
+
+					editableScriptVariablesWidget->layout()->addWidget(widget);
+				}
+				else {
+					m_globalInfo.logger.addLog(LogLevel::Warning, "In script \"" + scriptName + "\", found variable \"" + name + "\" with an unsupported Editable Script Variable type (\"" + type + "\").");
 				}
 			}
 		}
 	}
 
-	if (editableVariablesWidget->layout()->count() == 1) {
-		editableVariablesWidget->hide();
+	if (editableScriptVariablesWidget->layout()->count() == 1) {
+		editableScriptVariablesWidget->hide();
 	}
 	else {
-		editableVariablesWidget->show();
+		editableScriptVariablesWidget->show();
+	}
+}
+
+void ScriptableComponentWidget::updateEditableScriptVariablesWidget(Scriptable& scriptable) {
+	if (m_scriptToPath.find(scriptable.scriptName) != m_scriptToPath.end()) {
+		for (const auto& editableScriptVariable : m_editableScriptVariables[scriptable.scriptName]) {
+			std::string name = editableScriptVariable.first;
+			std::string type = editableScriptVariable.second.first;
+			if (m_editableScriptVariableNameToWidget.find(name) != m_editableScriptVariableNameToWidget.end()) {
+				EditableScriptVariableValue editableScriptVariableValue;
+				if (scriptable.editableVariables.find(name) != scriptable.editableVariables.end()) {
+					editableScriptVariableValue = scriptable.editableVariables[name];
+				}
+				else {
+					editableScriptVariableValue = editableScriptVariable.second.second;
+				}
+
+				QWidget* baseWidget = m_editableScriptVariableNameToWidget[name];
+				if (type == "Boolean") {
+					BooleanWidget* widget = static_cast<BooleanWidget*>(baseWidget);
+					widget->setValue(std::get<bool>(editableScriptVariableValue));
+				}
+				else if ((type == "Int8") ||
+					(type == "Int16") ||
+					(type == "Int32") ||
+					(type == "Int64") ||
+					(type == "Uint8") ||
+					(type == "Uint16") ||
+					(type == "Uint32") ||
+					(type == "Uint64")) {
+					IntegerWidget* widget = static_cast<IntegerWidget*>(baseWidget);
+					widget->setValue(std::get<int>(editableScriptVariableValue));
+				}
+				else if ((type == "Float32") ||
+					(type == "Float64")) {
+					ScalarWidget* widget = static_cast<ScalarWidget*>(baseWidget);
+					widget->setValue(std::get<float>(editableScriptVariableValue));
+				}
+				else if (type == "String") {
+					StringWidget* widget = static_cast<StringWidget*>(baseWidget);
+					widget->setText(std::get<std::string>(editableScriptVariableValue));
+				}
+				else if (type == "Vector2") {
+					Vector2Widget* widget = static_cast<Vector2Widget*>(baseWidget);
+					widget->setValue(std::get<nml::vec2>(editableScriptVariableValue));
+				}
+				else if (type == "Vector3") {
+					Vector3Widget* widget = static_cast<Vector3Widget*>(baseWidget);
+					widget->setValue(std::get<nml::vec3>(editableScriptVariableValue));
+				}
+				else if (type == "Vector4") {
+					Vector4Widget* widget = static_cast<Vector4Widget*>(baseWidget);
+					widget->setValue(std::get<nml::vec4>(editableScriptVariableValue));
+				}
+				else if (type == "Quaternion") {
+					QuaternionWidget* widget = static_cast<QuaternionWidget*>(baseWidget);
+					nml::vec4 value = std::get<nml::vec4>(editableScriptVariableValue);
+					widget->setValue(nml::quat(value.x, value.y, value.z, value.w));
+				}
+			}
+		}
 	}
 }
 
@@ -875,10 +845,31 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 						m_scriptsDirectoryWatcher.addPath(QString::fromStdString(m_globalInfo.projectDirectory) + "/scripts/");
 					}
 
-					std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + scriptName + ".h", std::ios::out | std::ios::trunc);
-					newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << scriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << scriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(double dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
-				
-					newScriptable.scriptName = scriptName;
+					const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
+					if (std::regex_search(scriptName, validFilenameRegex)) {
+						std::string scriptNoCase = "";
+						for (char c : scriptName) {
+							scriptNoCase += std::toupper(static_cast<unsigned char>(c));
+						}
+
+						std::string finalScriptName = scriptName;
+						uint32_t scriptNameIndex = 0;
+						if (m_scriptsNoCase.find(scriptNoCase) != m_scriptsNoCase.end()) {
+							while (m_scriptsNoCase.find(scriptNoCase + "_" + std::to_string(scriptNameIndex)) != m_scriptsNoCase.end()) {
+								scriptNameIndex++;
+							}
+							finalScriptName = scriptName + "_" + std::to_string(scriptNameIndex);
+							m_globalInfo.logger.addLog(LogLevel::Warning, "Script \"" + scriptName + "\" already exists, renaming the new script to \"" + finalScriptName + "\".");
+						}
+
+						std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h", std::ios::out | std::ios::trunc);
+						newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << finalScriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << finalScriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(double dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
+
+						newScriptable.scriptName = finalScriptName;
+					}
+					else {
+						m_globalInfo.logger.addLog(LogLevel::Warning, "Script name \"" + scriptName + "\" is not a valid filename.");
+					}
 				}
 			}
 
@@ -887,7 +878,9 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 			newScriptable.scriptName = element;
 		}
 	}
-	updateEditableVariablesWidget(newScriptable);
+	updateEditableScriptVariables(newScriptable.scriptName);
+	createEditableScriptVariablesWidget(newScriptable.scriptName);
+	updateEditableScriptVariablesWidget(newScriptable);
 
 	updateComponent(m_globalInfo.currentEntityID, &newScriptable);
 }
@@ -937,25 +930,32 @@ void ScriptableComponentWidget::onDirectoryChanged(const QString& path) {
 void ScriptableComponentWidget::onCurrentScriptChanged(const QString& path) {
 	if (std::filesystem::exists(path.toStdString())) {
 		if ((m_globalInfo.currentEntityID != NO_ENTITY) && m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.has_value()) {
-			updateEditableVariablesWidget(m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value());
+			updateEditableScriptVariables(m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable->scriptName);
+			createEditableScriptVariablesWidget(m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable->scriptName);
+			updateEditableScriptVariablesWidget(m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value());
 		}
 	}
 }
 
-void ScriptableComponentWidget::onEditableVariableChanged() {
+void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 	Scriptable newScriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
 	newScriptable.editableVariables.clear();
 
 	QObject* senderWidget = sender();
-	for (const auto& widgetToEditableVariableName : m_widgetToEditableVariableName) {
-		if (senderWidget == widgetToEditableVariableName.first) {
-			for (const auto& editableVariable : m_editableVariables) {
-				std::string name = std::get<0>(editableVariable);
-				std::string type = std::get<1>(editableVariable);
+	for (const auto& widgetToEditableScriptVariableName : m_widgetToEditableScriptVariableName) {
+		if (senderWidget == widgetToEditableScriptVariableName.first) {
+			auto& editableScriptVariables = m_editableScriptVariables[newScriptable.scriptName];
+			std::string name = widgetToEditableScriptVariableName.second;
+			if (editableScriptVariables.find(name) != editableScriptVariables.end()) {
+				auto& editableScriptVariable = editableScriptVariables[name];
+				std::string type = editableScriptVariable.first;
 				if (type != "Unknown") {
 					if (type == "Boolean") {
 						BooleanWidget* widget = static_cast<BooleanWidget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						bool value = widget->getValue();
+						if (value != std::get<bool>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if ((type == "Int8") ||
 						(type == "Int16") ||
@@ -966,35 +966,59 @@ void ScriptableComponentWidget::onEditableVariableChanged() {
 						(type == "Uint32") ||
 						(type == "Uint64")) {
 						IntegerWidget* widget = static_cast<IntegerWidget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						int value = widget->getValue();
+						if (value != std::get<int>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if ((type == "Float32") ||
 						(type == "Float64")) {
 						ScalarWidget* widget = static_cast<ScalarWidget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						float value = widget->getValue();
+						if (value != std::get<float>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if (type == "String") {
 						StringWidget* widget = static_cast<StringWidget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getText() };
+						std::string value = widget->getText();
+						if (value != std::get<std::string>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if (type == "Vector2") {
 						Vector2Widget* widget = static_cast<Vector2Widget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						nml::vec2 value = widget->getValue();
+						if (value != std::get<nml::vec2>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if (type == "Vector3") {
 						Vector3Widget* widget = static_cast<Vector3Widget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						nml::vec3 value = widget->getValue();
+						if (value != std::get<nml::vec3>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if (type == "Vector4") {
 						Vector4Widget* widget = static_cast<Vector4Widget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						nml::vec4 value = widget->getValue();
+						if (value != std::get<nml::vec4>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 					else if (type == "Quaternion") {
 						QuaternionWidget* widget = static_cast<QuaternionWidget*>(senderWidget);
-						newScriptable.editableVariables[name] = { type, widget->getValue() };
+						nml::quat valueQuat = widget->getValue();
+						nml::vec4 value = nml::vec4(valueQuat.a, valueQuat.b, valueQuat.c, valueQuat.d);
+						if (value != std::get<nml::vec4>(editableScriptVariable.second)) {
+							newScriptable.editableVariables[name] = value;
+						}
 					}
 				}
 			}
+
+			break;
 		}
 	}
 	updateComponent(m_globalInfo.currentEntityID, &newScriptable);
