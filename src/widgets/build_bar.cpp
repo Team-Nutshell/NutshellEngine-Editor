@@ -575,7 +575,6 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 
 	// Destroy temporary directory
 	std::filesystem::remove_all(tmpExportDirectory);
-	std::filesystem::remove(tmpExportDirectory);
 }
 
 void BuildBar::addLog(std::string log) {
