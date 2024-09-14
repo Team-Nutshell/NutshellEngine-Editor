@@ -11,6 +11,7 @@ public:
 
 private slots:
 	void rename();
+	void deleteAsset();
 	void newDirectory();
 	void newModel();
 	void newImageSampler();
@@ -25,6 +26,7 @@ public:
 	std::string filename = "";
 
 	QAction* renameAction;
+	QAction* deleteAction;
 	QAction* newDirectoryAction;
 	QAction* newModelAction;
 	QAction* newImageSamplerAction;

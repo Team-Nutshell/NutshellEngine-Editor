@@ -1,6 +1,7 @@
 #include "asset_list.h"
 #include "image_viewer.h"
 #include "asset_info_name_widget.h"
+#include "delete_asset_widget.h"
 #include "main_window.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
@@ -45,6 +46,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	}
 
 	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
+	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetList::onFileRenamed);
@@ -114,6 +116,17 @@ void AssetList::updateAssetList() {
 	}
 }
 
+void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
+	std::string itemFileName = listWidgetItem->text().toStdString();
+
+	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
+		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
+		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
+
+		emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
+	}
+}
+
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 	std::string itemFileName = listWidgetItem->text().toStdString();
 
@@ -127,8 +140,6 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 		else {
 			enterDirectory(selectedElementPath);
 		}
-
-		emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
 	}
 }
 
@@ -148,17 +159,20 @@ void AssetList::showMenu(const QPoint& pos) {
 	if (!item) {
 		menu->directory = m_currentDirectory;
 		menu->renameAction->setEnabled(false);
+		menu->deleteAction->setEnabled(false);
 	}
 	else {
 		if (item->text() != "../") {
 			menu->directory = m_currentDirectory;
 			menu->filename = item->text().toStdString();
 			menu->renameAction->setEnabled(true);
+			menu->deleteAction->setEnabled(true);
 			emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + item->text().toStdString());
 		}
 		else {
 			menu->directory = m_currentDirectory;
 			menu->renameAction->setEnabled(false);
+			menu->deleteAction->setEnabled(false);
 		}
 	}
 	menu->popup(QCursor::pos());
@@ -217,6 +231,11 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			if (listItem && (listItem->text() != "../")) {
 				m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
 			}
+		}
+		else if (event->key() == Qt::Key_Delete) {
+			std::string itemFileName = listItem->text().toStdString();
+			DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, m_currentDirectory + "/" + itemFileName);
+			deleteAssetWidget->show();
 		}
 	}
 }

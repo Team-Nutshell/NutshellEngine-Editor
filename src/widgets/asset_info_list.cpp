@@ -22,7 +22,7 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 }
 
 void AssetInfoList::onAssetSelected(const std::string& path) {
-	if (!std::filesystem::is_directory(path)) {
+	if (!path.empty() && !std::filesystem::is_directory(path)) {
 		size_t lastDot = path.rfind('.');
 		if (lastDot != std::string::npos) {
 			std::string extension = path.substr(lastDot + 1);

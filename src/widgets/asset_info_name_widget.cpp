@@ -7,6 +7,10 @@ AssetInfoNameWidget::AssetInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(
 }
 
 void AssetInfoNameWidget::onAssetSelected(const std::string& path) {
+	if (path.empty()) {
+		return;
+	}
+
 	std::string filename = path;
 	if (filename.back() == '/') {
 		filename.pop_back();

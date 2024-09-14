@@ -27,14 +27,15 @@ void InfoPanel::onEntitySelected() {
 	}
 	else {
 		entityInfoPanel->hide();
-		if (!assetInfoPanel->isHidden()) {
-			assetInfoPanel->show();
-		}
 	}
 }
 
 void InfoPanel::onAssetSelected(const std::string& path) {
-	(void)path;
-	entityInfoPanel->hide();
-	assetInfoPanel->show();
+	if (!path.empty()) {
+		entityInfoPanel->hide();
+		assetInfoPanel->show();
+	}
+	else {
+		assetInfoPanel->hide();
+	}
 }

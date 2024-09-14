@@ -1,11 +1,13 @@
 #include "asset_list_menu.h"
 #include "asset_info_name_widget.h"
+#include "delete_asset_widget.h"
 #include "main_window.h"
 #include <filesystem>
 #include <fstream>
 
 AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	renameAction = addAction("Rename", this, &AssetListMenu::rename);
+	deleteAction = addAction("Delete", this, &AssetListMenu::deleteAsset);
 	addSeparator();
 	QMenu* createMenu = addMenu("Create");
 	newDirectoryAction = createMenu->addAction("Directory", this, &AssetListMenu::newDirectory);
@@ -18,6 +20,11 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 
 void AssetListMenu::rename() {
 	m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
+}
+
+void AssetListMenu::deleteAsset() {
+	DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, directory + "/" + filename);
+	deleteAssetWidget->show();
 }
 
 void AssetListMenu::newDirectory() {

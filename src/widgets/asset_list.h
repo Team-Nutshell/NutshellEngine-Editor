@@ -24,6 +24,7 @@ signals:
 	void directoryChanged(const std::string& directory);
 
 private slots:
+	void onItemClicked(QListWidgetItem* listWidgetItem);
 	void onItemDoubleClicked(QListWidgetItem* listWidgetItem);
 	void onDirectoryChanged();
 
