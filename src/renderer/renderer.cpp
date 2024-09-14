@@ -2071,7 +2071,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 
 				// Update Transform Widget
 				MainWindow* mainWindow = m_globalInfo.mainWindow;
-				mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
+				mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
 			}
 		}
 		else if (event->buttons() & Qt::RightButton) {
@@ -2106,7 +2106,7 @@ void Renderer::mouseMoveEvent(QMouseEvent* event) {
 
 			// Update Transform Widget
 			MainWindow* mainWindow = m_globalInfo.mainWindow;
-			mainWindow->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
+			mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
 		}
 	}
 	event->accept();

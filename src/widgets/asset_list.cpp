@@ -1,10 +1,6 @@
 #include "asset_list.h"
 #include "image_viewer.h"
-#include "material_ntml_file_widget.h"
-#include "model_ntmd_file_widget.h"
-#include "options_ntop_file_widget.h"
-#include "sampler_ntsp_file_widget.h"
-#include "rename_widget.h"
+#include "asset_info_name_widget.h"
 #include "main_window.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
@@ -49,9 +45,9 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	}
 
 	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
-	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetList::onFileRenamed);
 }
 
 void AssetList::enterDirectory(const std::string& directory) {
@@ -79,22 +75,6 @@ void AssetList::actionOnFile(const std::string& file) {
 		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file);
 			imageViewer->show();
-		}
-		else if (extension == "ntmd") {
-			ModelNtmdFileWidget* modelNtmdFileWidget = new ModelNtmdFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			modelNtmdFileWidget->show();
-		}
-		else if (extension == "ntml") {
-			MaterialNtmlFileWidget* materialNtmlFileWidget = new MaterialNtmlFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			materialNtmlFileWidget->show();
-		}
-		else if (extension == "ntsp") {
-			SamplerNtspFileWidget* samplerNtspFileWidget = new SamplerNtspFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			samplerNtspFileWidget->show();
-		}
-		else if (extension == "ntop") {
-			OptionsNtopFileWidget* optionsNtopFileWidget = new OptionsNtopFileWidget(m_globalInfo, m_currentDirectory + "/" + file);
-			optionsNtopFileWidget->show();
 		}
 	}
 }
@@ -134,19 +114,6 @@ void AssetList::updateAssetList() {
 	}
 }
 
-void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
-	std::string itemFileName = listWidgetItem->text().toStdString();
-
-	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
-		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
-		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
-
-		if (std::filesystem::is_directory(selectedElementPath)) {
-			enterDirectory(selectedElementPath);
-		}
-	}
-}
-
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 	std::string itemFileName = listWidgetItem->text().toStdString();
 
@@ -157,6 +124,11 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 		if (!std::filesystem::is_directory(selectedElementPath)) {
 			actionOnFile(itemFileName);
 		}
+		else {
+			enterDirectory(selectedElementPath);
+		}
+
+		emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
 	}
 }
 
@@ -182,6 +154,7 @@ void AssetList::showMenu(const QPoint& pos) {
 			menu->directory = m_currentDirectory;
 			menu->filename = item->text().toStdString();
 			menu->renameAction->setEnabled(true);
+			emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + item->text().toStdString());
 		}
 		else {
 			menu->directory = m_currentDirectory;
@@ -242,10 +215,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 		}
 		else if (event->key() == Qt::Key_F2) {
 			if (listItem && (listItem->text() != "../")) {
-				std::string filePath = listItem->text().toStdString();
-				RenameWidget* renameWidget = new RenameWidget(m_globalInfo, m_currentDirectory, filePath);
-				renameWidget->show();
-				connect(renameWidget, &RenameWidget::renameFileSignal, this, &AssetList::onFileRenamed);
+				m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
 			}
 		}
 	}

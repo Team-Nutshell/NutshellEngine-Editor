@@ -1,34 +1,15 @@
 #include "material_ntml_file_widget.h"
 #include "separator_line.h"
+#include "main_window.h"
 #include "../common/asset_helper.h"
-#include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <fstream>
 
-MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& materialFilePath) : m_globalInfo(globalInfo), m_materialFilePath(materialFilePath) {
-	resize(640, 360);
-	setWindowTitle("NutshellEngine - Material File - " + QString::fromStdString(materialFilePath));
-	setWindowIcon(QIcon("assets/icon.png"));
-	setAttribute(Qt::WA_DeleteOnClose);
-
-	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("&File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &MaterialNtmlFileWidget::save);
-	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
-	m_editMenu = m_menuBar->addMenu("&Edit");
-	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
-	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
-	m_editMenu->addAction(m_undoAction);
-	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
-	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
-	m_editMenu->addAction(m_redoAction);
-
+MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
-	QMargins contentMargins = layout()->contentsMargins();
-	contentMargins.setTop(contentMargins.top() + 10);
-	layout()->setContentsMargins(contentMargins);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
+	layout()->setContentsMargins(0, 0, 0, 0);
 	diffuseTextureImageWidget = new FileSelectorWidget(globalInfo, "Diffuse Image", "No image selected", "");
 	layout()->addWidget(diffuseTextureImageWidget);
 	diffuseTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Diffuse Image Sampler", "No image sampler selected", "");
@@ -114,21 +95,24 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std
 	connect(emissiveColorWidget, &ColorPickerWidget::colorChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(alphaCutoffWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+}
 
-	std::fstream optionsFile(materialFilePath, std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + materialFilePath + "\" is not a valid JSON file.");
+void MaterialNtmlFileWidget::setPath(const std::string& path) {
+	m_materialFilePath = path;
+	std::fstream materialFile(m_materialFilePath, std::ios::in);
+	if (materialFile.is_open()) {
+		if (!nlohmann::json::accept(materialFile)) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_materialFilePath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + materialFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_materialFilePath + "\" cannot be opened.");
 		return;
 	}
 
-	optionsFile = std::fstream(materialFilePath, std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
+	materialFile = std::fstream(m_materialFilePath, std::ios::in);
+	nlohmann::json j = nlohmann::json::parse(materialFile);
 
 	if (j.contains("diffuse")) {
 		if (j["diffuse"].contains("texture")) {
@@ -269,6 +253,69 @@ void MaterialNtmlFileWidget::updateWidgets() {
 	indexOfRefractionWidget->setValue(materialNtml.indexOfRefraction);
 }
 
+void MaterialNtmlFileWidget::save() {
+	nlohmann::json j;
+	if (!materialNtml.diffuseTextureImagePath.empty()) {
+		j["diffuse"]["texture"]["imagePath"] = materialNtml.diffuseTextureImagePath;
+	}
+	if (!materialNtml.diffuseTextureImageSamplerPath.empty()) {
+		j["diffuse"]["texture"]["imageSamplerPath"] = materialNtml.diffuseTextureImageSamplerPath;
+	}
+	nml::vec3 diffuseColor = materialNtml.diffuseColor;
+	float opacityValue = materialNtml.opacity;
+	j["diffuse"]["color"] = { diffuseColor.x, diffuseColor.y, diffuseColor.z, opacityValue };
+	if (!materialNtml.normalTextureImagePath.empty()) {
+		j["normal"]["texture"]["imagePath"] = materialNtml.normalTextureImagePath;
+	}
+	if (!materialNtml.normalTextureImageSamplerPath.empty()) {
+		j["normal"]["texture"]["imageSamplerPath"] = materialNtml.normalTextureImageSamplerPath;
+	}
+	if (!materialNtml.metalnessTextureImagePath.empty()) {
+		j["metalness"]["texture"]["imagePath"] = materialNtml.metalnessTextureImagePath;
+	}
+	if (!materialNtml.metalnessTextureImageSamplerPath.empty()) {
+		j["metalness"]["texture"]["imageSamplerPath"] = materialNtml.metalnessTextureImageSamplerPath;
+	}
+	j["metalness"]["value"] = materialNtml.metalnessValue;
+	if (!materialNtml.roughnessTextureImagePath.empty()) {
+		j["roughness"]["texture"]["imagePath"] = materialNtml.roughnessTextureImagePath;
+	}
+	if (!materialNtml.roughnessTextureImageSamplerPath.empty()) {
+		j["roughness"]["texture"]["imageSamplerPath"] = materialNtml.roughnessTextureImageSamplerPath;
+	}
+	j["roughness"]["value"] = materialNtml.roughnessValue;
+	if (!materialNtml.occlusionTextureImagePath.empty()) {
+		j["occlusion"]["texture"]["imagePath"] = materialNtml.occlusionTextureImagePath;
+	}
+	if (!materialNtml.occlusionTextureImageSamplerPath.empty()) {
+		j["occlusion"]["texture"]["imageSamplerPath"] = materialNtml.occlusionTextureImageSamplerPath;
+	}
+	j["occlusion"]["value"] = materialNtml.occlusionValue;
+	if (!materialNtml.emissiveTextureImagePath.empty()) {
+		j["emissive"]["texture"]["imagePath"] = materialNtml.emissiveTextureImagePath;
+	}
+	if (!materialNtml.emissiveTextureImageSamplerPath.empty()) {
+		j["emissive"]["texture"]["imageSamplerPath"] = materialNtml.emissiveTextureImageSamplerPath;
+	}
+	nml::vec3 emissiveColor = materialNtml.emissiveColor;
+	j["emissive"]["color"] = { emissiveColor.x, emissiveColor.y, emissiveColor.z };
+	j["emissive"]["factor"] = materialNtml.emissiveFactor;
+	j["alphaCutoff"] = materialNtml.alphaCutoff;
+	j["indexOfRefraction"] = materialNtml.indexOfRefraction;
+
+	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		materialFile << "{\n}";
+	}
+	else {
+		materialFile << j.dump(1, '\t');
+	}
+	materialFile.close();
+
+	std::string materialPath = AssetHelper::absoluteToRelative(m_materialFilePath, m_globalInfo.projectDirectory);
+	m_globalInfo.rendererResourceManager.loadMaterial(m_materialFilePath, materialPath);
+}
+
 void MaterialNtmlFileWidget::onValueChanged() {
 	MaterialNtml newMaterialNtml = materialNtml;
 
@@ -350,95 +397,33 @@ void MaterialNtmlFileWidget::onValueChanged() {
 	}
 
 	if (newMaterialNtml != materialNtml) {
-		m_undoStack.push(new ChangeMaterialNtmlFile(this, newMaterialNtml));
-
-		SaveTitleChanger::change(this);
+		m_globalInfo.undoStack->push(new ChangeMaterialNtmlFile(m_globalInfo, newMaterialNtml, m_materialFilePath));
 	}
 }
 
-void MaterialNtmlFileWidget::save() {
-	nlohmann::json j;
-	if (!materialNtml.diffuseTextureImagePath.empty()) {
-		j["diffuse"]["texture"]["imagePath"] = materialNtml.diffuseTextureImagePath;
-	}
-	if (!materialNtml.diffuseTextureImageSamplerPath.empty()) {
-		j["diffuse"]["texture"]["imageSamplerPath"] = materialNtml.diffuseTextureImageSamplerPath;
-	}
-	nml::vec3 diffuseColor = materialNtml.diffuseColor;
-	float opacityValue = materialNtml.opacity;
-	j["diffuse"]["color"] = { diffuseColor.x, diffuseColor.y, diffuseColor.z, opacityValue };
-	if (!materialNtml.normalTextureImagePath.empty()) {
-		j["normal"]["texture"]["imagePath"] = materialNtml.normalTextureImagePath;
-	}
-	if (!materialNtml.normalTextureImageSamplerPath.empty()) {
-		j["normal"]["texture"]["imageSamplerPath"] = materialNtml.normalTextureImageSamplerPath;
-	}
-	if (!materialNtml.metalnessTextureImagePath.empty()) {
-		j["metalness"]["texture"]["imagePath"] = materialNtml.metalnessTextureImagePath;
-	}
-	if (!materialNtml.metalnessTextureImageSamplerPath.empty()) {
-		j["metalness"]["texture"]["imageSamplerPath"] = materialNtml.metalnessTextureImageSamplerPath;
-	}
-	j["metalness"]["value"] = materialNtml.metalnessValue;
-	if (!materialNtml.roughnessTextureImagePath.empty()) {
-		j["roughness"]["texture"]["imagePath"] = materialNtml.roughnessTextureImagePath;
-	}
-	if (!materialNtml.roughnessTextureImageSamplerPath.empty()) {
-		j["roughness"]["texture"]["imageSamplerPath"] = materialNtml.roughnessTextureImageSamplerPath;
-	}
-	j["roughness"]["value"] = materialNtml.roughnessValue;
-	if (!materialNtml.occlusionTextureImagePath.empty()) {
-		j["occlusion"]["texture"]["imagePath"] = materialNtml.occlusionTextureImagePath;
-	}
-	if (!materialNtml.occlusionTextureImageSamplerPath.empty()) {
-		j["occlusion"]["texture"]["imageSamplerPath"] = materialNtml.occlusionTextureImageSamplerPath;
-	}
-	j["occlusion"]["value"] = materialNtml.occlusionValue;
-	if (!materialNtml.emissiveTextureImagePath.empty()) {
-		j["emissive"]["texture"]["imagePath"] = materialNtml.emissiveTextureImagePath;
-	}
-	if (!materialNtml.emissiveTextureImageSamplerPath.empty()) {
-		j["emissive"]["texture"]["imageSamplerPath"] = materialNtml.emissiveTextureImageSamplerPath;
-	}
-	nml::vec3 emissiveColor = materialNtml.emissiveColor;
-	j["emissive"]["color"] = { emissiveColor.x, emissiveColor.y, emissiveColor.z };
-	j["emissive"]["factor"] = materialNtml.emissiveFactor;
-	j["alphaCutoff"] = materialNtml.alphaCutoff;
-	j["indexOfRefraction"] = materialNtml.indexOfRefraction;
-
-	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
-	if (j.empty()) {
-		materialFile << "{\n}";
-	}
-	else {
-		materialFile << j.dump(1, '\t');
-	}
-	materialFile.close();
-	
-	std::string materialPath = AssetHelper::absoluteToRelative(m_materialFilePath, m_globalInfo.projectDirectory);
-	m_globalInfo.rendererResourceManager.loadMaterial(m_materialFilePath, materialPath);
-
-	SaveTitleChanger::reset(this);
-}
-
-ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(MaterialNtmlFileWidget* materialNtmlFileWidget, MaterialNtml newMaterialNtml) {
+ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialNtml newMaterialNtml, const std::string& filePath) : m_globalInfo(globalInfo) {
 	setText("Change Material Ntml");
 
-	m_materialNtmlFileWidget = materialNtmlFileWidget;
+	m_materialNtmlFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->materialNtmlFileWidget;
 	m_oldMaterialNtml = m_materialNtmlFileWidget->materialNtml;
 	m_newMaterialNtml = newMaterialNtml;
+	m_filePath = filePath;
 }
 
 void ChangeMaterialNtmlFile::undo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_materialNtmlFileWidget->materialNtml = m_oldMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_materialNtmlFileWidget);
+	m_materialNtmlFileWidget->save();
 }
 
 void ChangeMaterialNtmlFile::redo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_materialNtmlFileWidget->materialNtml = m_newMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_materialNtmlFileWidget);
+	m_materialNtmlFileWidget->save();
 }

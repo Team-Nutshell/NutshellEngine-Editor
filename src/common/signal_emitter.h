@@ -45,6 +45,9 @@ signals:
 	void resetCameraSignal();
 	void orthographicCameraToAxisSignal(const nml::vec3&);
 
+	void selectAssetSignal(const std::string&);
+	void renameFileSignal(const std::string&, const std::string&);
+
 	void startBuildAndRunSignal();
 	void endBuildAndRunSignal();
 	void startExportSignal();

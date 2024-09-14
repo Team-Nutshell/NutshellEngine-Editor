@@ -100,6 +100,10 @@ set(UNDO_COMMANDS_HEADERS
 set(WIDGET_SOURCES
 	src/widgets/add_component_button.cpp
 	src/widgets/add_component_menu.cpp
+	src/widgets/asset_info_list.cpp
+	src/widgets/asset_info_name_widget.cpp
+	src/widgets/asset_info_panel.cpp
+	src/widgets/asset_info_scroll_area.cpp
 	src/widgets/asset_list.cpp
 	src/widgets/asset_list_menu.cpp
 	src/widgets/build_bar.cpp
@@ -124,6 +128,7 @@ set(WIDGET_SOURCES
 	src/widgets/file_push_button.cpp
 	src/widgets/file_selector_widget.cpp
 	src/widgets/image_viewer.cpp
+	src/widgets/info_panel.cpp
 	src/widgets/integer_widget.cpp
 	src/widgets/key_select_widget.cpp
 	src/widgets/light_component_widget.cpp
@@ -148,7 +153,6 @@ set(WIDGET_SOURCES
 	src/widgets/quaternion_widget.cpp
 	src/widgets/recent_project_widget.cpp
 	src/widgets/recent_projects_widget.cpp
-	src/widgets/rename_widget.cpp
 	src/widgets/renderable_component_widget.cpp
 	src/widgets/resource_panel.cpp
 	src/widgets/rigidbody_component_widget.cpp
@@ -165,6 +169,10 @@ set(WIDGET_SOURCES
 set(WIDGET_HEADERS
 	src/widgets/add_component_button.h
 	src/widgets/add_component_menu.h
+	src/widgets/asset_info_list.h
+	src/widgets/asset_info_name_widget.h
+	src/widgets/asset_info_panel.h
+	src/widgets/asset_info_scroll_area.h
 	src/widgets/asset_list.h
 	src/widgets/asset_list_menu.h
 	src/widgets/build_bar.h
@@ -189,6 +197,7 @@ set(WIDGET_HEADERS
 	src/widgets/file_push_button.h
 	src/widgets/file_selector_widget.h
 	src/widgets/image_viewer.h
+	src/widgets/info_panel.h
 	src/widgets/integer_widget.h
 	src/widgets/key_select_widget.h
 	src/widgets/light_component_widget.h
@@ -213,7 +222,6 @@ set(WIDGET_HEADERS
 	src/widgets/quaternion_widget.h
 	src/widgets/recent_project_widget.h
 	src/widgets/recent_projects_widget.h
-	src/widgets/rename_widget.h
 	src/widgets/renderable_component_widget.h
 	src/widgets/resource_panel.h
 	src/widgets/rigidbody_component_widget.h

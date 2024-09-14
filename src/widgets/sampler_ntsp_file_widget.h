@@ -2,11 +2,6 @@
 #include "../common/global_info.h"
 #include "combo_box_widget.h"
 #include "integer_widget.h"
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
-#include <QUndoStack>
-#include <QUndoCommand>
 #include <string>
 
 struct SamplerNtsp {
@@ -38,29 +33,20 @@ struct SamplerNtsp {
 class SamplerNtspFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath);
+	SamplerNtspFileWidget(GlobalInfo& globalInfo);
+
+	void setPath(const std::string& path);
 
 	void updateWidgets();
+	void save();
 
 private slots:
 	void onValueChanged();
-	void save();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	std::string m_samplerFilePath;
-
-	QUndoStack m_undoStack;
-
-	QMenuBar* m_menuBar;
-	QMenu* m_fileMenu;
-	QMenu* m_editMenu;
-
-	QAction* m_fileSaveAction;
-
-	QAction* m_undoAction;
-	QAction* m_redoAction;
 
 public:
 	SamplerNtsp samplerNtsp;
@@ -77,14 +63,17 @@ public:
 
 class ChangeSamplerNtspFile : public QUndoCommand {
 public:
-	ChangeSamplerNtspFile(SamplerNtspFileWidget* samplerNtspFileWidget, SamplerNtsp newSamplerNtsp);
+	ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp newSamplerNtsp, const std::string& filePath);
 
 	void undo();
 	void redo();
 
 private:
+	GlobalInfo& m_globalInfo;
+
 	SamplerNtspFileWidget* m_samplerNtspFileWidget;
 
+	std::string m_filePath;
 	SamplerNtsp m_oldSamplerNtsp;
 	SamplerNtsp m_newSamplerNtsp;
 };

@@ -4,11 +4,6 @@
 #include "file_selector_widget.h"
 #include "integer_widget.h"
 #include "string_widget.h"
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
-#include <QUndoStack>
-#include <QUndoCommand>
 #include <string>
 
 struct OptionsNtop {
@@ -34,29 +29,20 @@ struct OptionsNtop {
 class OptionsNtopFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath);
+	OptionsNtopFileWidget(GlobalInfo& globalInfo);
+
+	void setPath(const std::string& path);
 
 	void updateWidgets();
+	void save();
 
 private slots:
 	void onValueChanged();
-	void save();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	std::string m_optionsFilePath;
-
-	QUndoStack m_undoStack;
-
-	QMenuBar* m_menuBar;
-	QMenu* m_fileMenu;
-	QMenu* m_editMenu;
-
-	QAction* m_fileSaveAction;
-
-	QAction* m_undoAction;
-	QAction* m_redoAction;
 
 public:
 	OptionsNtop optionsNtop;
@@ -70,14 +56,17 @@ public:
 
 class ChangeOptionsNtopFile : public QUndoCommand {
 public:
-	ChangeOptionsNtopFile(OptionsNtopFileWidget* optionsNtopFileWidget, OptionsNtop newOptionsNtop);
+	ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop newOptionsNtop, const std::string& filePath);
 
 	void undo();
 	void redo();
 
 private:
+	GlobalInfo& m_globalInfo;
+
 	OptionsNtopFileWidget* m_optionsNtopFileWidget;
 
+	std::string m_filePath;
 	OptionsNtop m_oldOptionsNtop;
 	OptionsNtop m_newOptionsNtop;
 };

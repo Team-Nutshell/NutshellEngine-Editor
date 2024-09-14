@@ -3,11 +3,6 @@
 #include "file_selector_widget.h"
 #include "scalar_widget.h"
 #include "color_picker_widget.h"
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
-#include <QUndoStack>
-#include <QUndoCommand>
 #include <string>
 
 struct MaterialNtml {
@@ -65,29 +60,20 @@ struct MaterialNtml {
 class MaterialNtmlFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	MaterialNtmlFileWidget(GlobalInfo& globalInfo, const std::string& materialFilePath);
+	MaterialNtmlFileWidget(GlobalInfo& globalInfo);
+
+	void setPath(const std::string& path);
 
 	void updateWidgets();
+	void save();
 
 private slots:
 	void onValueChanged();
-	void save();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	std::string m_materialFilePath;
-
-	QUndoStack m_undoStack;
-
-	QMenuBar* m_menuBar;
-	QMenu* m_fileMenu;
-	QMenu* m_editMenu;
-
-	QAction* m_fileSaveAction;
-
-	QAction* m_undoAction;
-	QAction* m_redoAction;
 
 public:
 	MaterialNtml materialNtml;
@@ -117,14 +103,17 @@ public:
 
 class ChangeMaterialNtmlFile : public QUndoCommand {
 public:
-	ChangeMaterialNtmlFile(MaterialNtmlFileWidget* materialNtmlFileWidget, MaterialNtml newMaterialNtml);
+	ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialNtml newMaterialNtml, const std::string& filePath);
 
 	void undo();
 	void redo();
 
 private:
+	GlobalInfo& m_globalInfo;
+
 	MaterialNtmlFileWidget* m_materialNtmlFileWidget;
 
+	std::string m_filePath;
 	MaterialNtml m_oldMaterialNtml;
 	MaterialNtml m_newMaterialNtml;
 };

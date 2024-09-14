@@ -103,9 +103,6 @@ void EntityList::showMenu(const QPoint& pos) {
 
 void EntityList::onItemPressed(QListWidgetItem* listWidgetItem) {
 	EntityListItem* entityListItem = static_cast<EntityListItem*>(listWidgetItem);
-	if (m_globalInfo.currentEntityID == entityListItem->entityID) {
-		return;
-	}
 
 	if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
@@ -232,7 +229,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			m_moveEntityOrderKeyPressed = true;
 		}
 		else if (event->key() == Qt::Key_F2) {
-			m_globalInfo.mainWindow->entityInfoPanel->entityInfoNameWidget->setFocus();
+			m_globalInfo.mainWindow->infoPanel->entityInfoPanel->entityInfoNameWidget->setFocus();
 		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
 	}

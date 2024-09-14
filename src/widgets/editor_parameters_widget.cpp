@@ -18,6 +18,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	rendererParametersTab = new QTabWidget();
 	QVBoxLayout* rendererVerticalLayout = new QVBoxLayout();
 	rendererParametersTab->setLayout(rendererVerticalLayout);
+	rendererParametersTab->layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 
 	QWidget* rendererKeyGridLayoutWidget = new QWidget();
 	QGridLayout* rendererKeyGridLayout = new QGridLayout();
@@ -226,22 +227,20 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	buildParametersTab = new QTabWidget();
 	buildParametersTab->setLayout(new QVBoxLayout());
+	buildParametersTab->layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	cMakePathWidget = new StringWidget(m_globalInfo, "CMake executable");
 	cMakePathWidget->setText(m_globalInfo.editorParameters.build.cMakePath);
 	cMakePathWidget->valueLineEdit->setFixedWidth(400);
-	cMakePathWidget->layout()->setAlignment(cMakePathWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	cMakePathWidget->layout()->setAlignment(cMakePathWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	buildParametersTab->layout()->addWidget(cMakePathWidget);
 
 	addTab(buildParametersTab, "Build");
 
 	codeParametersTab = new QTabWidget();
 	codeParametersTab->setLayout(new QVBoxLayout());
+	codeParametersTab->layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	codeEditorCommandWidget = new StringWidget(m_globalInfo, "Code editor command (use \"${FILE_PATH}\" for file path)");
 	codeEditorCommandWidget->setText(m_globalInfo.editorParameters.code.codeEditorCommand);
 	codeEditorCommandWidget->valueLineEdit->setFixedWidth(400);
-	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	codeEditorCommandWidget->layout()->setAlignment(codeEditorCommandWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	codeParametersTab->layout()->addWidget(codeEditorCommandWidget);
 
 	addTab(codeParametersTab, "Code");

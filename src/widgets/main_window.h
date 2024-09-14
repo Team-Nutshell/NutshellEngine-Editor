@@ -8,7 +8,7 @@
 #include "build_bar.h"
 #include "entity_panel.h"
 #include "log_bar.h"
-#include "entity_info_panel.h"
+#include "info_panel.h"
 #include "resource_panel.h"
 #include "../renderer/renderer.h"
 #include <QMainWindow>
@@ -29,7 +29,7 @@ private:
 	void createBuildBar();
 	void createEntityPanel();
 	void createRenderer();
-	void createEntityInfoPanel();
+	void createInfoPanel();
 	void createResourcePanel();
 	void createLogBar();
 
@@ -45,7 +45,7 @@ public:
 	QSplitter* verticalSplitter;
 	EntityPanel* entityPanel;
 	Renderer* renderer;
-	EntityInfoPanel* entityInfoPanel;
+	InfoPanel* infoPanel;
 	ResourcePanel* resourcePanel;
 	LogBar* logBar;
 	BuildBar* buildBar;

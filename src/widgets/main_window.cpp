@@ -20,7 +20,7 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	createBuildBar();
 	createEntityPanel();
 	createRenderer();
-	createEntityInfoPanel();
+	createInfoPanel();
 	verticalSplitter = new QSplitter();
 	verticalSplitter->setOrientation(Qt::Orientation::Vertical);
 	verticalSplitter->addWidget(horizontalSplitter);
@@ -70,9 +70,9 @@ void MainWindow::createRenderer() {
 	horizontalSplitter->addWidget(renderer);
 }
 
-void MainWindow::createEntityInfoPanel() {
-	entityInfoPanel = new EntityInfoPanel(m_globalInfo);
-	horizontalSplitter->addWidget(entityInfoPanel);
+void MainWindow::createInfoPanel() {
+	infoPanel = new InfoPanel(m_globalInfo);
+	horizontalSplitter->addWidget(infoPanel);
 }
 
 void MainWindow::createResourcePanel() {

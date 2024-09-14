@@ -1,34 +1,15 @@
 #include "sampler_ntsp_file_widget.h"
+#include "main_window.h"
 #include "../common/asset_helper.h"
-#include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <fstream>
 
-SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::string& samplerFilePath) : m_globalInfo(globalInfo), m_samplerFilePath(samplerFilePath) {
-	resize(640, 360);
-	setWindowTitle("NutshellEngine - Sampler File - " + QString::fromStdString(samplerFilePath));
-	setWindowIcon(QIcon("assets/icon.png"));
-	setAttribute(Qt::WA_DeleteOnClose);
-
-	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("&File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &SamplerNtspFileWidget::save);
-	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
-	m_editMenu = m_menuBar->addMenu("&Edit");
-	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
-	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
-	m_editMenu->addAction(m_undoAction);
-	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
-	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
-	m_editMenu->addAction(m_redoAction);
-
+SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
-	QMargins contentMargins = layout()->contentsMargins();
-	contentMargins.setTop(contentMargins.top() + 10);
-	layout()->setContentsMargins(contentMargins);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
+	layout()->setContentsMargins(0, 0, 0, 0);
 	std::vector<std::string> filterElements = { "Linear", "Nearest", "Unknown" };
 	magFilterWidget = new ComboBoxWidget(globalInfo, "Mag Filter", filterElements);
 	layout()->addWidget(magFilterWidget);
@@ -58,21 +39,24 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo, const std::
 	connect(addressModeWWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(borderColorWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(anisotropyLevelWidget, &IntegerWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
+}
 
-	std::fstream optionsFile(samplerFilePath, std::ios::in);
-	if (optionsFile.is_open()) {
-		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + samplerFilePath + "\" is not a valid JSON file.");
+void SamplerNtspFileWidget::setPath(const std::string& path) {
+	m_samplerFilePath = path;
+	std::fstream samplerFile(m_samplerFilePath, std::ios::in);
+	if (samplerFile.is_open()) {
+		if (!nlohmann::json::accept(samplerFile)) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_samplerFilePath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + samplerFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_samplerFilePath + "\" cannot be opened.");
 		return;
 	}
 
-	optionsFile = std::fstream(samplerFilePath, std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(optionsFile);
+	samplerFile = std::fstream(m_samplerFilePath, std::ios::in);
+	nlohmann::json j = nlohmann::json::parse(samplerFile);
 
 	if (j.contains("magFilter")) {
 		std::string magFilter = j["magFilter"];
@@ -121,6 +105,30 @@ void SamplerNtspFileWidget::updateWidgets() {
 	anisotropyLevelWidget->setValue(samplerNtsp.anisotropyLevel);
 }
 
+void SamplerNtspFileWidget::save() {
+	nlohmann::json j;
+	j["magFilter"] = samplerNtsp.magFilter;
+	j["minFilter"] = samplerNtsp.minFilter;
+	j["mipmapFilter"] = samplerNtsp.mipmapFilter;
+	j["addressModeU"] = samplerNtsp.addressModeU;
+	j["addressModeV"] = samplerNtsp.addressModeV;
+	j["addressModeW"] = samplerNtsp.addressModeW;
+	j["borderColor"] = samplerNtsp.borderColor;
+	j["anisotropyLevel"] = samplerNtsp.anisotropyLevel;
+
+	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		samplerFile << "{\n}";
+	}
+	else {
+		samplerFile << j.dump(1, '\t');
+	}
+	samplerFile.close();
+
+	std::string samplerPath = AssetHelper::absoluteToRelative(m_samplerFilePath, m_globalInfo.projectDirectory);
+	m_globalInfo.rendererResourceManager.loadSampler(m_samplerFilePath, samplerPath);
+}
+
 void SamplerNtspFileWidget::onValueChanged() {
 	SamplerNtsp newSamplerNtsp = samplerNtsp;
 
@@ -151,56 +159,33 @@ void SamplerNtspFileWidget::onValueChanged() {
 	}
 
 	if (newSamplerNtsp != samplerNtsp) {
-		m_undoStack.push(new ChangeSamplerNtspFile(this, newSamplerNtsp));
-
-		SaveTitleChanger::change(this);
+		save();
 	}
 }
 
-void SamplerNtspFileWidget::save() {
-	nlohmann::json j;
-	j["magFilter"] = samplerNtsp.magFilter;
-	j["minFilter"] = samplerNtsp.minFilter;
-	j["mipmapFilter"] = samplerNtsp.mipmapFilter;
-	j["addressModeU"] = samplerNtsp.addressModeU;
-	j["addressModeV"] = samplerNtsp.addressModeV;
-	j["addressModeW"] = samplerNtsp.addressModeW;
-	j["borderColor"] = samplerNtsp.borderColor;
-	j["anisotropyLevel"] = samplerNtsp.anisotropyLevel;
-
-	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
-	if (j.empty()) {
-		samplerFile << "{\n}";
-	}
-	else {
-		samplerFile << j.dump(1, '\t');
-	}
-	samplerFile.close();
-
-	std::string samplerPath = AssetHelper::absoluteToRelative(m_samplerFilePath, m_globalInfo.projectDirectory);
-	m_globalInfo.rendererResourceManager.loadSampler(m_samplerFilePath, samplerPath);
-
-	SaveTitleChanger::reset(this);
-}
-
-ChangeSamplerNtspFile::ChangeSamplerNtspFile(SamplerNtspFileWidget* samplerNtspFileWidget, SamplerNtsp newSamplerNtsp) {
+ChangeSamplerNtspFile::ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp newSamplerNtsp, const std::string& filePath) : m_globalInfo(globalInfo) {
 	setText("Change Sampler Ntsp");
 
-	m_samplerNtspFileWidget = samplerNtspFileWidget;
+	m_samplerNtspFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->samplerNtspFileWidget;
 	m_oldSamplerNtsp = m_samplerNtspFileWidget->samplerNtsp;
 	m_newSamplerNtsp = newSamplerNtsp;
+	m_filePath = filePath;
 }
 
 void ChangeSamplerNtspFile::undo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_samplerNtspFileWidget->samplerNtsp = m_oldSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_samplerNtspFileWidget);
+	m_samplerNtspFileWidget->save();
 }
 
 void ChangeSamplerNtspFile::redo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_samplerNtspFileWidget->samplerNtsp = m_newSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_samplerNtspFileWidget);
+	m_samplerNtspFileWidget->save();
 }

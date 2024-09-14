@@ -1,5 +1,5 @@
 #include "asset_list_menu.h"
-#include "rename_widget.h"
+#include "asset_info_name_widget.h"
 #include "main_window.h"
 #include <filesystem>
 #include <fstream>
@@ -17,9 +17,7 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 }
 
 void AssetListMenu::rename() {
-	RenameWidget* renameWidget = new RenameWidget(m_globalInfo, directory, filename);
-	renameWidget->show();
-	connect(renameWidget, &RenameWidget::renameFileSignal, this, &AssetListMenu::onFileRenamed);
+	m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
 }
 
 void AssetListMenu::newDirectory() {
@@ -126,11 +124,4 @@ void AssetListMenu::newScene() {
 	newSceneFile << R"({
 })";
 	newSceneFile.close();
-}
-
-void AssetListMenu::onFileRenamed(const std::string& oldFilename, const std::string& newFilename) {
-	if (oldFilename == m_globalInfo.currentScenePath) {
-		m_globalInfo.currentScenePath = newFilename;
-		m_globalInfo.mainWindow->updateTitle();
-	}
 }

@@ -11,7 +11,7 @@ EntityListMenu::EntityListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo
 }
 
 void EntityListMenu::renameEntity() {
-	m_globalInfo.mainWindow->entityInfoPanel->entityInfoNameWidget->setFocus();
+	m_globalInfo.mainWindow->infoPanel->entityInfoPanel->entityInfoNameWidget->setFocus();
 }
 
 void EntityListMenu::newEntity() {

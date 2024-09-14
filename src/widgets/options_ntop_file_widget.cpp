@@ -1,6 +1,6 @@
 #include "options_ntop_file_widget.h"
+#include "main_window.h"
 #include "../common/asset_helper.h"
-#include "../common/save_title_changer.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -8,29 +8,10 @@
 #include <cstdlib>
 #include <cmath>
 
-OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::string& optionsFilePath) : m_globalInfo(globalInfo), m_optionsFilePath(optionsFilePath) {
-	resize(640, 360);
-	setWindowTitle("NutshellEngine - Options File - " + QString::fromStdString(optionsFilePath));
-	setWindowIcon(QIcon("assets/icon.png"));
-	setAttribute(Qt::WA_DeleteOnClose);
-
-	m_menuBar = new QMenuBar(this);
-	m_fileMenu = m_menuBar->addMenu("&File");
-	m_fileSaveAction = m_fileMenu->addAction("Save", this, &OptionsNtopFileWidget::save);
-	m_fileSaveAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
-	m_editMenu = m_menuBar->addMenu("&Edit");
-	m_undoAction = m_undoStack.createUndoAction(this, "&Undo");
-	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
-	m_editMenu->addAction(m_undoAction);
-	m_redoAction = m_undoStack.createRedoAction(this, "&Redo");
-	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
-	m_editMenu->addAction(m_redoAction);
-
+OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
-	QMargins contentMargins = layout()->contentsMargins();
-	contentMargins.setTop(contentMargins.top() + 10);
-	layout()->setContentsMargins(contentMargins);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
+	layout()->setContentsMargins(0, 0, 0, 0);
 	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
 	layout()->addWidget(windowTitleWidget);
 	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "Window Icon", "No window icon selected", m_globalInfo.projectDirectory + "/assets");
@@ -48,20 +29,23 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo, const std::
 	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsNtopFileWidget::onValueChanged);
+}
 
-	std::fstream optionsFile(optionsFilePath, std::ios::in);
+void OptionsNtopFileWidget::setPath(const std::string& path) {
+	m_optionsFilePath = path;
+	std::fstream optionsFile(m_optionsFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + optionsFilePath + "\" is not a valid JSON file.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_optionsFilePath + "\" is not a valid JSON file.");
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + optionsFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_optionsFilePath + "\" cannot be opened.");
 		return;
 	}
 
-	optionsFile = std::fstream(optionsFilePath, std::ios::in);
+	optionsFile = std::fstream(m_optionsFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(optionsFile);
 
 	if (j.contains("windowTitle")) {
@@ -97,6 +81,29 @@ void OptionsNtopFileWidget::updateWidgets() {
 	startProfilingWidget->setValue(optionsNtop.startProfiling);
 }
 
+void OptionsNtopFileWidget::save() {
+	nlohmann::json j;
+	if (!optionsNtop.windowTitle.empty()) {
+		j["windowTitle"] = optionsNtop.windowTitle;
+	}
+	if (!optionsNtop.windowIconImagePath.empty()) {
+		j["windowIconImagePath"] = optionsNtop.windowIconImagePath;
+	}
+	j["maxFPS"] = optionsNtop.maxFPS;
+	if (!optionsNtop.firstScenePath.empty()) {
+		j["firstScenePath"] = optionsNtop.firstScenePath;
+	}
+	j["startProfiling"] = optionsNtop.startProfiling;
+
+	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
+}
+
 void OptionsNtopFileWidget::onValueChanged() {
 	OptionsNtop newOptionsNtop = optionsNtop;
 
@@ -120,55 +127,33 @@ void OptionsNtopFileWidget::onValueChanged() {
 	}
 
 	if (newOptionsNtop != optionsNtop) {
-		m_undoStack.push(new ChangeOptionsNtopFile(this, newOptionsNtop));
-
-		SaveTitleChanger::change(this);
+		m_globalInfo.undoStack->push(new ChangeOptionsNtopFile(m_globalInfo, newOptionsNtop, m_optionsFilePath));
 	}
 }
 
-void OptionsNtopFileWidget::save() {
-	nlohmann::json j;
-	if (!optionsNtop.windowTitle.empty()) {
-		j["windowTitle"] = optionsNtop.windowTitle;
-	}
-	if (!optionsNtop.windowIconImagePath.empty()) {
-		j["windowIconImagePath"] = optionsNtop.windowIconImagePath;
-	}
-	j["maxFPS"] = optionsNtop.maxFPS;
-	if (!optionsNtop.firstScenePath.empty()) {
-		j["firstScenePath"] = optionsNtop.firstScenePath;
-	}
-	j["startProfiling"] = optionsNtop.startProfiling;
-
-	std::fstream optionsFile(m_optionsFilePath, std::ios::out | std::ios::trunc);
-	if (j.empty()) {
-		optionsFile << "{\n}";
-	}
-	else {
-		optionsFile << j.dump(1, '\t');
-	}
-
-	SaveTitleChanger::reset(this);
-}
-
-ChangeOptionsNtopFile::ChangeOptionsNtopFile(OptionsNtopFileWidget* optionsNtopFileWidget, OptionsNtop newOptionsNtop) {
+ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop newOptionsNtop, const std::string& filePath) : m_globalInfo(globalInfo) {
 	setText("Change Options Ntop");
 
-	m_optionsNtopFileWidget = optionsNtopFileWidget;
+	m_optionsNtopFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->optionsNtopFileWidget;
 	m_oldOptionsNtop = m_optionsNtopFileWidget->optionsNtop;
 	m_newOptionsNtop = newOptionsNtop;
+	m_filePath = filePath;
 }
 
 void ChangeOptionsNtopFile::undo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_optionsNtopFileWidget->optionsNtop = m_oldOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_optionsNtopFileWidget);
+	m_optionsNtopFileWidget->save();
 }
 
 void ChangeOptionsNtopFile::redo() {
+	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+
 	m_optionsNtopFileWidget->optionsNtop = m_newOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
 
-	SaveTitleChanger::change(m_optionsNtopFileWidget);
+	m_optionsNtopFileWidget->save();
 }
