@@ -159,7 +159,7 @@ void SamplerNtspFileWidget::onValueChanged() {
 	}
 
 	if (newSamplerNtsp != samplerNtsp) {
-		save();
+		m_globalInfo.undoStack->push(new ChangeSamplerNtspFile(m_globalInfo, newSamplerNtsp, m_samplerFilePath));
 	}
 }
 
