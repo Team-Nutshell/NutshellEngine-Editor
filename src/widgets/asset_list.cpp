@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
+#include <regex>
 
 AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
@@ -50,6 +51,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetList::onFileRenamed);
+	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &AssetList::onLineEditClose);
 }
 
 void AssetList::enterDirectory(const std::string& directory) {
@@ -216,6 +218,10 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else if ((event->key() == Qt::Key_Return) || (event->key() == Qt::Key_Enter)) {
+			if (!currentlyEditedItemName.empty()) {
+				return;
+			}
+
 			std::string itemFileName = listItem->text().toStdString();
 			std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
 			std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
@@ -229,7 +235,9 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 		}
 		else if (event->key() == Qt::Key_F2) {
 			if (listItem && (listItem->text() != "../")) {
-				m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
+				currentlyEditedItemName = listItem->text().toStdString();
+				listItem->setFlags(listItem->flags() | Qt::ItemFlag::ItemIsEditable);
+				editItem(listItem);
 			}
 		}
 		else if (event->key() == Qt::Key_Delete) {
@@ -278,4 +286,34 @@ void AssetList::dropEvent(QDropEvent* event) {
 		}
 		std::filesystem::copy(sourcePath, fullDestinationDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 	}
+}
+
+void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {
+	(void)hint;
+	QListWidgetItem* currentItem = selectedItems()[0];
+	std::string newName = reinterpret_cast<QLineEdit*>(lineEdit)->text().toStdString();
+	if (currentlyEditedItemName != newName) {
+		const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
+		if (!std::regex_search(newName, validFilenameRegex)) {
+			currentItem->setText(QString::fromStdString(currentlyEditedItemName));
+			return;
+		}
+
+		if (newName.empty()) {
+			currentItem->setText(QString::fromStdString(currentlyEditedItemName));
+			return;
+		}
+
+		if (std::filesystem::exists(m_currentDirectory + "/" + newName)) {
+			currentItem->setText(QString::fromStdString(currentlyEditedItemName));
+			return;
+		}
+
+		if (std::filesystem::exists(m_currentDirectory + "/" + currentlyEditedItemName)) {
+			std::filesystem::rename(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
+			emit m_globalInfo.signalEmitter.renameFileSignal(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
+			emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + newName);
+		}
+	}
+	currentlyEditedItemName = "";
 }

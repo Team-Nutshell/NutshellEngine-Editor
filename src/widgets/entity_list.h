@@ -27,6 +27,7 @@ private slots:
 	void onItemPressed(QListWidgetItem* listWidgetItem);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
+	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);
 
 private:
 	GlobalInfo& m_globalInfo;

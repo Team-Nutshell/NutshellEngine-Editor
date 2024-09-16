@@ -11,7 +11,9 @@ EntityListMenu::EntityListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo
 }
 
 void EntityListMenu::renameEntity() {
-	m_globalInfo.mainWindow->infoPanel->entityInfoPanel->entityInfoNameWidget->setFocus();
+	EntityListItem* entityListItem = m_globalInfo.mainWindow->entityPanel->entityList->findItemWithEntityID(m_globalInfo.currentEntityID);
+	entityListItem->setFlags(entityListItem->flags() | Qt::ItemFlag::ItemIsEditable);
+	m_globalInfo.mainWindow->entityPanel->entityList->editItem(entityListItem);
 }
 
 void EntityListMenu::newEntity() {

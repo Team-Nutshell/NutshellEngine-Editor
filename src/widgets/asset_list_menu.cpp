@@ -19,7 +19,10 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 }
 
 void AssetListMenu::rename() {
-	m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoNameWidget->setFocus();
+	QListWidgetItem* item = m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0];
+	m_globalInfo.mainWindow->resourcePanel->assetList->currentlyEditedItemName = item->text().toStdString();
+	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
+	m_globalInfo.mainWindow->resourcePanel->assetList->editItem(item);
 }
 
 void AssetListMenu::deleteAsset() {

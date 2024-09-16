@@ -39,6 +39,7 @@ private slots:
 	void dragEnterEvent(QDragEnterEvent* event);
 	void dragMoveEvent(QDragMoveEvent* event);
 	void dropEvent(QDropEvent* event);
+	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -51,4 +52,6 @@ private:
 
 public:
 	AssetListMenu* menu;
+
+	std::string currentlyEditedItemName = "";
 };

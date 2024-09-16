@@ -2,6 +2,7 @@
 #include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/destroy_entities_command.h"
+#include "../undo_commands/change_entity_name_command.h"
 #include <QSizePolicy>
 #include <QLabel>
 #include <QSignalBlocker>
@@ -26,6 +27,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onEntityNameChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &EntityList::onEntityVisibilityToggled);
+	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &EntityList::onLineEditClose);
 }
 
 EntityListItem* EntityList::findItemWithEntityID(EntityID entityID) {
@@ -229,7 +231,9 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			m_moveEntityOrderKeyPressed = true;
 		}
 		else if (event->key() == Qt::Key_F2) {
-			m_globalInfo.mainWindow->infoPanel->entityInfoPanel->entityInfoNameWidget->setFocus();
+			EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex));
+			entityListItem->setFlags(entityListItem->flags() | Qt::ItemFlag::ItemIsEditable);
+			editItem(entityListItem);
 		}
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
 	}
@@ -244,4 +248,29 @@ void EntityList::keyReleaseEvent(QKeyEvent* event) {
 	if (event->key() == Qt::Key_Alt) {
 		m_moveEntityOrderKeyPressed = false;
 	}
+}
+
+void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {
+	(void)hint;
+	EntityListItem* currentItem = findItemWithEntityID(m_globalInfo.currentEntityID);
+	currentItem->setFlags(currentItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
+	std::string previousEntityName = m_globalInfo.entities[m_globalInfo.currentEntityID].name;
+	std::string newEntityName = reinterpret_cast<QLineEdit*>(lineEdit)->text().toStdString();
+	if (newEntityName.empty()) {
+		currentItem->setText(QString::fromStdString(previousEntityName));
+		return;
+	}
+
+	if (newEntityName == previousEntityName) {
+		return;
+	}
+
+	if (m_globalInfo.findEntityByName(newEntityName) != NO_ENTITY) {
+		m_globalInfo.logger.addLog(LogLevel::Warning, "Cannot rename Entity \"" + previousEntityName + "\" to \"" + newEntityName + "\" as this name is already taken by another Entity.");
+
+		currentItem->setText(QString::fromStdString(previousEntityName));
+		return;
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, newEntityName));
 }
