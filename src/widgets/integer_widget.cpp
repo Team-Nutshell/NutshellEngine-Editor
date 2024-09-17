@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLocale>
 #include <QIntValidator>
+#include <QSignalBlocker>
 #include <algorithm>
 #include <cstdlib>
 
@@ -49,5 +50,11 @@ void IntegerWidget::onEditingFinished() {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
-	valueLineEdit->clearFocus();
+	else {
+		valueLineEdit->setText(QString::number(m_value));
+	}
+	{
+		const QSignalBlocker signalBlocker(valueLineEdit);
+		valueLineEdit->clearFocus();
+	}
 }

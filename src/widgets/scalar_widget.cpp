@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLocale>
 #include <QDoubleValidator>
+#include <QSignalBlocker>
 #include <algorithm>
 #include <cstdlib>
 
@@ -52,5 +53,11 @@ void ScalarWidget::onEditingFinished() {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
-	valueLineEdit->clearFocus();
+	else {
+		valueLineEdit->setText(QString::number(m_value, 'f', 5));
+	}
+	{
+		const QSignalBlocker signalBlocker(valueLineEdit);
+		valueLineEdit->clearFocus();
+	}
 }
