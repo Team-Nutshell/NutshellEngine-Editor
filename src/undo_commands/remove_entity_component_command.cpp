@@ -1,7 +1,7 @@
 #include "remove_entity_component_command.h"
 
 RemoveEntityComponentCommand::RemoveEntityComponentCommand(GlobalInfo& globalInfo, EntityID entityID, const std::string& componentName) : m_globalInfo(globalInfo) {
-	setText("Remove " + QString::fromStdString(componentName) + " Component to Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_remove_component", { componentName, m_globalInfo.entities[entityID].name })));
 	m_entityID = entityID;
 	m_componentName = componentName;
 	if (m_componentName == "Camera") {

@@ -13,17 +13,17 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Light"));
-	std::vector<std::string> elementList = { "Directional", "Point", "Spot", "Ambient" };
-	typeWidget = new ComboBoxWidget(m_globalInfo, "Type", elementList);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_light")));
+	std::vector<std::string> elementList = { m_globalInfo.localization.getString("component_light_type_directional"), m_globalInfo.localization.getString("component_light_type_point"), m_globalInfo.localization.getString("component_light_type_spot"), m_globalInfo.localization.getString("component_light_type_ambient") };
+	typeWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_light_type"), elementList);
 	layout()->addWidget(typeWidget);
-	colorWidget = new ColorPickerWidget(m_globalInfo, "Color", nml::vec3(1.0f, 1.0f, 1.0f));
+	colorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("component_light_color"), nml::vec3(1.0f, 1.0f, 1.0f));
 	layout()->addWidget(colorWidget);
-	intensityWidget = new ScalarWidget(m_globalInfo, "Intensity");
+	intensityWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_light_intensity"));
 	layout()->addWidget(intensityWidget);
-	directionWidget = new Vector3Widget(m_globalInfo, "Direction");
+	directionWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_light_direction"));
 	layout()->addWidget(directionWidget);
-	cutoffWidget = new Vector2Widget(m_globalInfo, "Cutoff");
+	cutoffWidget = new Vector2Widget(m_globalInfo, m_globalInfo.localization.getString("component_light_cutoff"));
 	layout()->addWidget(cutoffWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
@@ -39,7 +39,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 }
 
 void LightComponentWidget::updateWidgets(const Light& light) {
-	typeWidget->setElementByText(light.type);
+	typeWidget->setElementByText(typeToLightType(light.type));
 	colorWidget->setColor(nml::vec4(light.color, 1.0f));
 	intensityWidget->setValue(light.intensity);
 	directionWidget->setValue(light.direction);
@@ -60,6 +60,42 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 
 void LightComponentWidget::updateComponent(EntityID entityID, Component* component) {
 	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Light", { component }));
+}
+
+std::string LightComponentWidget::lightTypeToType(const std::string& lightType) {
+	if (lightType == m_globalInfo.localization.getString("component_light_type_directional")) {
+		return "Directional";
+	}
+	else if (lightType == m_globalInfo.localization.getString("component_light_type_point")) {
+		return "Point";
+	}
+	else if (lightType == m_globalInfo.localization.getString("component_light_type_spot")) {
+		return "Spot";
+	}
+	else if (lightType == m_globalInfo.localization.getString("component_light_type_ambient")) {
+		return "Ambient";
+	}
+	else {
+		return "Unknown";
+	}
+}
+
+std::string LightComponentWidget::typeToLightType(const std::string& type) {
+	if (type == "Directional") {
+		return m_globalInfo.localization.getString("component_light_type_directional");
+	}
+	else if (type == "Point") {
+		return m_globalInfo.localization.getString("component_light_type_point");
+	}
+	else if (type == "Spot") {
+		return m_globalInfo.localization.getString("component_light_type_spot");
+	}
+	else if (type == "Ambient") {
+		return m_globalInfo.localization.getString("component_light_type_ambient");
+	}
+	else {
+		return "Unknown";
+	}
 }
 
 void LightComponentWidget::onEntitySelected() {
@@ -106,7 +142,7 @@ void LightComponentWidget::onElementChanged(const std::string& element) {
 
 	QObject* senderWidget = sender();
 	if (senderWidget == typeWidget) {
-		newLight.type = element;
+		newLight.type = lightTypeToType(element);
 	}
 	updateComponent(m_globalInfo.currentEntityID, &newLight);
 }

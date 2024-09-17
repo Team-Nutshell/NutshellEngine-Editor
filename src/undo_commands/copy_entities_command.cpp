@@ -20,10 +20,10 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 		}
 	}
 	if (m_copiedEntities.size() == 1) {
-		setText("Copy Entity " + QString::fromStdString(m_copiedEntities[0].name) + " to Entity " + QString::fromStdString(m_pastedEntityNames[0]));
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entities", { m_copiedEntities[0].name, m_pastedEntityNames[0] })));
 	}
 	else {
-		setText("Copy multiple Entities.");
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entities")));
 	}
 }
 

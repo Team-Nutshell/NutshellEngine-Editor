@@ -4,10 +4,10 @@
 #include "../undo_commands/destroy_entities_command.h"
 
 EntityListMenu::EntityListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	renameEntityAction = addAction("Rename", this, &EntityListMenu::renameEntity);
+	renameEntityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_rename")), this, &EntityListMenu::renameEntity);
 	addSeparator();
-	newEntityAction = addAction("New Entity", this, &EntityListMenu::newEntity);
-	deleteEntityAction = addAction("Delete Entity", this, &EntityListMenu::deleteEntity);
+	newEntityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_new")), this, &EntityListMenu::newEntity);
+	deleteEntityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_delete")), this, &EntityListMenu::deleteEntity);
 }
 
 void EntityListMenu::renameEntity() {

@@ -1,7 +1,7 @@
 #include "add_entity_component_command.h"
 
 AddEntityComponentCommand::AddEntityComponentCommand(GlobalInfo& globalInfo, EntityID entityID, const std::string& componentName) : m_globalInfo(globalInfo) {
-	setText("Add " + QString::fromStdString(componentName) + " Component to Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_add_component", { componentName, m_globalInfo.entities[entityID].name })));
 	m_entityID = entityID;
 	m_componentName = componentName;
 }

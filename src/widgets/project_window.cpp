@@ -25,11 +25,11 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	m_logoLabel->setPixmap(m_logoPixmap->scaled(m_leftWidget->width() - 20, height(), Qt::AspectRatioMode::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation));
 	m_leftWidget->layout()->addWidget(m_logoLabel);
 	m_leftWidget->layout()->addWidget(new SeparatorLine(globalInfo));
-	m_leftWidget->layout()->addWidget(new QLabel("<b>Open Project:</b>"));
+	m_leftWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("open_project")) + "</b>"));
 	m_openProjectWidget = new OpenProjectWidget(m_globalInfo);
 	m_leftWidget->layout()->addWidget(m_openProjectWidget);
 	m_leftWidget->layout()->addWidget(new SeparatorLine(globalInfo));
-	m_leftWidget->layout()->addWidget(new QLabel("<b>New Project:</b>"));
+	m_leftWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("new_project")) + "</b>"));
 	m_newProjectWidget = new NewProjectWidget(m_globalInfo);
 	m_leftWidget->layout()->addWidget(m_newProjectWidget);
 	layout()->addWidget(m_leftWidget);
@@ -38,7 +38,7 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	m_rightWidget->setFixedWidth(300);
 	m_rightWidget->layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	m_rightWidget->layout()->setContentsMargins(0, 0, 0, 0);
-	m_rightWidget->layout()->addWidget(new QLabel("<b>Recent Projects:</b>"));
+	m_rightWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("recent_projects")) + "</b>"));
 	m_recentProjectWidget = new RecentProjectsWidget(m_globalInfo);
 	m_rightWidget->layout()->addWidget(m_recentProjectWidget);
 	layout()->addWidget(m_rightWidget);
@@ -113,7 +113,7 @@ void ProjectWindow::openMainWindow(const std::string& projectDirectory, const st
 	m_globalInfo.projectName = projectName;
 	m_globalInfo.mainWindow = new MainWindow(m_globalInfo);
 	MainWindow* mainWindow = m_globalInfo.mainWindow;
-	m_globalInfo.logger.addLog(LogLevel::Info, "Opened project " + projectName + ".");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_opened_project", { projectName }));
 	mainWindow->show();
 	close();
 }

@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <cstdint>
 
+class Localization;
 class Logger;
 
 class RendererResourceManager {
@@ -107,7 +108,7 @@ public:
 	};
 
 public:
-	RendererResourceManager(Logger* passLogger);
+	RendererResourceManager(Localization* passLocalization, Logger* passLogger);
 
 public:
 	void loadModel(const std::string& modelPath, const std::string& name);
@@ -151,5 +152,6 @@ public:
 
 	std::string projectDirectory = "";
 
+	Localization* localization;
 	Logger* logger;
 };

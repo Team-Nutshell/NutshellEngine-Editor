@@ -27,7 +27,7 @@ RecentProjectWidget::RecentProjectWidget(GlobalInfo& globalInfo, const std::stri
 	projectNameLabel = new QLabel("<b>" + QString::fromStdString(projectName) + "</b>");
 	hBoxLayoutWidget->layout()->addWidget(projectNameLabel);
 	removeRecentProjectButton = new QPushButton("X");
-	removeRecentProjectButton->setToolTip("Remove from Recent Projects list");
+	removeRecentProjectButton->setToolTip(QString::fromStdString(m_globalInfo.localization.getString("recent_projects_remove")));
 	removeRecentProjectButton->setFixedWidth(20);
 	hBoxLayoutWidget->layout()->addWidget(removeRecentProjectButton);
 	hBoxLayoutWidget->layout()->setAlignment(removeRecentProjectButton, Qt::AlignmentFlag::AlignRight);

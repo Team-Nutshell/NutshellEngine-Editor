@@ -41,7 +41,7 @@ const nml::vec3& ColorPickerWidget::getColor() {
 void ColorPickerWidget::onColorButtonClicked() {
 	QColorDialog colorDialog;
 	colorDialog.setCurrentColor(QColor::fromRgbF(m_color.x, m_color.y, m_color.z));
-	colorDialog.setWindowTitle("NutshellEngine - Select a color");
+	colorDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("select_color")));
 	colorDialog.setWindowIcon(QIcon("assets/icon.png"));
 	if (colorDialog.exec()) {
 		QColor newColor = colorDialog.currentColor();

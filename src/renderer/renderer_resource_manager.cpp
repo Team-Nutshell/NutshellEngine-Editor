@@ -1,5 +1,6 @@
 #include "renderer_resource_manager.h"
 #include "../common/asset_helper.h"
+#include "../common/localization.h"
 #include "../common/logger.h"
 #if defined(NTSHENGN_COMPILER_MSVC)
 #pragma warning(push)
@@ -32,11 +33,11 @@
 #include <algorithm>
 #include <fstream>
 
-RendererResourceManager::RendererResourceManager(Logger* passLogger) : logger(passLogger) {}
+RendererResourceManager::RendererResourceManager(Localization* passLocalization, Logger* passLogger) : localization(passLocalization), logger(passLogger) {}
 
 void RendererResourceManager::loadModel(const std::string& modelPath, const std::string& name) {
 	if (!std::filesystem::exists(modelPath)) {
-		logger->addLog(LogLevel::Warning, "Model file \"" + modelPath + "\" does not exist.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_type_file_does_not_exist", { localization->getString("model"), modelPath}));
 		return;
 	}
 
@@ -61,7 +62,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 			loadNtmd(modelPath, model);
 		}
 		else {
-			logger->addLog(LogLevel::Warning, "Model file extension \"." + extension + "\" is not supported by the editor.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_type_file_extension_not_supported_editor", { localization->getString("model"), extension }));
 			return;
 		}
 	}
@@ -76,7 +77,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 
 void RendererResourceManager::loadMaterial(const std::string& materialPath, const std::string& name) {
 	if (!std::filesystem::exists(materialPath)) {
-		logger->addLog(LogLevel::Warning, "Material file \"" + materialPath + "\" does not exist.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_type_file_does_not_exist", { localization->getString("material"), materialPath }));
 		return;
 	}
 
@@ -95,7 +96,7 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 			loadNtml(materialPath, material);
 		}
 		else {
-			logger->addLog(LogLevel::Warning, "Material file extension \"." + extension + "\" is not supported by the editor.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_type_file_extension_not_supported_editor", { localization->getString("material"), extension }));
 			return;
 		}
 	}
@@ -107,7 +108,7 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 
 void RendererResourceManager::loadImage(const std::string& imagePath, const std::string& name) {
 	if (!std::filesystem::exists(imagePath)) {
-		logger->addLog(LogLevel::Warning, "Image file \"" + imagePath + "\" does not exist.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_type_file_does_not_exist", { localization->getString("image"), imagePath }));
 		return;
 	}
 
@@ -139,7 +140,7 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 
 void RendererResourceManager::loadSampler(const std::string& samplerPath, const std::string& name) {
 	if (!std::filesystem::exists(samplerPath)) {
-		logger->addLog(LogLevel::Warning, "Sampler file \"" + samplerPath + "\" does not exist.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_type_file_does_not_exist", { localization->getString("image_sampler"), samplerPath }));
 		return;
 	}
 
@@ -158,7 +159,7 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 			loadNtsp(samplerPath, sampler);
 		}
 		else {
-			logger->addLog(LogLevel::Warning, "Sampler file extension \"." + extension + "\" is not supported by the editor.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_type_file_extension_not_supported_editor", { localization->getString("image_sampler"), extension }));
 			return;
 		}
 	}
@@ -172,12 +173,12 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 	std::fstream modelFile(modelPath, std::ios::in);
 	if (modelFile.is_open()) {
 		if (!nlohmann::json::accept(modelFile)) {
-			logger->addLog(LogLevel::Warning, "\"" + modelPath + "\" is not a valid JSON file.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_file_is_not_valid_json", { modelPath }));
 			return;
 		}
 	}
 	else {
-		logger->addLog(LogLevel::Warning, "\"" + modelPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { modelPath }));
 		return;
 	}
 
@@ -218,12 +219,12 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 	std::fstream meshFile(meshPath, std::ios::in);
 	if (meshFile.is_open()) {
 		if (!nlohmann::json::accept(meshFile)) {
-			logger->addLog(LogLevel::Warning, "\"" + meshPath + "\" is not a valid JSON file.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_file_is_not_valid_json", { meshPath }));
 			return mesh;
 		}
 	}
 	else {
-		logger->addLog(LogLevel::Warning, "\"" + meshPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { meshPath }));
 		return mesh;
 	}
 
@@ -271,12 +272,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 	std::fstream materialFile(materialPath, std::ios::in);
 	if (materialFile.is_open()) {
 		if (!nlohmann::json::accept(materialFile)) {
-			logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" is not a valid JSON file.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_file_is_not_valid_json", { materialPath }));
 			return;
 		}
 	}
 	else {
-		logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { materialPath }));
 		return;
 	}
 
@@ -355,12 +356,12 @@ void RendererResourceManager::loadNtim(const std::string& imagePath, ImageToGPU&
 	std::fstream imageFile(imagePath, std::ios::in);
 	if (imageFile.is_open()) {
 		if (!nlohmann::json::accept(imageFile)) {
-			logger->addLog(LogLevel::Warning, "\"" + imagePath + "\" is not a valid JSON file.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { imagePath }));
 			return;
 		}
 	}
 	else {
-		logger->addLog(LogLevel::Warning, "\"" + imagePath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { imagePath }));
 		return;
 	}
 
@@ -387,12 +388,12 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 	std::fstream samplerFile(samplerPath, std::ios::in);
 	if (samplerFile.is_open()) {
 		if (!nlohmann::json::accept(samplerFile)) {
-			logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" is not a valid JSON file.");
+			logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { samplerPath }));
 			return;
 		}
 	}
 	else {
-		logger->addLog(LogLevel::Warning, "\"" + samplerPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { samplerPath }));
 		return;
 	}
 
@@ -452,7 +453,7 @@ void RendererResourceManager::loadGltf(const std::string& modelPath, Model& mode
 		result = cgltf_load_buffers(&options, data, modelPath.c_str());
 
 		if (result != cgltf_result_success) {
-			logger->addLog(LogLevel::Warning, "Could not load buffers for model file \"" + modelPath + "\".");
+			logger->addLog(LogLevel::Warning, localization->getString("log_gltf_buffers_cannot_be_loaded", { modelPath }));
 		}
 		else {
 			cgltf_scene* scene = data->scene;
@@ -620,7 +621,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				}
 
 				default:
-					logger->addLog(LogLevel::Warning, "Index component type invalid for model file \"" + modelPath + "\".");
+					logger->addLog(LogLevel::Warning, localization->getString("log_gltf_index_component_type_invalid", { modelPath }));
 				}
 			}
 			else {
@@ -656,7 +657,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 									loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 								}
 								else {
-									logger->addLog(LogLevel::Warning, "Invalid Base64 data when loading glTF embedded texture for model file \"" + modelPath + "\" (base color texture).");
+									logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, "base color texture"}));
 								}
 							}
 							else {
@@ -753,7 +754,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 							}
 							else {
-								logger->addLog(LogLevel::Warning, "Invalid Base64 data when loading glTF embedded texture for model file \"" + modelPath + "\" (base color texture).");
+								logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, "emissive texture" }));
 							}
 						}
 						else {
@@ -856,7 +857,7 @@ void RendererResourceManager::loadImageStb(const std::string& imagePath, ImageTo
 
 	stbi_uc* pixels = stbi_load(imagePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
 	if (!pixels) {
-		logger->addLog(LogLevel::Warning, "Could not load image \"" + imagePath + "\".");
+		logger->addLog(LogLevel::Warning, localization->getString("log_cannot_load_image", { imagePath }));
 		return;
 	}
 
@@ -875,7 +876,7 @@ void RendererResourceManager::loadImageFromMemory(void* data, size_t size, const
 
 	stbi_uc* pixels = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(data), static_cast<int>(size), &width, &height, &texChannels, STBI_rgb_alpha);
 	if (!pixels) {
-		logger->addLog(LogLevel::Warning, "Could not load image from memory.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_cannot_load_image_from_memory"));
 		return;
 	}
 
@@ -894,7 +895,7 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 
 	// Open file
 	if (!file.is_open()) {
-		logger->addLog(LogLevel::Warning, "\"" + modelPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { modelPath }));
 		return;
 	}
 
@@ -1057,7 +1058,7 @@ std::unordered_map<std::string, RendererResourceManager::Material> RendererResou
 
 	// Open file
 	if (!file.is_open()) {
-		logger->addLog(LogLevel::Warning, "\"" + materialPath + "\" cannot be opened.");
+		logger->addLog(LogLevel::Warning, localization->getString("log_file_cannot_be_opened", { materialPath }));
 		return mtlMaterials;
 	}
 

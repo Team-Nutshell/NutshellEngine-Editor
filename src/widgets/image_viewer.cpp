@@ -6,7 +6,7 @@
 #include <algorithm>
 
 ImageViewer::ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath) : m_globalInfo(globalInfo) {
-	setWindowTitle("NutshellEngine - Image Viewer - " + QString::fromStdString(imagePath));
+	setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("assets_image_viewer")) + " - " + QString::fromStdString(imagePath));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 
@@ -24,12 +24,12 @@ ImageViewer::ImageViewer(GlobalInfo& globalInfo, const std::string& imagePath) :
 		std::fstream imageFile(imagePath);
 		if (imageFile.is_open()) {
 			if (!nlohmann::json::accept(imageFile)) {
-				m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + imagePath + "\" is not a valid JSON file.");
+				m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { imagePath }));
 				return;
 			}
 		}
 		else {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + imagePath + "\" cannot be opened.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_cannot_be_opened", { imagePath }));
 			return;
 		}
 

@@ -2,10 +2,10 @@
 
 ChangeEntitiesComponentCommand::ChangeEntitiesComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName, const std::vector<Component*>& components) : m_globalInfo(globalInfo) {
 	if (entityIDs.size() == 1) {
-		setText("Change " + QString::fromStdString(componentName) + " Component to Entity " + QString::fromStdString(m_globalInfo.entities[entityIDs[0]].name));
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_component_entity", { componentName, m_globalInfo.entities[entityIDs[0]].name })));
 	}
 	else {
-		setText("Change " + QString::fromStdString(componentName) + " Component to multiple Entities");
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_component_entities", { componentName })));
 	}
 	m_entityIDs = entityIDs;
 	m_componentName = componentName;

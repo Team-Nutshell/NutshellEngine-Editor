@@ -5,7 +5,7 @@
 OpenProjectWidget::OpenProjectWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	m_directoryPathButton = new FilePushButton(m_globalInfo, "Select a project directory", "", FilePushButton::PathType::Directory);
+	m_directoryPathButton = new FilePushButton(m_globalInfo, m_globalInfo.localization.getString("open_project_select_directory"), "", FilePushButton::PathType::Directory);
 	layout()->addWidget(m_directoryPathButton);
 	connect(m_directoryPathButton, &FilePushButton::pathChanged, this, &OpenProjectWidget::onPathChanged);
 }

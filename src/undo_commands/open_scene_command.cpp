@@ -3,7 +3,7 @@
 #include "../widgets/main_window.h"
 
 OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::unordered_map<EntityID, Entity>& newEntities, const std::string& newScenePath) : m_globalInfo(globalInfo), m_previousEntities(globalInfo.entities), m_newEntities(newEntities), m_previousScenePath(globalInfo.currentScenePath), m_newScenePath(newScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
-	setText("Open Scene \"" + QString::fromStdString(newScenePath) + "\"");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_open_scene", { m_newScenePath })));
 }
 
 void OpenSceneCommand::undo() {

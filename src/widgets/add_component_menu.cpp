@@ -2,12 +2,12 @@
 #include "../undo_commands/add_entity_component_command.h"
 
 AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(globalInfo) {
-	addCameraComponentAction = addAction("Add Camera Component", this, &AddComponentMenu::addCameraComponent);
-	addLightComponentAction = addAction("Add Light Component", this, &AddComponentMenu::addLightComponent);
-	addRenderableComponentAction = addAction("Add Renderable Component", this, &AddComponentMenu::addRenderableComponent);
-	addRigidbodyComponentAction = addAction("Add Rigidbody Component", this, &AddComponentMenu::addRigidbodyComponent);
-	addCollidableComponentAction = addAction("Add Collidable Component", this, &AddComponentMenu::addCollidableComponent);
-	addScriptableComponentAction = addAction("Add Scriptable Component", this, &AddComponentMenu::addScriptableComponent);
+	addCameraComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_camera")), this, &AddComponentMenu::addCameraComponent);
+	addLightComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_light")), this, &AddComponentMenu::addLightComponent);
+	addRenderableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_renderable")), this, &AddComponentMenu::addRenderableComponent);
+	addRigidbodyComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_rigidbody")), this, &AddComponentMenu::addRigidbodyComponent);
+	addCollidableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_collidable")), this, &AddComponentMenu::addCollidableComponent);
+	addScriptableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_scriptable")), this, &AddComponentMenu::addScriptableComponent);
 }
 
 void AddComponentMenu::addCameraComponent() {

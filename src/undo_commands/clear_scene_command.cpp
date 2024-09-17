@@ -3,7 +3,7 @@
 #include "../widgets/main_window.h"
 
 ClearSceneCommand::ClearSceneCommand(GlobalInfo& globalInfo) : m_globalInfo(globalInfo), m_previousEntities(globalInfo.entities), m_previousScenePath(globalInfo.currentScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
-	setText("Clear Scene");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_clear_scene", { m_previousScenePath })));
 }
 
 void ClearSceneCommand::undo() {

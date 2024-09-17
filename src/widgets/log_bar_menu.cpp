@@ -1,7 +1,7 @@
 #include "log_bar_menu.h"
 
 LogBarMenu::LogBarMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	clearLogsAction = addAction("Clear Logs", this, &LogBarMenu::clearLogs);
+	clearLogsAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("logs_clear_logs")), this, &LogBarMenu::clearLogs);
 }
 
 void LogBarMenu::clearLogs() {

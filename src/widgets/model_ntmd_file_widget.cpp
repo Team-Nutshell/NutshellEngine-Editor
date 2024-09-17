@@ -10,7 +10,7 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo) : m_globalInfo(
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new QLabel("Primitives"));
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_model_primitives"))));
 	primitivesWidget = new QWidget();
 	primitivesWidget->setLayout(new QVBoxLayout());
 	primitivesWidget->layout()->setContentsMargins(0, 0, 0, 0);
@@ -19,7 +19,7 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo) : m_globalInfo(
 	scrollPrimitivesWidget->setWidgetResizable(true);
 	scrollPrimitivesWidget->setWidget(primitivesWidget);
 	layout()->addWidget(scrollPrimitivesWidget);
-	addPrimitiveButton = new QPushButton("Add Primitive");
+	addPrimitiveButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("assets_model_add_primitive")));
 	layout()->addWidget(addPrimitiveButton);
 
 	connect(addPrimitiveButton, &QPushButton::clicked, this, &ModelNtmdFileWidget::onAddPrimitiveButtonClicked);
@@ -30,12 +30,12 @@ void ModelNtmdFileWidget::setPath(const std::string& path) {
 	std::fstream modelFile(m_modelFilePath, std::ios::in);
 	if (modelFile.is_open()) {
 		if (!nlohmann::json::accept(modelFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_modelFilePath + "\" is not a valid JSON file.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { m_modelFilePath }));
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_modelFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_cannot_be_opened", { m_modelFilePath }));
 		return;
 	}
 

@@ -1241,7 +1241,7 @@ GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode)
 		std::vector<GLchar> infolog(maxlength);
 		int length;
 		gl.glGetShaderInfoLog(shader, maxlength, &length, infolog.data());
-		m_globalInfo.logger.addLog(LogLevel::Error, "Error while compiling shader :" + std::string(infolog.data(), length));
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_shader_compilation_error", { std::string(infolog.data(), length) }));
 
 		return 0xFFFFFFFF;
 	}
@@ -1262,7 +1262,7 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 		std::vector<GLchar> infolog(maxlength);
 		int length;
 		gl.glGetProgramInfoLog(program, maxlength, &length, infolog.data());
-		m_globalInfo.logger.addLog(LogLevel::Error, "Error while linking program :" + std::string(infolog.data(), length));
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_program_linking_error", { std::string(infolog.data(), length) }));
 		gl.glDetachShader(program, vertexShader);
 		gl.glDetachShader(program, fragmentShader);
 

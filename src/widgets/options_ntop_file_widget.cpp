@@ -12,16 +12,17 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo) : m_globalI
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	windowTitleWidget = new StringWidget(globalInfo, "Window Title");
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_options_file"))));
+	windowTitleWidget = new StringWidget(globalInfo, m_globalInfo.localization.getString("assets_options_window_title"));
 	layout()->addWidget(windowTitleWidget);
-	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, "Window Icon", "No window icon selected", m_globalInfo.projectDirectory + "/assets");
+	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_window_icon"), m_globalInfo.localization.getString("assets_options_no_window_icon_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(windowIconImageWidget);
-	maxFPSWidget = new IntegerWidget(m_globalInfo, "Max FPS");
+	maxFPSWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_max_fps"));
 	maxFPSWidget->setMin(0);
 	layout()->addWidget(maxFPSWidget);
-	firstSceneWidget = new FileSelectorWidget(m_globalInfo, "First Scene", "No first scene selected", m_globalInfo.projectDirectory + "/assets");
+	firstSceneWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_first_scene"), m_globalInfo.localization.getString("assets_options_no_first_scene_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(firstSceneWidget);
-	startProfilingWidget = new BooleanWidget(m_globalInfo, "Start Profiling");
+	startProfilingWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_start_profiling"));
 	layout()->addWidget(startProfilingWidget);
 
 	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
@@ -36,12 +37,12 @@ void OptionsNtopFileWidget::setPath(const std::string& path) {
 	std::fstream optionsFile(m_optionsFilePath, std::ios::in);
 	if (optionsFile.is_open()) {
 		if (!nlohmann::json::accept(optionsFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_optionsFilePath + "\" is not a valid JSON file.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { m_optionsFilePath }));
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_optionsFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_cannot_be_opened", { m_optionsFilePath }));
 		return;
 	}
 
@@ -132,7 +133,7 @@ void OptionsNtopFileWidget::onValueChanged() {
 }
 
 ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop newOptionsNtop, const std::string& filePath) : m_globalInfo(globalInfo) {
-	setText("Change Options Ntop");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_options", { filePath })));
 
 	m_optionsNtopFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->optionsNtopFileWidget;
 	m_oldOptionsNtop = m_optionsNtopFileWidget->optionsNtop;

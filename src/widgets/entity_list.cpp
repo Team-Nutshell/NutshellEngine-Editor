@@ -266,7 +266,7 @@ void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEd
 	}
 
 	if (m_globalInfo.findEntityByName(newEntityName) != NO_ENTITY) {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "Cannot rename Entity \"" + previousEntityName + "\" to \"" + newEntityName + "\" as this name is already taken by another Entity.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_entity_name_already_taken", { previousEntityName, newEntityName }));
 
 		currentItem->setText(QString::fromStdString(previousEntityName));
 		return;

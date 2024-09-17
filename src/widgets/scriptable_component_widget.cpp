@@ -28,12 +28,12 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Scriptable"));
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_scriptable")));
 	QWidget* scriptSelectorWidget = new QWidget();
 	scriptSelectorWidget->setLayout(new QHBoxLayout());
 	scriptSelectorWidget->layout()->setContentsMargins(0, 0, 0, 0);
 	std::vector<std::string> scriptEntries = getScriptEntries();
-	scriptNameWidget = new ComboBoxWidget(m_globalInfo, "Script", scriptEntries);
+	scriptNameWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_scriptable_script"), scriptEntries);
 	scriptSelectorWidget->layout()->addWidget(scriptNameWidget);
 	openCodeEditorButton = new QPushButton("E");
 	openCodeEditorButton->setFixedWidth(20);
@@ -42,7 +42,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	editableScriptVariablesWidget = new QWidget();
 	editableScriptVariablesWidget->setLayout(new QVBoxLayout());
 	editableScriptVariablesWidget->layout()->setContentsMargins(0, 0, 0, 0);
-	editableScriptVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
+	editableScriptVariablesWidget->layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_editable_variables"))));
 	layout()->addWidget(editableScriptVariablesWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
@@ -90,7 +90,7 @@ void ScriptableComponentWidget::updateWidgets(const Scriptable& scriptable) {
 	else {
 		{
 			const QSignalBlocker signalBlocker(scriptNameWidget->comboBox);
-			scriptNameWidget->comboBox->setCurrentText("No script selected");
+			scriptNameWidget->comboBox->setCurrentText(QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_no_script_selected")));
 		}
 		openCodeEditorButton->setEnabled(false);
 		editableScriptVariablesWidget->hide();
@@ -107,7 +107,7 @@ void ScriptableComponentWidget::updateComponent(EntityID entityID, Component* co
 std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
 	m_scriptToPath.clear();
 	std::vector<std::string> scriptEntries;
-	scriptEntries.push_back("No script selected");
+	scriptEntries.push_back(m_globalInfo.localization.getString("component_scriptable_no_script_selected"));
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
 		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
 			if (entry.is_directory()) {
@@ -137,7 +137,7 @@ std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {
 		}
 		m_scriptsDirectoryWatcher.addPath(QString::fromStdString(m_globalInfo.projectDirectory) + "/scripts/");
 	}
-	scriptEntries.push_back("+ New script...");
+	scriptEntries.push_back(m_globalInfo.localization.getString("component_scriptable_new_script"));
 
 	return scriptEntries;
 }
@@ -513,7 +513,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 		delete item;
 	}
 	m_widgetToEditableScriptVariableName.clear();
-	editableScriptVariablesWidget->layout()->addWidget(new QLabel("Editable Variables:"));
+	editableScriptVariablesWidget->layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_editable_variables"))));
 
 	if (m_scriptToPath.find(scriptName) != m_scriptToPath.end()) {
 		for (const auto& editableScriptVariable : m_editableScriptVariables[scriptName]) {
@@ -706,7 +706,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 					editableScriptVariablesWidget->layout()->addWidget(widget);
 				}
 				else {
-					m_globalInfo.logger.addLog(LogLevel::Warning, "In script \"" + scriptName + "\", found variable \"" + name + "\" with an unsupported Editable Script Variable type (\"" + type + "\").");
+					m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_unsupported_editable_variable_type", { scriptName, name, type }));
 				}
 			}
 		}
@@ -825,10 +825,10 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 
 	QObject* senderWidget = sender();
 	if (senderWidget == scriptNameWidget) {
-		if (element == "No script selected") {
+		if (element == m_globalInfo.localization.getString("component_scriptable_no_script_selected")) {
 			newScriptable.scriptName = "";
 		}
-		else if (element == "+ New script...") {
+		else if (element == m_globalInfo.localization.getString("component_scriptable_new_script")) {
 			NewScriptMessageBox newScriptMessageBox(m_globalInfo);
 			if (newScriptMessageBox.exec() == QMessageBox::StandardButton::Ok) {
 				std::string scriptName = newScriptMessageBox.scriptNameLineEdit->text().toStdString();
@@ -859,7 +859,7 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 								scriptNameIndex++;
 							}
 							finalScriptName = scriptName + "_" + std::to_string(scriptNameIndex);
-							m_globalInfo.logger.addLog(LogLevel::Warning, "Script \"" + scriptName + "\" already exists, renaming the new script to \"" + finalScriptName + "\".");
+							m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_name_already_taken", { scriptName, finalScriptName }));
 						}
 
 						std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h", std::ios::out | std::ios::trunc);
@@ -868,7 +868,7 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 						newScriptable.scriptName = finalScriptName;
 					}
 					else {
-						m_globalInfo.logger.addLog(LogLevel::Warning, "Script name \"" + scriptName + "\" is not a valid filename.");
+						m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_name_not_valid", { scriptName }));
 					}
 				}
 			}
@@ -889,7 +889,7 @@ void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {
 	std::string codeEditorCommand = m_globalInfo.editorParameters.code.codeEditorCommand;
 
 	if (codeEditorCommand.empty()) {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "No code editor command has been specified.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_code_editor_none"));
 
 		return;
 	}

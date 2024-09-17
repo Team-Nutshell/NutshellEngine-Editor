@@ -1,6 +1,7 @@
 #pragma once
 #include "editor_parameters.h"
 #include "entity.h"
+#include "localization.h"
 #include "logger.h"
 #include "signal_emitter.h"
 #include "../renderer/renderer_resource_manager.h"
@@ -35,8 +36,9 @@ struct GlobalInfo {
 	std::unique_ptr<QUndoStack> undoStack;
 	EditorParameters editorParameters;
 	SignalEmitter signalEmitter;
+	Localization localization;
 	Logger logger;
-	RendererResourceManager rendererResourceManager = RendererResourceManager(&logger);
+	RendererResourceManager rendererResourceManager = RendererResourceManager(&localization, &logger);
 
 	EntityID findEntityByName(const std::string& entityName) {
 		for (const auto& entity : entities) {

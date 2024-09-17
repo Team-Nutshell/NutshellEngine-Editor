@@ -10,9 +10,9 @@ ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo) : m_g
 	removePrimitiveButton->setFixedWidth(20);
 	layout()->addWidget(removePrimitiveButton);
 	layout()->setAlignment(removePrimitiveButton, Qt::AlignmentFlag::AlignRight);
-	primitiveMeshWidget = new FileSelectorWidget(m_globalInfo, "Mesh", "No mesh selected", "");
+	primitiveMeshWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_model_primitive_mesh"), m_globalInfo.localization.getString("assets_model_primitive_no_mesh_selected"), "");
 	layout()->addWidget(primitiveMeshWidget);
-	primitiveMaterialWidget = new FileSelectorWidget(m_globalInfo, "Material", "No material selected", "");
+	primitiveMaterialWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_model_primitive_material"), m_globalInfo.localization.getString("assets_model_primitive_no_material_selected"), "");
 	layout()->addWidget(primitiveMaterialWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 

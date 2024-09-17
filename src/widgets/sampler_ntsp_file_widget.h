@@ -40,6 +40,14 @@ public:
 	void updateWidgets();
 	void save();
 
+private:
+	std::string filterToType(const std::string& filterName);
+	std::string typeToFilter(const std::string& type);
+	std::string addressModeToType(const std::string& addressModeName);
+	std::string typeToAddressMode(const std::string& type);
+	std::string borderColorToType(const std::string& borderColorName);
+	std::string typeToBorderColor(const std::string& type);
+
 private slots:
 	void onValueChanged();
 

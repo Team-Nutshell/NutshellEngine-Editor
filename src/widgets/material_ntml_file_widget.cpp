@@ -10,68 +10,69 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	diffuseTextureImageWidget = new FileSelectorWidget(globalInfo, "Diffuse Image", "No image selected", "");
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_material_file"))));
+	diffuseTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(diffuseTextureImageWidget);
-	diffuseTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Diffuse Image Sampler", "No image sampler selected", "");
+	diffuseTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(diffuseTextureImageSamplerWidget);
-	diffuseColorWidget = new ColorPickerWidget(globalInfo, "Diffuse Color", nml::vec3(0.5f, 0.5f, 0.5f));
+	diffuseColorWidget = new ColorPickerWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_color"), nml::vec3(0.5f, 0.5f, 0.5f));
 	layout()->addWidget(diffuseColorWidget);
-	opacityValueWidget = new ScalarWidget(globalInfo, "Opacity Value");
+	opacityValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_opacity_value"));
 	opacityValueWidget->setValue(1.0f);
 	opacityValueWidget->setMin(0.0f);
 	opacityValueWidget->setMax(1.0f);
 	layout()->addWidget(opacityValueWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	normalTextureImageWidget = new FileSelectorWidget(globalInfo, "Normal Image", "No image selected", "");
+	normalTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_normal_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(normalTextureImageWidget);
-	normalTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Normal Image Sampler", "No image sampler selected", "");
+	normalTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_normal_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(normalTextureImageSamplerWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	metalnessTextureImageWidget = new FileSelectorWidget(globalInfo, "Metalness Image", "No image selected", "");
+	metalnessTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(metalnessTextureImageWidget);
-	metalnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Metalness Image Sampler", "No image sampler selected", "");
+	metalnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(metalnessTextureImageSamplerWidget);
-	metalnessValueWidget = new ScalarWidget(globalInfo, "Metalness Value");
+	metalnessValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_value"));
 	metalnessValueWidget->setValue(0.5f);
 	metalnessValueWidget->setMin(0.0f);
 	metalnessValueWidget->setMax(1.0f);
 	layout()->addWidget(metalnessValueWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	roughnessTextureImageWidget = new FileSelectorWidget(globalInfo, "Roughness Image", "No image selected", "");
+	roughnessTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(roughnessTextureImageWidget);
-	roughnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Roughness Image Sampler", "No image sampler selected", "");
+	roughnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(roughnessTextureImageSamplerWidget);
-	roughnessValueWidget = new ScalarWidget(globalInfo, "Roughness Value");
+	roughnessValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_value"));
 	roughnessValueWidget->setValue(0.5f);
 	roughnessValueWidget->setMin(0.0f);
 	roughnessValueWidget->setMax(1.0f);
 	layout()->addWidget(roughnessValueWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	occlusionTextureImageWidget = new FileSelectorWidget(globalInfo, "Occlusion Image", "No image selected", "");
+	occlusionTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(occlusionTextureImageWidget);
-	occlusionTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Occlusion Image Sampler", "No image sampler selected", "");
+	occlusionTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(occlusionTextureImageSamplerWidget);
-	occlusionValueWidget = new ScalarWidget(globalInfo, "Occlusion Value");
+	occlusionValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_value"));
 	occlusionValueWidget->setValue(1.0f);
 	occlusionValueWidget->setMin(0.0f);
 	occlusionValueWidget->setMax(1.0f);
 	layout()->addWidget(occlusionValueWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	emissiveTextureImageWidget = new FileSelectorWidget(globalInfo, "Emissive Image", "No image selected", "");
+	emissiveTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(emissiveTextureImageWidget);
-	emissiveTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, "Emissive Image Sampler", "No image sampler selected", "");
+	emissiveTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(emissiveTextureImageSamplerWidget);
-	emissiveColorWidget = new ColorPickerWidget(globalInfo, "Emissive Color", nml::vec3(0.0f, 0.0f, 0.0f));
+	emissiveColorWidget = new ColorPickerWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_color"), nml::vec3(0.0f, 0.0f, 0.0f));
 	layout()->addWidget(emissiveColorWidget);
-	emissiveFactorWidget = new ScalarWidget(globalInfo, "Emissive Factor");
+	emissiveFactorWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_factor"));
 	emissiveFactorWidget->setValue(1.0f);
 	layout()->addWidget(emissiveFactorWidget);
 	layout()->addWidget(new SeparatorLine(globalInfo));
-	alphaCutoffWidget = new ScalarWidget(globalInfo, "Alpha Cutoff");
+	alphaCutoffWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_alpha_cutoff"));
 	alphaCutoffWidget->setMin(0.0f);
 	alphaCutoffWidget->setMax(1.0f);
 	layout()->addWidget(alphaCutoffWidget);
-	indexOfRefractionWidget = new ScalarWidget(globalInfo, "Index of Refraction");
+	indexOfRefractionWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_index_of_refraction"));
 	layout()->addWidget(indexOfRefractionWidget);
 
 	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
@@ -102,12 +103,12 @@ void MaterialNtmlFileWidget::setPath(const std::string& path) {
 	std::fstream materialFile(m_materialFilePath, std::ios::in);
 	if (materialFile.is_open()) {
 		if (!nlohmann::json::accept(materialFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_materialFilePath + "\" is not a valid JSON file.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { m_materialFilePath }));
 			return;
 		}
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + m_materialFilePath + "\" cannot be opened.");
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_cannot_be_opened", { m_materialFilePath }));
 		return;
 	}
 
@@ -402,7 +403,7 @@ void MaterialNtmlFileWidget::onValueChanged() {
 }
 
 ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialNtml newMaterialNtml, const std::string& filePath) : m_globalInfo(globalInfo) {
-	setText("Change Material Ntml");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_material", { filePath })));
 
 	m_materialNtmlFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->materialNtmlFileWidget;
 	m_oldMaterialNtml = m_materialNtmlFileWidget->materialNtml;

@@ -5,14 +5,14 @@
 #include <QKeySequence>
 #include <QFileDialog>
 
-FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(globalInfo) {
-	m_newSceneAction = addAction("New Scene", this, &FileMenu::newScene);
+FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_file"))), m_globalInfo(globalInfo) {
+	m_newSceneAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_file_new_scene")), this, &FileMenu::newScene);
 	m_newSceneAction->setShortcut(QKeySequence::fromString("Ctrl+N"));
-	m_openSceneAction = addAction("Open Scene...", this, &FileMenu::openScene);
+	m_openSceneAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_file_open_scene")), this, &FileMenu::openScene);
 	m_openSceneAction->setShortcut(QKeySequence::fromString("Ctrl+O"));
-	m_saveSceneAction = addAction("Save Scene", this, &FileMenu::saveScene);
+	m_saveSceneAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_file_save_scene")), this, &FileMenu::saveScene);
 	m_saveSceneAction->setShortcut(QKeySequence::fromString("Ctrl+S"));
-	m_saveSceneAsAction = addAction("Save Scene as...", this, &FileMenu::saveSceneAs);
+	m_saveSceneAsAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_file_save_scene_as")), this, &FileMenu::saveSceneAs);
 	m_saveSceneAsAction->setShortcut(QKeySequence::fromString("Shift+Ctrl+S"));
 }
 
@@ -27,7 +27,7 @@ void FileMenu::newScene() {
 
 void FileMenu::openScene() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle("NutshellEngine - Open Scene...");
+	fileDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("header_file_open_scene")));
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
@@ -54,7 +54,7 @@ void FileMenu::saveScene() {
 
 void FileMenu::saveSceneAs() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle("NutshellEngine - Save Scene as...");
+	fileDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("header_file_save_scene_as")));
 	fileDialog.setDefaultSuffix("ntsn");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/assets/"));

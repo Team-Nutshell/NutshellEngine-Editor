@@ -14,24 +14,24 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Collidable"));
-	std::vector<std::string> elements = { "Box", "Sphere", "Capsule" };
-	typeWidget = new ComboBoxWidget(m_globalInfo, "Type", elements);
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_collidable")));
+	std::vector<std::string> elements = { m_globalInfo.localization.getString("component_collidable_type_box"), m_globalInfo.localization.getString("component_collidable_type_sphere"), m_globalInfo.localization.getString("component_collidable_type_capsule") };
+	typeWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_type"), elements);
 	layout()->addWidget(typeWidget);
-	centerWidget = new Vector3Widget(m_globalInfo, "Center");
+	centerWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_center"));
 	layout()->addWidget(centerWidget);
-	radiusWidget = new ScalarWidget(m_globalInfo, "Radius");
+	radiusWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_radius"));
 	radiusWidget->setMin(0.0f);
 	layout()->addWidget(radiusWidget);
-	halfExtentWidget = new Vector3Widget(m_globalInfo, "Half Extent");
+	halfExtentWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_half_extent"));
 	layout()->addWidget(halfExtentWidget);
-	rotationWidget = new Vector3Widget(m_globalInfo, "Rotation");
+	rotationWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_rotation"));
 	layout()->addWidget(rotationWidget);
-	baseWidget = new Vector3Widget(m_globalInfo, "Base");
+	baseWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_base"));
 	layout()->addWidget(baseWidget);
-	tipWidget = new Vector3Widget(m_globalInfo, "Tip");
+	tipWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_tip"));
 	layout()->addWidget(tipWidget);
-	fromRenderableWidget = new QPushButton("From Renderable");
+	fromRenderableWidget = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("component_collidable_from_renderable")));
 	layout()->addWidget(fromRenderableWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
@@ -54,7 +54,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 }
 
 void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
-	typeWidget->setElementByText(collidable.type);
+	typeWidget->setElementByText(typeToColliderType(collidable.type));
 	centerWidget->setValue(collidable.center);
 	if ((collidable.type == "Box") || (collidable.type == "Sphere")) {
 		centerWidget->setEnabled(true);
@@ -113,6 +113,36 @@ void CollidableComponentWidget::updateFromRenderableWidget() {
 	}
 }
 
+std::string CollidableComponentWidget::colliderTypeToType(const std::string& colliderType) {
+	if (colliderType == m_globalInfo.localization.getString("component_collidable_type_box")) {
+		return "Box";
+	}
+	else if (colliderType == m_globalInfo.localization.getString("component_collidable_type_sphere")) {
+		return "Sphere";
+	}
+	else if (colliderType == m_globalInfo.localization.getString("component_collidable_type_capsule")) {
+		return "Capsule";
+	}
+	else {
+		return "Unknown";
+	}
+}
+
+std::string CollidableComponentWidget::typeToColliderType(const std::string& type) {
+	if (type == "Box") {
+		return m_globalInfo.localization.getString("component_collidable_type_box");
+	}
+	else if (type == "Sphere") {
+		return m_globalInfo.localization.getString("component_collidable_type_sphere");
+	}
+	else if (type == "Capsule") {
+		return m_globalInfo.localization.getString("component_collidable_type_capsule");
+	}
+	else {
+		return "Unknown";
+	}
+}
+
 void CollidableComponentWidget::onEntityCreated(EntityID entityID) {
 	Entity& entity = m_globalInfo.entities[entityID];
 	if (entity.collidable) {
@@ -168,7 +198,7 @@ void CollidableComponentWidget::onElementChanged(const std::string& element) {
 
 	QObject* senderWidget = sender();
 	if (senderWidget == typeWidget) {
-		newCollidable.type = element;
+		newCollidable.type = colliderTypeToType(element);
 	}
 	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
 }

@@ -6,16 +6,16 @@
 #include <fstream>
 
 AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	renameAction = addAction("Rename", this, &AssetListMenu::rename);
-	deleteAction = addAction("Delete", this, &AssetListMenu::deleteAsset);
+	renameAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_rename")), this, &AssetListMenu::rename);
+	deleteAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_delete")), this, &AssetListMenu::deleteAsset);
 	addSeparator();
-	QMenu* createMenu = addMenu("Create");
-	newDirectoryAction = createMenu->addAction("Directory", this, &AssetListMenu::newDirectory);
+	QMenu* createMenu = addMenu(QString::fromStdString(m_globalInfo.localization.getString("assets_create")));
+	newDirectoryAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("directory")), this, &AssetListMenu::newDirectory);
 	createMenu->addSeparator();
-	newModelAction = createMenu->addAction("Model", this, &AssetListMenu::newModel);
-	newImageSamplerAction = createMenu->addAction("Image Sampler", this, &AssetListMenu::newImageSampler);
-	newMaterialAction = createMenu->addAction("Material", this, &AssetListMenu::newMaterial);
-	newSceneAction = createMenu->addAction("Scene", this, &AssetListMenu::newScene);
+	newModelAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("model")), this, &AssetListMenu::newModel);
+	newImageSamplerAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("image_sampler")), this, &AssetListMenu::newImageSampler);
+	newMaterialAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("material")), this, &AssetListMenu::newMaterial);
+	newSceneAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("scene")), this, &AssetListMenu::newScene);
 }
 
 void AssetListMenu::rename() {

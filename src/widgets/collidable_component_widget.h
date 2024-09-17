@@ -17,6 +17,9 @@ private:
 
 	void updateFromRenderableWidget();
 
+	std::string colliderTypeToType(const std::string& colliderType);
+	std::string typeToColliderType(const std::string& type);
+
 private slots:
 	void onEntityCreated(EntityID entityID);
 	void onEntitySelected();

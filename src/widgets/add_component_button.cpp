@@ -2,7 +2,7 @@
 #include <QCursor>
 
 AddComponentButton::AddComponentButton(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	setText("Add Component");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component")));
 	menu = new AddComponentMenu(m_globalInfo);
 
 	connect(this, &QPushButton::clicked, this, &AddComponentButton::onClick);

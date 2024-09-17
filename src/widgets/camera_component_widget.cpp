@@ -10,17 +10,17 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Camera"));
-	forwardWidget = new Vector3Widget(m_globalInfo, "Forward");
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera")));
+	forwardWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_camera_forward"));
 	layout()->addWidget(forwardWidget);
-	upWidget = new Vector3Widget(m_globalInfo, "Up");
+	upWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_camera_up"));
 	layout()->addWidget(upWidget);
-	fovWidget = new ScalarWidget(m_globalInfo, "FOV");
+	fovWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_fov"));
 	fovWidget->setMin(0.0f);
 	layout()->addWidget(fovWidget);
-	nearPlaneWidget = new ScalarWidget(m_globalInfo, "Near Plane");
+	nearPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_near_plane"));
 	layout()->addWidget(nearPlaneWidget);
-	farPlaneWidget = new ScalarWidget(m_globalInfo, "Far Plane");
+	farPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_far_plane"));
 	layout()->addWidget(farPlaneWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 

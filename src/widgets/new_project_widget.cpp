@@ -9,9 +9,9 @@ NewProjectWidget::NewProjectWidget(GlobalInfo& globalInfo) : m_globalInfo(global
 	layout()->addWidget(m_newProjectDirectoryPathWidget);
 	m_newProjectNameWidget = new NewProjectNameWidget(m_globalInfo);
 	layout()->addWidget(m_newProjectNameWidget);
-	m_projectPathLabel = new QLabel("?/? (missing directory and project name)");
+	m_projectPathLabel = new QLabel("?/? (" + QString::fromStdString(m_globalInfo.localization.getString("new_project_missing_directory_project_name")) + ")");
 	layout()->addWidget(m_projectPathLabel);
-	m_createNewProjectButton = new QPushButton("Create new project");
+	m_createNewProjectButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("new_project_create")));
 	m_createNewProjectButton->setEnabled(false);
 	layout()->addWidget(m_createNewProjectButton);
 
@@ -39,13 +39,13 @@ void NewProjectWidget::onDirectorySelected(const std::string& directoryPath) {
 		projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 	}
 	else {
-		projectFullPath = m_projectDirectoryPath + "/? (missing project name)";
+		projectFullPath = m_projectDirectoryPath + "/? (" + m_globalInfo.localization.getString("new_project_missing_project_name") + ")";
 	}
 
 	if ((!m_projectDirectoryPath.empty()) && (!m_projectName.empty())) {
 		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
 		if (directoryExists) {
-			projectFullPath = projectFullPath + " (directory already exists)";
+			projectFullPath = projectFullPath + " (" + m_globalInfo.localization.getString("new_project_directory_already_exists") + ")";
 
 			m_createNewProjectButton->setEnabled(false);
 		}
@@ -71,22 +71,22 @@ void NewProjectWidget::onTextChanged(const std::string& text) {
 			projectFullPath = m_projectDirectoryPath + "/" + projectNameNoSpace;
 		}
 		else {
-			projectFullPath = m_projectDirectoryPath + "/? (missing project name)";
+			projectFullPath = m_projectDirectoryPath + "/? (" + m_globalInfo.localization.getString("new_project_missing_project_name") + ")";
 		}
 	}
 	else {
 		if (!m_projectName.empty()) {
-			projectFullPath = "?/" + projectNameNoSpace + " (missing directory)";
+			projectFullPath = "?/" + projectNameNoSpace + " (" + m_globalInfo.localization.getString("new_project_missing_directory") + ")";
 		}
 		else {
-			projectFullPath = "?/? (missing directory and project name)";
+			projectFullPath = "?/? (" + m_globalInfo.localization.getString("new_project_missing_directory_project_name") + ")";
 		}
 	}
 
 	if ((!m_projectDirectoryPath.empty()) && (!m_projectName.empty())) {
 		bool directoryExists = std::filesystem::exists(m_projectDirectoryPath + "/" + projectNameNoSpace);
 		if (directoryExists) {
-			projectFullPath = projectFullPath + " (directory already exists)";
+			projectFullPath = projectFullPath + " (" + m_globalInfo.localization.getString("new_project_directory_already_exists") + ")";
 
 			m_createNewProjectButton->setEnabled(false);
 		}

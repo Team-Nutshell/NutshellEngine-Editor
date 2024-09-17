@@ -13,7 +13,7 @@ ChangeEntityNameCommand::ChangeEntityNameCommand(GlobalInfo& globalInfo, EntityI
 		}
 		m_newEntityName = name + "_" + std::to_string(entityNameIndex);
 	}
-	setText("Change Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name) + " Name to " + QString::fromStdString(m_newEntityName));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_entity_name", { m_globalInfo.entities[entityID].name, m_newEntityName })));
 }
 
 void ChangeEntityNameCommand::undo() {

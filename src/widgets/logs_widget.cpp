@@ -10,14 +10,14 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setLayout(new QVBoxLayout());
 	layout()->setContentsMargins(0, 0, 0, 0);
-	clearLogsButton = new QPushButton("Clear logs");
+	clearLogsButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("logs_clear_logs")));
 	layout()->addWidget(clearLogsButton);
 	logsTable = new QTableWidget();
 	logsTable->setColumnCount(3);
 	logsTable->setColumnWidth(0, 150);
 	logsTable->setColumnWidth(1, 75);
 	logsTable->setColumnWidth(2, 1055);
-	QStringList headerLabels = {"Time", "Level", "Log"};
+	QStringList headerLabels = { QString::fromStdString(m_globalInfo.localization.getString("logs_header_time")), QString::fromStdString(m_globalInfo.localization.getString("logs_header_level")), QString::fromStdString(m_globalInfo.localization.getString("logs_header_log")) };
 	logsTable->setHorizontalHeaderLabels(headerLabels);
 	layout()->addWidget(logsTable);
 
@@ -37,13 +37,13 @@ void LogsWidget::updateLogs() {
 		LogLevel logLevel = std::get<1>(logs[i]);
 		std::string level = "Info";
 		if (logLevel == LogLevel::Info) {
-			level = "Info";
+			level = m_globalInfo.localization.getString("logs_level_info");
 		}
 		else if (logLevel == LogLevel::Warning) {
-			level = "Warning";
+			level = m_globalInfo.localization.getString("logs_level_warning");
 		}
 		else if (logLevel == LogLevel::Error) {
-			level = "Error";
+			level = m_globalInfo.localization.getString("logs_level_error");
 		}
 
 		std::string logString = std::get<2>(logs[i]);

@@ -57,7 +57,7 @@ void BuildBar::launchBuild() {
 
 void BuildBar::launchExport() {
 	QFileDialog fileDialog = QFileDialog();
-	fileDialog.setWindowTitle("NutshellEngine - Export To...");
+	fileDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("build_export")));
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
 	fileDialog.setFileMode(QFileDialog::FileMode::Directory);
 	fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
@@ -84,7 +84,7 @@ bool BuildBar::build() {
 	generateScriptManager();
 
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build.");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build", { buildType }));
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
@@ -126,12 +126,12 @@ bool BuildBar::build() {
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DNTSHENGN_BUILD_IN_EDITOR=ON";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
 	bool cMakeSuccess = true;
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_cmake_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
@@ -146,10 +146,10 @@ bool BuildBar::build() {
 		CloseHandle(processInformation.hThread);
 
 		if (exitCode == 0) {
-			m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully launched the project\'s CMakeLists.txt.");
+			m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_cmake_success"));
 		}
 		else {
-			m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error with the project\'s CMakeLists.txt.");
+			m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_error"));
 
 			cMakeSuccess = false;
 		}
@@ -157,7 +157,7 @@ bool BuildBar::build() {
 	else {
 		CloseHandle(pipeWrite);
 		CloseHandle(pipeRead);
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_cannot_launch"));
 
 		cMakeSuccess = false;
 	}
@@ -190,11 +190,11 @@ bool BuildBar::build() {
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
 	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType;
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
@@ -209,10 +209,10 @@ bool BuildBar::build() {
 		CloseHandle(processInformation.hThread);
 
 		if (exitCode == 0) {
-			m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully built the project.");
+			m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_success"));
 		}
 		else {
-			m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error while building the project.");
+			m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_build_error"));
 
 			buildSuccess = false;
 		}
@@ -220,7 +220,7 @@ bool BuildBar::build() {
 	else {
 		CloseHandle(pipeWrite);
 		CloseHandle(pipeRead);
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_cannot_launch"));
 
 		buildSuccess = false;
 	}
@@ -231,11 +231,11 @@ bool BuildBar::build() {
 #elif defined(NTSHENGN_OS_LINUX)
 	// CMake
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " -DNTSHENGN_BUILD_IN_EDITOR=ON 2>&1";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching CMake with command: " + cMakeCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
 	bool cMakeSuccess = true;
 	FILE* fp = popen(cMakeCommand.c_str(), "r");
 	if (fp == NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_cannot_launch"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -243,17 +243,17 @@ bool BuildBar::build() {
 		return false;
 	}
 	
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] CMake logs:");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_cmake_logs"));
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
 		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully launched the project\'s CMakeLists.txt.");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_cmake_success"));
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error with the project\'s CMakeLists.txt.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_error"));
 
 		cMakeSuccess = false;
 	}
@@ -267,10 +267,10 @@ bool BuildBar::build() {
 
 	// Build
 	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType + " 2>&1";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Launching " + buildType + " build with command: " + cMakeBuildCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
 	fp = popen(cMakeBuildCommand.c_str(), "r");
 	if (fp == NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Cannot launch CMake (CMake not installed?).");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_cannot_launch"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -278,16 +278,16 @@ bool BuildBar::build() {
 		return false;
 	}
 	
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Build logs:");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_logs"));
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
 		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Build] Successfully built the project.");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_success"));
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Build] Error while building the project.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_build_error"));
 
 		buildSuccess = false;
 	}
@@ -309,11 +309,11 @@ bool BuildBar::build() {
 
 void BuildBar::run() {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Running the application.");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run"));
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] There is no build to run.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_no_build_to_run"));
 
 		return;
 	}
@@ -354,11 +354,11 @@ void BuildBar::run() {
 
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "NutshellEngine.exe";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Launching application with command: " + runCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Application Logs:");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
@@ -378,16 +378,16 @@ void BuildBar::run() {
 		CloseHandle(processInformation.hThread);
 
 		if (exitCode == 0) {
-			m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Successfully closed the application.");
+			m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_close_success"));
 		}
 		else {
-			m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Error when closing the application.");
+			m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_close_error"));
 		}
 	}
 	else {
 		CloseHandle(pipeWrite);
 		CloseHandle(pipeRead);
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot launch NutshellEngine\'s runtime executable.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_cannot_launch"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -398,16 +398,16 @@ void BuildBar::run() {
 #elif defined(NTSHENGN_OS_LINUX)
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "./NutshellEngine 2>&1";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Launching application with command: " + runCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
 	FILE* fp = popen(runCommand.c_str(), "r");
 	if (fp == NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Cannot launch NutshellEngine\'s runtime executable.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_cannot_launch"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
 	}
 	
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Application logs:");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
 		std::string log = std::string(stdOutBuffer);
@@ -419,10 +419,10 @@ void BuildBar::run() {
 	}
 
 	if (pclose(fp) == 0) {
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Run] Successfully closed the application.");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_close_success"));
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Run] Error when closing the application.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_close_error"));
 	}
 #endif
 
@@ -432,11 +432,11 @@ void BuildBar::run() {
 
 void BuildBar::exportApplication(const std::string& exportDirectory) {
 	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Exporting the application.");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_launching_export"));
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] There is no build to export.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_no_build_to_export"));
 
 		return;
 	}
@@ -503,11 +503,11 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
 	const std::string exportCommand = "powershell Compress-Archive -Path export_tmp/" + m_globalInfo.projectName + " -DestinationPath " + exportedFullPath + " -Force";
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export application with command: " + exportCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
 		while (ReadFile(pipeRead, stdOutBuffer, 4096, &bytesRead, NULL)) {
@@ -522,16 +522,16 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		CloseHandle(processInformation.hThread);
 
 		if (exitCode == 0) {
-			m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Successfully exported the application at " + exportedFullPath + ".");
+			m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_success", { exportedFullPath }));
 		}
 		else {
-			m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Error when exporting the application.");
+			m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_export_error"));
 		}
 	}
 	else {
 		CloseHandle(pipeWrite);
 		CloseHandle(pipeRead);
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Cannot export the application.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_cannot_export"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -547,26 +547,26 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + m_globalInfo.projectName);
 	
 	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " export_tmp/" + m_globalInfo.projectName;
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Launching export with command: " + exportCommand);
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
 	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Cannot export the application.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_cannot_export"));
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
 	}
 
-	m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Export logs:");
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_logs"));
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
 		addLog(std::string(stdOutBuffer));
 	}
 
 	if (pclose(fp) == 0) {
-		m_globalInfo.logger.addLog(LogLevel::Info, "[Export] Successfully exported the application at " + exportedFullPath + ".");
+		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_success", { exportedFullPath }));
 	}
 	else {
-		m_globalInfo.logger.addLog(LogLevel::Error, "[Export] Error when exporting the application.");
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_export_error"));
 	}
 #endif
 

@@ -1,7 +1,6 @@
 #include "create_entity_command.h"
 
 CreateEntityCommand::CreateEntityCommand(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
-	setText("Create Entity " + QString::fromStdString(name));
 	m_entityID = NO_ENTITY;
 	uint32_t entityNameIndex = 0;
 	if (m_globalInfo.findEntityByName(name) == NO_ENTITY) {
@@ -13,6 +12,7 @@ CreateEntityCommand::CreateEntityCommand(GlobalInfo& globalInfo, const std::stri
 		}
 		m_entityName = name + "_" + std::to_string(entityNameIndex);
 	}
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_create_entity", { m_entityName })));
 }
 
 void CreateEntityCommand::undo() {

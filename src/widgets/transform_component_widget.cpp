@@ -11,12 +11,12 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Transform"));
-	positionWidget = new Vector3Widget(m_globalInfo, "Position");
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_transform")));
+	positionWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_transform_position"));
 	layout()->addWidget(positionWidget);
-	rotationWidget = new Vector3Widget(m_globalInfo, "Rotation");
+	rotationWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_transform_rotation"));
 	layout()->addWidget(rotationWidget);
-	scaleWidget = new Vector3Widget(m_globalInfo, "Scale");
+	scaleWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_transform_scale"));
 	layout()->addWidget(scaleWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 

@@ -16,13 +16,13 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, "Renderable"));
-	modelPathWidget = new FileSelectorWidget(m_globalInfo, "Model", "No model selected", m_globalInfo.projectDirectory + "/assets");
+	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable")));
+	modelPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_model"), m_globalInfo.localization.getString("component_renderable_no_model_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(modelPathWidget);
-	std::vector<std::string> primitiveIndexElements = { "No primitive index" };
-	primitiveIndexWidget = new ComboBoxWidget(m_globalInfo, "Primitive Index", primitiveIndexElements);
+	std::vector<std::string> primitiveIndexElements = { m_globalInfo.localization.getString("component_renderable_no_primitive_index") };
+	primitiveIndexWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_primitive_index"), primitiveIndexElements);
 	layout()->addWidget(primitiveIndexWidget);
-	materialPathWidget = new FileSelectorWidget(m_globalInfo, "Material", "No material selected", m_globalInfo.projectDirectory + "/assets");
+	materialPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_material"), m_globalInfo.localization.getString("component_renderable_no_material_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(materialPathWidget);
 	layout()->addWidget(new SeparatorLine(m_globalInfo));
 
@@ -44,7 +44,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 			const QSignalBlocker signalBlocker(primitiveIndexWidget->comboBox);
 			primitiveIndexWidget->comboBox->clear();
 			QStringList primitiveIndexes;
-			primitiveIndexes.append("No primitive index");
+			primitiveIndexes.append(QString::fromStdString(m_globalInfo.localization.getString("component_renderable_no_primitive_index")));
 			uint32_t primitiveCount = 0;
 			if (m_globalInfo.rendererResourceManager.models.find(renderable.modelPath) != m_globalInfo.rendererResourceManager.models.end()) {
 				RendererResourceManager::Model& model = m_globalInfo.rendererResourceManager.models[renderable.modelPath];
@@ -62,7 +62,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 				primitiveIndexWidget->comboBox->setCurrentIndex(renderable.primitiveIndex + 1);
 			}
 			else {
-				primitiveIndexWidget->comboBox->setCurrentIndex(primitiveIndexWidget->comboBox->findText("No primitive index"));
+				primitiveIndexWidget->comboBox->setCurrentIndex(primitiveIndexWidget->comboBox->findText(QString::fromStdString(m_globalInfo.localization.getString("component_renderable_no_primitive_index"))));
 			}
 		}
 	}
@@ -72,7 +72,7 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 		{
 			const QSignalBlocker signalBlocker(primitiveIndexWidget->comboBox);
 			primitiveIndexWidget->comboBox->clear();
-			primitiveIndexWidget->comboBox->addItem("No primitive index");
+			primitiveIndexWidget->comboBox->addItem(QString::fromStdString(m_globalInfo.localization.getString("component_renderable_no_primitive_index")));
 		}
 	}
 
@@ -158,7 +158,7 @@ void RenderableComponentWidget::onPathChanged(const std::string& path) {
 
 void RenderableComponentWidget::onElementChanged(const std::string& element) {
 	uint primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
-	if (element != "No primitive index") {
+	if (element != m_globalInfo.localization.getString("component_renderable_no_primitive_index")) {
 		size_t spacePos = element.find(' ');
 		if (spacePos != std::string::npos) {
 			primitiveIndex = static_cast<uint32_t>(std::atoi(element.substr(0, spacePos).c_str()));

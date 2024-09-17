@@ -16,12 +16,12 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	std::fstream sceneFile(sceneFilePath, std::ios::in);
 	if (sceneFile.is_open()) {
 		if (!nlohmann::json::accept(sceneFile)) {
-			globalInfo.logger.addLog(LogLevel::Warning, "\"" + sceneFilePath + "\" is not a valid JSON file.");
+			globalInfo.logger.addLog(LogLevel::Warning, globalInfo.localization.getString("log_file_is_not_valid_json", { sceneFilePath }));
 			return;
 		}
 	}
 	else {
-		globalInfo.logger.addLog(LogLevel::Warning, "\"" + sceneFilePath + "\" cannot be opened.");
+		globalInfo.logger.addLog(LogLevel::Warning, globalInfo.localization.getString("log_file_cannot_be_opened", { sceneFilePath }));
 		return;
 	}
 		

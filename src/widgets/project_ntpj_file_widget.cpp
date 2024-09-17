@@ -22,7 +22,7 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 	std::fstream projectFile(projectFilePath, std::ios::in);
 	if (projectFile.is_open()) {
 		if (!nlohmann::json::accept(projectFile)) {
-			m_globalInfo.logger.addLog(LogLevel::Warning, "\"" + projectFilePath + "\" is not a valid JSON file.");
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { projectFilePath }));
 			return;
 		}
 	}

@@ -51,13 +51,14 @@ set(COMMON_HEADERS
 	src/common/editor_parameters.h
 	src/common/entity.h
 	src/common/global_info.h
+	src/common/localization.h
 	src/common/logger.h
 	src/common/save_title_changer.h
 	src/common/scene_manager.h
 	src/common/signal_emitter.h)
-
 set(COMMON_SOURCES
 	src/common/editor_parameters.cpp
+	src/common/localization.cpp
 	src/common/logger.cpp
 	src/common/scene_manager.cpp)
 

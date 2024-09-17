@@ -10,7 +10,7 @@ EntityInfoPersistenceWidget::EntityInfoPersistenceWidget(GlobalInfo& globalInfo)
 	layout()->setContentsMargins(0, 0, 0, 0);
 	m_persistenceCheckBox = new QCheckBox();
 	layout()->addWidget(m_persistenceCheckBox);
-	layout()->addWidget(new QLabel("Is Persistent"));
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("entity_is_persistent"))));
 
 	connect(m_persistenceCheckBox, &QCheckBox::stateChanged, this, &EntityInfoPersistenceWidget::onStateChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPersistenceWidget::onEntitySelected);

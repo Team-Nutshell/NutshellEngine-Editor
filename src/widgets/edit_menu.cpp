@@ -4,18 +4,18 @@
 #include <algorithm>
 #include <iterator>
 
-EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&Edit"), m_globalInfo(globalInfo) {
-	m_undoAction = m_globalInfo.undoStack->createUndoAction(this, "&Undo");
+EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_edit"))), m_globalInfo(globalInfo) {
+	m_undoAction = m_globalInfo.undoStack->createUndoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_undo")));
 	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
 	addAction(m_undoAction);
-	m_redoAction = m_globalInfo.undoStack->createRedoAction(this, "&Redo");
+	m_redoAction = m_globalInfo.undoStack->createRedoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_redo")));
 	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
 	addAction(m_redoAction);
 	addSeparator();
-	m_copyEntitiesAction = addAction("Copy Entity", this, &EditMenu::copyEntities);
+	m_copyEntitiesAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entity")), this, &EditMenu::copyEntities);
 	m_copyEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+C"));
 	m_copyEntitiesAction->setEnabled(false);
-	m_pasteEntitiesAction = addAction("Paste Entity", this, &EditMenu::pasteEntities);
+	m_pasteEntitiesAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entity")), this, &EditMenu::pasteEntities);
 	m_pasteEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+V"));
 	m_pasteEntitiesAction->setEnabled(false);
 
@@ -48,11 +48,11 @@ void EditMenu::onEntitySelected() {
 	}
 
 	if (m_globalInfo.otherSelectedEntityIDs.empty()) {
-		m_copyEntitiesAction->setText("Copy Entity");
-		m_pasteEntitiesAction->setText("Paste Entity");
+		m_copyEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entity")));
+		m_pasteEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entity")));
 	}
 	else {
-		m_copyEntitiesAction->setText("Copy Entities");
-		m_pasteEntitiesAction->setText("Paste Entities");
+		m_copyEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entities")));
+		m_pasteEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entities")));
 	}
 }

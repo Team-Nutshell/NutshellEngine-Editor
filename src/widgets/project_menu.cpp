@@ -3,15 +3,15 @@
 #include "project_ntpj_file_widget.h"
 #include <fstream>
 
-ProjectMenu::ProjectMenu(GlobalInfo& globalInfo) : QMenu("&Project"), m_globalInfo(globalInfo) {
-	m_buildAction = addAction("Build and Run", this, &ProjectMenu::launchBuild);
+ProjectMenu::ProjectMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_project"))), m_globalInfo(globalInfo) {
+	m_buildAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_build_and_run")), this, &ProjectMenu::launchBuild);
 	m_buildAction->setShortcut(QKeySequence::fromString("F5"));
 	addSeparator();
-	m_openProjectSettingsAction = addAction("Open Project Settings", this, &ProjectMenu::openProjectSettings);
+	m_openProjectSettingsAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_open_project_settings")), this, &ProjectMenu::openProjectSettings);
 	m_openProjectSettingsAction->setShortcut(QKeySequence::fromString("Ctrl+Shift+P"));
 	addSeparator();
-	m_importGlobalResources = addAction("Import global resources", this, &ProjectMenu::importGlobalResources);
-	m_updateBaseProject = addAction("Update base project", this, &ProjectMenu::updateBaseProject);
+	m_importGlobalResources = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_import_global_resources")), this, &ProjectMenu::importGlobalResources);
+	m_updateBaseProject = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_update_base_project")), this, &ProjectMenu::updateBaseProject);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportStarted);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportEnded);

@@ -1,7 +1,7 @@
 #include "create_entities_from_model_command.h"
 
 CreateEntitiesFromModelCommand::CreateEntitiesFromModelCommand(GlobalInfo& globalInfo, const std::string& name, const std::string& modelPath) : m_globalInfo(globalInfo), m_modelPath(modelPath) {
-	setText("Create Entities from model \"" + QString::fromStdString(modelPath) + "\"");
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_create_entities_from_model", { modelPath })));
 	if (m_globalInfo.findEntityByName(name) == NO_ENTITY) {
 		m_baseEntityName = name;
 	}

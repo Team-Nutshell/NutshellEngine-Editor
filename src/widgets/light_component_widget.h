@@ -16,6 +16,9 @@ private:
 	void updateWidgets(const Light& light);
 	void updateComponent(EntityID entityID, Component* component);
 
+	std::string lightTypeToType(const std::string& lightType);
+	std::string typeToLightType(const std::string& type);
+
 private slots:
 	void onEntitySelected();
 	void onEntityLightAdded(EntityID entityID);

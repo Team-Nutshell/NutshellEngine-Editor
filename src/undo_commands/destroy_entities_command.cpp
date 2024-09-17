@@ -4,10 +4,10 @@
 
 DestroyEntitiesCommand::DestroyEntitiesCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs) : m_globalInfo(globalInfo) {
 	if (entityIDs.size() == 1) {
-		setText("Destroy Entity " + QString::fromStdString(m_globalInfo.entities[entityIDs[0]].name));
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_destroy_entity", { m_globalInfo.entities[entityIDs[0]].name })));
 	}
 	else {
-		setText("Destroy multiple Entities");
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_destroy_entities")));
 	}
 	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
 	for (EntityID entityID : entityIDs) {

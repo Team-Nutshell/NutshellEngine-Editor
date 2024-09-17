@@ -1,7 +1,7 @@
 #include "change_entity_persistence_command.h"
 
 ChangeEntityPersistenceCommand::ChangeEntityPersistenceCommand(GlobalInfo& globalInfo, EntityID entityID, bool isPersistent) : m_globalInfo(globalInfo) {
-	setText("Change Entity " + QString::fromStdString(m_globalInfo.entities[entityID].name) + " Persistence to " + (isPersistent ? "True" : "False"));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_entity_persistence", { m_globalInfo.entities[entityID].name })));
 	m_entityID = entityID;
 	m_previousEntityPersistence = m_globalInfo.entities[entityID].isPersistent;
 	m_newEntityPersistence = isPersistent;
