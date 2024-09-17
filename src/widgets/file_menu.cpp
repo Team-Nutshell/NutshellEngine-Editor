@@ -1,6 +1,7 @@
 #include "file_menu.h"
 #include "../common/scene_manager.h"
 #include "new_scene_message_box.h"
+#include "main_window.h"
 #include <QKeySequence>
 #include <QFileDialog>
 
@@ -16,7 +17,12 @@ FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(global
 }
 
 void FileMenu::newScene() {
-	NewSceneMessageBox newSceneMessageBox(m_globalInfo);
+	if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+		NewSceneMessageBox newSceneMessageBox(m_globalInfo);
+	}
+	else {
+		SceneManager::newScene(m_globalInfo);
+	}
 }
 
 void FileMenu::openScene() {
