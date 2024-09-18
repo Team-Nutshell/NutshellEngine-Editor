@@ -4,7 +4,7 @@
 
 LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(1310, 720);
-	setWindowTitle("NutshellEngine - Logs");
+	setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("logs")));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 
@@ -93,4 +93,9 @@ void LogsWidget::onLogsCleared() {
 
 void LogsWidget::onLogAdded() {
 	updateLogs();
+}
+
+void LogsWidget::closeEvent(QCloseEvent* event) {
+	emit closeWindow();
+	QWidget::closeEvent(event);
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include "log_bar_menu.h"
+#include "logs_widget.h"
 #include <QLabel>
 #include <QPaintEvent>
 #include <QMouseEvent>
@@ -19,9 +20,12 @@ private slots:
 
 protected:
 	void paintEvent(QPaintEvent* event);
+	void onLogsWidgetClose();
 
 private:
 	GlobalInfo& m_globalInfo;
+
+	LogsWidget* m_logsWidget = nullptr;
 
 public:
 	LogBarMenu* menu;

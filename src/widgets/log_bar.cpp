@@ -1,5 +1,4 @@
 #include "log_bar.h"
-#include "logs_widget.h"
 
 LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setAlignment(Qt::AlignmentFlag::AlignVCenter);
@@ -38,8 +37,15 @@ void LogBar::showMenu(const QPoint& pos) {
 
 void LogBar::mousePressEvent(QMouseEvent* event) {
 	if (event->button() == Qt::MouseButton::LeftButton) {
-		LogsWidget* logsWidget = new LogsWidget(m_globalInfo);
-		logsWidget->show();
+		if (!m_logsWidget) {
+			m_logsWidget = new LogsWidget(m_globalInfo);
+			m_logsWidget->show();
+
+			connect(m_logsWidget, &LogsWidget::closeWindow, this, &LogBar::onLogsWidgetClose);
+		}
+		else {
+			m_logsWidget->activateWindow();
+		}
 	}
 	event->accept();
 }
@@ -63,4 +69,8 @@ void LogBar::paintEvent(QPaintEvent* event) {
 	}
 
 	QLabel::paintEvent(event);
+}
+
+void LogBar::onLogsWidgetClose() {
+	m_logsWidget = nullptr;
 }

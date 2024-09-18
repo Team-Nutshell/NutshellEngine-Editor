@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QTableWidget>
 #include <QPushButton>
+#include <QCloseEvent>
 
 class LogsWidget : public QWidget {
 	Q_OBJECT
@@ -15,6 +16,10 @@ private slots:
 	void onClearLogsButtonClicked();
 	void onLogAdded();
 	void onLogsCleared();
+	void closeEvent(QCloseEvent* event);
+
+signals:
+	void closeWindow();
 
 private:
 	GlobalInfo& m_globalInfo;
