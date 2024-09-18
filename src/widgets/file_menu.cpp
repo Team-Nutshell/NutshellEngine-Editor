@@ -29,7 +29,7 @@ void FileMenu::openScene() {
 	QFileDialog fileDialog = QFileDialog();
 	fileDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("header_file_open_scene")));
 	fileDialog.setWindowIcon(QIcon("assets/icon.png"));
-	fileDialog.setNameFilter("NutshellEngine Scene (*.ntsn)");
+	fileDialog.setNameFilter("NutshellEngine " + QString::fromStdString(m_globalInfo.localization.getString("scene")) + " (*.ntsn)");
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/assets/"));
 	}

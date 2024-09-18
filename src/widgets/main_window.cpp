@@ -53,6 +53,8 @@ void MainWindow::createMenuBar() {
 	menuBar()->addMenu(projectMenu);
 	optionsMenu = new OptionsMenu(m_globalInfo);
 	menuBar()->addMenu(optionsMenu);
+	helpMenu = new HelpMenu(m_globalInfo);
+	menuBar()->addMenu(helpMenu);
 }
 
 void MainWindow::createBuildBar() {

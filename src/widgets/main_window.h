@@ -5,6 +5,7 @@
 #include "view_menu.h"
 #include "project_menu.h"
 #include "options_menu.h"
+#include "help_menu.h"
 #include "build_bar.h"
 #include "entity_panel.h"
 #include "log_bar.h"
@@ -53,5 +54,6 @@ public:
 	EditMenu* editMenu;
 	ViewMenu* viewMenu;
 	ProjectMenu* projectMenu;
+	HelpMenu* helpMenu;
 	OptionsMenu* optionsMenu;
 };

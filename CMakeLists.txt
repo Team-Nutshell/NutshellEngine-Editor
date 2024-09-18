@@ -99,6 +99,7 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/remove_entity_component_command.h)
 
 set(WIDGET_SOURCES
+	src/widgets/about_widget.cpp
 	src/widgets/add_component_button.cpp
 	src/widgets/add_component_menu.cpp
 	src/widgets/asset_info_list.cpp
@@ -129,6 +130,7 @@ set(WIDGET_SOURCES
 	src/widgets/file_menu.cpp
 	src/widgets/file_push_button.cpp
 	src/widgets/file_selector_widget.cpp
+	src/widgets/help_menu.cpp
 	src/widgets/image_viewer.cpp
 	src/widgets/info_panel.cpp
 	src/widgets/integer_widget.cpp
@@ -169,6 +171,7 @@ set(WIDGET_SOURCES
 	src/widgets/vector4_widget.cpp
 	src/widgets/view_menu.cpp)
 set(WIDGET_HEADERS
+	src/widgets/about_widget.h
 	src/widgets/add_component_button.h
 	src/widgets/add_component_menu.h
 	src/widgets/asset_info_list.h
@@ -199,6 +202,7 @@ set(WIDGET_HEADERS
 	src/widgets/file_menu.h
 	src/widgets/file_push_button.h
 	src/widgets/file_selector_widget.h
+	src/widgets/help_menu.h
 	src/widgets/image_viewer.h
 	src/widgets/info_panel.h
 	src/widgets/integer_widget.h
