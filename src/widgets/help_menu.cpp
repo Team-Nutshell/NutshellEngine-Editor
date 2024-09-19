@@ -10,7 +10,7 @@ HelpMenu::HelpMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 }
 
 void HelpMenu::openDocumentation() {
-	QDesktopServices::openUrl(QUrl::fromLocalFile("assets/docs/html/index.html"));
+	QDesktopServices::openUrl(QUrl("https://www.team-nutshell.dev/nutshellengine-docs/"));
 }
 
 void HelpMenu::aboutNutshellEngine() {
