@@ -75,7 +75,7 @@ void AssetList::actionOnFile(const std::string& file) {
 		std::string extension = file.substr(lastDot + 1);
 
 		if (extension == "ntsn") {
-			if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+			if ((m_globalInfo.mainWindow->windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
 				CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
 				closeSceneWidget->show();
 				m_openScenePath = file;

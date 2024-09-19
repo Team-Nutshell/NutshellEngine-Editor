@@ -17,7 +17,7 @@ FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 }
 
 void FileMenu::newScene() {
-	if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+	if ((m_globalInfo.mainWindow->windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
 		CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
 		closeSceneWidget->show();
 		m_openScenePath = "";
@@ -43,7 +43,7 @@ void FileMenu::openScene() {
 
 	if (fileDialog.exec()) {
 		std::string filePath = fileDialog.selectedFiles()[0].toStdString();
-		if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+		if ((m_globalInfo.mainWindow->windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
 			CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
 			closeSceneWidget->show();
 			m_openScenePath = filePath;
