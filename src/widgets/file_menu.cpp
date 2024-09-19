@@ -1,7 +1,7 @@
 #include "file_menu.h"
-#include "../common/scene_manager.h"
-#include "new_scene_message_box.h"
+#include "close_scene_widget.h"
 #include "main_window.h"
+#include "../common/scene_manager.h"
 #include <QKeySequence>
 #include <QFileDialog>
 
@@ -18,7 +18,11 @@ FileMenu::FileMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 
 void FileMenu::newScene() {
 	if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
-		NewSceneMessageBox newSceneMessageBox(m_globalInfo);
+		CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
+		closeSceneWidget->show();
+		m_openScenePath = "";
+
+		connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &FileMenu::onCloseSceneConfirmed);
 	}
 	else {
 		SceneManager::newScene(m_globalInfo);
@@ -39,7 +43,16 @@ void FileMenu::openScene() {
 
 	if (fileDialog.exec()) {
 		std::string filePath = fileDialog.selectedFiles()[0].toStdString();
-		SceneManager::openScene(m_globalInfo, filePath);
+		if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+			CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
+			closeSceneWidget->show();
+			m_openScenePath = filePath;
+
+			connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &FileMenu::onCloseSceneConfirmed);
+		}
+		else {
+			SceneManager::openScene(m_globalInfo, filePath);
+		}
 	}
 }
 
@@ -66,5 +79,14 @@ void FileMenu::saveSceneAs() {
 	if (fileDialog.exec()) {
 		std::string filePath = fileDialog.selectedFiles()[0].toStdString();
 		SceneManager::saveScene(m_globalInfo, filePath);
+	}
+}
+
+void FileMenu::onCloseSceneConfirmed() {
+	if (m_openScenePath.empty()) {
+		SceneManager::newScene(m_globalInfo);
+	}
+	else {
+		SceneManager::openScene(m_globalInfo, m_openScenePath);
 	}
 }

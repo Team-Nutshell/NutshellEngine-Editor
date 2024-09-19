@@ -30,6 +30,8 @@ private slots:
 
 	void onFileRenamed(const std::string& oldFilename, const std::string& newFilename);
 
+	void onCloseSceneConfirmed();
+
 	void showMenu(const QPoint& pos);
 
 	QStringList mimeTypes() const;
@@ -48,7 +50,7 @@ private:
 	std::string m_currentDirectory;
 	QFileSystemWatcher m_directoryWatcher;
 
-	bool m_movingMouse = false;
+	std::string m_openScenePath;
 
 public:
 	AssetListMenu* menu;

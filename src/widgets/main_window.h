@@ -37,8 +37,12 @@ private:
 private slots:
 	void closeEvent(QCloseEvent* event);
 
+	void onCloseSceneConfirmed();
+
 private:
 	GlobalInfo& m_globalInfo;
+
+	bool m_forceClose = false;
 
 public:
 	QWidget* mainWidget;

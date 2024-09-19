@@ -14,6 +14,9 @@ private:
 	void saveScene();
 	void saveSceneAs();
 
+private slots:
+	void onCloseSceneConfirmed();
+
 private:
 	GlobalInfo& m_globalInfo;
 
@@ -21,4 +24,6 @@ private:
 	QAction* m_openSceneAction;
 	QAction* m_saveSceneAction;
 	QAction* m_saveSceneAsAction;
+
+	std::string m_openScenePath;
 };

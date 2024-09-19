@@ -1,6 +1,8 @@
 {
 	"ok": "OK",
 	"cancel": "Cancel",
+	"save": "Save",
+	"dont_save": "Don't Save",
 	"select_directory": "Select a directory",
 	"no_image_selected": "No image selected",
 	"no_image_sampler_selected": "No image sampler selected",
@@ -14,6 +16,8 @@
 	"info": "Info",
 	"about_nutshell_engine": "NutshellEngine is open-source and licensed under the MIT License, all repositories are available on ${0}.",
 	"about_nutshell_engine_team_nutshell_github": "Team Nutshell's GitHub",
+	"close_scene": "Close Scene",
+	"unsaved_scene_changes": "Scene \"${0}\" has unsaved changes, do you want to save the scene?",
 	"open_project": "Open Project:",
 	"open_project_select_directory": "Select a project directory",
 	"new_project": "New Project:",

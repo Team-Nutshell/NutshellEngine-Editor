@@ -111,6 +111,7 @@ set(WIDGET_SOURCES
 	src/widgets/build_bar.cpp
 	src/widgets/boolean_widget.cpp
 	src/widgets/camera_component_widget.cpp
+	src/widgets/close_scene_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/collidable_component_widget.cpp
 	src/widgets/combo_box_widget.cpp
@@ -146,7 +147,6 @@ set(WIDGET_SOURCES
 	src/widgets/new_project_directory_path_widget.cpp
 	src/widgets/new_project_name_widget.cpp
 	src/widgets/new_project_widget.cpp
-	src/widgets/new_scene_message_box.cpp
 	src/widgets/new_script_message_box.cpp
 	src/widgets/open_project_widget.cpp
 	src/widgets/options_ntop_file_widget.cpp
@@ -183,6 +183,7 @@ set(WIDGET_HEADERS
 	src/widgets/build_bar.h
 	src/widgets/boolean_widget.h
 	src/widgets/camera_component_widget.h
+	src/widgets/close_scene_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/collidable_component_widget.h
 	src/widgets/combo_box_widget.h
@@ -218,7 +219,6 @@ set(WIDGET_HEADERS
 	src/widgets/new_project_directory_path_widget.h
 	src/widgets/new_project_name_widget.h
 	src/widgets/new_project_widget.h
-	src/widgets/new_scene_message_box.h
 	src/widgets/new_script_message_box.h
 	src/widgets/open_project_widget.h
 	src/widgets/options_ntop_file_widget.h

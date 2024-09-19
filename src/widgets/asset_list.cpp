@@ -2,6 +2,7 @@
 #include "image_viewer.h"
 #include "asset_info_name_widget.h"
 #include "delete_asset_widget.h"
+#include "close_scene_widget.h"
 #include "main_window.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
@@ -74,7 +75,16 @@ void AssetList::actionOnFile(const std::string& file) {
 		std::string extension = file.substr(lastDot + 1);
 
 		if (extension == "ntsn") {
-			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
+			if (m_globalInfo.mainWindow->windowTitle()[0] == '*') {
+				CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
+				closeSceneWidget->show();
+				m_openScenePath = file;
+
+				connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &AssetList::onCloseSceneConfirmed);
+			}
+			else {
+				SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
+			}
 		}
 		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
 			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file);
@@ -154,6 +164,10 @@ void AssetList::onFileRenamed(const std::string& oldFilename, const std::string&
 		m_globalInfo.currentScenePath = newFilename;
 		m_globalInfo.mainWindow->updateTitle();
 	}
+}
+
+void AssetList::onCloseSceneConfirmed() {
+	SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + m_openScenePath);
 }
 
 void AssetList::showMenu(const QPoint& pos) {

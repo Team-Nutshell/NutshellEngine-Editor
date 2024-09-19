@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include "separator_line.h"
+#include "close_scene_widget.h"
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QApplication>
@@ -87,7 +88,26 @@ void MainWindow::createLogBar() {
 	mainWidget->layout()->addWidget(logBar);
 }
 
+void MainWindow::onCloseSceneConfirmed() {
+	m_forceClose = true;
+	close();
+}
+
 void MainWindow::closeEvent(QCloseEvent* event) {
-	(void)event;
-	QApplication::closeAllWindows();
+	if (m_forceClose) {
+		event->accept();
+		QApplication::closeAllWindows();
+		return;
+	}
+
+	if ((windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
+		event->ignore();
+		CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
+		closeSceneWidget->show();
+
+		connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &MainWindow::onCloseSceneConfirmed);
+	}
+	else {
+		QApplication::closeAllWindows();
+	}
 }
