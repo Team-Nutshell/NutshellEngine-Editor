@@ -62,6 +62,7 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 
 	nlohmann::json j;
 	j["projectName"] = projectName;
+	j["engineVersion"] = m_globalInfo.version;
 	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
 	projectFile << j.dump(1, '\t');
 
