@@ -269,7 +269,14 @@ std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> Scri
 	}
 	else if ((usingNamespaceStd && (type == "string")) || (!usingNamespaceStd && (type == "std::string"))) {
 		if (tokenCount >= 4) {
-			editableScriptVariableValue = tokens[3];
+			std::string stringToken = tokens[3];
+			if (stringToken.front() == '\"') {
+				stringToken = stringToken.substr(1);
+			}
+			if (stringToken.back() == '\"') {
+				stringToken.pop_back();
+			}
+			editableScriptVariableValue = stringToken;
 		}
 		else {
 			editableScriptVariableValue = std::string("");
@@ -955,6 +962,10 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						if (value != std::get<bool>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
 						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<bool>(editableScriptVariable.second));
+						}
 					}
 					else if ((type == "Int8") ||
 						(type == "Int16") ||
@@ -969,6 +980,10 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						if (value != std::get<int>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
 						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<int>(editableScriptVariable.second));
+						}
 					}
 					else if ((type == "Float32") ||
 						(type == "Float64")) {
@@ -977,12 +992,20 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						if (value != std::get<float>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
 						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<float>(editableScriptVariable.second));
+						}
 					}
 					else if (type == "String") {
 						StringWidget* widget = static_cast<StringWidget*>(senderWidget);
 						std::string value = widget->getText();
 						if (value != std::get<std::string>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
+						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setText(std::get<std::string>(editableScriptVariable.second));
 						}
 					}
 					else if (type == "Vector2") {
@@ -991,12 +1014,20 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						if (value != std::get<nml::vec2>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
 						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<nml::vec2>(editableScriptVariable.second));
+						}
 					}
 					else if (type == "Vector3") {
 						Vector3Widget* widget = static_cast<Vector3Widget*>(senderWidget);
 						nml::vec3 value = widget->getValue();
 						if (value != std::get<nml::vec3>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
+						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<nml::vec3>(editableScriptVariable.second));
 						}
 					}
 					else if (type == "Vector4") {
@@ -1005,6 +1036,10 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						if (value != std::get<nml::vec4>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
 						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							widget->setValue(std::get<nml::vec4>(editableScriptVariable.second));
+						}
 					}
 					else if (type == "Quaternion") {
 						QuaternionWidget* widget = static_cast<QuaternionWidget*>(senderWidget);
@@ -1012,6 +1047,12 @@ void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 						nml::vec4 value = nml::vec4(valueQuat.a, valueQuat.b, valueQuat.c, valueQuat.d);
 						if (value != std::get<nml::vec4>(editableScriptVariable.second)) {
 							newScriptable.editableVariables[name] = value;
+						}
+						else {
+							newScriptable.editableVariables.erase(name);
+							nml::vec4 editableScriptVariableVec4 = std::get<nml::vec4>(editableScriptVariable.second);
+							nml::quat editableScriptVariableQuat = nml::quat(editableScriptVariableVec4.x, editableScriptVariableVec4.y, editableScriptVariableVec4.z, editableScriptVariableVec4.w);
+							widget->setValue(editableScriptVariableQuat);
 						}
 					}
 				}
