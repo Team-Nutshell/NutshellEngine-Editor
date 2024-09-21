@@ -939,7 +939,6 @@ void ScriptableComponentWidget::onCurrentScriptChanged(const QString& path) {
 
 void ScriptableComponentWidget::onEditableScriptVariableChanged() {
 	Scriptable newScriptable = m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable.value();
-	newScriptable.editableVariables.clear();
 
 	QObject* senderWidget = sender();
 	for (const auto& widgetToEditableScriptVariableName : m_widgetToEditableScriptVariableName) {
