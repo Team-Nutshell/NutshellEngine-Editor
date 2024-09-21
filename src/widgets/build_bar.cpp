@@ -24,12 +24,12 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 5, 0, 0);
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
-	buildAndRunButton = new QPushButton("Build and Run");
+	buildAndRunButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("header_project_build_and_run")));
 	layout()->addWidget(buildAndRunButton);
 	std::vector<std::string> buildTypeList{ "Debug", "Release" };
-	buildTypeComboBox = new ComboBoxWidget(m_globalInfo, "Build Type", buildTypeList);
+	buildTypeComboBox = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("build_type"), buildTypeList);
 	layout()->addWidget(buildTypeComboBox);
-	exportButton = new QPushButton("Export");
+	exportButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("build_export")));
 	layout()->addWidget(exportButton);
 
 	connect(buildAndRunButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
