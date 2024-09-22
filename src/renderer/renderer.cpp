@@ -7,6 +7,7 @@
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <QMimeData>
+#include <QGuiApplication>
 #include <algorithm>
 #include <iterator>
 #include <array>

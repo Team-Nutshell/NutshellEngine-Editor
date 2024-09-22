@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QSignalBlocker>
 #include <QFont>
+#include <QGuiApplication>
 #include <algorithm>
 #include <iterator>
 #include <functional>

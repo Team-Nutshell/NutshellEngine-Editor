@@ -14,16 +14,11 @@
 #if defined(NTSHENGN_COMPILER_GCC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
-#elif defined(NTSHENGN_COMPILER_CLANG)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wstringop-overflow"
 #endif
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 #if defined(NTSHENGN_COMPILER_GCC)
 #pragma GCC diagnostic pop
-#elif defined(NTSHENGN_COMPILER_CLANG)
-#pragma clang diagnostic pop
 #endif
 #include "../../external/nlohmann/json.hpp"
 #include <array>

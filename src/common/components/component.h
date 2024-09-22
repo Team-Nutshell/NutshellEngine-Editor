@@ -14,7 +14,7 @@ enum class ComponentType {
 
 struct Component {
 	Component(ComponentType type) : componentType(type) {}
-	~Component() = default;
+	virtual ~Component() {}
 
 	ComponentType componentType = ComponentType::Unknown;
 
