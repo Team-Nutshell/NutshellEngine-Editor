@@ -268,6 +268,14 @@ target_link_libraries(${PROJECT_NAME}
 		Qt6::OpenGLWidgets
 		nml)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+	set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+	find_package(Threads REQUIRED)
+	target_link_libraries(${PROJECT_NAME}
+		PRIVATE
+			Threads::Threads)
+endif()
+
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		external/cgltf
