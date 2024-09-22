@@ -15,7 +15,7 @@
 #include <tuple>
 #if defined(NTSHENGN_OS_WINDOWS)
 #include <windows.h>
-#elif defined(NTSHENGN_OS_LINUX)
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 #include <stdio.h>
 #endif
 #include <cctype>
@@ -228,7 +228,7 @@ bool BuildBar::build() {
 	if (buildSuccess) {
 		CloseHandle(pipeRead);
 	}
-#elif defined(NTSHENGN_OS_LINUX)
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 	// CMake
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " -DNTSHENGN_BUILD_IN_EDITOR=ON 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
@@ -395,7 +395,7 @@ void BuildBar::run() {
 		return;
 	}
 	CloseHandle(pipeRead);
-#elif defined(NTSHENGN_OS_LINUX)
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "./NutshellEngine 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
@@ -539,7 +539,7 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		return;
 	}
 	CloseHandle(pipeRead);
-#elif defined(NTSHENGN_OS_LINUX)
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".tar.gz";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 

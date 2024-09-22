@@ -55,9 +55,9 @@ struct BuildParameters {
 };
 
 struct CodeParameters {
-#if NTSHENGN_OS_WINDOWS
+#if defined(NTSHENGN_OS_WINDOWS)
 	std::string codeEditorCommand = "notepad ${FILE_PATH}";
-#elif NTSHENGN_OS_LINUX
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 	std::string codeEditorCommand = "nano ${FILE_PATH}";
 #endif
 };
