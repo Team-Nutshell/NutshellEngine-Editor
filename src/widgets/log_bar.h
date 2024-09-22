@@ -18,9 +18,10 @@ private slots:
 	void showMenu(const QPoint& pos);
 	void mousePressEvent(QMouseEvent* event);
 
+	void onLogsWidgetClose();
+
 protected:
 	void paintEvent(QPaintEvent* event);
-	void onLogsWidgetClose();
 
 private:
 	GlobalInfo& m_globalInfo;

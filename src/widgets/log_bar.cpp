@@ -50,6 +50,10 @@ void LogBar::mousePressEvent(QMouseEvent* event) {
 	event->accept();
 }
 
+void LogBar::onLogsWidgetClose() {
+	m_logsWidget = nullptr;
+}
+
 void LogBar::paintEvent(QPaintEvent* event) {
 	if (m_globalInfo.logger.getLogs().empty()) {
 		return;
@@ -69,8 +73,4 @@ void LogBar::paintEvent(QPaintEvent* event) {
 	}
 
 	QLabel::paintEvent(event);
-}
-
-void LogBar::onLogsWidgetClose() {
-	m_logsWidget = nullptr;
 }

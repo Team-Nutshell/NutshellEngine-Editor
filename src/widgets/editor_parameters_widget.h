@@ -8,9 +8,7 @@
 #include "vector3_widget.h"
 #include <QTabWidget>
 #include <QWidget>
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
+#include <QCloseEvent>
 
 class EditorParametersWidget : public QTabWidget {
 	Q_OBJECT
@@ -28,6 +26,10 @@ private slots:
 	void onStringChanged(const std::string& text);
 	void onVector3Changed(const nml::vec3& value);
 	void onColorChanged(const nml::vec3& color);
+	void closeEvent(QCloseEvent* event);
+
+signals:
+	void closeWindow();
 
 private:
 	GlobalInfo& m_globalInfo;

@@ -620,3 +620,8 @@ void EditorParametersWidget::onColorChanged(const nml::vec3& color) {
 
 	save();
 }
+
+void EditorParametersWidget::closeEvent(QCloseEvent* event) {
+	emit closeWindow();
+	QTabWidget::closeEvent(event);
+}
