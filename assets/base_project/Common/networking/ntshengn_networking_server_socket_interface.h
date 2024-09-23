@@ -25,6 +25,7 @@ namespace NtshEngn {
 		virtual void setClientDisconnectCallback(std::function<void(ConnectedClientID)> callback) = 0;
 		virtual void setDataReceivedCallback(std::function<void(ConnectedClientID, void*, size_t)> callback) = 0;
 
+		virtual uint16_t getPort() = 0;
 		virtual const std::unordered_map<ConnectedClientID, ConnectedClient>& getConnectedClients() = 0;
 	};
 

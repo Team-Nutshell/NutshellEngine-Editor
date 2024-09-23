@@ -48,6 +48,8 @@ namespace NtshEngn {
 
 	// Script
 	struct ScriptBase {
+		virtual ~ScriptBase() {}
+
 		virtual void onCollisionEnter(CollisionInfo collisionInfo) {
 			NTSHENGN_UNUSED(collisionInfo);
 		}
