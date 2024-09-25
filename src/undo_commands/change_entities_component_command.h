@@ -27,6 +27,8 @@ private:
 	std::vector<Rigidbody> m_newRigidbodys;
 	std::vector<Collidable> m_previousCollidables;
 	std::vector<Collidable> m_newCollidables;
+	std::vector<SoundListener> m_previousSoundListeners;
+	std::vector<SoundListener> m_newSoundListeners;
 	std::vector<Scriptable> m_previousScriptables;
 	std::vector<Scriptable> m_newScriptables;
 };

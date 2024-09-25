@@ -6,6 +6,7 @@
 #include "components/renderable.h"
 #include "components/rigidbody.h"
 #include "components/scriptable.h"
+#include "components/sound_listener.h"
 #include "components/transform.h"
 #include "../../external/nlohmann/json.hpp"
 #include <string>
@@ -28,6 +29,7 @@ struct Entity {
 	std::optional<Renderable> renderable;
 	std::optional<Rigidbody> rigidbody;
 	std::optional<Collidable> collidable;
+	std::optional<SoundListener> soundListener;
 	std::optional<Scriptable> scriptable;
 
 	bool isVisible = true;
@@ -51,6 +53,9 @@ struct Entity {
 		}
 		if (collidable) {
 			j["collidable"] = collidable->toJson();
+		}
+		if (soundListener) {
+			j["soundListener"] = soundListener->toJson();
 		}
 		if (scriptable) {
 			j["scriptable"] = scriptable->toJson();
@@ -84,6 +89,9 @@ struct Entity {
 		}
 		if (j.contains("collidable")) {
 			entity.collidable = Collidable::fromJson(j["collidable"]);
+		}
+		if (j.contains("soundListener")) {
+			entity.soundListener = SoundListener::fromJson(j["soundListener"]);
 		}
 		if (j.contains("scriptable")) {
 			entity.scriptable = Scriptable::fromJson(j["scriptable"]);

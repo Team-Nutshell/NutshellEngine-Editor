@@ -8,6 +8,7 @@ enum class ComponentType {
 	Renderable,
 	Rigidbody,
 	Scriptable,
+	SoundListener,
 	Transform,
 	Unknown
 };

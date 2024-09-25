@@ -44,6 +44,7 @@ set(COMMON_COMPONENTS_HEADERS
 	src/common/components/renderable.h
 	src/common/components/rigidbody.h
 	src/common/components/scriptable.h
+	src/common/components/sound_listener.h
 	src/common/components/transform.h)
 
 set(COMMON_HEADERS
@@ -166,6 +167,7 @@ set(WIDGET_SOURCES
 	src/widgets/scalar_widget.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
+	src/widgets/sound_listener_component_widget.cpp
 	src/widgets/string_widget.cpp
 	src/widgets/transform_component_widget.cpp
 	src/widgets/vector2_widget.cpp
@@ -238,6 +240,7 @@ set(WIDGET_HEADERS
 	src/widgets/scalar_widget.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
+	src/widgets/sound_listener_component_widget.h
 	src/widgets/string_widget.h
 	src/widgets/transform_component_widget.h
 	src/widgets/vector2_widget.h

@@ -27,6 +27,10 @@ void AddEntityComponentCommand::undo() {
 		m_globalInfo.entities[m_entityID].collidable.reset();
 		emit m_globalInfo.signalEmitter.removeEntityCollidableSignal(m_entityID);
 	}
+	else if (m_componentName == "SoundListener") {
+		m_globalInfo.entities[m_entityID].soundListener.reset();
+		emit m_globalInfo.signalEmitter.removeEntitySoundListenerSignal(m_entityID);
+	}
 	else if (m_componentName == "Scriptable") {
 		m_globalInfo.entities[m_entityID].scriptable.reset();
 		emit m_globalInfo.signalEmitter.removeEntityScriptableSignal(m_entityID);
@@ -53,6 +57,10 @@ void AddEntityComponentCommand::redo() {
 	else if (m_componentName == "Collidable") {
 		m_globalInfo.entities[m_entityID].collidable = Collidable();
 		emit m_globalInfo.signalEmitter.addEntityCollidableSignal(m_entityID);
+	}
+	else if (m_componentName == "SoundListener") {
+		m_globalInfo.entities[m_entityID].soundListener = SoundListener();
+		emit m_globalInfo.signalEmitter.addEntitySoundListenerSignal(m_entityID);
 	}
 	else if (m_componentName == "Scriptable") {
 		m_globalInfo.entities[m_entityID].scriptable = Scriptable();

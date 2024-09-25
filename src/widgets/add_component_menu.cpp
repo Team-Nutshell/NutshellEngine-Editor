@@ -7,6 +7,7 @@ AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_g
 	addRenderableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_renderable")), this, &AddComponentMenu::addRenderableComponent);
 	addRigidbodyComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_rigidbody")), this, &AddComponentMenu::addRigidbodyComponent);
 	addCollidableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_collidable")), this, &AddComponentMenu::addCollidableComponent);
+	addSoundListenerComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_sound_listener")), this, &AddComponentMenu::addSoundListenerComponent);
 	addScriptableComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_scriptable")), this, &AddComponentMenu::addScriptableComponent);
 }
 
@@ -28,6 +29,10 @@ void AddComponentMenu::addRigidbodyComponent() {
 
 void AddComponentMenu::addCollidableComponent() {
 	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable"));
+}
+
+void AddComponentMenu::addSoundListenerComponent() {
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "SoundListener"));
 }
 
 void AddComponentMenu::addScriptableComponent() {

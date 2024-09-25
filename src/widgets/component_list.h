@@ -6,6 +6,7 @@
 #include "renderable_component_widget.h"
 #include "rigidbody_component_widget.h"
 #include "collidable_component_widget.h"
+#include "sound_listener_component_widget.h"
 #include "scriptable_component_widget.h"
 #include "add_component_button.h"
 #include <QWidget>
@@ -25,6 +26,7 @@ public:
 	RenderableComponentWidget* renderableWidget;
 	RigidbodyComponentWidget* rigidbodyWidget;
 	CollidableComponentWidget* collidableWidget;
+	SoundListenerComponentWidget* soundListenerWidget;
 	ScriptableComponentWidget* scriptableWidget;
 	AddComponentButton* addComponentButton;
 };

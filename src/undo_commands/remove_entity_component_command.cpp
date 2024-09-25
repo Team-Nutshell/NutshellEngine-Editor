@@ -19,6 +19,9 @@ RemoveEntityComponentCommand::RemoveEntityComponentCommand(GlobalInfo& globalInf
 	else if (m_componentName == "Collidable") {
 		m_collidable = m_globalInfo.entities[m_entityID].collidable;
 	}
+	else if (m_componentName == "SoundListener") {
+		m_soundListener = m_globalInfo.entities[m_entityID].soundListener;
+	}
 	else if (m_componentName == "Scriptable") {
 		m_scriptable = m_globalInfo.entities[m_entityID].scriptable;
 	}
@@ -44,6 +47,10 @@ void RemoveEntityComponentCommand::undo() {
 	else if (m_componentName == "Collidable") {
 		m_globalInfo.entities[m_entityID].collidable = m_collidable;
 		emit m_globalInfo.signalEmitter.addEntityCollidableSignal(m_entityID);
+	}
+	else if (m_componentName == "SoundListener") {
+		m_globalInfo.entities[m_entityID].soundListener = m_soundListener;
+		emit m_globalInfo.signalEmitter.addEntitySoundListenerSignal(m_entityID);
 	}
 	else if (m_componentName == "Scriptable") {
 		m_globalInfo.entities[m_entityID].scriptable = m_scriptable;
@@ -71,6 +78,10 @@ void RemoveEntityComponentCommand::redo() {
 	else if (m_componentName == "Collidable") {
 		m_globalInfo.entities[m_entityID].collidable.reset();
 		emit m_globalInfo.signalEmitter.removeEntityCollidableSignal(m_entityID);
+	}
+	else if (m_componentName == "SoundListener") {
+		m_globalInfo.entities[m_entityID].soundListener.reset();
+		emit m_globalInfo.signalEmitter.removeEntitySoundListenerSignal(m_entityID);
 	}
 	else if (m_componentName == "Scriptable") {
 		m_globalInfo.entities[m_entityID].scriptable.reset();

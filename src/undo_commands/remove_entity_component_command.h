@@ -20,5 +20,6 @@ private:
 	std::optional<Renderable> m_renderable;
 	std::optional<Rigidbody> m_rigidbody;
 	std::optional<Collidable> m_collidable;
+	std::optional<SoundListener> m_soundListener;
 	std::optional<Scriptable> m_scriptable;
 };

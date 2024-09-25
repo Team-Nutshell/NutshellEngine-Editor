@@ -5,6 +5,7 @@
 #include "components/renderable.h"
 #include "components/rigidbody.h"
 #include "components/scriptable.h"
+#include "components/sound_listener.h"
 #include "components/transform.h"
 #include "../../external/nml/include/nml.h"
 #include <QObject>
@@ -36,6 +37,9 @@ signals:
 	void addEntityCollidableSignal(EntityID);
 	void removeEntityCollidableSignal(EntityID);
 	void changeEntityCollidableSignal(EntityID, const Collidable&);
+	void addEntitySoundListenerSignal(EntityID);
+	void removeEntitySoundListenerSignal(EntityID);
+	void changeEntitySoundListenerSignal(EntityID, const SoundListener&);
 	void addEntityScriptableSignal(EntityID);
 	void removeEntityScriptableSignal(EntityID);
 	void changeEntityScriptableSignal(EntityID, const Scriptable&);

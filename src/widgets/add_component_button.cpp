@@ -44,6 +44,13 @@ void AddComponentButton::onClick() {
 		menu->addCollidableComponentAction->setEnabled(false);
 	}
 
+	if (!m_globalInfo.entities[m_globalInfo.currentEntityID].soundListener) {
+		menu->addSoundListenerComponentAction->setEnabled(true);
+	}
+	else {
+		menu->addSoundListenerComponentAction->setEnabled(false);
+	}
+
 	if (!m_globalInfo.entities[m_globalInfo.currentEntityID].scriptable) {
 		menu->addScriptableComponentAction->setEnabled(true);
 	}

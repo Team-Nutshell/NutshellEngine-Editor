@@ -17,6 +17,8 @@ ComponentList::ComponentList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	layout()->addWidget(rigidbodyWidget);
 	collidableWidget = new CollidableComponentWidget(m_globalInfo);
 	layout()->addWidget(collidableWidget);
+	soundListenerWidget = new SoundListenerComponentWidget(m_globalInfo);
+	layout()->addWidget(soundListenerWidget);
 	scriptableWidget = new ScriptableComponentWidget(m_globalInfo);
 	layout()->addWidget(scriptableWidget);
 	addComponentButton = new AddComponentButton(m_globalInfo);

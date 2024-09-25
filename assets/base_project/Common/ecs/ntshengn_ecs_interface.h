@@ -7,6 +7,7 @@
 #include "components/ntshengn_ecs_light.h"
 #include "components/ntshengn_ecs_rigidbody.h"
 #include "components/ntshengn_ecs_collidable.h"
+#include "components/ntshengn_ecs_sound_listener.h"
 #include "components/ntshengn_ecs_scriptable.h"
 #include <stdexcept>
 #include <bitset>

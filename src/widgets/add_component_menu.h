@@ -14,6 +14,7 @@ private slots:
 	void addRenderableComponent();
 	void addRigidbodyComponent();
 	void addCollidableComponent();
+	void addSoundListenerComponent();
 	void addScriptableComponent();
 
 private:
@@ -25,5 +26,6 @@ public:
 	QAction* addRenderableComponentAction;
 	QAction* addRigidbodyComponentAction;
 	QAction* addCollidableComponentAction;
+	QAction* addSoundListenerComponentAction;
 	QAction* addScriptableComponentAction;
 };

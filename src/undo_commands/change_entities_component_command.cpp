@@ -34,6 +34,10 @@ ChangeEntitiesComponentCommand::ChangeEntitiesComponentCommand(GlobalInfo& globa
 			m_previousCollidables.push_back(m_globalInfo.entities[m_entityIDs[i]].collidable.value());
 			m_newCollidables.push_back(*static_cast<Collidable*>(components[i]));
 		}
+		else if (m_componentName == "SoundListener") {
+			m_previousSoundListeners.push_back(m_globalInfo.entities[m_entityIDs[i]].soundListener.value());
+			m_newSoundListeners.push_back(*static_cast<SoundListener*>(components[i]));
+		}
 		else if (m_componentName == "Scriptable") {
 			m_previousScriptables.push_back(m_globalInfo.entities[m_entityIDs[i]].scriptable.value());
 			m_newScriptables.push_back(*static_cast<Scriptable*>(components[i]));
@@ -67,6 +71,10 @@ void ChangeEntitiesComponentCommand::undo() {
 			m_globalInfo.entities[m_entityIDs[i]].collidable = m_previousCollidables[i];
 			emit m_globalInfo.signalEmitter.changeEntityCollidableSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].collidable.value());
 		}
+		else if (m_componentName == "SoundListener") {
+			m_globalInfo.entities[m_entityIDs[i]].soundListener = m_previousSoundListeners[i];
+			emit m_globalInfo.signalEmitter.changeEntitySoundListenerSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].soundListener.value());
+		}
 		else if (m_componentName == "Scriptable") {
 			m_globalInfo.entities[m_entityIDs[i]].scriptable = m_previousScriptables[i];
 			emit m_globalInfo.signalEmitter.changeEntityScriptableSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].scriptable.value());
@@ -99,6 +107,10 @@ void ChangeEntitiesComponentCommand::redo() {
 		else if (m_componentName == "Collidable") {
 			m_globalInfo.entities[m_entityIDs[i]].collidable = m_newCollidables[i];
 			emit m_globalInfo.signalEmitter.changeEntityCollidableSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].collidable.value());
+		}
+		else if (m_componentName == "SoundListener") {
+			m_globalInfo.entities[m_entityIDs[i]].soundListener = m_newSoundListeners[i];
+			emit m_globalInfo.signalEmitter.changeEntitySoundListenerSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].soundListener.value());
 		}
 		else if (m_componentName == "Scriptable") {
 			m_globalInfo.entities[m_entityIDs[i]].scriptable = m_newScriptables[i];
