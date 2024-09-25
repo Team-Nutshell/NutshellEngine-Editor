@@ -767,14 +767,6 @@ namespace NtshEngn {
 			return audioModule->getSoundSourcePitch(soundSourceID);
 		}
 
-		void setSoundListenerEntity(Entity entity) {
-			if (!audioModule) {
-				return;
-			}
-
-			audioModule->setSoundListenerEntity(entity);
-		}
-
 		// Animation
 		void playAnimation(Entity entity, uint32_t animationIndex) {
 			if (!graphicsModule) {
