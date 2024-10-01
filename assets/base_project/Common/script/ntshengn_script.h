@@ -618,7 +618,15 @@ namespace NtshEngn {
 				return;
 			}
 
-			return graphicsModule->setBackgroundColor(backgroundColor);
+			graphicsModule->setBackgroundColor(backgroundColor);
+		}
+
+		void emitParticles(const ParticleEmitter& particleEmitter) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->emitParticles(particleEmitter);
 		}
 
 		// Physics

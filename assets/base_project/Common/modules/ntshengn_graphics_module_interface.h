@@ -34,6 +34,9 @@ namespace NtshEngn {
 		// Returns true if the entity is currently playing the animation with index animationIndex, else, returns false
 		virtual bool isAnimationPlaying(Entity entity, uint32_t animationIndex) = 0;
 
+		// Emits particles described by particleEmitter
+		virtual void emitParticles(const ParticleEmitter& particleEmitter) = 0;
+
 		// Draws a text on the UI with the font in the fontID parameter using the position on screen and color
 		virtual void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec4& color) = 0;
 		// Draws a line on the UI according to its start and end points and its color

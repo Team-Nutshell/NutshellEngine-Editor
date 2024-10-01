@@ -103,7 +103,10 @@ namespace NtshEngn {
 
 	// Texture
 	struct Texture {
+		// Texture image
 		Image* image = nullptr;
+
+		// Texture image sampler
 		ImageSampler imageSampler;
 	};
 
@@ -153,18 +156,29 @@ namespace NtshEngn {
 	};
 
 	struct AnimationChannelKeyframe {
+		// Keyframe timestamp
 		float timestamp = 0.0f;
+
+		// Keyframe value
 		Math::vec4 value;
 	};
 
 	struct AnimationChannel {
+		// Interpolation type
 		AnimationChannelInterpolationType interpolationType = AnimationChannelInterpolationType::Unknown;
+
+		// Transform type
 		AnimationChannelTransformType transformType = AnimationChannelTransformType::Unknown;
+
+		// List of keyframes
 		std::vector<AnimationChannelKeyframe> keyframes;
 	};
 
 	struct Animation {
+		// Animation total duration
 		float duration = 0.0f;
+
+		// Joint animation channels
 		std::unordered_map<uint32_t, std::vector<AnimationChannel>> jointChannels;
 	};
 
@@ -240,6 +254,31 @@ namespace NtshEngn {
 		Image* image = nullptr;
 		ImageSamplerFilter imageSamplerFilter = ImageSamplerFilter::Unknown;
 		std::unordered_map<char, FontGlyph> glyphs;
+	};
+
+	// Particle
+	struct ParticleEmitter {
+		// Number of particles per emission
+		uint32_t number = 0;
+
+		// Range of duration per particle
+		std::array<float, 2> durationRange = { 0.0f, 0.0f };
+
+		// Range of position per particle
+		std::array<Math::vec3, 2> positionRange = { Math::vec3(0.0f, 0.0f, 0.0f), Math::vec3(0.0f, 0.0f, 0.0f) };
+
+		// Base direction and range of rotation per particle
+		Math::vec3 baseDirection = Math::vec3(0.0f, 0.0f, 1.0f);
+		std::array<Math::vec3, 2> rotationRange = { Math::vec3(0.0f, 0.0f, 0.0f), Math::vec3(0.0f, 0.0f, 0.0f) };
+
+		// Range of speed per particle
+		std::array<float, 2> speedRange = { 0.0f, 0.0f };
+
+		// Range of color per particle
+		std::array<Math::vec4, 2> colorRange = { Math::vec4(0.0f, 0.0f, 0.0f, 0.0f), Math::vec4(0.0f, 0.0f, 0.0f, 0.0f) };
+
+		// Range of size per particle
+		std::array<float, 2> sizeRange = { 0.0f, 0.0f };
 	};
 
 }
