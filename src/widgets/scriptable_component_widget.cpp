@@ -870,7 +870,7 @@ void ScriptableComponentWidget::onElementChanged(const std::string& element) {
 						}
 
 						std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h", std::ios::out | std::ios::trunc);
-						newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << finalScriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << finalScriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(double dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
+						newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << finalScriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << finalScriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(float dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
 
 						newScriptable.scriptName = finalScriptName;
 					}
