@@ -15,7 +15,7 @@ namespace NtshEngn {
 		virtual ~WindowModuleInterface() {}
 
 		virtual void init() = 0;
-		virtual void update(double dt) = 0;
+		virtual void update(float dt) = 0;
 		virtual void destroy() = 0;
 
 		// Opens a new window and returns a unique identifier

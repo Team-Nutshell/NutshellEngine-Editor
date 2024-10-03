@@ -18,7 +18,7 @@ namespace NtshEngn {
 	struct Script : public ScriptBase {
 	public:
 		virtual void init() = 0;
-		virtual void update(double dt) = 0;
+		virtual void update(float dt) = 0;
 		virtual void destroy() = 0;
 
 	protected:

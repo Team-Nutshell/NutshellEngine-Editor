@@ -12,7 +12,7 @@ namespace NtshEngn {
 		virtual ~AudioModuleInterface() {}
 
 		virtual void init() = 0;
-		virtual void update(double dt) = 0;
+		virtual void update(float dt) = 0;
 		virtual void destroy() = 0;
 
 		// Loads the sound described in the sound parameter in the internal format and returns a unique identifier
