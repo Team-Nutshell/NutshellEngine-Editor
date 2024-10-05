@@ -32,20 +32,8 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
 	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Expanding);
 	setSizePolicy(sizePolicy);
-	if (std::filesystem::exists(m_assetsDirectory)) {
-		for (const auto& entry : std::filesystem::directory_iterator(m_assetsDirectory)) {
-			std::string entryPath = entry.path().string();
-			std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
-			if (std::filesystem::is_directory(entry)) {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)) + "/");
-			}
-			else {
-				addItem(QString::fromStdString(entryPath.substr(entryPath.find_last_of('/') + 1)));
-			}
-		}
 
-		m_directoryWatcher.addPath(QString::fromStdString(m_assetsDirectory));
-	}
+	updateAssetList();
 
 	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
 	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
