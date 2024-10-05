@@ -119,6 +119,10 @@ void AssetList::updateAssetList() {
 void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
 	std::string itemFileName = listWidgetItem->text().toStdString();
 
+	if (itemFileName == "../") {
+		return;
+	}
+
 	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
 		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
 		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
