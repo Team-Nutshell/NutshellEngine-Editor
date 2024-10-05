@@ -12,10 +12,6 @@ namespace NtshEngn {
 		PhysicsModuleInterface(const std::string& name) : SystemModuleInterface(ModuleType::Physics, name) {}
 		virtual ~PhysicsModuleInterface() {}
 
-		virtual void init() = 0;
-		virtual void update(float dt) = 0;
-		virtual void destroy() = 0;
-
 		// Returns an IntersectionInformation structure containing information about the intersection
 		virtual IntersectionInformation intersect(const ColliderShape* shape1, const ColliderShape* shape2) = 0;
 		

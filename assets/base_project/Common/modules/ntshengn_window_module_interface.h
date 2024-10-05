@@ -14,10 +14,6 @@ namespace NtshEngn {
 		WindowModuleInterface(const std::string& name) : SystemModuleInterface(ModuleType::Window, name) {}
 		virtual ~WindowModuleInterface() {}
 
-		virtual void init() = 0;
-		virtual void update(float dt) = 0;
-		virtual void destroy() = 0;
-
 		// Opens a new window and returns a unique identifier
 		virtual WindowID openWindow(int width, int height, const std::string& title) = 0;
 		// Returns true if the window with identifier windowID is open, else, returns false

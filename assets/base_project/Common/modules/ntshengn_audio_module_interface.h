@@ -11,10 +11,6 @@ namespace NtshEngn {
 		AudioModuleInterface(const std::string& name) : SystemModuleInterface(ModuleType::Audio, name) {}
 		virtual ~AudioModuleInterface() {}
 
-		virtual void init() = 0;
-		virtual void update(float dt) = 0;
-		virtual void destroy() = 0;
-
 		// Loads the sound described in the sound parameter in the internal format and returns a unique identifier
 		virtual SoundID load(const Sound& sound) = 0;
 
