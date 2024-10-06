@@ -100,7 +100,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 		return;
 	}
 
-	if ((windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
+	if ((windowTitle()[0] == '*')) {
 		event->ignore();
 		CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
 		closeSceneWidget->show();

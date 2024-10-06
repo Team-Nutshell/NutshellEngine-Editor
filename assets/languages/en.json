@@ -18,6 +18,7 @@
 	"about_nutshell_engine_team_nutshell_github": "Team Nutshell's GitHub",
 	"close_scene": "Close Scene",
 	"unsaved_scene_changes": "Scene \"${0}\" has unsaved changes, do you want to save the scene?",
+	"unsaved_scene_changes_no_file": "Scene has unsaved changes, do you want to save the scene?",
 	"open_project": "Open Project:",
 	"open_project_select_directory": "Select a project directory",
 	"new_project": "New Project:",

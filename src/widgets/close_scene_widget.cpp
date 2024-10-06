@@ -2,6 +2,7 @@
 #include "../common/scene_manager.h"
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QFileDialog>
 
 CloseSceneWidget::CloseSceneWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo), m_scenePath(globalInfo.currentScenePath) {
 	setFixedWidth(350);
@@ -12,7 +13,14 @@ CloseSceneWidget::CloseSceneWidget(GlobalInfo& globalInfo) : m_globalInfo(global
 	setModal(true);
 
 	setLayout(new QVBoxLayout());
-	QLabel* closeSceneLabel = new QLabel(QString::fromStdString(m_globalInfo.localization.getString("unsaved_scene_changes", { m_scenePath })));
+	std::string unsavedSceneString;
+	if (!m_scenePath.empty()) {
+		unsavedSceneString = m_globalInfo.localization.getString("unsaved_scene_changes", { m_scenePath });
+	}
+	else {
+		unsavedSceneString = m_globalInfo.localization.getString("unsaved_scene_changes_no_file");
+	}
+	QLabel* closeSceneLabel = new QLabel(QString::fromStdString(unsavedSceneString));
 	closeSceneLabel->setWordWrap(true);
 	layout()->addWidget(closeSceneLabel);
 	QWidget* buttonsWidget = new QWidget();
@@ -31,7 +39,25 @@ CloseSceneWidget::CloseSceneWidget(GlobalInfo& globalInfo) : m_globalInfo(global
 }
 
 void CloseSceneWidget::onSaveSceneButtonClicked() {
-	SceneManager::saveScene(m_globalInfo, m_scenePath);
+	if (!m_scenePath.empty()) {
+		SceneManager::saveScene(m_globalInfo, m_scenePath);
+	}
+	else {
+		QFileDialog fileDialog = QFileDialog();
+		fileDialog.setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("header_file_save_scene_as")));
+		fileDialog.setDefaultSuffix("ntsn");
+		if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
+			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/assets/"));
+		}
+		else if (!m_globalInfo.projectDirectory.empty()) {
+			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory));
+		}
+
+		if (fileDialog.exec()) {
+			std::string filePath = fileDialog.selectedFiles()[0].toStdString();
+			SceneManager::saveScene(m_globalInfo, filePath);
+		}
+	}
 	emit confirmSignal();
 	close();
 }
