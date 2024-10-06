@@ -52,19 +52,20 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 	std::filesystem::create_directory(projectDirectory);
 	std::filesystem::copy("assets/base_project", projectDirectory, std::filesystem::copy_options::recursive);
 
+	nlohmann::json jOptions;
+	jOptions["windowTitle"] = projectName;
+	jOptions["maxFPS"] = 60;
+	std::filesystem::create_directory(projectDirectory + "/assets/options/");
 	std::fstream optionsFile(projectDirectory + "/assets/options/options.ntop", std::ios::out | std::ios::trunc);
-	if (optionsFile.is_open()) {
-		nlohmann::json j;
-		j["windowTitle"] = projectName;
-		j["maxFPS"] = 60;
-		optionsFile << j.dump(1, '\t');
-	}
+	optionsFile << jOptions.dump(1, '\t');
+	optionsFile.close();
 
-	nlohmann::json j;
-	j["projectName"] = projectName;
-	j["engineVersion"] = m_globalInfo.version;
+	nlohmann::json jProject;
+	jProject["projectName"] = projectName;
+	jProject["engineVersion"] = m_globalInfo.version;
 	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
-	projectFile << j.dump(1, '\t');
+	projectFile << jProject.dump(1, '\t');
+	projectFile.close();
 
 	openMainWindow(projectDirectory, projectName);
 }
