@@ -35,6 +35,10 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	updateAssetList();
 
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
+		m_directoryWatcher.addPath(QString::fromStdString(m_assetsDirectory));
+	}
+
 	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
 	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
