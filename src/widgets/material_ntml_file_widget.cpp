@@ -115,6 +115,8 @@ void MaterialNtmlFileWidget::setPath(const std::string& path) {
 	materialFile = std::fstream(m_materialFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(materialFile);
 
+	materialNtml = MaterialNtml();
+
 	if (j.contains("diffuse")) {
 		if (j["diffuse"].contains("texture")) {
 			if (j["diffuse"]["texture"].contains("imagePath")) {

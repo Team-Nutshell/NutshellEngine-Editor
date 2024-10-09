@@ -59,6 +59,8 @@ void SamplerNtspFileWidget::setPath(const std::string& path) {
 	samplerFile = std::fstream(m_samplerFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(samplerFile);
 
+	samplerNtsp = SamplerNtsp();
+
 	if (j.contains("magFilter")) {
 		std::string magFilter = j["magFilter"];
 		samplerNtsp.magFilter = magFilter;

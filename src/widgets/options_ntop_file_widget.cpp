@@ -49,6 +49,8 @@ void OptionsNtopFileWidget::setPath(const std::string& path) {
 	optionsFile = std::fstream(m_optionsFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(optionsFile);
 
+	optionsNtop = OptionsNtop();
+
 	if (j.contains("windowTitle")) {
 		std::string windowTitle = j["windowTitle"];
 		optionsNtop.windowTitle = windowTitle;
