@@ -8,7 +8,11 @@
 
 AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	renameAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_rename")), this, &AssetListMenu::renameAsset);
+	renameAction->setShortcut(QKeySequence::fromString("F2"));
 	deleteAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_delete")), this, &AssetListMenu::deleteAsset);
+	deleteAction->setShortcut(QKeySequence::fromString("Del"));
+	duplicateAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_duplicate")), this, &AssetListMenu::duplicateAsset);
+	duplicateAction->setShortcut(QKeySequence::fromString("Ctrl+D"));
 	addSeparator();
 	reloadAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_reload")), this, &AssetListMenu::reloadAsset);
 	addSeparator();
@@ -22,8 +26,8 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 }
 
 void AssetListMenu::renameAsset() {
+	m_globalInfo.mainWindow->resourcePanel->assetList->currentlyEditedItemName = filename;
 	QListWidgetItem* item = m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0];
-	m_globalInfo.mainWindow->resourcePanel->assetList->currentlyEditedItemName = item->text().toStdString();
 	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
 	m_globalInfo.mainWindow->resourcePanel->assetList->editItem(item);
 }
@@ -33,8 +37,38 @@ void AssetListMenu::deleteAsset() {
 	deleteAssetWidget->show();
 }
 
+void AssetListMenu::duplicateAsset() {
+	bool isDirectory = false;
+	if (std::filesystem::is_directory(directory + "/" + filename)) {
+		filename.pop_back();
+		isDirectory = true;
+	}
+
+	std::string extension = "";
+	std::string baseAssetName = filename;
+	size_t lastDot = filename.rfind('.');
+	if (lastDot != std::string::npos) {
+		extension = "." + filename.substr(lastDot + 1);
+		baseAssetName = filename.substr(0, lastDot);
+	}
+	uint32_t fileNameIndex = 0;
+	std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+	while (std::filesystem::exists(directory + "/" + duplicatedAssetName)) {
+		fileNameIndex++;
+		duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+	}
+	std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
+	if (isDirectory) {
+		copyOptions = std::filesystem::copy_options::recursive;
+	}
+	std::filesystem::copy(directory + "/" + filename, directory + "/" + duplicatedAssetName, copyOptions);
+	if (!isDirectory) {
+		emit m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + duplicatedAssetName);
+	}
+}
+
 void AssetListMenu::reloadAsset() {
-	std::string assetPath = directory + "/" + m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0]->text().toStdString();
+	std::string assetPath = directory + "/" + filename;
 	std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
 	size_t lastDot = assetName.rfind('.');
 	if (lastDot != std::string::npos) {

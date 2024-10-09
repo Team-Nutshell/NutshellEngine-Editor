@@ -157,6 +157,7 @@ void AssetList::showMenu(const QPoint& pos) {
 		menu->directory = m_currentDirectory;
 		menu->renameAction->setEnabled(false);
 		menu->deleteAction->setEnabled(false);
+		menu->duplicateAction->setEnabled(false);
 		menu->reloadAction->setEnabled(false);
 	}
 	else {
@@ -165,6 +166,7 @@ void AssetList::showMenu(const QPoint& pos) {
 			menu->filename = item->text().toStdString();
 			menu->renameAction->setEnabled(true);
 			menu->deleteAction->setEnabled(true);
+			menu->duplicateAction->setEnabled(true);
 			if (!std::filesystem::is_directory(m_currentDirectory + "/" + item->text().toStdString())) {
 				menu->reloadAction->setEnabled(true);
 			}
@@ -176,6 +178,7 @@ void AssetList::showMenu(const QPoint& pos) {
 			menu->directory = m_currentDirectory;
 			menu->renameAction->setEnabled(false);
 			menu->deleteAction->setEnabled(false);
+			menu->duplicateAction->setEnabled(false);
 			menu->reloadAction->setEnabled(false);
 		}
 	}
@@ -232,6 +235,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 				enterDirectory(selectedElementPath);
 			}
 			else {
+				emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
 				actionOnFile(itemFileName);
 			}
 		}
@@ -246,6 +250,36 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			std::string itemFileName = listItem->text().toStdString();
 			DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, m_currentDirectory + "/" + itemFileName);
 			deleteAssetWidget->show();
+		}
+		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_D)) {
+			std::string itemFileName = listItem->text().toStdString();
+			bool isDirectory = false;
+			if (std::filesystem::is_directory(m_currentDirectory + "/" + itemFileName)) {
+				itemFileName.pop_back();
+				isDirectory = true;
+			}
+
+			std::string extension = "";
+			std::string baseAssetName = itemFileName;
+			size_t lastDot = baseAssetName.rfind('.');
+			if (lastDot != std::string::npos) {
+				extension = "." + itemFileName.substr(lastDot + 1);
+				baseAssetName = itemFileName.substr(0, lastDot);
+			}
+			uint32_t fileNameIndex = 0;
+			std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+			while (std::filesystem::exists(m_currentDirectory + "/" + duplicatedAssetName)) {
+				fileNameIndex++;
+				duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+			}
+			std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
+			if (isDirectory) {
+				copyOptions = std::filesystem::copy_options::recursive;
+			}
+			std::filesystem::copy(m_currentDirectory + "/" + itemFileName, m_currentDirectory + "/" + duplicatedAssetName, copyOptions);
+			if (!isDirectory) {
+				emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + duplicatedAssetName);
+			}
 		}
 	}
 }

@@ -12,6 +12,7 @@ public:
 private slots:
 	void renameAsset();
 	void deleteAsset();
+	void duplicateAsset();
 	void reloadAsset();
 	void newDirectory();
 	void newModel();
@@ -28,6 +29,7 @@ public:
 
 	QAction* renameAction;
 	QAction* deleteAction;
+	QAction* duplicateAction;
 	QAction* reloadAction;
 	QAction* newDirectoryAction;
 	QAction* newModelAction;

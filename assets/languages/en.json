@@ -215,6 +215,7 @@
 	"assets_options_start_profiling": "Start Profiling",
 	"assets_rename": "Rename",
 	"assets_delete": "Delete",
+	"assets_duplicate": "Duplicate",
 	"assets_reload": "Reload",
 	"assets_create": "Create",
 	"editor_parameters": "Editor Parameters",
