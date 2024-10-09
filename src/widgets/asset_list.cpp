@@ -40,7 +40,6 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	}
 
 	connect(this, &QListWidget::customContextMenuRequested, this, &AssetList::showMenu);
-	connect(this, &QListWidget::itemClicked, this, &AssetList::onItemClicked);
 	connect(this, &QListWidget::itemDoubleClicked, this, &AssetList::onItemDoubleClicked);
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetList::onFileRenamed);
@@ -120,21 +119,6 @@ void AssetList::updateAssetList() {
 	}
 }
 
-void AssetList::onItemClicked(QListWidgetItem* listWidgetItem) {
-	std::string itemFileName = listWidgetItem->text().toStdString();
-
-	if (itemFileName == "../") {
-		return;
-	}
-
-	if (std::filesystem::exists(m_currentDirectory + "/" + itemFileName)) {
-		std::string selectedElementPath = std::filesystem::canonical(m_currentDirectory + "/" + itemFileName).string();
-		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
-
-		emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
-	}
-}
-
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 	std::string itemFileName = listWidgetItem->text().toStdString();
 
@@ -143,6 +127,7 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
 
 		if (!std::filesystem::is_directory(selectedElementPath)) {
+			emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
 			actionOnFile(itemFileName);
 		}
 		else {
@@ -329,7 +314,9 @@ void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEdi
 		if (std::filesystem::exists(m_currentDirectory + "/" + currentlyEditedItemName)) {
 			std::filesystem::rename(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
 			emit m_globalInfo.signalEmitter.renameFileSignal(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
-			emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + newName);
+			if (!std::filesystem::is_directory(m_currentDirectory + "/" + newName)) {
+				emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + newName);
+			}
 		}
 	}
 	currentlyEditedItemName = "";
