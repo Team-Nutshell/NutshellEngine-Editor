@@ -2,12 +2,15 @@
 #include "asset_info_name_widget.h"
 #include "delete_asset_widget.h"
 #include "main_window.h"
+#include "../common/asset_helper.h"
 #include <filesystem>
 #include <fstream>
 
 AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	renameAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_rename")), this, &AssetListMenu::rename);
+	renameAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_rename")), this, &AssetListMenu::renameAsset);
 	deleteAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_delete")), this, &AssetListMenu::deleteAsset);
+	addSeparator();
+	reloadAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_reload")), this, &AssetListMenu::reloadAsset);
 	addSeparator();
 	QMenu* createMenu = addMenu(QString::fromStdString(m_globalInfo.localization.getString("assets_create")));
 	newDirectoryAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("directory")), this, &AssetListMenu::newDirectory);
@@ -18,7 +21,7 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	newSceneAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("scene")), this, &AssetListMenu::newScene);
 }
 
-void AssetListMenu::rename() {
+void AssetListMenu::renameAsset() {
 	QListWidgetItem* item = m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0];
 	m_globalInfo.mainWindow->resourcePanel->assetList->currentlyEditedItemName = item->text().toStdString();
 	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
@@ -28,6 +31,28 @@ void AssetListMenu::rename() {
 void AssetListMenu::deleteAsset() {
 	DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, directory + "/" + filename);
 	deleteAssetWidget->show();
+}
+
+void AssetListMenu::reloadAsset() {
+	std::string assetPath = directory + "/" + m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0]->text().toStdString();
+	std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
+	size_t lastDot = assetName.rfind('.');
+	if (lastDot != std::string::npos) {
+		std::string extension = assetName.substr(lastDot + 1);
+		RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
+		if (assetType == RendererResourceManager::AssetType::Model) {
+			m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::Material) {
+			m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::Image) {
+			m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
+			m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
+		}
+	}
 }
 
 void AssetListMenu::newDirectory() {

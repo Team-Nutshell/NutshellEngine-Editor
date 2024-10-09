@@ -172,6 +172,7 @@ void AssetList::showMenu(const QPoint& pos) {
 		menu->directory = m_currentDirectory;
 		menu->renameAction->setEnabled(false);
 		menu->deleteAction->setEnabled(false);
+		menu->reloadAction->setEnabled(false);
 	}
 	else {
 		if (item->text() != "../") {
@@ -179,12 +180,18 @@ void AssetList::showMenu(const QPoint& pos) {
 			menu->filename = item->text().toStdString();
 			menu->renameAction->setEnabled(true);
 			menu->deleteAction->setEnabled(true);
-			emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + item->text().toStdString());
+			if (!std::filesystem::is_directory(m_currentDirectory + "/" + item->text().toStdString())) {
+				menu->reloadAction->setEnabled(true);
+			}
+			else {
+				menu->reloadAction->setEnabled(false);
+			}
 		}
 		else {
 			menu->directory = m_currentDirectory;
 			menu->renameAction->setEnabled(false);
 			menu->deleteAction->setEnabled(false);
+			menu->reloadAction->setEnabled(false);
 		}
 	}
 	menu->popup(QCursor::pos());

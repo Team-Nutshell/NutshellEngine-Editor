@@ -14,6 +14,14 @@ class Logger;
 
 class RendererResourceManager {
 public:
+	enum class AssetType {
+		Model,
+		Material,
+		Image,
+		ImageSampler,
+		Unknown
+	};
+
 	struct Mesh {
 		struct Vertex {
 			nml::vec3 position;
@@ -117,6 +125,8 @@ public:
 	void loadSampler(const std::string& samplerPath, const std::string& name);
 
 	void loadMeshColliders(Mesh& mesh);
+
+	AssetType getFileAssetType(const std::string& path);
 
 private:
 	void loadNtmd(const std::string& modelPath, Model& model);

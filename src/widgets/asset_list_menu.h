@@ -10,8 +10,9 @@ public:
 	AssetListMenu(GlobalInfo& globalInfo);
 
 private slots:
-	void rename();
+	void renameAsset();
 	void deleteAsset();
+	void reloadAsset();
 	void newDirectory();
 	void newModel();
 	void newImageSampler();
@@ -27,6 +28,7 @@ public:
 
 	QAction* renameAction;
 	QAction* deleteAction;
+	QAction* reloadAction;
 	QAction* newDirectoryAction;
 	QAction* newModelAction;
 	QAction* newImageSamplerAction;
