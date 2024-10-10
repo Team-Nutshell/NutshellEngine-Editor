@@ -18,6 +18,7 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 			}
 			m_pastedEntityNames.push_back(copiedEntity.name + "_" + std::to_string(entityNameIndex));
 		}
+		m_pastedEntityIDs[i] = m_globalInfo.globalEntityID++;
 	}
 	if (m_copiedEntities.size() == 1) {
 		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entities", { m_copiedEntities[0].name, m_pastedEntityNames[0] })));
@@ -44,10 +45,9 @@ void CopyEntitiesCommand::redo() {
 		Entity& copiedEntity = m_copiedEntities[i];
 
 		Entity pastedEntity = copiedEntity;
-		pastedEntity.entityID = m_globalInfo.globalEntityID++;
+		pastedEntity.entityID = m_pastedEntityIDs[i];
 		pastedEntity.name = m_pastedEntityNames[i];
 		m_globalInfo.entities[pastedEntity.entityID] = pastedEntity;
-		m_pastedEntityIDs[i] = pastedEntity.entityID;
 		emit m_globalInfo.signalEmitter.createEntitySignal(m_pastedEntityIDs[i]);
 
 		if (i == 0) {
