@@ -1029,91 +1029,6 @@ void Renderer::paintGL() {
 
 	gl.glDisable(GL_CULL_FACE);
 
-	// Guizmo
-	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		if (!guizmoPositionCalculated) {
-			bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
-			guizmoPosition = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID].position : m_globalInfo.entities[m_globalInfo.currentEntityID].transform.position;
-			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-				hasEntityMoveTransform = m_entityMoveTransforms.find(otherSelectedEntityID) != m_entityMoveTransforms.end();
-				guizmoPosition += hasEntityMoveTransform ? m_entityMoveTransforms[otherSelectedEntityID].position : m_globalInfo.entities[otherSelectedEntityID].transform.position;
-			}
-			guizmoPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
-
-			guizmoPositionCalculated = true;
-		}
-
-		std::string guizmoModelName = "";
-		if (m_guizmoMode == GuizmoMode::Translate) {
-			guizmoModelName = "Guizmo-Translate";
-		}
-		else if (m_guizmoMode == GuizmoMode::Rotate) {
-			guizmoModelName = "Guizmo-Rotate";
-		}
-		else if (m_guizmoMode == GuizmoMode::Scale) {
-			guizmoModelName = "Guizmo-Scale";
-		}
-		else if (m_guizmoMode == GuizmoMode::None) {
-			guizmoModelName = "";
-		}
-		if (m_guizmoMode != GuizmoMode::None) {
-			if (m_globalInfo.rendererResourceManager.rendererModels.find(guizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
-				gl.glUseProgram(m_guizmoProgram);
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
-
-				gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
-				gl.glClear(GL_DEPTH_BUFFER_BIT);
-				gl.glEnable(GL_DEPTH_TEST);
-				gl.glDepthFunc(GL_LESS);
-				gl.glDepthMask(GL_TRUE);
-				gl.glEnable(GL_CULL_FACE);
-
-				nml::mat4 modelMatrix = nml::translate(guizmoPosition);
-				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
-
-				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
-				for (size_t i = 0; i < guizmoModel.primitives.size(); i++) {
-					const RendererPrimitive& guizmoPrimitive = guizmoModel.primitives[i];
-					nml::vec3 guizmoAxisColor = nml::vec3(0.0f, 0.0f, 0.0f);
-					if (i == 0) {
-						if (m_guizmoAxis == GuizmoAxis::X) {
-							guizmoAxisColor.x = 1.0f;
-						}
-						else {
-							guizmoAxisColor.x = 0.5f;
-						}
-					}
-					else if (i == 1) {
-						if (m_guizmoAxis == GuizmoAxis::Y) {
-							guizmoAxisColor.y = 1.0f;
-						}
-						else {
-							guizmoAxisColor.y = 0.5f;
-						}
-					}
-					else if (i == 2) {
-						if (m_guizmoAxis == GuizmoAxis::Z) {
-							guizmoAxisColor.z = 1.0f;
-						}
-						else {
-							guizmoAxisColor.z = 0.5f;
-						}
-					}
-					gl.glUniform3f(gl.glGetUniformLocation(m_guizmoProgram, "axisColor"), guizmoAxisColor.x, guizmoAxisColor.y, guizmoAxisColor.z);
-					gl.glBindBuffer(GL_ARRAY_BUFFER, guizmoPrimitive.mesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_guizmoProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, guizmoPrimitive.mesh.indexBuffer);
-
-					gl.glDrawElements(GL_TRIANGLES, guizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
-				}
-			}
-		}
-	}
-
-	gl.glDisable(GL_CULL_FACE);
-
 	// Outline
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		std::set<EntityID> entitiesOutline = m_globalInfo.otherSelectedEntityIDs;
@@ -1232,6 +1147,91 @@ void Renderer::paintGL() {
 			gl.glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
 	}
+
+	// Guizmo
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		if (!guizmoPositionCalculated) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(m_globalInfo.currentEntityID) != m_entityMoveTransforms.end();
+			guizmoPosition = hasEntityMoveTransform ? m_entityMoveTransforms[m_globalInfo.currentEntityID].position : m_globalInfo.entities[m_globalInfo.currentEntityID].transform.position;
+			for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				hasEntityMoveTransform = m_entityMoveTransforms.find(otherSelectedEntityID) != m_entityMoveTransforms.end();
+				guizmoPosition += hasEntityMoveTransform ? m_entityMoveTransforms[otherSelectedEntityID].position : m_globalInfo.entities[otherSelectedEntityID].transform.position;
+			}
+			guizmoPosition /= static_cast<float>(m_globalInfo.otherSelectedEntityIDs.size() + 1);
+
+			guizmoPositionCalculated = true;
+		}
+
+		std::string guizmoModelName = "";
+		if (m_guizmoMode == GuizmoMode::Translate) {
+			guizmoModelName = "Guizmo-Translate";
+		}
+		else if (m_guizmoMode == GuizmoMode::Rotate) {
+			guizmoModelName = "Guizmo-Rotate";
+		}
+		else if (m_guizmoMode == GuizmoMode::Scale) {
+			guizmoModelName = "Guizmo-Scale";
+		}
+		else if (m_guizmoMode == GuizmoMode::None) {
+			guizmoModelName = "";
+		}
+		if (m_guizmoMode != GuizmoMode::None) {
+			if (m_globalInfo.rendererResourceManager.rendererModels.find(guizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
+				gl.glUseProgram(m_guizmoProgram);
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+
+				gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+				gl.glClear(GL_DEPTH_BUFFER_BIT);
+				gl.glEnable(GL_DEPTH_TEST);
+				gl.glDepthFunc(GL_LESS);
+				gl.glDepthMask(GL_TRUE);
+				gl.glEnable(GL_CULL_FACE);
+
+				nml::mat4 modelMatrix = nml::translate(guizmoPosition);
+				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
+
+				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
+				for (size_t i = 0; i < guizmoModel.primitives.size(); i++) {
+					const RendererPrimitive& guizmoPrimitive = guizmoModel.primitives[i];
+					nml::vec3 guizmoAxisColor = nml::vec3(0.0f, 0.0f, 0.0f);
+					if (i == 0) {
+						if (m_guizmoAxis == GuizmoAxis::X) {
+							guizmoAxisColor.x = 1.0f;
+						}
+						else {
+							guizmoAxisColor.x = 0.5f;
+						}
+					}
+					else if (i == 1) {
+						if (m_guizmoAxis == GuizmoAxis::Y) {
+							guizmoAxisColor.y = 1.0f;
+						}
+						else {
+							guizmoAxisColor.y = 0.5f;
+						}
+					}
+					else if (i == 2) {
+						if (m_guizmoAxis == GuizmoAxis::Z) {
+							guizmoAxisColor.z = 1.0f;
+						}
+						else {
+							guizmoAxisColor.z = 0.5f;
+						}
+					}
+					gl.glUniform3f(gl.glGetUniformLocation(m_guizmoProgram, "axisColor"), guizmoAxisColor.x, guizmoAxisColor.y, guizmoAxisColor.z);
+					gl.glBindBuffer(GL_ARRAY_BUFFER, guizmoPrimitive.mesh.vertexBuffer);
+					GLint positionPos = gl.glGetAttribLocation(m_guizmoProgram, "position");
+					gl.glEnableVertexAttribArray(positionPos);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, guizmoPrimitive.mesh.indexBuffer);
+
+					gl.glDrawElements(GL_TRIANGLES, guizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
+			}
+		}
+	}
+
+	gl.glDisable(GL_CULL_FACE);
 }
 
 GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode) {
