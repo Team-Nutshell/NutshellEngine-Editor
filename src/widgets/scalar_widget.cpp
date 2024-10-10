@@ -28,7 +28,7 @@ void ScalarWidget::setValue(float value) {
 	value = std::clamp(value, m_min, m_max);
 	if (m_value != value) {
 		m_value = value;
-		valueLineEdit->setText(QString::number(m_value, 'f', 5));
+		valueLineEdit->setText(QString::number(m_value, 'g', 5));
 	}
 }
 
@@ -54,7 +54,7 @@ void ScalarWidget::onEditingFinished() {
 		emit valueChanged(m_value);
 	}
 	else {
-		valueLineEdit->setText(QString::number(m_value, 'f', 5));
+		valueLineEdit->setText(QString::number(m_value, 'g', 5));
 	}
 	{
 		const QSignalBlocker signalBlocker(valueLineEdit);

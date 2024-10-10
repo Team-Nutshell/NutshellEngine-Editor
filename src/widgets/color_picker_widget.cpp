@@ -25,7 +25,7 @@ void ColorPickerWidget::setColor(const nml::vec3& color) {
 	if (luminance < 0.5f) {
 		buttonTextColor = 1.0f;
 	}
-	colorButton->setText("(" + QString::number(m_color.x, 'f', 2) + ", " + QString::number(m_color.y, 'f', 2) + ", " + QString::number(m_color.z, 'f', 2) + ")");
+	colorButton->setText("(" + QString::number(m_color.x, 'g', 2) + ", " + QString::number(m_color.y, 'g', 2) + ", " + QString::number(m_color.z, 'g', 2) + ")");
 	QPalette colorButtonPalette = colorButton->palette();
 	colorButtonPalette.setColor(QPalette::ColorRole::Button, QColor::fromRgbF(m_color.x, m_color.y, m_color.z));
 	colorButtonPalette.setColor(QPalette::ColorRole::ButtonText, QColor::fromRgbF(buttonTextColor, buttonTextColor, buttonTextColor));
