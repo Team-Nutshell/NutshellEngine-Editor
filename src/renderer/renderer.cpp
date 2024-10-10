@@ -999,6 +999,12 @@ void Renderer::paintGL() {
 						m_globalInfo.currentEntityID = pickedEntityID;
 					}
 				}
+				else {
+					if (!m_multiSelectionKeyPressed) {
+						m_globalInfo.otherSelectedEntityIDs.clear();
+						m_globalInfo.currentEntityID = pickedEntityID;
+					}
+				}
 				emit m_globalInfo.signalEmitter.selectEntitySignal();
 			}
 			else {
