@@ -189,6 +189,8 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 						break;
 					}
 				}
+
+				SaveTitleChanger::change(m_globalInfo.mainWindow);
 			}
 		}
 		else if (event->key() == Qt::Key_Down) {
@@ -226,6 +228,8 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 						break;
 					}
 				}
+
+				SaveTitleChanger::change(m_globalInfo.mainWindow);
 			}
 		}
 		else if (event->key() == Qt::Key_Alt) {

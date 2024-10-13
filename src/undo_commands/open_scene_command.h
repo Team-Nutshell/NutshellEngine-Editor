@@ -4,7 +4,7 @@
 
 class OpenSceneCommand : public QUndoCommand {
 public:
-	OpenSceneCommand(GlobalInfo& globalInfo, const std::unordered_map<EntityID, Entity>& newEntities, const std::string& newScenePath);
+	OpenSceneCommand(GlobalInfo& globalInfo, const std::vector<Entity>& newEntities, const std::string& newScenePath);
 
 	void undo();
 	void redo();
@@ -12,8 +12,8 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::unordered_map<EntityID, Entity> m_previousEntities;
-	std::unordered_map<EntityID, Entity> m_newEntities;
+	std::vector<Entity> m_previousEntities;
+	std::vector<Entity> m_newEntities;
 
 	std::string m_previousScenePath;
 	std::string m_newScenePath;

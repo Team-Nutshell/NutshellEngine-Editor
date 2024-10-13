@@ -28,12 +28,12 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	sceneFile = std::fstream(sceneFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(sceneFile);
 
-	std::unordered_map<EntityID, Entity> newEntities;
+	std::vector<Entity> newEntities(j["entities"].size());
 	if (j.contains("entities")) {
 		for (size_t i = 0; i < j["entities"].size(); i++) {
 			Entity newEntity = Entity::fromJson(j["entities"][i]);
 			newEntity.entityID = globalInfo.globalEntityID++;
-			newEntities[newEntity.entityID] = newEntity;
+			newEntities[i] = newEntity;
 			if (newEntity.renderable) {
 				if (!newEntity.renderable->modelPath.empty()) {
 					std::string fullModelPath = newEntity.renderable->modelPath;
@@ -68,7 +68,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 	globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, newEntities, sceneFilePath));
 
 	for (const auto& newEntity : newEntities) {
-		ColliderMesh::update(globalInfo, newEntity.first);
+		ColliderMesh::update(globalInfo, newEntity.entityID);
 	}
 }
 

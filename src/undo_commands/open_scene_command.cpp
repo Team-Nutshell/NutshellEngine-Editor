@@ -2,8 +2,15 @@
 #include "../common/save_title_changer.h"
 #include "../widgets/main_window.h"
 
-OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::unordered_map<EntityID, Entity>& newEntities, const std::string& newScenePath) : m_globalInfo(globalInfo), m_previousEntities(globalInfo.entities), m_newEntities(newEntities), m_previousScenePath(globalInfo.currentScenePath), m_newScenePath(newScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
+OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::vector<Entity>& newEntities, const std::string& newScenePath) : m_globalInfo(globalInfo), m_newEntities(newEntities), m_previousScenePath(globalInfo.currentScenePath), m_newScenePath(newScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
 	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_open_scene", { m_newScenePath })));
+
+	m_previousEntities.resize(globalInfo.entities.size());
+	for (int i = 0; i < m_globalInfo.mainWindow->entityPanel->entityList->count(); i++) {
+		EntityListItem* entityListItem = static_cast<EntityListItem*>(globalInfo.mainWindow->entityPanel->entityList->item(i));
+
+		m_previousEntities[i] = globalInfo.entities[entityListItem->entityID];
+	}
 }
 
 void OpenSceneCommand::undo() {
@@ -14,9 +21,9 @@ void OpenSceneCommand::undo() {
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyedEntityID);
 	}
 
-	m_globalInfo.entities = m_previousEntities;
-	for (const auto& previousEntity : m_previousEntities) {
-		emit m_globalInfo.signalEmitter.createEntitySignal(previousEntity.first);
+	for (const Entity& previousEntity : m_previousEntities) {
+		m_globalInfo.entities[previousEntity.entityID] = previousEntity;
+		emit m_globalInfo.signalEmitter.createEntitySignal(previousEntity.entityID);
 	}
 	m_globalInfo.currentScenePath = m_previousScenePath;
 	m_globalInfo.mainWindow->updateTitle();
@@ -37,9 +44,9 @@ void OpenSceneCommand::redo() {
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyedEntityID);
 	}
 
-	m_globalInfo.entities = m_newEntities;
-	for (const auto& newEntity : m_newEntities) {
-		emit m_globalInfo.signalEmitter.createEntitySignal(newEntity.first);
+	for (const Entity& newEntity : m_newEntities) {
+		m_globalInfo.entities[newEntity.entityID] = newEntity;
+		emit m_globalInfo.signalEmitter.createEntitySignal(newEntity.entityID);
 	}
 	m_globalInfo.currentScenePath = m_newScenePath;
 	m_globalInfo.mainWindow->updateTitle();
