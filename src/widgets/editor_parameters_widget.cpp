@@ -150,31 +150,31 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	rendererVerticalLayout->addWidget(rendererCameraGridLayoutWidget);
 
 	cameraNearPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_near_plane"));
-	cameraNearPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraNearPlane, 'g', 3));
+	cameraNearPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraNearPlane, 'g', 7));
 	cameraNearPlaneWidget->layout()->setAlignment(cameraNearPlaneWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cameraNearPlaneWidget->layout()->setAlignment(cameraNearPlaneWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraNearPlaneWidget, 0, 0);
 
 	cameraFarPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_far_plane"));
-	cameraFarPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraFarPlane, 'g', 3));
+	cameraFarPlaneWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraFarPlane, 'g', 7));
 	cameraFarPlaneWidget->layout()->setAlignment(cameraFarPlaneWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cameraFarPlaneWidget->layout()->setAlignment(cameraFarPlaneWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraFarPlaneWidget, 1, 0);
 
 	cameraSpeedWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_speed"));
-	cameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSpeed, 'g', 3));
+	cameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSpeed, 'g', 7));
 	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraSpeedWidget, 0, 1);
 
 	cameraSensitivityWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_sensitivity"));
-	cameraSensitivityWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSensitivity, 'g', 3));
+	cameraSensitivityWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSensitivity, 'g', 7));
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraSensitivityWidget, 1, 1);
 
 	gridScaleWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_grid_scale"));
-	gridScaleWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridScale, 'g', 3));
+	gridScaleWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridScale, 'g', 7));
 	gridScaleWidget->layout()->setAlignment(gridScaleWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	gridScaleWidget->layout()->setAlignment(gridScaleWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(gridScaleWidget, 0, 2);

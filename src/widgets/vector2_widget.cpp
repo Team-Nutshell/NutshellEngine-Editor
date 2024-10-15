@@ -35,8 +35,8 @@ Vector2Widget::Vector2Widget(GlobalInfo& globalInfo, const std::string& name) : 
 
 void Vector2Widget::setValue(const nml::vec2& value) {
 	m_value = value;
-	xLineEdit->setText(QString::number(m_value.x, 'g', 5));
-	yLineEdit->setText(QString::number(m_value.y, 'g', 5));
+	xLineEdit->setText(QString::number(m_value.x, 'g', 7));
+	yLineEdit->setText(QString::number(m_value.y, 'g', 7));
 }
 
 const nml::vec2& Vector2Widget::getValue() {

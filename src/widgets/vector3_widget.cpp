@@ -43,9 +43,9 @@ Vector3Widget::Vector3Widget(GlobalInfo& globalInfo, const std::string& name) : 
 
 void Vector3Widget::setValue(const nml::vec3& value) {
 	m_value = value;
-	xLineEdit->setText(QString::number(m_value.x, 'g', 5));
-	yLineEdit->setText(QString::number(m_value.y, 'g', 5));
-	zLineEdit->setText(QString::number(m_value.z, 'g', 5));
+	xLineEdit->setText(QString::number(m_value.x, 'g', 7));
+	yLineEdit->setText(QString::number(m_value.y, 'g', 7));
+	zLineEdit->setText(QString::number(m_value.z, 'g', 7));
 }
 
 const nml::vec3& Vector3Widget::getValue() {

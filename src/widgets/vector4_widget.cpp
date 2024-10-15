@@ -51,10 +51,10 @@ Vector4Widget::Vector4Widget(GlobalInfo& globalInfo, const std::string& name) : 
 
 void Vector4Widget::setValue(const nml::vec4& value) {
 	m_value = value;
-	xLineEdit->setText(QString::number(m_value.x, 'g', 5));
-	yLineEdit->setText(QString::number(m_value.y, 'g', 5));
-	zLineEdit->setText(QString::number(m_value.z, 'g', 5));
-	wLineEdit->setText(QString::number(m_value.w, 'g', 5));
+	xLineEdit->setText(QString::number(m_value.x, 'g', 7));
+	yLineEdit->setText(QString::number(m_value.y, 'g', 7));
+	zLineEdit->setText(QString::number(m_value.z, 'g', 7));
+	wLineEdit->setText(QString::number(m_value.w, 'g', 7));
 }
 
 const nml::vec4& Vector4Widget::getValue() {

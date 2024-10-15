@@ -51,10 +51,10 @@ QuaternionWidget::QuaternionWidget(GlobalInfo& globalInfo, const std::string& na
 
 void QuaternionWidget::setValue(const nml::quat& value) {
 	m_value = value;
-	aLineEdit->setText(QString::number(m_value.a, 'g', 5));
-	bLineEdit->setText(QString::number(m_value.b, 'g', 5));
-	cLineEdit->setText(QString::number(m_value.c, 'g', 5));
-	dLineEdit->setText(QString::number(m_value.d, 'g', 5));
+	aLineEdit->setText(QString::number(m_value.a, 'g', 7));
+	bLineEdit->setText(QString::number(m_value.b, 'g', 7));
+	cLineEdit->setText(QString::number(m_value.c, 'g', 7));
+	dLineEdit->setText(QString::number(m_value.d, 'g', 7));
 }
 
 const nml::quat& QuaternionWidget::getValue() {
