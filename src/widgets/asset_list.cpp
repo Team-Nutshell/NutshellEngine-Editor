@@ -145,6 +145,7 @@ void AssetList::onFileRenamed(const std::string& oldFilename, const std::string&
 		m_globalInfo.currentScenePath = newFilename;
 		m_globalInfo.mainWindow->updateTitle();
 	}
+	emit m_globalInfo.signalEmitter.selectAssetSignal(newFilename);
 }
 
 void AssetList::onCloseSceneConfirmed() {

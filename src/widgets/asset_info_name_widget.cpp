@@ -4,7 +4,6 @@
 AssetInfoNameWidget::AssetInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QLineEdit::editingFinished, this, &AssetInfoNameWidget::onEditingFinished);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectAssetSignal, this, &AssetInfoNameWidget::onAssetSelected);
-	connect(&globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetInfoNameWidget::onFileRenamed);
 }
 
 void AssetInfoNameWidget::onAssetSelected(const std::string& path) {
@@ -51,13 +50,5 @@ void AssetInfoNameWidget::onEditingFinished() {
 		}
 
 		m_previousName = newName;
-	}
-}
-
-void AssetInfoNameWidget::onFileRenamed(const std::string& oldFilename, const std::string& newFilename) {
-	std::string currentName = text().toStdString();
-	if (oldFilename == currentName) {
-		setText(QString::fromStdString(newFilename));
-		m_previousName = newFilename;
 	}
 }
