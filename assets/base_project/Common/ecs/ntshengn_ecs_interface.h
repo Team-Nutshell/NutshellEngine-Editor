@@ -39,7 +39,7 @@ namespace NtshEngn {
 		}
 
 		Entity createEntity() {
-			NTSHENGN_ASSERT(m_numberOfEntities < NTSHENGN_MAX_ENTITIES);
+			NTSHENGN_ASSERT(m_numberOfEntities < NTSHENGN_MAX_ENTITIES, "Too many Entities.");
 
 			Entity id = m_availableEntities.front();
 			m_availableEntities.pop_front();
@@ -51,7 +51,7 @@ namespace NtshEngn {
 		}
 
 		Entity createEntity(const std::string& name) {
-			NTSHENGN_ASSERT(!m_entityNames.exist(name));
+			NTSHENGN_ASSERT(!m_entityNames.exist(name), "An Entity named \"" + name + "\" already exists.");
 
 			Entity id = createEntity();
 			m_entityNames.insert_or_assign(id, name);
@@ -60,7 +60,7 @@ namespace NtshEngn {
 		}
 
 		void destroyEntity(Entity entity) {
-			NTSHENGN_ASSERT(m_existingEntities.find(entity) != m_existingEntities.end());
+			NTSHENGN_ASSERT(m_existingEntities.find(entity) != m_existingEntities.end(), "Entity " + std::to_string(entity) + " does not exist.");
 
 			m_componentMasks[entity].reset();
 			m_availableEntities.push_front(entity);
@@ -78,13 +78,13 @@ namespace NtshEngn {
 		}
 
 		void setComponents(Entity entity, ComponentMask componentMask) {
-			NTSHENGN_ASSERT(entity < NTSHENGN_MAX_ENTITIES);
+			NTSHENGN_ASSERT(entity < NTSHENGN_MAX_ENTITIES, "Entity " + std::to_string(entity) + " does not exist.");
 
 			m_componentMasks[entity] = componentMask;
 		}
 
 		ComponentMask getComponents(Entity entity) {
-			NTSHENGN_ASSERT(entity < NTSHENGN_MAX_ENTITIES);
+			NTSHENGN_ASSERT(entity < NTSHENGN_MAX_ENTITIES, "Entity " + std::to_string(entity) + " does not exist.");
 
 			return m_componentMasks[entity];
 		}
@@ -98,7 +98,7 @@ namespace NtshEngn {
 		}
 
 		void setEntityName(Entity entity, const std::string& name) {
-			NTSHENGN_ASSERT(!m_entityNames.exist(name));
+			NTSHENGN_ASSERT(!m_entityNames.exist(name), "An Entity named \"" + name + "\" already exists.");
 
 			m_entityNames.insert_or_assign(entity, name);
 		}
@@ -163,7 +163,7 @@ namespace NtshEngn {
 	class ComponentArray : public ComponentArrayInterface {
 	public:
 		void insertData(Entity entity, T component) {
-			NTSHENGN_ASSERT(m_entityToIndex.find(entity) == m_entityToIndex.end());
+			NTSHENGN_ASSERT(m_entityToIndex.find(entity) == m_entityToIndex.end(), "Entity " + std::to_string(entity) + " already has this component.");
 
 			m_entityToIndex[entity] = m_validSize;
 			m_indexToEntity[m_validSize] = entity;
@@ -172,7 +172,7 @@ namespace NtshEngn {
 		}
 
 		void removeData(Entity entity) {
-			NTSHENGN_ASSERT(m_entityToIndex.find(entity) != m_entityToIndex.end());
+			NTSHENGN_ASSERT(m_entityToIndex.find(entity) != m_entityToIndex.end(), "Entity " + std::to_string(entity) + " does not have this component.");
 
 			size_t tmp = m_entityToIndex[entity];
 			m_components[tmp] = m_components[m_validSize - 1];
@@ -189,7 +189,7 @@ namespace NtshEngn {
 		}
 
 		T& getData(Entity entity) {
-			NTSHENGN_ASSERT(m_entityToIndex.find(entity) != m_entityToIndex.end());
+			NTSHENGN_ASSERT(m_entityToIndex.find(entity) != m_entityToIndex.end(), "Entity " + std::to_string(entity) + " does not have this component.");
 
 			return m_components[m_entityToIndex[entity]];
 		}
@@ -213,7 +213,7 @@ namespace NtshEngn {
 		void registerComponent() {
 			std::string typeName = std::string(typeid(T).name());
 
-			NTSHENGN_ASSERT(m_componentTypes.find(typeName) == m_componentTypes.end());
+			NTSHENGN_ASSERT(m_componentTypes.find(typeName) == m_componentTypes.end(), "Component is already registered.");
 
 			m_componentTypes.insert({ typeName, m_nextComponent });
 			m_componentArrays.insert({ typeName, std::make_shared<ComponentArray<T>>() });
@@ -224,7 +224,7 @@ namespace NtshEngn {
 		Component getComponentID() {
 			std::string typeName = std::string(typeid(T).name());
 
-			NTSHENGN_ASSERT(m_componentTypes.find(typeName) != m_componentTypes.end());
+			NTSHENGN_ASSERT(m_componentTypes.find(typeName) != m_componentTypes.end(), "Component is not registered.");
 
 			return m_componentTypes[typeName];
 		}
@@ -265,7 +265,7 @@ namespace NtshEngn {
 		std::shared_ptr<ComponentArray<T>> getComponentArray() {
 			std::string typeName = std::string(typeid(T).name());
 
-			NTSHENGN_ASSERT(m_componentTypes.find(typeName) != m_componentTypes.end());
+			NTSHENGN_ASSERT(m_componentTypes.find(typeName) != m_componentTypes.end(), "Component does not exist.");
 
 			return std::static_pointer_cast<ComponentArray<T>>(m_componentArrays[typeName]);
 		}
@@ -286,7 +286,7 @@ namespace NtshEngn {
 		void registerSystem(System* system) {
 			std::string typeName = std::string(typeid(T).name());
 
-			NTSHENGN_ASSERT(m_systems.find(typeName) == m_systems.end());
+			NTSHENGN_ASSERT(m_systems.find(typeName) == m_systems.end(), "System is already registered.");
 
 			m_systems.insert({ typeName, system });
 		}
@@ -295,7 +295,7 @@ namespace NtshEngn {
 		void setComponents(ComponentMask componentMask) {
 			std::string typeName = std::string(typeid(T).name());
 
-			NTSHENGN_ASSERT(m_systems.find(typeName) != m_systems.end());
+			NTSHENGN_ASSERT(m_systems.find(typeName) != m_systems.end(), "System does not exist.");
 
 			m_componentMasks.insert({ typeName, componentMask });
 		}
