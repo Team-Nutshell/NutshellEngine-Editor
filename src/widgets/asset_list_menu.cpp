@@ -113,6 +113,8 @@ void AssetListMenu::newModel() {
 	newModelFile << R"({
 })";
 	newModelFile.close();
+
+	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newModelName + modelExtension);
 }
 
 void AssetListMenu::newImageSampler() {
@@ -136,6 +138,8 @@ void AssetListMenu::newImageSampler() {
 	"anisotropyLevel": 0
 })";
 	newImageSamplerFile.close();
+
+	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newImageSamplerName + imageSamplerExtension);
 }
 
 void AssetListMenu::newMaterial() {
@@ -178,6 +182,8 @@ void AssetListMenu::newMaterial() {
 	"indexOfRefraction": 0.0
 })";
 	newMaterialFile.close();
+
+	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newMaterialName + materialExtension);
 }
 
 void AssetListMenu::newScene() {
@@ -193,4 +199,6 @@ void AssetListMenu::newScene() {
 	newSceneFile << R"({
 })";
 	newSceneFile.close();
+
+	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newSceneName + sceneExtension);
 }
