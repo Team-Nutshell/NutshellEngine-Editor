@@ -117,6 +117,7 @@ set(WIDGET_SOURCES
 	src/widgets/close_scene_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/collidable_component_widget.cpp
+	src/widgets/combo_box_no_scroll_widget.cpp
 	src/widgets/combo_box_widget.cpp
 	src/widgets/component_list.cpp
 	src/widgets/component_scroll_area.cpp
@@ -190,6 +191,7 @@ set(WIDGET_HEADERS
 	src/widgets/close_scene_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/collidable_component_widget.h
+	src/widgets/combo_box_no_scroll_widget.h
 	src/widgets/combo_box_widget.h
 	src/widgets/component_list.h
 	src/widgets/component_scroll_area.h

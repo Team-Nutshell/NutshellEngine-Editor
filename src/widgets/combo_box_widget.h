@@ -1,8 +1,8 @@
 #pragma once
 #include "../common/global_info.h"
+#include "combo_box_no_scroll_widget.h"
 #include <QWidget>
 #include <QLabel>
-#include <QComboBox>
 #include <string>
 #include <vector>
 
@@ -25,5 +25,5 @@ private:
 
 public:
 	QLabel* nameLabel;
-	QComboBox* comboBox;
+	ComboBoxNoScrollWidget* comboBox;
 };

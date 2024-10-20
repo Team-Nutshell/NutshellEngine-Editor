@@ -6,7 +6,7 @@ ComboBoxWidget::ComboBoxWidget(GlobalInfo& globalInfo, const std::string& name, 
 	layout()->setContentsMargins(0, 0, 0, 0);
 	nameLabel = new QLabel(QString::fromStdString(name));
 	layout()->addWidget(nameLabel);
-	comboBox = new QComboBox();
+	comboBox = new ComboBoxNoScrollWidget();
 	for (const std::string& element : elements) {
 		comboBox->addItem(QString::fromStdString(element));
 	}
