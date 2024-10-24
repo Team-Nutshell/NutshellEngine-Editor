@@ -10,7 +10,7 @@ BooleanWidget::BooleanWidget(GlobalInfo& globalInfo, const std::string& name) : 
 	layout()->addWidget(checkBox);
 	layout()->setAlignment(checkBox, Qt::AlignmentFlag::AlignRight);
 	
-	connect(checkBox, &QCheckBox::stateChanged, this, &BooleanWidget::onStateChanged);
+	connect(checkBox, &QCheckBox::checkStateChanged, this, &BooleanWidget::onStateChanged);
 }
 
 void BooleanWidget::setValue(bool value) {
