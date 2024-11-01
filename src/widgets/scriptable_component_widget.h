@@ -17,7 +17,7 @@ public:
 
 private:
 	void updateWidgets(const Scriptable& scriptable);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Scriptable>& scriptables);
 
 	std::vector<std::string> getScriptEntries();
 

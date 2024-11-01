@@ -100,8 +100,13 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	updateFromRenderableWidget();
 }
 
-void CollidableComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Collidable", { component }));
+void CollidableComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Collidable>& collidables) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < collidables.size(); i++) {
+		componentPointers.push_back(&collidables[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Collidable", componentPointers));
 }
 
 void CollidableComponentWidget::updateFromRenderableWidget() {
@@ -194,74 +199,175 @@ void CollidableComponentWidget::onEntityCollidableChanged(EntityID entityID, con
 }
 
 void CollidableComponentWidget::onElementChanged(const std::string& element) {
-	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == typeWidget) {
-		newCollidable.type = colliderTypeToType(element);
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Collidable> newCollidables;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].collidable) {
+			Collidable newCollidable = m_globalInfo.entities[selectedEntityID].collidable.value();
+
+			if (senderWidget == typeWidget) {
+				newCollidable.type = colliderTypeToType(element);
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newCollidables.push_back(newCollidable);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
+
+	updateComponents(entityIDs, newCollidables);
 }
 
 void CollidableComponentWidget::onVec3Changed(const nml::vec3& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Collidable> newCollidables;
+
 	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == centerWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCollidable.center[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCollidable.center = value;
 	}
 	else if (senderWidget == halfExtentWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCollidable.halfExtent[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCollidable.halfExtent = value;
 	}
 	else if (senderWidget == rotationWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCollidable.rotation[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCollidable.rotation = value;
 	}
 	else if (senderWidget == baseWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCollidable.base[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCollidable.base = value;
 	}
 	else if (senderWidget == tipWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCollidable.tip[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCollidable.tip = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newCollidables.push_back(newCollidable);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].collidable) {
+			newCollidable = m_globalInfo.entities[otherSelectedEntityID].collidable.value();
+
+			if (senderWidget == centerWidget) {
+				newCollidable.center[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == halfExtentWidget) {
+				newCollidable.halfExtent[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == rotationWidget) {
+				newCollidable.rotation[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == baseWidget) {
+				newCollidable.base[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == tipWidget) {
+				newCollidable.tip[changedIndex] = value[changedIndex];
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newCollidables.push_back(newCollidable);
+		}
+	}
+
+	updateComponents(entityIDs, newCollidables);
 }
 
 void CollidableComponentWidget::onScalarChanged(float value) {
-	Collidable newCollidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == radiusWidget) {
-		newCollidable.radius = value;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Collidable> newCollidables;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].collidable) {
+			Collidable newCollidable = m_globalInfo.entities[selectedEntityID].collidable.value();
+
+			if (senderWidget == radiusWidget) {
+				newCollidable.radius = value;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newCollidables.push_back(newCollidable);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newCollidable);
+
+	updateComponents(entityIDs, newCollidables);
 }
 
 void CollidableComponentWidget::onFromRenderableButtonClicked() {
-	if (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable && ((!m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
-		RendererResourceManager::Mesh& mesh = m_globalInfo.rendererResourceManager.models[m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath].primitives[m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->primitiveIndex].mesh;
-		if (!mesh.collidersCalculated) {
-			m_globalInfo.rendererResourceManager.loadMeshColliders(mesh);
-		}
+	std::vector<EntityID> entityIDs;
+	std::vector<Collidable> newCollidables;
 
-		const Collidable& collidable = m_globalInfo.entities[m_globalInfo.currentEntityID].collidable.value();
-		Collidable newCollidable = collidable;
-		if (collidable.type == "Box") {
-			newCollidable.center = mesh.obb.center;
-			newCollidable.halfExtent = mesh.obb.halfExtent;
-			newCollidable.rotation = mesh.obb.rotation;
-		}
-		else if (collidable.type == "Sphere") {
-			newCollidable.center = mesh.sphere.center;
-			newCollidable.radius = mesh.sphere.radius;
-		}
-		else if (collidable.type == "Capsule") {
-			newCollidable.base = mesh.capsule.base;
-			newCollidable.tip = mesh.capsule.tip;
-			newCollidable.radius = mesh.capsule.radius;
-		}
-		updateComponent(m_globalInfo.currentEntityID, &newCollidable);
-		updateWidgets(newCollidable);
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].renderable && ((!m_globalInfo.entities[selectedEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[selectedEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
+			RendererResourceManager::Mesh& mesh = m_globalInfo.rendererResourceManager.models[m_globalInfo.entities[selectedEntityID].renderable->modelPath].primitives[m_globalInfo.entities[selectedEntityID].renderable->primitiveIndex].mesh;
+			if (!mesh.collidersCalculated) {
+				m_globalInfo.rendererResourceManager.loadMeshColliders(mesh);
+			}
 
-		ColliderMesh::update(m_globalInfo, m_globalInfo.currentEntityID);
+			Collidable newCollidable = m_globalInfo.entities[selectedEntityID].collidable.value();
+			if (newCollidable.type == "Box") {
+				newCollidable.center = mesh.obb.center;
+				newCollidable.halfExtent = mesh.obb.halfExtent;
+				newCollidable.rotation = mesh.obb.rotation;
+			}
+			else if (newCollidable.type == "Sphere") {
+				newCollidable.center = mesh.sphere.center;
+				newCollidable.radius = mesh.sphere.radius;
+			}
+			else if (newCollidable.type == "Capsule") {
+				newCollidable.base = mesh.capsule.base;
+				newCollidable.tip = mesh.capsule.tip;
+				newCollidable.radius = mesh.capsule.radius;
+			}
+			entityIDs.push_back(selectedEntityID);
+			newCollidables.push_back(newCollidable);
+
+			ColliderMesh::update(m_globalInfo, selectedEntityID);
+
+			if (m_globalInfo.currentEntityID) {
+				updateWidgets(newCollidable);
+			}
+		}
 	}
 }
 

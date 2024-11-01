@@ -2,10 +2,11 @@
 #include "../common/global_info.h"
 #include <QUndoCommand>
 #include <string>
+#include <vector>
 
 class AddEntityComponentCommand : public QUndoCommand {
 public:
-	AddEntityComponentCommand(GlobalInfo& globalInfo, EntityID entityID, const std::string& componentName);
+	AddEntityComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName);
 
 	void undo();
 	void redo();
@@ -13,6 +14,6 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
-	EntityID m_entityID;
+	std::vector<EntityID> m_entityIDs;
 	std::string m_componentName;
 };

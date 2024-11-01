@@ -11,7 +11,7 @@ public:
 
 private:
 	void updateWidgets(const Rigidbody& rigidbody);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Rigidbody>& rigidbodies);
 
 private slots:
 	void onEntitySelected();

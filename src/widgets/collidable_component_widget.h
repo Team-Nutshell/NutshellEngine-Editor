@@ -13,7 +13,7 @@ public:
 
 private:
 	void updateWidgets(const Collidable& collidable);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Collidable>& collidables);
 
 	void updateFromRenderableWidget();
 

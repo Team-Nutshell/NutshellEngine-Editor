@@ -23,8 +23,8 @@ private:
 	std::vector<Light> m_newLights;
 	std::vector<Renderable> m_previousRenderables;
 	std::vector<Renderable> m_newRenderables;
-	std::vector<Rigidbody> m_previousRigidbodys;
-	std::vector<Rigidbody> m_newRigidbodys;
+	std::vector<Rigidbody> m_previousRigidbodies;
+	std::vector<Rigidbody> m_newRigidbodies;
 	std::vector<Collidable> m_previousCollidables;
 	std::vector<Collidable> m_newCollidables;
 	std::vector<SoundListener> m_previousSoundListeners;

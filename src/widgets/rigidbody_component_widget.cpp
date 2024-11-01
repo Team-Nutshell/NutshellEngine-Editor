@@ -55,8 +55,13 @@ void RigidbodyComponentWidget::updateWidgets(const Rigidbody& rigidbody) {
 	dynamicFrictionWidget->setValue(rigidbody.dynamicFriction);
 }
 
-void RigidbodyComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Rigidbody", { component }));
+void RigidbodyComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Rigidbody>& rigidbodies) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < rigidbodies.size(); i++) {
+		componentPointers.push_back(&rigidbodies[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Rigidbody", componentPointers));
 }
 
 void RigidbodyComponentWidget::onEntitySelected() {
@@ -99,39 +104,67 @@ void RigidbodyComponentWidget::onEntityRigidbodyChanged(EntityID entityID, const
 }
 
 void RigidbodyComponentWidget::onBooleanChanged(bool boolean) {
-	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == isStaticWidget) {
-		newRigidbody.isStatic = boolean;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Rigidbody> newRigidbodies;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].rigidbody) {
+			Rigidbody newRigidbody = m_globalInfo.entities[selectedEntityID].rigidbody.value();
+
+			if (senderWidget == isStaticWidget) {
+				newRigidbody.isStatic = boolean;
+			}
+			else if (senderWidget == isAffectedByConstantsWidget) {
+				newRigidbody.isAffectedByConstants = boolean;
+			}
+			else if (senderWidget == lockRotationWidget) {
+				newRigidbody.lockRotation = boolean;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newRigidbodies.push_back(newRigidbody);
+		}
 	}
-	else if (senderWidget == isAffectedByConstantsWidget) {
-		newRigidbody.isAffectedByConstants = boolean;
-	}
-	else if (senderWidget == lockRotationWidget) {
-		newRigidbody.lockRotation = boolean;
-	}
-	updateComponent(m_globalInfo.currentEntityID, &newRigidbody);
+
+	updateComponents(entityIDs, newRigidbodies);
 }
 
 void RigidbodyComponentWidget::onScalarChanged(float value) {
-	Rigidbody newRigidbody = m_globalInfo.entities[m_globalInfo.currentEntityID].rigidbody.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == massWidget) {
-		newRigidbody.mass = value;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Rigidbody> newRigidbodies;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].rigidbody) {
+			Rigidbody newRigidbody = m_globalInfo.entities[selectedEntityID].rigidbody.value();
+
+			if (senderWidget == massWidget) {
+				newRigidbody.mass = value;
+			}
+			else if (senderWidget == inertiaWidget) {
+				newRigidbody.inertia = value;
+			}
+			else if (senderWidget == restitutionWidget) {
+				newRigidbody.restitution = value;
+			}
+			else if (senderWidget == staticFrictionWidget) {
+				newRigidbody.staticFriction = value;
+			}
+			else if (senderWidget == dynamicFrictionWidget) {
+				newRigidbody.dynamicFriction = value;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newRigidbodies.push_back(newRigidbody);
+		}
 	}
-	else if (senderWidget == inertiaWidget) {
-		newRigidbody.inertia = value;
-	}
-	else if (senderWidget == restitutionWidget) {
-		newRigidbody.restitution = value;
-	}
-	else if (senderWidget == staticFrictionWidget) {
-		newRigidbody.staticFriction = value;
-	}
-	else if (senderWidget == dynamicFrictionWidget) {
-		newRigidbody.dynamicFriction = value;
-	}
-	updateComponent(m_globalInfo.currentEntityID, &newRigidbody);
+
+	updateComponents(entityIDs, newRigidbodies);
 }

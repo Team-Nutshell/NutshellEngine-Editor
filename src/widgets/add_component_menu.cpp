@@ -12,29 +12,99 @@ AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_g
 }
 
 void AddComponentMenu::addCameraComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Camera"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].camera) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Camera"));
 }
 
 void AddComponentMenu::addLightComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Light"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].light) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Light"));
 }
 
 void AddComponentMenu::addRenderableComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Renderable"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].renderable) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Renderable"));
 }
 
 void AddComponentMenu::addRigidbodyComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Rigidbody"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].rigidbody) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Rigidbody"));
 }
 
 void AddComponentMenu::addCollidableComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Collidable"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].collidable) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Collidable"));
 }
 
 void AddComponentMenu::addSoundListenerComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "SoundListener"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].soundListener) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "SoundListener"));
 }
 
 void AddComponentMenu::addScriptableComponent() {
-	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, m_globalInfo.currentEntityID, "Scriptable"));
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+	std::vector<EntityID> entityIDs;
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (!m_globalInfo.entities[selectedEntityID].scriptable) {
+			entityIDs.push_back(selectedEntityID);
+		}
+	}
+
+	m_globalInfo.undoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Scriptable"));
 }

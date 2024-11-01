@@ -85,8 +85,13 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	}
 }
 
-void RenderableComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Renderable", { component }));
+void RenderableComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Renderable>& renderables) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < renderables.size(); i++) {
+		componentPointers.push_back(&renderables[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Renderable", componentPointers));
 }
 
 void RenderableComponentWidget::onEntitySelected() {
@@ -133,27 +138,40 @@ void RenderableComponentWidget::onEntityRenderableChanged(EntityID entityID, con
 }
 
 void RenderableComponentWidget::onPathChanged(const std::string& path) {
-	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == modelPathWidget) {
-		std::string fullModelPath = path;
-		newRenderable.modelPath = AssetHelper::absoluteToRelative(fullModelPath, m_globalInfo.projectDirectory);
-		if (!fullModelPath.empty()) {
-			m_globalInfo.rendererResourceManager.loadModel(fullModelPath, newRenderable.modelPath);
-			if (newRenderable.modelPath != m_globalInfo.entities[m_globalInfo.currentEntityID].renderable->modelPath) {
-				newRenderable.primitiveIndex = 0;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Renderable> newRenderables;
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].renderable) {
+			Renderable newRenderable = m_globalInfo.entities[selectedEntityID].renderable.value();
+
+			if (senderWidget == modelPathWidget) {
+				std::string fullModelPath = path;
+				newRenderable.modelPath = AssetHelper::absoluteToRelative(fullModelPath, m_globalInfo.projectDirectory);
+				if (!fullModelPath.empty()) {
+					m_globalInfo.rendererResourceManager.loadModel(fullModelPath, newRenderable.modelPath);
+					if (newRenderable.modelPath != m_globalInfo.entities[selectedEntityID].renderable->modelPath) {
+						newRenderable.primitiveIndex = 0;
+					}
+				}
 			}
+			else if (senderWidget == materialPathWidget) {
+				std::string fullMaterialPath = path;
+				newRenderable.materialPath = AssetHelper::absoluteToRelative(fullMaterialPath, m_globalInfo.projectDirectory);
+				if (!fullMaterialPath.empty()) {
+					m_globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newRenderable.materialPath);
+				}
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newRenderables.push_back(newRenderable);
 		}
 	}
-	else if (senderWidget == materialPathWidget) {
-		std::string fullMaterialPath = path;
-		newRenderable.materialPath = AssetHelper::absoluteToRelative(fullMaterialPath, m_globalInfo.projectDirectory);
-		if (!fullMaterialPath.empty()) {
-			m_globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newRenderable.materialPath);
-		}
-	}
-	updateComponent(m_globalInfo.currentEntityID, &newRenderable);
+
+	updateComponents(entityIDs, newRenderables);
 }
 
 void RenderableComponentWidget::onElementChanged(const std::string& element) {
@@ -168,10 +186,25 @@ void RenderableComponentWidget::onElementChanged(const std::string& element) {
 		}
 	}
 
-	Renderable newRenderable = m_globalInfo.entities[m_globalInfo.currentEntityID].renderable.value();
 	QObject* senderWidget = sender();
-	if (senderWidget == primitiveIndexWidget) {
-		newRenderable.primitiveIndex = primitiveIndex;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Renderable> newRenderables;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].renderable) {
+			Renderable newRenderable = m_globalInfo.entities[selectedEntityID].renderable.value();
+
+			if (senderWidget == primitiveIndexWidget) {
+				newRenderable.primitiveIndex = primitiveIndex;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newRenderables.push_back(newRenderable);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newRenderable);
+
+	updateComponents(entityIDs, newRenderables);
 }

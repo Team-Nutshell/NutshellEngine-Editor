@@ -43,8 +43,13 @@ void CameraComponentWidget::updateWidgets(const Camera& camera) {
 	farPlaneWidget->setValue(camera.farPlane);
 }
 
-void CameraComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Camera", { component }));
+void CameraComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Camera>& cameras) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < cameras.size(); i++) {
+		componentPointers.push_back(&cameras[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Camera", componentPointers));
 }
 
 void CameraComponentWidget::onEntitySelected() {
@@ -87,22 +92,62 @@ void CameraComponentWidget::onEntityCameraChanged(EntityID entityID, const Camer
 }
 
 void CameraComponentWidget::onVec3Changed(const nml::vec3& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Camera> newCameras;
+
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == forwardWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCamera.forward[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCamera.forward = value;
 	}
 	else if (senderWidget == upWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newCamera.up[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newCamera.up = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newCamera);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newCameras.push_back(newCamera);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].camera) {
+			newCamera = m_globalInfo.entities[otherSelectedEntityID].camera.value();
+
+			if (senderWidget == forwardWidget) {
+				newCamera.forward[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == upWidget) {
+				newCamera.up[changedIndex] = value[changedIndex];
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newCameras.push_back(newCamera);
+		}
+	}
+
+	updateComponents(entityIDs, newCameras);
 }
 
 void CameraComponentWidget::onScalarChanged(float value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Camera> newCameras;
+
 	Camera newCamera = m_globalInfo.entities[m_globalInfo.currentEntityID].camera.value();
 
-	QObject* senderWidget = sender();
 	if (senderWidget == fovWidget) {
 		newCamera.fov = value;
 	}
@@ -112,5 +157,27 @@ void CameraComponentWidget::onScalarChanged(float value) {
 	else if (senderWidget == farPlaneWidget) {
 		newCamera.farPlane = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newCamera);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newCameras.push_back(newCamera);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].camera) {
+			newCamera = m_globalInfo.entities[otherSelectedEntityID].camera.value();
+
+			if (senderWidget == fovWidget) {
+				newCamera.fov = value;
+			}
+			else if (senderWidget == nearPlaneWidget) {
+				newCamera.nearPlane = value;
+			}
+			else if (senderWidget == farPlaneWidget) {
+				newCamera.farPlane = value;
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newCameras.push_back(newCamera);
+		}
+	}
+
+	updateComponents(entityIDs, newCameras);
 }

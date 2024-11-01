@@ -11,7 +11,7 @@ public:
 
 private:
 	void updateWidgets(const Camera& camera);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Camera>& cameras);
 
 private slots:
 	void onEntitySelected();

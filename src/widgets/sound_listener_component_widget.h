@@ -10,7 +10,7 @@ public:
 
 private:
 	void updateWidgets(const SoundListener& soundListener);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<SoundListener>& soundListeners);
 
 private slots:
 	void onEntitySelected();

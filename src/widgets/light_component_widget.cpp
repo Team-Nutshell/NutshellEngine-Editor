@@ -58,8 +58,13 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	}
 }
 
-void LightComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Light", { component }));
+void LightComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Light>& lights) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < lights.size(); i++) {
+		componentPointers.push_back(&lights[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Light", componentPointers));
 }
 
 std::string LightComponentWidget::lightTypeToType(const std::string& lightType) {
@@ -138,51 +143,147 @@ void LightComponentWidget::onEntityLightChanged(EntityID entityID, const Light& 
 }
 
 void LightComponentWidget::onElementChanged(const std::string& element) {
-	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == typeWidget) {
-		newLight.type = lightTypeToType(element);
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Light> newLights;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].light) {
+			Light newLight = m_globalInfo.entities[selectedEntityID].light.value();
+
+			if (senderWidget == typeWidget) {
+				newLight.type = lightTypeToType(element);
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newLights.push_back(newLight);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newLight);
+
+	updateComponents(entityIDs, newLights);
 }
 
 void LightComponentWidget::onColorChanged(const nml::vec3& color) {
-	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == colorWidget) {
-		newLight.color = color;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Light> newLights;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].light) {
+			Light newLight = m_globalInfo.entities[selectedEntityID].light.value();
+
+			if (senderWidget == colorWidget) {
+				newLight.color = color;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newLights.push_back(newLight);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newLight);
+
+	updateComponents(entityIDs, newLights);
 }
 
 void LightComponentWidget::onScalarChanged(float value) {
-	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
-
 	QObject* senderWidget = sender();
-	if (senderWidget == intensityWidget) {
-		newLight.intensity = value;
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Light> newLights;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].light) {
+			Light newLight = m_globalInfo.entities[selectedEntityID].light.value();
+
+			if (senderWidget == intensityWidget) {
+				newLight.intensity = value;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newLights.push_back(newLight);
+		}
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newLight);
+
+	updateComponents(entityIDs, newLights);
 }
 
 void LightComponentWidget::onVec3Changed(const nml::vec3& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Light> newLights;
+
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == directionWidget) {
+		for (uint8_t i = 0; i < 2; i++) {
+			if (newLight.direction[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newLight.direction = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newLight);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newLights.push_back(newLight);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].light) {
+			newLight = m_globalInfo.entities[otherSelectedEntityID].light.value();
+
+			if (senderWidget == directionWidget) {
+				newLight.direction[changedIndex] = value[changedIndex];
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newLights.push_back(newLight);
+		}
+	}
+
+	updateComponents(entityIDs, newLights);
 }
 
 void LightComponentWidget::onVec2Changed(const nml::vec2& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Light> newLights;
+
 	Light newLight = m_globalInfo.entities[m_globalInfo.currentEntityID].light.value();
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == cutoffWidget) {
+		for (uint8_t i = 0; i < 2; i++) {
+			if (newLight.cutoff[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newLight.cutoff = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newLight);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newLights.push_back(newLight);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].light) {
+			newLight = m_globalInfo.entities[otherSelectedEntityID].light.value();
+
+			if (senderWidget == cutoffWidget) {
+				newLight.cutoff[changedIndex] = value[changedIndex];
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newLights.push_back(newLight);
+		}
+	}
+
+	updateComponents(entityIDs, newLights);
 }

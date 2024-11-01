@@ -33,8 +33,13 @@ void TransformComponentWidget::updateWidgets(const Transform& transform) {
 	scaleWidget->setValue(transform.scale);
 }
 
-void TransformComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "Transform", { component }));
+void TransformComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Transform>& transforms) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < transforms.size(); i++) {
+		componentPointers.push_back(&transforms[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Transform", componentPointers));
 }
 
 void TransformComponentWidget::onEntitySelected() {
@@ -59,17 +64,60 @@ void TransformComponentWidget::onEntityTransformChanged(EntityID entityID, const
 }
 
 void TransformComponentWidget::onVec3Changed(const nml::vec3& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Transform> newTransforms;
+
 	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == positionWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newTransform.position[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newTransform.position = value;
 	}
 	else if (senderWidget == rotationWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newTransform.rotation[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newTransform.rotation = value;
 	}
 	else if (senderWidget == scaleWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newTransform.scale[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newTransform.scale = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newTransform);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newTransforms.push_back(newTransform);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		newTransform = m_globalInfo.entities[otherSelectedEntityID].transform;
+
+		if (senderWidget == positionWidget) {
+			newTransform.position[changedIndex] = value[changedIndex];
+		}
+		else if (senderWidget == rotationWidget) {
+			newTransform.rotation[changedIndex] = value[changedIndex];
+		}
+		else if (senderWidget == scaleWidget) {
+			newTransform.scale[changedIndex] = value[changedIndex];
+		}
+
+		entityIDs.push_back(otherSelectedEntityID);
+		newTransforms.push_back(newTransform);
+	}
+
+	updateComponents(entityIDs, newTransforms);
 }

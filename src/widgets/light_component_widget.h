@@ -14,7 +14,7 @@ public:
 
 private:
 	void updateWidgets(const Light& light);
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Light>& lights);
 
 	std::string lightTypeToType(const std::string& lightType);
 	std::string typeToLightType(const std::string& type);

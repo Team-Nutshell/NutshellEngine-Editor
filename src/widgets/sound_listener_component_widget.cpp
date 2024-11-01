@@ -30,8 +30,13 @@ void SoundListenerComponentWidget::updateWidgets(const SoundListener& soundListe
 	upWidget->setValue(soundListener.up);
 }
 
-void SoundListenerComponentWidget::updateComponent(EntityID entityID, Component* component) {
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { entityID }, "SoundListener", { component }));
+void SoundListenerComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<SoundListener>& soundListeners) {
+	std::vector<Component*> componentPointers;
+	for (size_t i = 0; i < soundListeners.size(); i++) {
+		componentPointers.push_back(&soundListeners[i]);
+	}
+
+	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "SoundListener", componentPointers));
 }
 
 void SoundListenerComponentWidget::onEntitySelected() {
@@ -74,14 +79,50 @@ void SoundListenerComponentWidget::onEntitySoundListenerChanged(EntityID entityI
 }
 
 void SoundListenerComponentWidget::onVec3Changed(const nml::vec3& value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<SoundListener> newSoundListeners;
+
 	SoundListener newSoundListener = m_globalInfo.entities[m_globalInfo.currentEntityID].soundListener.value();
 
-	QObject* senderWidget = sender();
+	uint8_t changedIndex = 255;
 	if (senderWidget == forwardWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newSoundListener.forward[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newSoundListener.forward = value;
 	}
 	else if (senderWidget == upWidget) {
+		for (uint8_t i = 0; i < 3; i++) {
+			if (newSoundListener.up[i] != value[i]) {
+				changedIndex = i;
+				break;
+			}
+		}
 		newSoundListener.up = value;
 	}
-	updateComponent(m_globalInfo.currentEntityID, &newSoundListener);
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newSoundListeners.push_back(newSoundListener);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		if (m_globalInfo.entities[otherSelectedEntityID].soundListener) {
+			newSoundListener = m_globalInfo.entities[otherSelectedEntityID].soundListener.value();
+
+			if (senderWidget == forwardWidget) {
+				newSoundListener.forward[changedIndex] = value[changedIndex];
+			}
+			else if (senderWidget == upWidget) {
+				newSoundListener.up[changedIndex] = value[changedIndex];
+			}
+
+			entityIDs.push_back(otherSelectedEntityID);
+			newSoundListeners.push_back(newSoundListener);
+		}
+	}
+
+	updateComponents(entityIDs, newSoundListeners);
 }

@@ -11,7 +11,7 @@ public:
 	void updateWidgets(const Transform& transform);
 
 private:
-	void updateComponent(EntityID entityID, Component* component);
+	void updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Transform>& transforms);
 
 private slots:
 	void onEntitySelected();

@@ -27,8 +27,8 @@ ChangeEntitiesComponentCommand::ChangeEntitiesComponentCommand(GlobalInfo& globa
 			m_newRenderables.push_back(*static_cast<Renderable*>(components[i]));
 		}
 		else if (m_componentName == "Rigidbody") {
-			m_previousRigidbodys.push_back(m_globalInfo.entities[m_entityIDs[i]].rigidbody.value());
-			m_newRigidbodys.push_back(*static_cast<Rigidbody*>(components[i]));
+			m_previousRigidbodies.push_back(m_globalInfo.entities[m_entityIDs[i]].rigidbody.value());
+			m_newRigidbodies.push_back(*static_cast<Rigidbody*>(components[i]));
 		}
 		else if (m_componentName == "Collidable") {
 			m_previousCollidables.push_back(m_globalInfo.entities[m_entityIDs[i]].collidable.value());
@@ -64,7 +64,7 @@ void ChangeEntitiesComponentCommand::undo() {
 			emit m_globalInfo.signalEmitter.changeEntityRenderableSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].renderable.value());
 		}
 		else if (m_componentName == "Rigidbody") {
-			m_globalInfo.entities[m_entityIDs[i]].rigidbody = m_previousRigidbodys[i];
+			m_globalInfo.entities[m_entityIDs[i]].rigidbody = m_previousRigidbodies[i];
 			emit m_globalInfo.signalEmitter.changeEntityRigidbodySignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].rigidbody.value());
 		}
 		else if (m_componentName == "Collidable") {
@@ -101,7 +101,7 @@ void ChangeEntitiesComponentCommand::redo() {
 			emit m_globalInfo.signalEmitter.changeEntityRenderableSignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].renderable.value());
 		}
 		else if (m_componentName == "Rigidbody") {
-			m_globalInfo.entities[m_entityIDs[i]].rigidbody = m_newRigidbodys[i];
+			m_globalInfo.entities[m_entityIDs[i]].rigidbody = m_newRigidbodies[i];
 			emit m_globalInfo.signalEmitter.changeEntityRigidbodySignal(m_entityIDs[i], m_globalInfo.entities[m_entityIDs[i]].rigidbody.value());
 		}
 		else if (m_componentName == "Collidable") {
