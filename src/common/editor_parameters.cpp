@@ -177,17 +177,9 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.gridScale = j["renderer"]["gridScale"];
 		}
 
-		if (j["renderer"].contains("currentEntityOutlineColor")) {
-			renderer.currentEntityOutlineColor.x = j["renderer"]["currentEntityOutlineColor"][0];
-			renderer.currentEntityOutlineColor.y = j["renderer"]["currentEntityOutlineColor"][1];
-			renderer.currentEntityOutlineColor.z = j["renderer"]["currentEntityOutlineColor"][2];
+		if (j["renderer"].contains("guizmoSize")) {
+			renderer.guizmoSize = j["renderer"]["guizmoSize"];
 		}
-		if (j["renderer"].contains("otherEntitiesOutlineColor")) {
-			renderer.otherEntitiesOutlineColor.x = j["renderer"]["otherEntitiesOutlineColor"][0];
-			renderer.otherEntitiesOutlineColor.y = j["renderer"]["otherEntitiesOutlineColor"][1];
-			renderer.otherEntitiesOutlineColor.z = j["renderer"]["otherEntitiesOutlineColor"][2];
-		}
-		
 		if (j["renderer"].contains("guizmoTranslationStep")) {
 			renderer.guizmoTranslationStep.x = j["renderer"]["guizmoTranslationStep"][0];
 			renderer.guizmoTranslationStep.y = j["renderer"]["guizmoTranslationStep"][1];
@@ -202,6 +194,17 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.guizmoScaleStep.x = j["renderer"]["guizmoScaleStep"][0];
 			renderer.guizmoScaleStep.y = j["renderer"]["guizmoScaleStep"][1];
 			renderer.guizmoScaleStep.z = j["renderer"]["guizmoScaleStep"][2];
+		}
+
+		if (j["renderer"].contains("currentEntityOutlineColor")) {
+			renderer.currentEntityOutlineColor.x = j["renderer"]["currentEntityOutlineColor"][0];
+			renderer.currentEntityOutlineColor.y = j["renderer"]["currentEntityOutlineColor"][1];
+			renderer.currentEntityOutlineColor.z = j["renderer"]["currentEntityOutlineColor"][2];
+		}
+		if (j["renderer"].contains("otherEntitiesOutlineColor")) {
+			renderer.otherEntitiesOutlineColor.x = j["renderer"]["otherEntitiesOutlineColor"][0];
+			renderer.otherEntitiesOutlineColor.y = j["renderer"]["otherEntitiesOutlineColor"][1];
+			renderer.otherEntitiesOutlineColor.z = j["renderer"]["otherEntitiesOutlineColor"][2];
 		}
 
 		if (j["renderer"].contains("showGrid")) {
@@ -265,6 +268,7 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridScale"] = renderer.gridScale;
+	j["renderer"]["guizmoSize"] = renderer.guizmoSize;
 	j["renderer"]["guizmoTranslationStep"] = { renderer.guizmoTranslationStep.x, renderer.guizmoTranslationStep.y, renderer.guizmoTranslationStep.z };
 	j["renderer"]["guizmoRotationStep"] = { renderer.guizmoRotationStep.x, renderer.guizmoRotationStep.y, renderer.guizmoRotationStep.z };
 	j["renderer"]["guizmoScaleStep"] = { renderer.guizmoScaleStep.x, renderer.guizmoScaleStep.y, renderer.guizmoScaleStep.z };

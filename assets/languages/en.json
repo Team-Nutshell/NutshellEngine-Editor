@@ -248,6 +248,7 @@
 	"editor_parameters_camera_speed": "Camera Speed",
 	"editor_parameters_camera_sensitivity": "Camera Sensitivity",
 	"editor_parameters_grid_scale": "Grid Scale",
+	"editor_parameters_guizmo_size": "Guizmo Size",
 	"editor_parameters_guizmo_translation_step": "Guizmo Translation Step",
 	"editor_parameters_guizmo_rotation_step": "Guizmo Rotation Step",
 	"editor_parameters_guizmo_scale_step": "Guizmo Scale Step",

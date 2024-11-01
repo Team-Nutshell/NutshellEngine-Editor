@@ -64,6 +64,7 @@ public:
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridScaleWidget;
+	ScalarWidget* guizmoSizeWidget;
 	Vector3Widget* guizmoTranslationStepWidget;
 	Vector3Widget* guizmoRotationStepWidget;
 	Vector3Widget* guizmoScaleStepWidget;

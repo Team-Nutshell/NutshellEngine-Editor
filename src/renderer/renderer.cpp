@@ -958,7 +958,7 @@ void Renderer::paintGL() {
 					gl.glClear(GL_DEPTH_BUFFER_BIT);
 					gl.glEnable(GL_CULL_FACE);
 
-					nml::mat4 modelMatrix = nml::translate(guizmoPosition);
+					nml::mat4 modelMatrix = nml::translate(guizmoPosition) * nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize));
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
 					const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
@@ -1187,7 +1187,7 @@ void Renderer::paintGL() {
 				gl.glDepthMask(GL_TRUE);
 				gl.glEnable(GL_CULL_FACE);
 
-				nml::mat4 modelMatrix = nml::translate(guizmoPosition);
+				nml::mat4 modelMatrix = nml::translate(guizmoPosition) * nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize));
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
 
 				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
