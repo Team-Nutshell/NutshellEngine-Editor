@@ -89,7 +89,7 @@ void SamplerNtspFileWidget::setPath(const std::string& path) {
 		std::string borderColor = j["borderColor"];
 		samplerNtsp.borderColor = borderColor;
 	}
-	if (j.contains("anistropyLevel")) {
+	if (j.contains("anisotropyLevel")) {
 		int anisotropyLevel = j["anisotropyLevel"];
 		samplerNtsp.anisotropyLevel = anisotropyLevel;
 	}
