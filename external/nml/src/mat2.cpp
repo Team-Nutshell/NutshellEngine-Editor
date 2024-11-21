@@ -8,12 +8,12 @@ namespace nml {
 mat2::mat2(): x(0.0f), y(0.0f) {}
 mat2::mat2(float _value): x(_value), y(_value) {}
 mat2::mat2(float _xx, float _xy, float _yx, float _yy): x(_xx, _xy), y(_yx, _yy) {}
-mat2::mat2(float _xx, float _xy, vec2 _y): x(_xx, _xy), y(_y) {}
-mat2::mat2(vec2 _x, float _yx, float _yy): x(_x), y(_yx, _yy) {}
-mat2::mat2(vec2 _x, vec2 _y): x(_x), y(_y) {}
+mat2::mat2(float _xx, float _xy, const vec2& _y): x(_xx, _xy), y(_y) {}
+mat2::mat2(const vec2& _x, float _yx, float _yy): x(_x), y(_yx, _yy) {}
+mat2::mat2(const vec2& _x, const vec2& _y): x(_x), y(_y) {}
 mat2::mat2(const float* _ptr): x(_ptr), y(_ptr + 2) {}
-mat2::mat2(mat3 _mat): x(_mat.x), y(_mat.y) {}
-mat2::mat2(mat4 _mat): x(_mat.x), y(_mat.y) {}
+mat2::mat2(const mat3& _mat): x(_mat.x), y(_mat.y) {}
+mat2::mat2(const mat4& _mat): x(_mat.x), y(_mat.y) {}
 
 mat2& mat2::operator+=(const mat2& other) {
 	x += other.x;

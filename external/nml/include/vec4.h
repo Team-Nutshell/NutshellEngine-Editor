@@ -17,12 +17,12 @@ struct vec4 {
 	vec4();
 	vec4(float _value);
 	vec4(float _x, float _y, float _z, float _w);
-	vec4(float _x, vec3 _yzw);
-	vec4(vec3 _xyz, float _w);
-	vec4(float _x, float _y, vec2 _zw);
-	vec4(float _x, vec2 _yz, float _w);
-	vec4(vec2 _xy, float _z, float _w);
-	vec4(vec2 _xy, vec2 _zw);
+	vec4(float _x, const vec3& _yzw);
+	vec4(const vec3& _xyz, float _w);
+	vec4(float _x, float _y, const vec2& _zw);
+	vec4(float _x, const vec2& _yz, float _w);
+	vec4(const vec2& _xy, float _z, float _w);
+	vec4(const vec2& _xy, const vec2& _zw);
 	vec4(const float* _ptr);
 
 	// Operators

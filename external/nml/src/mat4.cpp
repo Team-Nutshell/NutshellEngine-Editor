@@ -9,21 +9,21 @@ namespace nml {
 mat4::mat4(): x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 mat4::mat4(float _value): x(_value), y(_value), z(_value), w(_value) {}
 mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w): x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
-mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w): x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww): x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, vec4 _w): x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_w) {}
-mat4::mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w): x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
-mat4::mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w): x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
-mat4::mat4(vec4 _x, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww): x(_x), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
-mat4::mat4(vec4 _x, vec4 _y, vec4 _z, vec4 _w): x(_x), y(_y), z(_z), w(_w) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w): x(_xx, _xy, _xz, _xw), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w): x(_xx, _xy, _xz, _xw), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
+mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w): x(_x), y(_yx, _yy, _yz, _yw), z(_zx, _zy, _zz, _zw), w(_w) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww): x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww): x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww): x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, const vec4& _w): x(_xx, _xy, _xz, _xw), y(_y), z(_z), w(_w) {}
+mat4::mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w): x(_x), y(_yx, _yy, _yz, _yw), z(_z), w(_w) {}
+mat4::mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w): x(_x), y(_y), z(_zx, _zy, _zz, _zw), w(_w) {}
+mat4::mat4(const vec4& _x, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww): x(_x), y(_y), z(_z), w(_wx, _wy, _wz, _ww) {}
+mat4::mat4(const vec4& _x, const vec4& _y, const vec4& _z, const vec4& _w): x(_x), y(_y), z(_z), w(_w) {}
 mat4::mat4(const float* _ptr): x(_ptr), y(_ptr + 4), z(_ptr + 8), w(_ptr + 12) {}
 
 mat4& mat4::operator+=(const mat4& other) {
@@ -299,13 +299,8 @@ void decomposeTransform(const mat4& transform, vec3& translation, quat& rotation
 	translation = vec3(transform.w);
 	scale = vec3(transform.x.length(), transform.y.length(), transform.z.length());
 
-	const mat3 baseRotationMat = mat3(vec3(transform.x) / scale.x, vec3(transform.y) / scale.y, vec3(transform.z) / scale.z);
-	const float trace = baseRotationMat.x.x + baseRotationMat.y.y + baseRotationMat.z.z;
-	const float S = std::sqrt(1.0f + trace) * 2.0f;
-	rotation.a = S / 4.0f;
-	rotation.b = (baseRotationMat.y.z - baseRotationMat.z.y) / S;
-	rotation.c = (baseRotationMat.z.x - baseRotationMat.x.z) / S;
-	rotation.d = (baseRotationMat.x.y - baseRotationMat.y.x) / S;
+	const mat4 rotationMatrix = mat4(vec4(vec3(transform.x) / scale.x, 0.0f), vec4(vec3(transform.y) / scale.y, 0.0f), vec4(vec3(transform.z) / scale.z, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	rotation = rotationMatrixToQuat(rotationMatrix);
 }
 
 mat4 quatToRotationMatrix(const quat& qua) {

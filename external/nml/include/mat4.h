@@ -24,21 +24,21 @@ struct mat4 {
 	mat4();
 	mat4(float _value);
 	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-	mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-	mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w);
-	mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-	mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-	mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-	mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-	mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
-	mat4(float _xx, float _xy, float _xz, float _xw, vec4 _y, vec4 _z, vec4 _w);
-	mat4(vec4 _x, float _yx, float _yy, float _yz, float _yw, vec4 _z, vec4 _w);
-	mat4(vec4 _x, vec4 _y, float _zx, float _zy, float _zz, float _zw, vec4 _w);
-	mat4(vec4 _x, vec4 _y, vec4 _z, float _wx, float _wy, float _wz, float _ww);
-	mat4(vec4 _x, vec4 _y, vec4 _z, vec4 _w);
+	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+	mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+	mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+	mat4(float _xx, float _xy, float _xz, float _xw, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w);
+	mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+	mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+	mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+	mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+	mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, float _wx, float _wy, float _wz, float _ww);
+	mat4(float _xx, float _xy, float _xz, float _xw, const vec4& _y, const vec4& _z, const vec4& _w);
+	mat4(const vec4& _x, float _yx, float _yy, float _yz, float _yw, const vec4& _z, const vec4& _w);
+	mat4(const vec4& _x, const vec4& _y, float _zx, float _zy, float _zz, float _zw, const vec4& _w);
+	mat4(const vec4& _x, const vec4& _y, const vec4& _z, float _wx, float _wy, float _wz, float _ww);
+	mat4(const vec4& _x, const vec4& _y, const vec4& _z, const vec4& _w);
 	mat4(const float* _ptr);
 
 	// Operators

@@ -4,6 +4,7 @@
 namespace nml {
 
 struct vec3;
+struct mat4;
 
 // a + bi + cj + dk
 struct quat {
@@ -52,6 +53,7 @@ quat normalize(const quat& qua);
 float dot(const quat& a, const quat& b);
 quat slerp(const quat& a, const quat& b, const float interpolationValue);
 quat eulerAnglesToQuat(const vec3& vec);
+quat rotationMatrixToQuat(const mat4& mat);
 
 std::string to_string(const quat& qua);
 

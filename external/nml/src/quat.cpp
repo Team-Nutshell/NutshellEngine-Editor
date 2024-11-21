@@ -1,5 +1,6 @@
 #include "../include/quat.h"
 #include "../include/vec3.h"
+#include "../include/mat4.h"
 #include <cmath>
 #include <stdexcept>
 
@@ -184,6 +185,42 @@ quat eulerAnglesToQuat(const vec3& vec) {
 		sinHalfX * cosHalfY * cosHalfZ + cosHalfX * sinHalfY * sinHalfZ,
 		cosHalfX * sinHalfY * cosHalfZ - sinHalfX * cosHalfY * sinHalfZ,
 		cosHalfX * cosHalfY * sinHalfZ + sinHalfX * sinHalfY * cosHalfZ);
+}
+
+quat rotationMatrixToQuat(const mat4& mat) {
+	quat quaternion;
+
+	const float trace = mat.x.x + mat.y.y + mat.z.z;
+	if (trace > 0.0f) {
+		const float S = std::sqrt(1.0f + trace) * 2.0f;
+		quaternion.a = S * 0.25f;
+		quaternion.b = (mat.y.z - mat.z.y) / S;
+		quaternion.c = (mat.z.x - mat.x.z) / S;
+		quaternion.d = (mat.x.y - mat.y.x) / S;
+	}
+	else if ((mat.x.x > mat.y.y) && (mat.x.x > mat.z.z)) {
+		const float S = std::sqrt(1.0f + mat.x.x - mat.y.y - mat.z.z) * 2.0f;
+		quaternion.a = (mat.y.z - mat.z.y) / S;
+		quaternion.b = S * 0.25f;
+		quaternion.c = (mat.y.x + mat.x.y) / S;
+		quaternion.d = (mat.z.x + mat.x.z) / S;
+	}
+	else if (mat.y.y > mat.z.z) {
+		const float S = std::sqrt(1.0f + mat.y.y - mat.x.x - mat.z.z) * 2.0f;
+		quaternion.a = (mat.z.x - mat.x.z) / S;
+		quaternion.b = (mat.y.x + mat.x.y) / S;
+		quaternion.c = S * 0.25f;
+		quaternion.d = (mat.z.y + mat.y.z) / S;
+	}
+	else {
+		const float S = std::sqrt(1.0f + mat.z.z - mat.x.x - mat.y.y) * 2.0f;
+		quaternion.a = (mat.x.y - mat.y.x) / S;
+		quaternion.b = (mat.z.x + mat.x.z) / S;
+		quaternion.c = (mat.z.y + mat.y.z) / S;
+		quaternion.d = S * 0.25f;
+	}
+
+	return quaternion;
 }
 
 std::string to_string(const quat& qua) {

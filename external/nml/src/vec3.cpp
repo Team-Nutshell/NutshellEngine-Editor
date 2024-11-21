@@ -4,6 +4,8 @@
 #include "../include/mat4.h"
 #include "../include/quat.h"
 #include <cmath>
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 
 namespace nml {
@@ -11,10 +13,10 @@ namespace nml {
 vec3::vec3(): x(0.0f), y(0.0f), z(0.0f) {}
 vec3::vec3(float _value): x(_value), y(_value), z(_value) {}
 vec3::vec3(float _x, float _y, float _z): x(_x), y(_y), z(_z) {}
-vec3::vec3(float _x, vec2 _yz): x(_x), y(_yz.x), z(_yz.y) {}
-vec3::vec3(vec2 _xy, float _z): x(_xy.x), y(_xy.y), z(_z) {}
+vec3::vec3(float _x, const vec2& _yz): x(_x), y(_yz.x), z(_yz.y) {}
+vec3::vec3(const vec2& _xy, float _z): x(_xy.x), y(_xy.y), z(_z) {}
 vec3::vec3(const float* _ptr): x(*_ptr), y(*(_ptr + 1)), z(*(_ptr + 2)) {}
-vec3::vec3(vec4 _xyzw): x(_xyzw.x), y(_xyzw.y), z(_xyzw.z) {}
+vec3::vec3(const vec4& _xyzw): x(_xyzw.x), y(_xyzw.y), z(_xyzw.z) {}
 
 vec3& vec3::operator+=(const vec3& other) { 
 	x += other.x;
@@ -148,9 +150,18 @@ vec3 quatToEulerAngles(const quat& qua) {
 }
 
 vec3 rotationMatrixToEulerAngles(const mat4& mat) {
-	return vec3(-std::atan2(mat.z.y, mat.z.z),
-		-std::atan2(-mat.z.x, std::sqrt((mat.z.y * mat.z.y) + (mat.z.z * mat.z.z))),
-		-std::atan2(mat.y.x, mat.x.x));
+	vec3 eulerAngles;
+	eulerAngles.y = std::asin(std::clamp(mat.z.x, -1.0f, 1.0f));
+	if (std::abs(mat.z.x) < (1.0f - std::numeric_limits<float>::epsilon())) {
+		eulerAngles.x = std::atan2(-mat.z.y, mat.z.z);
+		eulerAngles.z = std::atan2(-mat.y.x, mat.x.x);
+	}
+	else {
+		eulerAngles.x = std::atan2(mat.y.z, mat.y.y);
+		eulerAngles.z = 0.0f;
+	}
+
+	return eulerAngles;
 }
 
 std::string to_string(const vec3& vec) {

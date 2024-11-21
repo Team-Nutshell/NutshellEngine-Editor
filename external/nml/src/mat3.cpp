@@ -12,15 +12,15 @@ namespace nml {
 mat3::mat3(): x(0.0f), y(0.0f), z(0.0f) {}
 mat3::mat3(float _value): x(_value), y(_value), z(_value) {}
 mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz): x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
-mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, vec3 _z): x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_z) {}
-mat3::mat3(float _xx, float _xy, float _xz, vec3 _y, float _zx, float _zy, float _zz): x(_xx, _xy, _xz), y(_y), z(_zx, _zy, _zz) {}
-mat3::mat3(vec3 _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz): x(_x), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
-mat3::mat3(float _xx, float _xy, float _xz, vec3 _y, vec3 _z): x(_xx, _xy, _xz), y(_y), z(_z) {}
-mat3::mat3(vec3 _x, vec3 _y, float _zx, float _zy, float _zz): x(_x), y(_y), z(_zx, _zy, _zz) {}
-mat3::mat3(vec3 _x, float _yx, float _yy, float _yz, vec3 _z): x(_x), y(_yx, _yy, _yz), z(_z) {}
-mat3::mat3(vec3 _x, vec3 _y, vec3 _z): x(_x), y(_y), z(_z) {}
+mat3::mat3(float _xx, float _xy, float _xz, float _yx, float _yy, float _yz, const vec3& _z): x(_xx, _xy, _xz), y(_yx, _yy, _yz), z(_z) {}
+mat3::mat3(float _xx, float _xy, float _xz, const vec3& _y, float _zx, float _zy, float _zz): x(_xx, _xy, _xz), y(_y), z(_zx, _zy, _zz) {}
+mat3::mat3(const vec3& _x, float _yx, float _yy, float _yz, float _zx, float _zy, float _zz): x(_x), y(_yx, _yy, _yz), z(_zx, _zy, _zz) {}
+mat3::mat3(float _xx, float _xy, float _xz, const vec3& _y, const vec3& _z): x(_xx, _xy, _xz), y(_y), z(_z) {}
+mat3::mat3(const vec3& _x, const vec3& _y, float _zx, float _zy, float _zz): x(_x), y(_y), z(_zx, _zy, _zz) {}
+mat3::mat3(const vec3& _x, float _yx, float _yy, float _yz, const vec3& _z): x(_x), y(_yx, _yy, _yz), z(_z) {}
+mat3::mat3(const vec3& _x, const vec3& _y, const vec3& _z): x(_x), y(_y), z(_z) {}
 mat3::mat3(const float* _ptr): x(_ptr), y(_ptr + 3), z(_ptr + 6) {}
-mat3::mat3(mat4 _mat): x(_mat.x), y(_mat.y), z(_mat.z) {}
+mat3::mat3(const mat4& _mat): x(_mat.x), y(_mat.y), z(_mat.z) {}
 
 mat3& mat3::operator+=(const mat3& other) {
 	x += other.x;
