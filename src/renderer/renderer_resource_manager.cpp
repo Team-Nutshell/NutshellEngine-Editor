@@ -240,7 +240,7 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 
 		// Sphere
 		const float positionMinusCenterSquaredLength = nml::dot(positionMinusCenter, positionMinusCenter);
-		if (positionMinusCenterSquaredLength > mesh.capsule.radius) {
+		if (positionMinusCenterSquaredLength > mesh.sphere.radius) {
 			mesh.sphere.radius = positionMinusCenterSquaredLength;
 		}
 
@@ -264,7 +264,7 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.obb.rotation.z = nml::toDeg(mesh.obb.rotation.z);
 
 	// Sphere
-	mesh.sphere.radius = std::sqrt(mesh.capsule.radius);
+	mesh.sphere.radius = std::sqrt(mesh.sphere.radius);
 
 	// Capsule
 	mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
