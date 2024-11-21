@@ -852,17 +852,47 @@ namespace NtshEngn {
 				0.0f, 0.0f, far / nearMinusFar, -1.0f,
 				0.0f, 0.0f, -(far * near) / farMinusNear, 0.0f);
 		}
+		inline quat rotationMatrixToQuat(const mat4& mat) { // Defined early for decomposeTransform
+			quat quaternion;
+
+			const float trace = mat.x.x + mat.y.y + mat.z.z;
+			if (trace > 0.0f) {
+				const float S = std::sqrt(1.0f + trace) * 2.0f;
+				quaternion.a = S * 0.25f;
+				quaternion.b = (mat.y.z - mat.z.y) / S;
+				quaternion.c = (mat.z.x - mat.x.z) / S;
+				quaternion.d = (mat.x.y - mat.y.x) / S;
+			}
+			else if ((mat.x.x > mat.y.y) && (mat.x.x > mat.z.z)) {
+				const float S = std::sqrt(1.0f + mat.x.x - mat.y.y - mat.z.z) * 2.0f;
+				quaternion.a = (mat.y.z - mat.z.y) / S;
+				quaternion.b = S * 0.25f;
+				quaternion.c = (mat.y.x + mat.x.y) / S;
+				quaternion.d = (mat.z.x + mat.x.z) / S;
+			}
+			else if (mat.y.y > mat.z.z) {
+				const float S = std::sqrt(1.0f + mat.y.y - mat.x.x - mat.z.z) * 2.0f;
+				quaternion.a = (mat.z.x - mat.x.z) / S;
+				quaternion.b = (mat.y.x + mat.x.y) / S;
+				quaternion.c = S * 0.25f;
+				quaternion.d = (mat.z.y + mat.y.z) / S;
+			}
+			else {
+				const float S = std::sqrt(1.0f + mat.z.z - mat.x.x - mat.y.y) * 2.0f;
+				quaternion.a = (mat.x.y - mat.y.x) / S;
+				quaternion.b = (mat.z.x + mat.x.z) / S;
+				quaternion.c = (mat.z.y + mat.y.z) / S;
+				quaternion.d = S * 0.25f;
+			}
+
+			return quaternion;
+		}
 		inline void decomposeTransform(const mat4& transform, vec3& translation, quat& rotation, vec3& scale) {
 			translation = vec3(transform.w);
 			scale = vec3(transform.x.length(), transform.y.length(), transform.z.length());
 
-			const mat3 baseRotationMat = mat3(vec3(transform.x) / scale.x, vec3(transform.y) / scale.y, vec3(transform.z) / scale.z);
-			const float trace = baseRotationMat.x.x + baseRotationMat.y.y + baseRotationMat.z.z;
-			const float S = std::sqrt(1.0f + trace) * 2.0f;
-			rotation.a = S / 4.0f;
-			rotation.b = (baseRotationMat.y.z - baseRotationMat.z.y) / S;
-			rotation.c = (baseRotationMat.z.x - baseRotationMat.x.z) / S;
-			rotation.d = (baseRotationMat.x.y - baseRotationMat.y.x) / S;
+			const mat4 rotationMatrix = mat4(vec4(vec3(transform.x) / scale.x, 0.0f), vec4(vec3(transform.y) / scale.y, 0.0f), vec4(vec3(transform.z) / scale.z, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f));
+			rotation = rotationMatrixToQuat(rotationMatrix);
 		}
 
 		inline std::string to_string(const mat4& mat) {
