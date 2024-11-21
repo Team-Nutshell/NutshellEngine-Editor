@@ -180,35 +180,9 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 
 	std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
 
-	// AABB
-	AABB aabb;
 	for (size_t j = 0; j < mesh.vertices.size(); j++) {
 		uniquePositions.insert(mesh.vertices[j].position);
-
-		if (mesh.vertices[j].position.x < aabb.min.x) {
-			aabb.min.x = mesh.vertices[j].position.x;
-		}
-		if (mesh.vertices[j].position.y < aabb.min.y) {
-			aabb.min.y = mesh.vertices[j].position.y;
-		}
-		if (mesh.vertices[j].position.z < aabb.min.z) {
-			aabb.min.z = mesh.vertices[j].position.z;
-		}
-
-		if (mesh.vertices[j].position.x > aabb.max.x) {
-			aabb.max.x = mesh.vertices[j].position.x;
-		}
-		if (mesh.vertices[j].position.y > aabb.max.y) {
-			aabb.max.y = mesh.vertices[j].position.y;
-		}
-		if (mesh.vertices[j].position.z > aabb.max.z) {
-			aabb.max.z = mesh.vertices[j].position.z;
-		}
 	}
-
-	// Sphere
-	mesh.sphere.center = (aabb.min + aabb.max) / 2.0f;
-	mesh.sphere.radius = (mesh.sphere.center - aabb.min).length();
 
 	float size = static_cast<float>(uniquePositions.size());
 
@@ -240,11 +214,13 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 		});
 
 	mesh.obb.center = means;
+	mesh.sphere.center = means;
+	mesh.sphere.radius = 0.0f;
 	mesh.capsule.radius = 0.0f;
 
 	float segmentLengthMax = 0.0f;
 	for (const nml::vec3& position : uniquePositions) {
-		const nml::vec3 positionMinusCenter = position - mesh.obb.center;
+		const nml::vec3 positionMinusCenter = position - means;
 
 		// OBB
 		const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
@@ -260,6 +236,12 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 		const float extentZ = std::abs(nml::dot(eigen[2].second, positionMinusCenter));
 		if (extentZ > mesh.obb.halfExtent.z) {
 			mesh.obb.halfExtent.z = extentZ;
+		}
+
+		// Sphere
+		const float positionMinusCenterSquaredLength = nml::dot(positionMinusCenter, positionMinusCenter);
+		if (positionMinusCenterSquaredLength > mesh.capsule.radius) {
+			mesh.sphere.radius = positionMinusCenterSquaredLength;
 		}
 
 		// Capsule
@@ -280,6 +262,9 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.obb.rotation.x = nml::toDeg(mesh.obb.rotation.x);
 	mesh.obb.rotation.y = nml::toDeg(mesh.obb.rotation.y);
 	mesh.obb.rotation.z = nml::toDeg(mesh.obb.rotation.z);
+
+	// Sphere
+	mesh.sphere.radius = std::sqrt(mesh.capsule.radius);
 
 	// Capsule
 	mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
