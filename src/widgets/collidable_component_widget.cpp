@@ -369,6 +369,8 @@ void CollidableComponentWidget::onFromRenderableButtonClicked() {
 			}
 		}
 	}
+
+	updateComponents(entityIDs, newCollidables);
 }
 
 void CollidableComponentWidget::onEntityRenderableAdded(EntityID entityID) {
