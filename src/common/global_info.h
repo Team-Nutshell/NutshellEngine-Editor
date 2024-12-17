@@ -18,7 +18,7 @@
 class MainWindow;
 
 struct GlobalInfo {
-	std::string version = "0.1.5";
+	std::string version = "0.1.6";
 
 	std::string projectDirectory = "";
 	std::string projectName = "";
