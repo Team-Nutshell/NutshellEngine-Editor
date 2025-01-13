@@ -7,6 +7,13 @@
 
 namespace NtshEngn {
 
+	// Camera
+	enum class CameraProjectionType {
+		Perspective,
+		Orthographic,
+		Unknown
+	};
+
 	// Image
 	typedef uint32_t ImageID;
 	#define NTSHENGN_IMAGE_UNKNOWN 0xFFFFFFFF
