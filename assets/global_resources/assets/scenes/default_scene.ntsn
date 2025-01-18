@@ -10,6 +10,7 @@
 				],
 				"fov": 45.0,
 				"nearPlane": 0.029999999329447746,
+				"projectionType": "Perspective",
 				"up": [
 					0.0,
 					1.0,
@@ -56,6 +57,7 @@
 					-1.0,
 					-1.0
 				],
+				"intensity": 1.0,
 				"type": "Directional"
 			},
 			"name": "DirectionalLight",
