@@ -83,6 +83,7 @@
 			"isPersistent": false,
 			"name": "Cube",
 			"renderable": {
+				"materialPath": "assets/materials/cube_material.ntml",
 				"modelPath": "assets/models/cube_model.ntmd",
 				"primitiveIndex": 0
 			},
@@ -108,6 +109,7 @@
 			"isPersistent": false,
 			"name": "Plane",
 			"renderable": {
+				"materialPath": "assets/materials/plane_material.ntml",
 				"modelPath": "assets/models/plane_model.ntmd",
 				"primitiveIndex": 0
 			},
