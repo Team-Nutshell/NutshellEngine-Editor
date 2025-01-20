@@ -798,11 +798,12 @@ void Renderer::paintGL() {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.second.camera->forward, entity.second.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
+					float defaultAspectRatio = 16.0f / 9.0f;
 					if (entity.second.camera->projectionType == "Perspective") {
-						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), 16.0f / 9.0f, entity.second.camera->nearPlane, entity.second.camera->farPlane);
+						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), defaultAspectRatio, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					}
 					else if (entity.second.camera->projectionType == "Orthographic") {
-						entityCameraProjectionMatrix = nml::orthoRH(entity.second.camera->left, entity.second.camera->right, entity.second.camera->bottom, entity.second.camera->top, entity.second.camera->nearPlane, entity.second.camera->farPlane);
+						entityCameraProjectionMatrix = nml::orthoRH(entity.second.camera->left * defaultAspectRatio, entity.second.camera->right * defaultAspectRatio, entity.second.camera->bottom, entity.second.camera->top, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					}
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
@@ -1102,11 +1103,12 @@ void Renderer::paintGL() {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.camera->forward, entity.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
+					float defaultAspectRatio = 16.0f / 9.0f;
 					if (entity.camera->projectionType == "Perspective") {
-						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), 16.0f / 9.0f, entity.camera->nearPlane, entity.camera->farPlane);
+						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), defaultAspectRatio, entity.camera->nearPlane, entity.camera->farPlane);
 					}
 					else if (entity.camera->projectionType == "Orthographic") {
-						entityCameraProjectionMatrix = nml::orthoRH(entity.camera->left, entity.camera->right, entity.camera->bottom, entity.camera->top, entity.camera->nearPlane, entity.camera->farPlane);
+						entityCameraProjectionMatrix = nml::orthoRH(entity.camera->left * defaultAspectRatio, entity.camera->right * defaultAspectRatio, entity.camera->bottom, entity.camera->top, entity.camera->nearPlane, entity.camera->farPlane);
 					}
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
