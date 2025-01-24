@@ -15,6 +15,7 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	duplicateAction->setShortcut(QKeySequence::fromString("Ctrl+D"));
 	addSeparator();
 	reloadAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_reload")), this, &AssetListMenu::reloadAsset);
+	reloadAction->setShortcut(QKeySequence::fromString("Ctrl+R"));
 	addSeparator();
 	QMenu* createMenu = addMenu(QString::fromStdString(m_globalInfo.localization.getString("assets_create")));
 	newDirectoryAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("directory")), this, &AssetListMenu::newDirectory);

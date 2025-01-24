@@ -4,6 +4,7 @@
 #include "delete_asset_widget.h"
 #include "close_scene_widget.h"
 #include "main_window.h"
+#include "../common/asset_helper.h"
 #include "../common/scene_manager.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
@@ -280,6 +281,28 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			std::filesystem::copy(m_currentDirectory + "/" + itemFileName, m_currentDirectory + "/" + duplicatedAssetName, copyOptions);
 			if (!isDirectory) {
 				emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + duplicatedAssetName);
+			}
+		}
+		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_R)) {
+			std::string itemFileName = listItem->text().toStdString();
+			std::string assetPath = m_currentDirectory + "/" + itemFileName;
+			std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
+			size_t lastDot = assetName.rfind('.');
+			if (lastDot != std::string::npos) {
+				std::string extension = assetName.substr(lastDot + 1);
+				RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
+				if (assetType == RendererResourceManager::AssetType::Model) {
+					m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
+				}
+				else if (assetType == RendererResourceManager::AssetType::Material) {
+					m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
+				}
+				else if (assetType == RendererResourceManager::AssetType::Image) {
+					m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
+				}
+				else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
+					m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
+				}
 			}
 		}
 	}
