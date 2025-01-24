@@ -686,7 +686,12 @@ void Renderer::paintGL() {
 					if (!entity.second.renderable->materialPath.empty()) {
 						const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
 						gl.glActiveTexture(GL_TEXTURE0);
-						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+						if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+						}
+						else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(m_globalInfo.projectDirectory + "/" + material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[m_globalInfo.projectDirectory + "/" + material.diffuseTextureName]);
+						}
 						m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
 						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
