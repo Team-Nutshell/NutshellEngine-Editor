@@ -23,6 +23,10 @@ struct Renderable : public Component {
 			j["materialPath"] = materialPath;
 		}
 
+		if (j.empty()) {
+			j = nlohmann::json::object();
+		}
+
 		return j;
 	}
 
