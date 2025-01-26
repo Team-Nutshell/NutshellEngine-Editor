@@ -445,11 +445,14 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build/export_tmp");
 	}
 
+	std::string projectNameNoSpace = m_globalInfo.projectName;
+	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
+
 	// Copy runtime
 	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
 	// Copy to another directory
-	const std::string tmpExportDirectory = m_globalInfo.projectDirectory + "/editor_build/export_tmp/" + m_globalInfo.projectName;
+	const std::string tmpExportDirectory = m_globalInfo.projectDirectory + "/editor_build/export_tmp/" + projectNameNoSpace;
 	std::filesystem::create_directory(tmpExportDirectory);
 	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/" + buildType, tmpExportDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
@@ -472,11 +475,11 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		std::filesystem::remove(scriptsPdb);
 	}
 
-	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".zip";
+	const std::string exportedFileName = projectNameNoSpace + "_" + buildType + ".zip";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	// Rename executable
-	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine.exe", tmpExportDirectory + "/" + m_globalInfo.projectName + ".exe");
+	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine.exe", tmpExportDirectory + "/" + projectNameNoSpace + ".exe");
 
 	HANDLE pipeRead = NULL;
 	HANDLE pipeWrite = NULL;
@@ -502,7 +505,7 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	PROCESS_INFORMATION processInformation;
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string exportCommand = "powershell Compress-Archive -Path export_tmp/" + m_globalInfo.projectName + " -DestinationPath " + exportedFullPath + " -Force";
+	const std::string exportCommand = "powershell Compress-Archive -Path export_tmp/" + projectNameNoSpace + " -DestinationPath " + exportedFullPath + " -Force";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
@@ -540,13 +543,13 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	}
 	CloseHandle(pipeRead);
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-	const std::string exportedFileName = m_globalInfo.projectName + "_" + buildType + ".tar.gz";
+	const std::string exportedFileName = projectNameNoSpace + "_" + buildType + ".tar.gz";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	// Rename executable
-	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + m_globalInfo.projectName);
+	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + projectNameNoSpace);
 	
-	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " export_tmp/" + m_globalInfo.projectName;
+	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " export_tmp/" + projectNameNoSpace;
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
 	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {
