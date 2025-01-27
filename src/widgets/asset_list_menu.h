@@ -19,6 +19,7 @@ private slots:
 	void newImageSampler();
 	void newMaterial();
 	void newScene();
+	void copyPath();
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -36,4 +37,5 @@ public:
 	QAction* newImageSamplerAction;
 	QAction* newMaterialAction;
 	QAction* newSceneAction;
+	QAction* copyPathAction;
 };

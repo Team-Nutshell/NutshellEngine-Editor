@@ -3,6 +3,7 @@
 #include "delete_asset_widget.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
+#include <QClipboard>
 #include <filesystem>
 #include <fstream>
 
@@ -24,6 +25,8 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	newImageSamplerAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("image_sampler")), this, &AssetListMenu::newImageSampler);
 	newMaterialAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("material")), this, &AssetListMenu::newMaterial);
 	newSceneAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("scene")), this, &AssetListMenu::newScene);
+	addSeparator();
+	copyPathAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_copy_path")), this, &AssetListMenu::copyPath);
 }
 
 void AssetListMenu::renameAsset() {
@@ -202,4 +205,9 @@ void AssetListMenu::newScene() {
 	newSceneFile.close();
 
 	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newSceneName + sceneExtension);
+}
+
+void AssetListMenu::copyPath() {
+	std::string assetPath = AssetHelper::absoluteToRelative(directory + "/" + filename, m_globalInfo.projectDirectory);
+	QGuiApplication::clipboard()->setText(QString::fromStdString(assetPath));
 }

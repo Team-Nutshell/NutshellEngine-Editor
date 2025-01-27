@@ -225,6 +225,7 @@
 	"assets_duplicate": "Duplicate",
 	"assets_reload": "Reload",
 	"assets_create": "Create",
+	"assets_copy_path": "Copy Path",
 	"editor_parameters": "Editor Parameters",
 	"editor_parameters_renderer": "Renderer",
 	"editor_parameters_camera_forward": "Camera Forward",
