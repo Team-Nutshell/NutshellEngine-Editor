@@ -352,6 +352,12 @@ void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEdi
 	(void)hint;
 	QListWidgetItem* currentItem = selectedItems()[0];
 	std::string newName = reinterpret_cast<QLineEdit*>(lineEdit)->text().toStdString();
+	if (std::filesystem::is_directory(m_currentDirectory + "/" + currentlyEditedItemName)) {
+		if (newName.back() == '/') {
+			newName.pop_back();
+		}
+	}
+
 	if (currentlyEditedItemName != newName) {
 		const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
 		if (!std::regex_search(newName, validFilenameRegex)) {
