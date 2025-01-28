@@ -809,7 +809,7 @@ namespace NtshEngn {
 		}
 
 		// UI
-		void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}

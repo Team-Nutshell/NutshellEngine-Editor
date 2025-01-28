@@ -260,7 +260,7 @@ namespace NtshEngn {
 	struct Font {
 		Image* image = nullptr;
 		ImageSamplerFilter imageSamplerFilter = ImageSamplerFilter::Unknown;
-		std::unordered_map<char, FontGlyph> glyphs;
+		std::unordered_map<wchar_t, FontGlyph> glyphs;
 	};
 
 	// Particle
