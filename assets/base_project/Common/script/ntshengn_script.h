@@ -817,6 +817,16 @@ namespace NtshEngn {
 			graphicsModule->drawUIText(fontID, text, position, color);
 		}
 
+		void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			std::wstring wideString(text.begin(), text.end());
+
+			graphicsModule->drawUIText(fontID, wideString, position, color);
+		}
+
 		void drawUILine(const Math::vec2& start, const Math::vec2& end, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
