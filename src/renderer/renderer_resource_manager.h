@@ -90,10 +90,10 @@ public:
 	};
 
 	struct Material {
-		std::string diffuseTextureName;
-		std::string diffuseTextureSamplerName;
-		std::string emissiveTextureName;
-		std::string emissiveTextureSamplerName;
+		std::string diffuseTextureName = "defaultDiffuseTexture";
+		std::string diffuseTextureSamplerName = "defaultSampler";
+		std::string emissiveTextureName = "defaultEmissiveTexture";
+		std::string emissiveTextureSamplerName = "defaultSampler";
 		float alphaCutoff = 0.0f;
 	};
 
