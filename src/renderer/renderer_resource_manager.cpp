@@ -432,8 +432,8 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 			}
 		}
 		else if (j["diffuse"].contains("color")) {
-			nml::vec3 diffuseColor = { j["diffuse"]["color"][0], j["diffuse"]["color"][1], j["diffuse"]["color"][2] };
-			std::string mapKey = "srgb " + std::to_string(diffuseColor.x) + " " + std::to_string(diffuseColor.y) + " " + std::to_string(diffuseColor.z) + " " + std::to_string(1.0f);
+			nml::vec4 diffuseColor = { j["diffuse"]["color"][0], j["diffuse"]["color"][1], j["diffuse"]["color"][2], j["diffuse"]["color"][3] };
+			std::string mapKey = "srgb " + std::to_string(diffuseColor.x) + " " + std::to_string(diffuseColor.y) + " " + std::to_string(diffuseColor.z) + " " + std::to_string(diffuseColor.w);
 
 			if (textures.find(mapKey) == textures.end()) {
 				ImageToGPU image;
@@ -442,7 +442,7 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 				image.data = { static_cast<uint8_t>(round(255.0f * diffuseColor.x)),
 					static_cast<uint8_t>(round(255.0f * diffuseColor.y)),
 					static_cast<uint8_t>(round(255.0f * diffuseColor.z)),
-					255
+					static_cast<uint8_t>(round(255.0f * diffuseColor.w))
 				};
 
 				imagesToGPU[mapKey] = image;
