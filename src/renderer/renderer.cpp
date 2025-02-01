@@ -133,6 +133,7 @@ void Renderer::initializeGL() {
 
 	uniform sampler2D diffuseTextureSampler;
 	uniform sampler2D emissiveTextureSampler;
+	uniform float emissiveFactor;
 	uniform float alphaCutoff;
 	uniform bool enableShading;
 	restrict readonly buffer LightBuffer {
@@ -219,7 +220,7 @@ void Renderer::initializeGL() {
 			outColor = vec4(diffuseTextureSample.rgb, 1.0);
 		}
 
-		outColor += vec4(emissiveTextureSample, 0.0);
+		outColor += vec4(emissiveTextureSample * emissiveFactor, 0.0);
 	}
 	)GLSL";
 	GLuint entityFragmentShader = compileShader(GL_FRAGMENT_SHADER, entityFragmentShaderCode);
@@ -691,7 +692,9 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
 					if (!entity.second.renderable->materialPath.empty()) {
+						// Bind Renderable material
 						const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
+
 						gl.glActiveTexture(GL_TEXTURE0);
 						if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
 							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
@@ -703,8 +706,18 @@ void Renderer::paintGL() {
 						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
 						gl.glActiveTexture(GL_TEXTURE1);
-						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+						if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+						}
+						else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(m_globalInfo.projectDirectory + "/" + material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[m_globalInfo.projectDirectory + "/" + material.emissiveTextureName]);
+						}
 						m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
+						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+
+						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
+
+						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
 					}
 					else {
 						gl.glActiveTexture(GL_TEXTURE0);
@@ -716,10 +729,6 @@ void Renderer::paintGL() {
 						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.emissiveTextureName]);
 						m_globalInfo.rendererResourceManager.samplers[entityMaterial.emissiveTextureSamplerName].bind(gl);
 					}
-
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
-
-					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), entityMaterial.alphaCutoff);
 
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
 
@@ -751,6 +760,10 @@ void Renderer::paintGL() {
 					m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
+					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), 0.0f);
+
+					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
+
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -781,6 +794,10 @@ void Renderer::paintGL() {
 				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.emissiveTextureName]);
 				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), 0.0f);
+
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
@@ -865,6 +882,8 @@ void Renderer::paintGL() {
 	// Grid
 	if (m_globalInfo.editorParameters.renderer.showGrid) {
 		if (!m_camera.useOrthographicProjection) {
+			gl.glDepthFunc(GL_LESS);
+
 			gl.glUseProgram(m_gridProgram);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
@@ -1550,6 +1569,8 @@ void Renderer::loadResourcesToGPU() {
 			newRendererPrimitive.material.diffuseTextureSamplerName = material.diffuseTextureSamplerName;
 			newRendererPrimitive.material.emissiveTextureName = material.emissiveTextureName;
 			newRendererPrimitive.material.emissiveTextureSamplerName = material.emissiveTextureSamplerName;
+
+			newRendererPrimitive.material.emissiveFactor = material.emissiveFactor;
 
 			newRendererPrimitive.material.alphaCutoff = material.alphaCutoff;
 

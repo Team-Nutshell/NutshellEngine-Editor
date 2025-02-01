@@ -48,6 +48,7 @@ struct RendererMaterial {
 	std::string diffuseTextureSamplerName = "defaultSampler";
 	std::string emissiveTextureName = "defaultEmissiveTexture";
 	std::string emissiveTextureSamplerName = "defaultSampler";
+	float emissiveFactor = 1.0f;
 	float alphaCutoff = 0.0f;
 };
 

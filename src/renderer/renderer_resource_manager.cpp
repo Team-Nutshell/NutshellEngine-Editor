@@ -483,6 +483,10 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 
 			material.emissiveTextureName = mapKey;
 		}
+
+		if (j["emissive"].contains("factor")) {
+			material.emissiveFactor = j["emissive"]["factor"];
+		}
 	}
 }
 
@@ -961,6 +965,11 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 
 					primitive.material.emissiveTextureName = mapKey;
+				}
+
+				// Emissive factor
+				if (primitiveMaterial->has_emissive_strength) {
+					primitive.material.emissiveFactor = primitiveMaterial->emissive_strength.emissive_strength;
 				}
 
 				// Alpha cutoff
