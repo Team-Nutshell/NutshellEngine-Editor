@@ -4,6 +4,7 @@
 #include "model_ntmd_file_widget.h"
 #include "options_ntop_file_widget.h"
 #include "sampler_ntsp_file_widget.h"
+#include "image_file_widget.h"
 #include <QWidget>
 
 class AssetInfoList : public QWidget {
@@ -22,4 +23,5 @@ public:
 	ModelNtmdFileWidget* modelNtmdFileWidget;
 	OptionsNtopFileWidget* optionsNtopFileWidget;
 	SamplerNtspFileWidget* samplerNtspFileWidget;
+	ImageFileWidget* imageFileWidget;
 };

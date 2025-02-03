@@ -1,5 +1,4 @@
 #include "asset_list.h"
-#include "image_viewer.h"
 #include "asset_info_name_widget.h"
 #include "delete_asset_widget.h"
 #include "close_scene_widget.h"
@@ -77,10 +76,6 @@ void AssetList::actionOnFile(const std::string& file) {
 			else {
 				SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
 			}
-		}
-		else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
-			ImageViewer* imageViewer = new ImageViewer(m_globalInfo, m_currentDirectory + "/" + file);
-			imageViewer->show();
 		}
 	}
 }

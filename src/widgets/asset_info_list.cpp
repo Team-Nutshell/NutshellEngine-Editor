@@ -17,6 +17,9 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	samplerNtspFileWidget = new SamplerNtspFileWidget(m_globalInfo);
 	samplerNtspFileWidget->hide();
 	layout()->addWidget(samplerNtspFileWidget);
+	imageFileWidget = new ImageFileWidget(m_globalInfo);
+	imageFileWidget->hide();
+	layout()->addWidget(imageFileWidget);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectAssetSignal, this, &AssetInfoList::onAssetSelected);
 }
@@ -33,6 +36,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				modelNtmdFileWidget->hide();
 				optionsNtopFileWidget->hide();
 				samplerNtspFileWidget->hide();
+				imageFileWidget->hide();
 			}
 			else if (extension == "ntmd") {
 				materialNtmlFileWidget->hide();
@@ -40,6 +44,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				modelNtmdFileWidget->show();
 				optionsNtopFileWidget->hide();
 				samplerNtspFileWidget->hide();
+				imageFileWidget->hide();
 			}
 			else if (extension == "ntop") {
 				materialNtmlFileWidget->hide();
@@ -47,6 +52,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				optionsNtopFileWidget->setPath(path);
 				optionsNtopFileWidget->show();
 				samplerNtspFileWidget->hide();
+				imageFileWidget->hide();
 			}
 			else if (extension == "ntsp") {
 				materialNtmlFileWidget->hide();
@@ -54,12 +60,22 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				optionsNtopFileWidget->hide();
 				samplerNtspFileWidget->setPath(path);
 				samplerNtspFileWidget->show();
+				imageFileWidget->hide();
+			}
+			else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
+				materialNtmlFileWidget->hide();
+				modelNtmdFileWidget->hide();
+				optionsNtopFileWidget->hide();
+				samplerNtspFileWidget->hide();
+				imageFileWidget->setPath(path);
+				imageFileWidget->show();
 			}
 			else {
 				materialNtmlFileWidget->hide();
 				modelNtmdFileWidget->hide();
 				optionsNtopFileWidget->hide();
 				samplerNtspFileWidget->hide();
+				imageFileWidget->hide();
 			}
 		}
 	}
@@ -68,5 +84,6 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 		modelNtmdFileWidget->hide();
 		optionsNtopFileWidget->hide();
 		samplerNtspFileWidget->hide();
+		imageFileWidget->hide();
 	}
 }

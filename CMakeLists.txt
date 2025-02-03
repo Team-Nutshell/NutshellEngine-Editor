@@ -136,7 +136,8 @@ set(WIDGET_SOURCES
 	src/widgets/file_push_button.cpp
 	src/widgets/file_selector_widget.cpp
 	src/widgets/help_menu.cpp
-	src/widgets/image_viewer.cpp
+	src/widgets/image_file_widget.cpp
+	src/widgets/info_label_widget.cpp
 	src/widgets/info_panel.cpp
 	src/widgets/integer_widget.cpp
 	src/widgets/key_select_widget.cpp
@@ -210,7 +211,8 @@ set(WIDGET_HEADERS
 	src/widgets/file_push_button.h
 	src/widgets/file_selector_widget.h
 	src/widgets/help_menu.h
-	src/widgets/image_viewer.h
+	src/widgets/image_file_widget.h
+	src/widgets/info_label_widget.h
 	src/widgets/info_panel.h
 	src/widgets/integer_widget.h
 	src/widgets/key_select_widget.h

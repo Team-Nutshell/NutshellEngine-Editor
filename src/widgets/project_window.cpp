@@ -22,7 +22,7 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	m_leftWidget->setFixedWidth(550);
 	m_logoLabel = new QLabel();
 	m_logoPixmap = new QPixmap("assets/logo.png");
-	m_logoLabel->setPixmap(m_logoPixmap->scaled(m_leftWidget->width() - 20, height(), Qt::AspectRatioMode::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation));
+	m_logoLabel->setPixmap(m_logoPixmap->scaledToWidth(m_leftWidget->width() - 20, Qt::TransformationMode::SmoothTransformation));
 	m_leftWidget->layout()->addWidget(m_logoLabel);
 	m_leftWidget->layout()->addWidget(new SeparatorLine(globalInfo));
 	m_leftWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("open_project")) + "</b>"));
