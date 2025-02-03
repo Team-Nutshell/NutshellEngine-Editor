@@ -1,4 +1,5 @@
 #include "file_selector_widget.h"
+#include "../common/asset_helper.h"
 #include <QHBoxLayout>
 #include <QFileDialog>
 #include <algorithm>
@@ -11,7 +12,7 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 	layout()->addWidget(filePathLabel);
 	std::string filePath = defaultPath;
 	if (!std::filesystem::path(filePath).is_absolute()) {
-		filePath = m_globalInfo.projectDirectory + "/" + filePath;
+		filePath = AssetHelper::relativeToAbsolute(filePath, m_globalInfo.projectDirectory);
 	}
 	filePathButton = new FilePushButton(m_globalInfo, noFileText, filePath, FilePushButton::PathType::File);
 	filePathButton->setAcceptDrops(true);
@@ -56,4 +57,13 @@ void FileSelectorWidget::onResetFilePathClicked() {
 		setPath("");
 		emit fileSelected("");
 	}
+}
+
+void FileSelectorWidget::mousePressEvent(QMouseEvent* event) {
+	if (event->buttons() & Qt::RightButton) {
+		if (!m_path.empty() && !std::filesystem::path(m_path).is_absolute() && std::filesystem::exists(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory))) {
+			emit m_globalInfo.signalEmitter.selectAssetSignal(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory));
+		}
+	}
+	event->accept();
 }

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
+#include <QMouseEvent>
 #include <string>
 
 class FileSelectorWidget : public QWidget {
@@ -20,6 +21,8 @@ signals:
 private slots:
 	void onPathChanged(const std::string& path);
 	void onResetFilePathClicked();
+
+	void mousePressEvent(QMouseEvent* event);
 
 private:
 	GlobalInfo& m_globalInfo;

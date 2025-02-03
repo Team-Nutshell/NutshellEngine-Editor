@@ -1,4 +1,5 @@
 #include "file_push_button.h"
+#include "../common/asset_helper.h"
 #include <QFileDialog>
 #include <QMimeData>
 
@@ -28,7 +29,7 @@ void FilePushButton::onButtonClicked() {
 			fileDialog.setDirectory(QString::fromStdString(pathDirectory));
 		}
 		else {
-			fileDialog.setDirectory(QString::fromStdString(m_globalInfo.projectDirectory + "/" + pathDirectory));
+			fileDialog.setDirectory(QString::fromStdString(AssetHelper::relativeToAbsolute(pathDirectory, m_globalInfo.projectDirectory)));
 		}
 	}
 	else {

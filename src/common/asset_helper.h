@@ -18,4 +18,8 @@ struct AssetHelper {
 
 		return path;
 	}
+
+	static std::string relativeToAbsolute(const std::string& path, const std::string& projectDirectory) {
+		return projectDirectory + "/" + path;
+	}
 };
