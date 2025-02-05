@@ -14,6 +14,7 @@ int main() {
 	application->setStyle("Fusion");
 
 	GlobalInfo globalInfo;
+	globalInfo.version = "0.1.7";
 	globalInfo.devicePixelRatio = application->devicePixelRatio();
 	globalInfo.undoStack = std::make_unique<QUndoStack>();
 
