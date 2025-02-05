@@ -37,7 +37,7 @@ void ComponentTitleWidget::onClick() {
 		}
 	}
 
-	m_globalInfo.undoStack->push(new RemoveEntityComponentCommand(m_globalInfo, entityIDs, m_name));
+	m_globalInfo.actionUndoStack->push(new RemoveEntityComponentCommand(m_globalInfo, entityIDs, m_name));
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }

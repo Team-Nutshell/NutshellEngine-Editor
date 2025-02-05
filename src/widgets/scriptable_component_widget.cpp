@@ -106,7 +106,7 @@ void ScriptableComponentWidget::updateComponents(const std::vector<EntityID>& en
 		componentPointers.push_back(&scriptables[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Scriptable", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Scriptable", componentPointers));
 }
 
 std::vector<std::string> ScriptableComponentWidget::getScriptEntries() {

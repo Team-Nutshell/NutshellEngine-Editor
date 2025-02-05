@@ -27,7 +27,7 @@ void EntityInfoPersistenceWidget::onEntitySelected() {
 }
 
 void EntityInfoPersistenceWidget::onStateChanged(int state) {
-	m_globalInfo.undoStack->push(new ChangeEntityPersistenceCommand(m_globalInfo, m_globalInfo.currentEntityID, Qt::CheckState(state) == Qt::CheckState::Checked));
+	m_globalInfo.actionUndoStack->push(new ChangeEntityPersistenceCommand(m_globalInfo, m_globalInfo.currentEntityID, Qt::CheckState(state) == Qt::CheckState::Checked));
 }
 
 void EntityInfoPersistenceWidget::onEntityPersistenceChanged(EntityID entityID, bool isPersistent) {

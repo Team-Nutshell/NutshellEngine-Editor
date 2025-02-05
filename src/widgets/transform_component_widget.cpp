@@ -39,7 +39,7 @@ void TransformComponentWidget::updateComponents(const std::vector<EntityID>& ent
 		componentPointers.push_back(&transforms[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Transform", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Transform", componentPointers));
 }
 
 void TransformComponentWidget::onEntitySelected() {

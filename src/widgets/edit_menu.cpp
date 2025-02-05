@@ -5,12 +5,19 @@
 #include <iterator>
 
 EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_edit"))), m_globalInfo(globalInfo) {
-	m_undoAction = m_globalInfo.undoStack->createUndoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_undo")));
-	m_undoAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
-	addAction(m_undoAction);
-	m_redoAction = m_globalInfo.undoStack->createRedoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_redo")));
-	m_redoAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
-	addAction(m_redoAction);
+	m_undoActionAction = m_globalInfo.actionUndoStack->createUndoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_action_undo")));
+	m_undoActionAction->setShortcut(QKeySequence::fromString("Ctrl+Z"));
+	addAction(m_undoActionAction);
+	m_redoActionAction = m_globalInfo.actionUndoStack->createRedoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_action_redo")));
+	m_redoActionAction->setShortcut(QKeySequence::fromString("Ctrl+Y"));
+	addAction(m_redoActionAction);
+	addSeparator();
+	m_undoSelectionAction = m_globalInfo.selectionUndoStack->createUndoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_selection_undo")));
+	m_undoSelectionAction->setShortcut(QKeySequence::fromString("Ctrl+K"));
+	addAction(m_undoSelectionAction);
+	m_redoSelectionAction = m_globalInfo.selectionUndoStack->createRedoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_selection_redo")));
+	m_redoSelectionAction->setShortcut(QKeySequence::fromString("Ctrl+L"));
+	addAction(m_redoSelectionAction);
 	addSeparator();
 	m_copyEntitiesAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entity")), this, &EditMenu::copyEntities);
 	m_copyEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+C"));
@@ -35,7 +42,7 @@ void EditMenu::copyEntities() {
 
 void EditMenu::pasteEntities() {
 	if (!m_globalInfo.copiedEntities.empty()) {
-		m_globalInfo.undoStack->push(new CopyEntitiesCommand(m_globalInfo, m_globalInfo.copiedEntities));
+		m_globalInfo.actionUndoStack->push(new CopyEntitiesCommand(m_globalInfo, m_globalInfo.copiedEntities));
 	}
 }
 

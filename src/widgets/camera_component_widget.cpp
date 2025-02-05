@@ -102,7 +102,7 @@ void CameraComponentWidget::updateComponents(const std::vector<EntityID>& entity
 		componentPointers.push_back(&cameras[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Camera", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Camera", componentPointers));
 }
 
 std::string CameraComponentWidget::projectionTypeToType(const std::string& projectionType) {

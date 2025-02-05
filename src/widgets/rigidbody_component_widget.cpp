@@ -61,7 +61,7 @@ void RigidbodyComponentWidget::updateComponents(const std::vector<EntityID>& ent
 		componentPointers.push_back(&rigidbodies[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Rigidbody", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Rigidbody", componentPointers));
 }
 
 void RigidbodyComponentWidget::onEntitySelected() {

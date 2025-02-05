@@ -64,7 +64,7 @@ void LightComponentWidget::updateComponents(const std::vector<EntityID>& entityI
 		componentPointers.push_back(&lights[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Light", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Light", componentPointers));
 }
 
 std::string LightComponentWidget::lightTypeToType(const std::string& lightType) {

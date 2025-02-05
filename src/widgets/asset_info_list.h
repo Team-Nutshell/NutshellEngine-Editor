@@ -6,6 +6,7 @@
 #include "sampler_ntsp_file_widget.h"
 #include "image_file_widget.h"
 #include <QWidget>
+#include <string>
 
 class AssetInfoList : public QWidget {
 	Q_OBJECT
@@ -24,4 +25,6 @@ public:
 	OptionsNtopFileWidget* optionsNtopFileWidget;
 	SamplerNtspFileWidget* samplerNtspFileWidget;
 	ImageFileWidget* imageFileWidget;
+
+	std::string currentAssetPath = "";
 };

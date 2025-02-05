@@ -1,4 +1,5 @@
 #include "clear_scene_command.h"
+#include "select_asset_entities_command.h"
 #include "../common/save_title_changer.h"
 #include "../widgets/main_window.h"
 
@@ -23,7 +24,7 @@ void ClearSceneCommand::undo() {
 }
 
 void ClearSceneCommand::redo() {
-	m_globalInfo.clearSelectedEntities();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);

@@ -8,7 +8,7 @@
 #include <fstream>
 
 void SceneManager::newScene(GlobalInfo& globalInfo) {
-	globalInfo.undoStack->push(new ClearSceneCommand(globalInfo));
+	globalInfo.actionUndoStack->push(new ClearSceneCommand(globalInfo));
 	emit globalInfo.signalEmitter.resetCameraSignal();
 }
 
@@ -65,7 +65,7 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 			}
 		}
 	}
-	globalInfo.undoStack->push(new OpenSceneCommand(globalInfo, newEntities, sceneFilePath));
+	globalInfo.actionUndoStack->push(new OpenSceneCommand(globalInfo, newEntities, sceneFilePath));
 
 	for (const auto& newEntity : newEntities) {
 		ColliderMesh::update(globalInfo, newEntity.entityID);

@@ -1,4 +1,5 @@
 #include "create_entities_from_model_command.h"
+#include "select_asset_entities_command.h"
 
 CreateEntitiesFromModelCommand::CreateEntitiesFromModelCommand(GlobalInfo& globalInfo, const std::string& name, const std::string& modelPath) : m_globalInfo(globalInfo), m_modelPath(modelPath) {
 	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_create_entities_from_model", { modelPath })));
@@ -19,7 +20,7 @@ void CreateEntitiesFromModelCommand::undo() {
 		m_globalInfo.entities.erase(entityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(entityID);
 	}
-	m_globalInfo.clearSelectedEntities();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
 }
 
 void CreateEntitiesFromModelCommand::redo() {

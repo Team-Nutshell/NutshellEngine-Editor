@@ -18,8 +18,10 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	QAction* m_undoAction;
-	QAction* m_redoAction;
+	QAction* m_undoActionAction;
+	QAction* m_redoActionAction;
+	QAction* m_undoSelectionAction;
+	QAction* m_redoSelectionAction;
 	QAction* m_copyEntitiesAction;
 	QAction* m_pasteEntitiesAction;
 };

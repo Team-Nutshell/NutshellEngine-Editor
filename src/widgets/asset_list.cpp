@@ -5,6 +5,7 @@
 #include "main_window.h"
 #include "../common/asset_helper.h"
 #include "../common/scene_manager.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QImage>
@@ -123,7 +124,7 @@ void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
 		std::replace(selectedElementPath.begin(), selectedElementPath.end(), '\\', '/');
 
 		if (!std::filesystem::is_directory(selectedElementPath)) {
-			emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
+			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, selectedElementPath, NO_ENTITY, std::set<EntityID>()));
 			actionOnFile(itemFileName);
 		}
 		else {
@@ -141,7 +142,7 @@ void AssetList::onFileRenamed(const std::string& oldFilename, const std::string&
 		m_globalInfo.currentScenePath = newFilename;
 		m_globalInfo.mainWindow->updateTitle();
 	}
-	emit m_globalInfo.signalEmitter.selectAssetSignal(newFilename);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, newFilename, NO_ENTITY, std::set<EntityID>()));
 }
 
 void AssetList::onCloseSceneConfirmed() {
@@ -232,7 +233,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 				enterDirectory(selectedElementPath);
 			}
 			else {
-				emit m_globalInfo.signalEmitter.selectAssetSignal(selectedElementPath);
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, selectedElementPath, NO_ENTITY, std::set<EntityID>()));
 				actionOnFile(itemFileName);
 			}
 		}
@@ -275,7 +276,7 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			}
 			std::filesystem::copy(m_currentDirectory + "/" + itemFileName, m_currentDirectory + "/" + duplicatedAssetName, copyOptions);
 			if (!isDirectory) {
-				emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + duplicatedAssetName);
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_currentDirectory + "/" + duplicatedAssetName, NO_ENTITY, std::set<EntityID>()));
 			}
 		}
 		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_R)) {
@@ -374,7 +375,7 @@ void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEdi
 			std::filesystem::rename(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
 			emit m_globalInfo.signalEmitter.renameFileSignal(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
 			if (!std::filesystem::is_directory(m_currentDirectory + "/" + newName)) {
-				emit m_globalInfo.signalEmitter.selectAssetSignal(m_currentDirectory + "/" + newName);
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_currentDirectory + "/" + newName, NO_ENTITY, std::set<EntityID>()));
 			}
 		}
 	}

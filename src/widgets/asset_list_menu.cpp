@@ -3,6 +3,7 @@
 #include "delete_asset_widget.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include <QClipboard>
 #include <filesystem>
 #include <fstream>
@@ -67,7 +68,7 @@ void AssetListMenu::duplicateAsset() {
 	}
 	std::filesystem::copy(directory + "/" + filename, directory + "/" + duplicatedAssetName, copyOptions);
 	if (!isDirectory) {
-		emit m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + duplicatedAssetName);
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + duplicatedAssetName, NO_ENTITY, std::set<EntityID>()));
 	}
 }
 
@@ -118,7 +119,7 @@ void AssetListMenu::newModel() {
 })";
 	newModelFile.close();
 
-	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newModelName + modelExtension);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newModelName + modelExtension, NO_ENTITY, std::set<EntityID>()));
 }
 
 void AssetListMenu::newImageSampler() {
@@ -143,7 +144,7 @@ void AssetListMenu::newImageSampler() {
 })";
 	newImageSamplerFile.close();
 
-	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newImageSamplerName + imageSamplerExtension);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newImageSamplerName + imageSamplerExtension, NO_ENTITY, std::set<EntityID>()));
 }
 
 void AssetListMenu::newMaterial() {
@@ -187,7 +188,7 @@ void AssetListMenu::newMaterial() {
 })";
 	newMaterialFile.close();
 
-	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newMaterialName + materialExtension);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, std::set<EntityID>()));
 }
 
 void AssetListMenu::newScene() {
@@ -204,7 +205,7 @@ void AssetListMenu::newScene() {
 })";
 	newSceneFile.close();
 
-	m_globalInfo.signalEmitter.selectAssetSignal(directory + "/" + newSceneName + sceneExtension);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, std::set<EntityID>()));
 }
 
 void AssetListMenu::copyPath() {

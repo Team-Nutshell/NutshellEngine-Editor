@@ -17,6 +17,11 @@
 
 class MainWindow;
 
+enum class SelectionType {
+	Asset,
+	Entities
+};
+
 struct GlobalInfo {
 	std::string version;
 
@@ -35,7 +40,9 @@ struct GlobalInfo {
 
 	MainWindow* mainWindow;
 
-	std::unique_ptr<QUndoStack> undoStack;
+	std::unique_ptr<QUndoStack> actionUndoStack;
+	std::unique_ptr<QUndoStack> selectionUndoStack;
+	SelectionType lastSelectionType = SelectionType::Entities;
 	EditorParameters editorParameters;
 	SignalEmitter signalEmitter;
 	Localization localization;
@@ -50,11 +57,5 @@ struct GlobalInfo {
 		}
 
 		return NO_ENTITY;
-	}
-
-	void clearSelectedEntities() {
-		currentEntityID = NO_ENTITY;
-		otherSelectedEntityIDs.clear();
-		emit signalEmitter.selectEntitySignal();
 	}
 };

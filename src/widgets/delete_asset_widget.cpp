@@ -1,4 +1,5 @@
 #include "delete_asset_widget.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -34,7 +35,7 @@ void DeleteAssetWidget::onOkButtonClicked() {
 		else {
 			std::filesystem::remove(m_path);
 		}
-		emit m_globalInfo.signalEmitter.selectAssetSignal("");
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, "", NO_ENTITY, std::set<EntityID>()));
 	}
 	close();
 }

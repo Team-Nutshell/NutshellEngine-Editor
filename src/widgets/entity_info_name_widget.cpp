@@ -17,7 +17,7 @@ void EntityInfoNameWidget::onEntitySelected() {
 void EntityInfoNameWidget::onEditingFinished() {
 	if (m_previousName != text().toStdString()) {
 		m_previousName = text().toStdString();
-		m_globalInfo.undoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, text().toStdString()));
+		m_globalInfo.actionUndoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, text().toStdString()));
 	}
 }
 

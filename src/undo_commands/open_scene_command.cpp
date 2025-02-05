@@ -1,4 +1,5 @@
 #include "open_scene_command.h"
+#include "select_asset_entities_command.h"
 #include "../common/save_title_changer.h"
 #include "../widgets/main_window.h"
 
@@ -14,7 +15,7 @@ OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::vector<Ent
 }
 
 void OpenSceneCommand::undo() {
-	m_globalInfo.clearSelectedEntities();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);
@@ -37,7 +38,7 @@ void OpenSceneCommand::undo() {
 }
 
 void OpenSceneCommand::redo() {
-	m_globalInfo.clearSelectedEntities();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);

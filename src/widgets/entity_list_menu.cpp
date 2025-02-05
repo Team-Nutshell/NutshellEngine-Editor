@@ -17,9 +17,9 @@ void EntityListMenu::renameEntity() {
 }
 
 void EntityListMenu::newEntity() {
-	m_globalInfo.undoStack->push(new CreateEntityCommand(m_globalInfo, "Entity_" + std::to_string(m_globalInfo.globalEntityID)));
+	m_globalInfo.actionUndoStack->push(new CreateEntityCommand(m_globalInfo, "Entity_" + std::to_string(m_globalInfo.globalEntityID)));
 }
 
 void EntityListMenu::deleteEntity() {
-	m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, { m_globalInfo.currentEntityID }));
+	m_globalInfo.actionUndoStack->push(new DestroyEntitiesCommand(m_globalInfo, { m_globalInfo.currentEntityID }));
 }

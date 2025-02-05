@@ -106,7 +106,7 @@ void CollidableComponentWidget::updateComponents(const std::vector<EntityID>& en
 		componentPointers.push_back(&collidables[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Collidable", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Collidable", componentPointers));
 }
 
 void CollidableComponentWidget::updateFromRenderableWidget() {

@@ -3,6 +3,7 @@
 #include "../undo_commands/destroy_entities_command.h"
 #include "../undo_commands/change_entities_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include "../widgets/main_window.h"
 #include <QKeySequence>
 #include <QKeyEvent>
@@ -1020,30 +1021,32 @@ void Renderer::paintGL() {
 		uint32_t pickedEntityID;
 		gl.glReadPixels(cursorPosition.x() * m_globalInfo.devicePixelRatio, ((height() - 1) - cursorPosition.y()) * m_globalInfo.devicePixelRatio, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedEntityID);
 		if (pickedEntityID != NO_ENTITY) {
+			EntityID currentEntityID = m_globalInfo.currentEntityID;
+			std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 			if (pickedEntityID < (NO_ENTITY - 3)) {
 				if (m_globalInfo.currentEntityID != pickedEntityID) {
 					if (m_multiSelectionKeyPressed) {
 						if (m_globalInfo.currentEntityID != NO_ENTITY) {
-							m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+							otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
 						}
-						m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
-						m_globalInfo.currentEntityID = pickedEntityID;
+						otherSelectedEntityIDs.erase(pickedEntityID);
+						currentEntityID = pickedEntityID;
 					}
 					else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-						m_globalInfo.otherSelectedEntityIDs.erase(pickedEntityID);
+						otherSelectedEntityIDs.erase(pickedEntityID);
 					}
 					else {
-						m_globalInfo.otherSelectedEntityIDs.clear();
-						m_globalInfo.currentEntityID = pickedEntityID;
+						otherSelectedEntityIDs.clear();
+						currentEntityID = pickedEntityID;
 					}
 				}
 				else {
 					if (!m_multiSelectionKeyPressed) {
-						m_globalInfo.otherSelectedEntityIDs.clear();
-						m_globalInfo.currentEntityID = pickedEntityID;
+						otherSelectedEntityIDs.clear();
+						currentEntityID = pickedEntityID;
 					}
 				}
-				emit m_globalInfo.signalEmitter.selectEntitySignal();
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 			else {
 				if (pickedEntityID == (NO_ENTITY - 3)) {
@@ -1059,7 +1062,7 @@ void Renderer::paintGL() {
 			}
 		}
 		else {
-			m_globalInfo.clearSelectedEntities();
+			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
 		}
 
 		m_doPicking = false;
@@ -1992,7 +1995,7 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
-			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
+			m_globalInfo.actionUndoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
 		}
 	}
 	else if (event->key() == Qt::Key_Control) {
@@ -2059,7 +2062,7 @@ void Renderer::mousePressEvent(QMouseEvent* event) {
 					changedEntityIDs.push_back(otherSelectedEntityID);
 					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityID]);
 				}
-				m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
+				m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
 				m_entityMoveTransforms.clear();
 			}
 		}
@@ -2096,7 +2099,7 @@ void Renderer::mouseReleaseEvent(QMouseEvent* event) {
 					changedEntityIDs.push_back(otherSelectedEntityID);
 					changedEntityTransforms.push_back(&m_entityMoveTransforms[otherSelectedEntityID]);
 				}
-				m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
+				m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changedEntityIDs, "Transform", changedEntityTransforms));
 				m_entityMoveTransforms.clear();
 			}
 		}
@@ -2217,7 +2220,7 @@ void Renderer::dropEvent(QDropEvent* event) {
 				if (dotPosition != std::string::npos) {
 					name = name.substr(0, dotPosition);
 				}
-				m_globalInfo.undoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
+				m_globalInfo.actionUndoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
 			}
 		}
 	}

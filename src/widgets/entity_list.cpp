@@ -3,6 +3,7 @@
 #include "../common/save_title_changer.h"
 #include "../undo_commands/destroy_entities_command.h"
 #include "../undo_commands/change_entity_name_command.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include <QSizePolicy>
 #include <QLabel>
 #include <QSignalBlocker>
@@ -107,68 +108,72 @@ void EntityList::showMenu(const QPoint& pos) {
 void EntityList::onItemPressed(QListWidgetItem* listWidgetItem) {
 	EntityListItem* entityListItem = static_cast<EntityListItem*>(listWidgetItem);
 
+	EntityID currentEntityID = m_globalInfo.currentEntityID;
+	std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 	if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
 		if (m_globalInfo.currentEntityID != NO_ENTITY) {
 			int currentEntityIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
 			int selectionIndex = row(listWidgetItem);
 			int startRange = std::min(currentEntityIndex, selectionIndex);
 			int endRange = std::max(currentEntityIndex, selectionIndex);
-			m_globalInfo.otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
+			otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
 			for (int i = startRange; i < endRange; i++) {
-				m_globalInfo.otherSelectedEntityIDs.insert(static_cast<EntityListItem*>(item(i))->entityID);
+				otherSelectedEntityIDs.insert(static_cast<EntityListItem*>(item(i))->entityID);
 			}
 		}
-		m_globalInfo.otherSelectedEntityIDs.erase(entityListItem->entityID);
-		m_globalInfo.currentEntityID = entityListItem->entityID;
+		otherSelectedEntityIDs.erase(entityListItem->entityID);
+		currentEntityID = entityListItem->entityID;
 	}
 	else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-		m_globalInfo.otherSelectedEntityIDs.erase(entityListItem->entityID);
+		otherSelectedEntityIDs.erase(entityListItem->entityID);
 	}
 	else {
-		m_globalInfo.otherSelectedEntityIDs.clear();
-		m_globalInfo.currentEntityID = entityListItem->entityID;
+		otherSelectedEntityIDs.clear();
+		currentEntityID = entityListItem->entityID;
 	}
-	emit m_globalInfo.signalEmitter.selectEntitySignal();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 }
 
 void EntityList::keyPressEvent(QKeyEvent* event) {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		EntityID currentEntityID = m_globalInfo.currentEntityID;
+		std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 		int currentSelectionIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
 		if (event->key() == Qt::Key_Delete) {
 			std::vector<EntityID> entitiesToDestroy = { m_globalInfo.currentEntityID };
 			std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entitiesToDestroy));
-			m_globalInfo.undoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
+			m_globalInfo.actionUndoStack->push(new DestroyEntitiesCommand(m_globalInfo, entitiesToDestroy));
 			if (count() != 0) {
 				if (currentSelectionIndex < count()) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 				else if (currentSelectionIndex > count()) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(count() - 1));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 				else {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 			}
-			emit m_globalInfo.signalEmitter.selectEntitySignal();
 		}
 		else if (event->key() == Qt::Key_Up) {
 			if (!m_moveEntityOrderKeyPressed) {
-				m_globalInfo.clearSelectedEntities();
+				currentEntityID = NO_ENTITY;
+				otherSelectedEntityIDs.clear();
 				if (currentSelectionIndex == 0) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(count() - 1));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 				else {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 			}
 			else {
 				std::vector<int> entityIndexes = { currentSelectionIndex };
-				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+				for (EntityID otherSelectedEntityID : otherSelectedEntityIDs) {
 					entityIndexes.push_back(row(findItemWithEntityID(otherSelectedEntityID)));
 				}
 				std::sort(entityIndexes.begin(), entityIndexes.end());
@@ -195,14 +200,15 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 		}
 		else if (event->key() == Qt::Key_Down) {
 			if (!m_moveEntityOrderKeyPressed) {
-				m_globalInfo.clearSelectedEntities();
+				currentEntityID = NO_ENTITY;
+				otherSelectedEntityIDs.clear();
 				if (currentSelectionIndex == (count() - 1)) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(0));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 				else {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex + 1));
-					m_globalInfo.currentEntityID = entityListItem->entityID;
+					currentEntityID = entityListItem->entityID;
 				}
 			}
 			else {
@@ -240,7 +246,7 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			entityListItem->setFlags(entityListItem->flags() | Qt::ItemFlag::ItemIsEditable);
 			editItem(entityListItem);
 		}
-		emit m_globalInfo.signalEmitter.selectEntitySignal();
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	}
 }
 
@@ -277,5 +283,5 @@ void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEd
 		return;
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, newEntityName));
+	m_globalInfo.actionUndoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, newEntityName));
 }

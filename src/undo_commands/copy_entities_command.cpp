@@ -1,4 +1,5 @@
 #include "copy_entities_command.h"
+#include "select_asset_entities_command.h"
 #include "../widgets/main_window.h"
 #include "../widgets/entity_list.h"
 
@@ -29,18 +30,29 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 }
 
 void CopyEntitiesCommand::undo() {
+	EntityID currentEntityID = m_globalInfo.currentEntityID;
+	std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	bool clearAllSelection = false;
 	for (EntityID pastedEntityID : m_pastedEntityIDs) {
 		m_globalInfo.entities.erase(pastedEntityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(pastedEntityID);
-		m_globalInfo.otherSelectedEntityIDs.erase(pastedEntityID);
+		otherSelectedEntityIDs.erase(pastedEntityID);
 		if (pastedEntityID == m_globalInfo.currentEntityID) {
-			m_globalInfo.clearSelectedEntities();
+			clearAllSelection = true;
 		}
+	}
+
+	if (clearAllSelection) {
+		emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+	}
+	else {
+		emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	}
 }
 
 void CopyEntitiesCommand::redo() {
-	m_globalInfo.otherSelectedEntityIDs.clear();
+	EntityID currentEntityID = m_globalInfo.currentEntityID;
+	std::set<EntityID> otherSelectedEntityIDs;
 	for (size_t i = 0; i < m_copiedEntities.size(); i++) {
 		Entity& copiedEntity = m_copiedEntities[i];
 
@@ -51,12 +63,12 @@ void CopyEntitiesCommand::redo() {
 		emit m_globalInfo.signalEmitter.createEntitySignal(m_pastedEntityIDs[i]);
 
 		if (i == 0) {
-			m_globalInfo.currentEntityID = pastedEntity.entityID;
-			emit m_globalInfo.signalEmitter.selectEntitySignal();
+			currentEntityID = pastedEntity.entityID;
 		}
 		else {
-			m_globalInfo.otherSelectedEntityIDs.insert(pastedEntity.entityID);
+			otherSelectedEntityIDs.insert(pastedEntity.entityID);
 		}
 	}
+	emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	m_globalInfo.mainWindow->entityPanel->entityList->updateSelection();
 }

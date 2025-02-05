@@ -2,6 +2,7 @@
 #include "separator_line.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <fstream>
@@ -400,7 +401,7 @@ void MaterialNtmlFileWidget::onValueChanged() {
 	}
 
 	if (newMaterialNtml != materialNtml) {
-		m_globalInfo.undoStack->push(new ChangeMaterialNtmlFile(m_globalInfo, newMaterialNtml, m_materialFilePath));
+		m_globalInfo.actionUndoStack->push(new ChangeMaterialNtmlFile(m_globalInfo, newMaterialNtml, m_materialFilePath));
 	}
 }
 
@@ -414,7 +415,7 @@ ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialN
 }
 
 void ChangeMaterialNtmlFile::undo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_materialNtmlFileWidget->materialNtml = m_oldMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
@@ -423,7 +424,7 @@ void ChangeMaterialNtmlFile::undo() {
 }
 
 void ChangeMaterialNtmlFile::redo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_materialNtmlFileWidget->materialNtml = m_newMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();

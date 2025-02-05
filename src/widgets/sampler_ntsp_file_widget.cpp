@@ -1,6 +1,7 @@
 #include "sampler_ntsp_file_widget.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -270,7 +271,7 @@ void SamplerNtspFileWidget::onValueChanged() {
 	}
 
 	if (newSamplerNtsp != samplerNtsp) {
-		m_globalInfo.undoStack->push(new ChangeSamplerNtspFile(m_globalInfo, newSamplerNtsp, m_samplerFilePath));
+		m_globalInfo.actionUndoStack->push(new ChangeSamplerNtspFile(m_globalInfo, newSamplerNtsp, m_samplerFilePath));
 	}
 }
 
@@ -284,7 +285,7 @@ ChangeSamplerNtspFile::ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp
 }
 
 void ChangeSamplerNtspFile::undo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_samplerNtspFileWidget->samplerNtsp = m_oldSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();
@@ -293,7 +294,7 @@ void ChangeSamplerNtspFile::undo() {
 }
 
 void ChangeSamplerNtspFile::redo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_samplerNtspFileWidget->samplerNtsp = m_newSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();

@@ -36,7 +36,7 @@ void SoundListenerComponentWidget::updateComponents(const std::vector<EntityID>&
 		componentPointers.push_back(&soundListeners[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "SoundListener", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "SoundListener", componentPointers));
 }
 
 void SoundListenerComponentWidget::onEntitySelected() {

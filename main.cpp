@@ -16,7 +16,8 @@ int main() {
 	GlobalInfo globalInfo;
 	globalInfo.version = "0.1.7";
 	globalInfo.devicePixelRatio = application->devicePixelRatio();
-	globalInfo.undoStack = std::make_unique<QUndoStack>();
+	globalInfo.actionUndoStack = std::make_unique<QUndoStack>();
+	globalInfo.selectionUndoStack = std::make_unique<QUndoStack>();
 
 	ProjectWindow projectWindow(globalInfo);
 	projectWindow.show();

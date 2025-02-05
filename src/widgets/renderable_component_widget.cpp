@@ -91,7 +91,7 @@ void RenderableComponentWidget::updateComponents(const std::vector<EntityID>& en
 		componentPointers.push_back(&renderables[i]);
 	}
 
-	m_globalInfo.undoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Renderable", componentPointers));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, entityIDs, "Renderable", componentPointers));
 }
 
 void RenderableComponentWidget::onEntitySelected() {

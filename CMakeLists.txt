@@ -87,7 +87,8 @@ set(UNDO_COMMANDS_SOURCES
 	src/undo_commands/create_entity_command.cpp
 	src/undo_commands/destroy_entities_command.cpp
 	src/undo_commands/open_scene_command.cpp
-	src/undo_commands/remove_entity_component_command.cpp)
+	src/undo_commands/remove_entity_component_command.cpp
+	src/undo_commands/select_asset_entities_command.cpp)
 set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/add_entity_component_command.h
 	src/undo_commands/change_entities_component_command.h
@@ -99,7 +100,8 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/create_entity_command.h
 	src/undo_commands/destroy_entities_command.h
 	src/undo_commands/open_scene_command.h
-	src/undo_commands/remove_entity_component_command.h)
+	src/undo_commands/remove_entity_component_command.h
+	src/undo_commands/select_asset_entities_command.h)
 
 set(WIDGET_SOURCES
 	src/widgets/about_widget.cpp

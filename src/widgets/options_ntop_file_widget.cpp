@@ -1,6 +1,7 @@
 #include "options_ntop_file_widget.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
@@ -130,7 +131,7 @@ void OptionsNtopFileWidget::onValueChanged() {
 	}
 
 	if (newOptionsNtop != optionsNtop) {
-		m_globalInfo.undoStack->push(new ChangeOptionsNtopFile(m_globalInfo, newOptionsNtop, m_optionsFilePath));
+		m_globalInfo.actionUndoStack->push(new ChangeOptionsNtopFile(m_globalInfo, newOptionsNtop, m_optionsFilePath));
 	}
 }
 
@@ -144,7 +145,7 @@ ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop
 }
 
 void ChangeOptionsNtopFile::undo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_optionsNtopFileWidget->optionsNtop = m_oldOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
@@ -153,7 +154,7 @@ void ChangeOptionsNtopFile::undo() {
 }
 
 void ChangeOptionsNtopFile::redo() {
-	emit m_globalInfo.signalEmitter.selectAssetSignal(m_filePath);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
 
 	m_optionsNtopFileWidget->optionsNtop = m_newOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
