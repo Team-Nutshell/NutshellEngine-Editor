@@ -35,7 +35,7 @@ void LogsWidget::updateLogs() {
 		time.erase(std::remove(time.begin(), time.end(), '\n'), time.end());
 
 		LogLevel logLevel = std::get<1>(logs[i]);
-		std::string level = "Info";
+		std::string level = m_globalInfo.localization.getString("logs_level_info");
 		if (logLevel == LogLevel::Info) {
 			level = m_globalInfo.localization.getString("logs_level_info");
 		}
