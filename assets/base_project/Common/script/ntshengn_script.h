@@ -23,6 +23,10 @@ namespace NtshEngn {
 
 	protected:
 		// Resources
+		Model* createModel(const std::string& modelName) {
+			return assetManager->createModel(modelName);
+		}
+
 		Model* loadModel(const std::string& filePath) {
 			return assetManager->loadModel(filePath);
 		}
@@ -35,8 +39,40 @@ namespace NtshEngn {
 			return graphicsModule->load(mesh);
 		}
 
+		void destroyModel(const std::string& modelName) {
+			assetManager->destroyModel(modelName);
+		}
+
+		Model* findModelByName(const std::string& modelName) {
+			return assetManager->findModelByName(modelName);
+		}
+
+		std::string getModelName(const Model* model) {
+			return assetManager->getModelName(model);
+		}
+
+		Material* createMaterial(const std::string& materialName) {
+			return assetManager->createMaterial(materialName);
+		}
+
 		Material* loadMaterial(const std::string& filePath) {
 			return assetManager->loadMaterial(filePath);
+		}
+
+		void destroyMaterial(const std::string& materialName) {
+			assetManager->destroyMaterial(materialName);
+		}
+
+		Material* findMaterialByName(const std::string& materialName) {
+			return assetManager->findMaterialByName(materialName);
+		}
+
+		std::string getMaterialName(const Material* material) {
+			return assetManager->getMaterialName(material);
+		}
+
+		Image* createImage(const std::string& imageName) {
+			return assetManager->createImage(imageName);
 		}
 
 		Image* loadImage(const std::string& filePath) {
@@ -51,6 +87,22 @@ namespace NtshEngn {
 			return graphicsModule->load(image);
 		}
 
+		void destroyImage(const std::string& imageName) {
+			assetManager->destroyImage(imageName);
+		}
+
+		Image* findImageByName(const std::string& imageName) {
+			return assetManager->findImageByName(imageName);
+		}
+
+		std::string getImageName(const Image* image) {
+			return assetManager->getImageName(image);
+		}
+
+		Font* createFont(const std::string& fontName) {
+			return assetManager->createFont(fontName);
+		}
+
 		Font* loadFont(const std::string& filePath, float fontHeight) {
 			return assetManager->loadFont(filePath, fontHeight);
 		}
@@ -63,6 +115,22 @@ namespace NtshEngn {
 			return graphicsModule->load(font);
 		}
 
+		void destroyFont(const std::string& fontName) {
+			assetManager->destroyFont(fontName);
+		}
+
+		Font* findFontByName(const std::string& fontName) {
+			return assetManager->findFontByName(fontName);
+		}
+
+		std::string getFontName(const Font* font) {
+			return assetManager->getFontName(font);
+		}
+
+		Sound* createSound(const std::string& soundName) {
+			return assetManager->createSound(soundName);
+		}
+
 		Sound* loadSound(const std::string& filePath) {
 			return assetManager->loadSound(filePath);
 		}
@@ -73,6 +141,18 @@ namespace NtshEngn {
 			}
 
 			return audioModule->load(sound);
+		}
+
+		void destroySound(const std::string& soundName) {
+			assetManager->destroySound(soundName);
+		}
+
+		Sound* findSoundByName(const std::string& soundName) {
+			return assetManager->findSoundByName(soundName);
+		}
+
+		std::string getSoundName(const Sound* sound) {
+			return assetManager->getSoundName(sound);
 		}
 
 		// Scenes

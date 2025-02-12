@@ -274,18 +274,24 @@ namespace NtshEngn {
 		// Range of position per particle
 		std::array<Math::vec3, 2> positionRange = { Math::vec3(0.0f, 0.0f, 0.0f), Math::vec3(0.0f, 0.0f, 0.0f) };
 
-		// Base direction and range of rotation per particle
+		// Base direction and range of direction angle per particle
 		Math::vec3 baseDirection = Math::vec3(0.0f, 0.0f, 1.0f);
-		std::array<Math::vec3, 2> rotationRange = { Math::vec3(0.0f, 0.0f, 0.0f), Math::vec3(0.0f, 0.0f, 0.0f) };
+		std::array<Math::vec3, 2> directionAnglesRange = { Math::vec3(0.0f, 0.0f, 0.0f), Math::vec3(0.0f, 0.0f, 0.0f) };
 
 		// Range of speed per particle
 		std::array<float, 2> speedRange = { 0.0f, 0.0f };
 
-		// Range of color per particle
+		// Texture of the particles
+		Image* image = nullptr;
+
+		// Range of color per particle, if image is not null, the color is multiplied to the image
 		std::array<Math::vec4, 2> colorRange = { Math::vec4(0.0f, 0.0f, 0.0f, 0.0f), Math::vec4(0.0f, 0.0f, 0.0f, 0.0f) };
 
 		// Range of size per particle
 		std::array<float, 2> sizeRange = { 0.0f, 0.0f };
+
+		// Range of rotation per particle
+		std::array<float, 2> rotationRange = { 0.0f, 0.0f };
 	};
 
 }

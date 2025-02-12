@@ -44,26 +44,41 @@ namespace NtshEngn {
 
 	class AssetManagerInterface {
 	public:
-		virtual Sound* createSound() = 0;
-		virtual Sound* loadSound(const std::string& filePath) = 0;
-
-		virtual Model* createModel() = 0;
+		virtual Model* createModel(const std::string& modelName) = 0;
 		virtual Model* loadModel(const std::string& filePath) = 0;
 
-		virtual Material* createMaterial() = 0;
+		virtual Material* createMaterial(const std::string& materialName) = 0;
 		virtual Material* loadMaterial(const std::string& filePath) = 0;
 
-		virtual Image* createImage() = 0;
+		virtual Image* createImage(const std::string& imageName) = 0;
 		virtual Image* loadImage(const std::string& filePath) = 0;
 
-		virtual Font* createFont() = 0;
+		virtual Font* createFont(const std::string& fontName) = 0;
 		virtual Font* loadFont(const std::string& filePath, float fontHeight) = 0;
+		
+		virtual Sound* createSound(const std::string& soundName) = 0;
+		virtual Sound* loadSound(const std::string& filePath) = 0;
 
-		virtual void destroySound(Sound* sound) = 0;
-		virtual void destroyModel(Model* model) = 0;
-		virtual void destroyMaterial(Material* material) = 0;
-		virtual void destroyImage(Image* image) = 0;
-		virtual void destroyFont(Font* font) = 0;
+		virtual void destroyModel(const std::string& modelName) = 0;
+		virtual void destroyMaterial(const std::string& materialName) = 0;
+		virtual void destroyImage(const std::string& imageName) = 0;
+		virtual void destroyFont(const std::string& fontName) = 0;
+		virtual void destroySound(const std::string& soundName) = 0;
+
+		virtual Model* findModelByName(const std::string& modelName) = 0;
+		virtual std::string getModelName(const Model* model) = 0;
+
+		virtual Material* findMaterialByName(const std::string& materialName) = 0;
+		virtual std::string getMaterialName(const Material* material) = 0;
+
+		virtual Image* findImageByName(const std::string& imageName) = 0;
+		virtual std::string getImageName(const Image* image) = 0;
+
+		virtual Font* findFontByName(const std::string& fontName) = 0;
+		virtual std::string getFontName(const Font* font) = 0;
+
+		virtual Sound* findSoundByName(const std::string& soundName) = 0;
+		virtual std::string getSoundName(const Sound* sound) = 0;
 
 		virtual void calculateTangents(Mesh& mesh) = 0;
 		virtual std::array<Math::vec3, 2> calculateAABB(const Mesh& mesh) = 0;
