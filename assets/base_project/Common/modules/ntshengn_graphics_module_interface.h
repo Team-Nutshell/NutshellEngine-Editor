@@ -32,6 +32,8 @@ namespace NtshEngn {
 
 		// Emits particles described by particleEmitter
 		virtual void emitParticles(const ParticleEmitter& particleEmitter) = 0;
+		// Destroys all particles
+		virtual void destroyParticles() = 0;
 
 		// Draws a text on the UI with the font in the fontID parameter using the position on screen and color
 		virtual void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec4& color) = 0;

@@ -157,6 +157,7 @@ namespace NtshEngn {
 
 		// Scenes
 		void goToScene(const std::string& filePath) {
+			destroyParticles();
 			sceneManager->goToScene(filePath);
 		}
 
@@ -707,6 +708,14 @@ namespace NtshEngn {
 			}
 
 			graphicsModule->emitParticles(particleEmitter);
+		}
+
+		void destroyParticles() {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->destroyParticles();
 		}
 
 		// Physics
