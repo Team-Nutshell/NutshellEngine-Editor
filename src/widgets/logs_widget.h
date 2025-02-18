@@ -16,6 +16,7 @@ private slots:
 	void onClearLogsButtonClicked();
 	void onLogAdded();
 	void onLogsCleared();
+	void onScrollBarRangeChanged(int min, int max);
 	void closeEvent(QCloseEvent* event);
 
 signals:

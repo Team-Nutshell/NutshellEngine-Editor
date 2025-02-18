@@ -24,6 +24,7 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(clearLogsButton, &QPushButton::clicked, this, &LogsWidget::onClearLogsButtonClicked);
 	connect(&m_globalInfo.logger, &Logger::addLogSignal, this, &LogsWidget::onLogAdded);
 	connect(&m_globalInfo.logger, &Logger::clearLogsSignal, this, &LogsWidget::onLogsCleared);
+	connect(logsTable->verticalScrollBar(), &QScrollBar::rangeChanged, this, &LogsWidget::onScrollBarRangeChanged);
 
 	updateLogs();
 }
@@ -77,7 +78,6 @@ void LogsWidget::updateLogs() {
 		}
 	}
 	m_currentLog += logs.size() - m_currentLog;
-	logsTable->verticalScrollBar()->setSliderPosition(logsTable->verticalScrollBar()->maximum());
 }
 
 void LogsWidget::onClearLogsButtonClicked() {
@@ -89,6 +89,11 @@ void LogsWidget::onLogsCleared() {
 	logsTable->setRowCount(0);
 
 	m_currentLog = 0;
+}
+
+void LogsWidget::onScrollBarRangeChanged(int min, int max) {
+	(void)(min);
+	logsTable->verticalScrollBar()->setSliderPosition(max);
 }
 
 void LogsWidget::onLogAdded() {
