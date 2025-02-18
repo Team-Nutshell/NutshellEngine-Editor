@@ -1,5 +1,6 @@
 #pragma once
 #include "../Common/script/ntshengn_script.h"
+#include "GameControllerScript.h"
 
 using namespace NtshEngn;
 struct CameraScript : public Script {
@@ -14,63 +15,40 @@ struct CameraScript : public Script {
 
 		const Transform& transform = getEntityComponent<Transform>(entityID);
 
-		m_yaw = Math::toDeg(transform.rotation.y);
-		m_pitch = Math::toDeg(transform.rotation.x);
-
 		const Camera& camera = getEntityComponent<Camera>(entityID);
 		Math::vec3 cameraForward = Math::normalize(camera.forward);
 
-		m_forwardYaw = std::atan2(cameraForward.z, cameraForward.x);
-		m_forwardPitch = -std::asin(cameraForward.y);
+		m_yaw = Math::toDeg(transform.rotation.y) + Math::toDeg(std::atan2(cameraForward.z, cameraForward.x));
+		m_pitch = Math::toDeg(transform.rotation.x) + Math::toDeg(-std::asin(cameraForward.y));
 	}
 
 	void update(float dt) {
+		NTSHENGN_UNUSED(dt);
+
+		Entity gameController = findEntityByName("GameController");
+		Scriptable& gameControllerScriptable = getEntityComponent<Scriptable>(gameController);
+		GameControllerScript* gameControllerScript = static_cast<GameControllerScript*>(gameControllerScriptable.script);
+
 		GamepadID gamepad = getConnectedGamepads().empty() ? NTSHENGN_GAMEPAD_UNKNOWN : getConnectedGamepads()[0];
-		if (gamepad != NTSHENGN_GAMEPAD_UNKNOWN) {
-			if ((getGamepadButtonState(gamepad, InputGamepadButton::Any) == InputState::Pressed) ||
-				(getGamepadLeftTrigger(gamepad) > 0.1f) ||
-				(getGamepadRightTrigger(gamepad) > 0.1f) ||
-				(std::abs(getGamepadStickAxisX(gamepad, InputGamepadStick::Left)) > 0.1f) ||
-				(std::abs(getGamepadStickAxisY(gamepad, InputGamepadStick::Left)) > 0.1f) ||
-				(std::abs(getGamepadStickAxisX(gamepad, InputGamepadStick::Right)) > 0.1f) ||
-				(std::abs(getGamepadStickAxisY(gamepad, InputGamepadStick::Right)) > 0.1f)) {
-				m_keyboardMode = false;
-			}
-		}
-		else {
-			m_keyboardMode = true;
-		}
 
-		if (getKeyState(InputKeyboardKey::Any) == InputState::Pressed) {
-			m_keyboardMode = true;
-		}
-
-		if (m_keyboardMode) {
+		if (gameControllerScript->keyboardMode) {
 			if (getKeyState(InputKeyboardKey::Escape) == InputState::Pressed) {
 				m_mouseMiddleMode = !m_mouseMiddleMode;
+
+				m_prevMouseX = getWindowWidth() / 2;
+				m_prevMouseY = getWindowHeight() / 2;
+				setCursorPosition(m_prevMouseX, m_prevMouseY);
+
 				setCursorVisibility(!m_mouseMiddleMode);
-				if (m_mouseMiddleMode) {
-					m_prevMouseX = getWindowWidth() / 2;
-					m_prevMouseY = getWindowHeight() / 2;
-					setCursorPosition(m_prevMouseX, m_prevMouseY);
-				}
 			}
 		}
 		else {
-			if (getGamepadButtonState(gamepad, InputGamepadButton::Start) == InputState::Pressed) {
+			if (getGamepadButtonState(gameControllerScript->gamepad, InputGamepadButton::Start) == InputState::Pressed) {
 				m_mouseMiddleMode = !m_mouseMiddleMode;
-				setCursorVisibility(!m_mouseMiddleMode);
-				if (m_mouseMiddleMode) {
-					m_prevMouseX = getWindowWidth() / 2;
-					m_prevMouseY = getWindowHeight() / 2;
-					setCursorPosition(m_prevMouseX, m_prevMouseY);
-				}
 			}
 		}
 
-		Transform& transform = getEntityComponent<Transform>(entityID);
-
-		if (m_keyboardMode) {
+		if (gameControllerScript->keyboardMode) {
 			if (m_mouseMiddleMode) {
 				const int mouseX = getCursorPositionX();
 				const int mouseY = getCursorPositionY();
@@ -100,8 +78,8 @@ struct CameraScript : public Script {
 				gamepadDirection.y = 0.0f;
 			}
 
-			const float xOffset = gamepadDirection.x * m_mouseSensitivity * 10.0f;
-			const float yOffset = gamepadDirection.y * m_mouseSensitivity * 10.0f;
+			const float xOffset = gamepadDirection.x * m_mouseSensitivity * 20.0f;
+			const float yOffset = gamepadDirection.y * m_mouseSensitivity * 20.0f;
 
 			m_yaw = std::fmod(m_yaw + xOffset, 360.0f);
 			m_pitch = std::max(-89.0f, std::min(89.0f, m_pitch + yOffset));
@@ -110,40 +88,43 @@ struct CameraScript : public Script {
 		float yawRad = Math::toRad(m_yaw);
 		float pitchRad = Math::toRad(m_pitch);
 
-		transform.rotation.x = pitchRad;
-		transform.rotation.y = yawRad;
-
 		Math::vec3 newForward;
-		newForward.x = std::cos(m_forwardPitch + pitchRad) * std::cos(m_forwardYaw + yawRad);
-		newForward.y = -std::sin(m_forwardPitch + pitchRad);
-		newForward.z = std::cos(m_forwardPitch + pitchRad) * std::sin(m_forwardYaw + yawRad);
+		newForward.x = std::cos(pitchRad) * std::cos(yawRad);
+		newForward.y = -std::sin(pitchRad);
+		newForward.z = std::cos(pitchRad) * std::sin(yawRad);
 		newForward = Math::normalize(newForward);
 
-		Math::vec3 addedPosition = Math::vec3(0.0f, 0.0f, 0.0f);
-		const float cameraSpeed = m_cameraSpeed * dt;
+		Camera& camera = getEntityComponent<Camera>(entityID);
+		camera.forward = newForward;
 
-		if (m_keyboardMode) {
-			if ((getKeyState(InputKeyboardKey::W) == InputState::Held)) {
-				addedPosition += (newForward * cameraSpeed);
+		Rigidbody& rigidbody = getEntityComponent<Rigidbody>(entityID);
+		rigidbody.linearVelocity.x = 0.0f;
+		rigidbody.linearVelocity.z = 0.0f;
+
+		Math::vec3 addedVelocity = Math::vec3(0.0f, 0.0f, 0.0f);
+
+		if (gameControllerScript->keyboardMode) {
+			if (getKeyState(InputKeyboardKey::W) == InputState::Held) {
+				Math::vec3 t = Math::normalize(Math::vec3(newForward.x, 0.0, newForward.z));
+				addedVelocity += (t * m_cameraSpeed);
 			}
 			if (getKeyState(InputKeyboardKey::S) == InputState::Held) {
-				addedPosition -= (newForward * cameraSpeed);
+				Math::vec3 t = Math::normalize(Math::vec3(newForward.x, 0.0, newForward.z));
+				addedVelocity -= (t * m_cameraSpeed);
 			}
 			if (getKeyState(InputKeyboardKey::A) == InputState::Held) {
 				Math::vec3 t = Math::normalize(Math::vec3(-newForward.z, 0.0, newForward.x));
-				addedPosition.x -= (t.x * cameraSpeed);
-				addedPosition.z -= (t.z * cameraSpeed);
+				addedVelocity.x -= (t.x * m_cameraSpeed);
+				addedVelocity.z -= (t.z * m_cameraSpeed);
 			}
 			if (getKeyState(InputKeyboardKey::D) == InputState::Held) {
 				Math::vec3 t = Math::normalize(Math::vec3(-newForward.z, 0.0, newForward.x));
-				addedPosition.x += (t.x * cameraSpeed);
-				addedPosition.z += (t.z * cameraSpeed);
+				addedVelocity.x += (t.x * m_cameraSpeed);
+				addedVelocity.z += (t.z * m_cameraSpeed);
 			}
-			if (getKeyState(InputKeyboardKey::Space) == InputState::Held) {
-				addedPosition.y += cameraSpeed;
-			}
-			if (getKeyState(InputKeyboardKey::Shift) == InputState::Held) {
-				addedPosition.y -= cameraSpeed;
+
+			if (m_onTheGround && (getKeyState(InputKeyboardKey::Space) == InputState::Pressed)) {
+				addedVelocity.y += m_jumpSpeed;
 			}
 		}
 		else {
@@ -157,44 +138,55 @@ struct CameraScript : public Script {
 			if (std::abs(gamepadDirection.y) < 0.1f) {
 				gamepadDirection.y = 0.0f;
 			}
-			addedPosition.x += (t.x * gamepadDirection.x * cameraSpeed);
-			addedPosition.z += (t.z * gamepadDirection.x * cameraSpeed);
+			addedVelocity.x += (t.x * gamepadDirection.x * m_cameraSpeed);
+			addedVelocity.z += (t.z * gamepadDirection.x * m_cameraSpeed);
+			addedVelocity.x += (newForward.x * -gamepadDirection.y * m_cameraSpeed);
+			addedVelocity.z += (newForward.z * -gamepadDirection.y * m_cameraSpeed);
 
-			float leftTrigger = getGamepadLeftTrigger(gamepad);
-			if (leftTrigger > 0.1f) {
-				addedPosition.y -= leftTrigger * cameraSpeed;
+			if (m_onTheGround && (getGamepadButtonState(gamepad, InputGamepadButton::Face1) == InputState::Pressed)) {
+				addedVelocity.y = m_jumpSpeed;
 			}
-			float rightTrigger = getGamepadRightTrigger(gamepad);
-			if (rightTrigger > 0.1f) {
-				addedPosition.y += rightTrigger * cameraSpeed;
-			}
-
-			addedPosition += (newForward * -gamepadDirection.y * cameraSpeed); 
 		}
 
-		if (Math::dot(addedPosition, addedPosition) > (cameraSpeed * cameraSpeed)) {
-			addedPosition = Math::normalize(addedPosition) * cameraSpeed;
+		if (Math::dot(addedVelocity, addedVelocity) > 0.0f) {
+			Math::vec3 normalizedVelocity = Math::normalize(addedVelocity);
+			addedVelocity.x = normalizedVelocity.x * m_cameraSpeed;
+			addedVelocity.z = normalizedVelocity.z * m_cameraSpeed;
 		}
-		transform.position += addedPosition;
+		rigidbody.linearVelocity += addedVelocity;
+
+		getEntityComponent<SoundListener>(entityID).forward = camera.forward;
+
+		m_onTheGround = false;
+	}
+
+	void onCollisionEnter(CollisionInfo collisionInfo) {
+		if (Math::dot(collisionInfo.normal, Math::vec3(0.0f, -1.0f, 0.0f)) > 0.6f) {
+			m_onTheGround = true;
+		}
+	}
+
+	void onCollisionStill(CollisionInfo collisionInfo) {
+		if (Math::dot(collisionInfo.normal, Math::vec3(0.0f, -1.0f, 0.0f)) > 0.6f) {
+			m_onTheGround = true;
+		}
 	}
 
 	void destroy() {
 	}
 
 private:
-	bool m_keyboardMode = true;
+	bool m_mouseMiddleMode = true;
 
-	bool m_mouseMiddleMode = false;
+	NTSHENGN_EDITABLE_VARIABLE float m_cameraSpeed = 0.0f;
+	NTSHENGN_EDITABLE_VARIABLE float m_jumpSpeed = 0.0f;
+	const float m_mouseSensitivity = 0.12f;
 
-	NTSHENGN_EDITABLE_VARIABLE float m_cameraSpeed = 1.5f;
-	NTSHENGN_EDITABLE_VARIABLE float m_mouseSensitivity = 0.12f;
+	float m_yaw = 0.0f;
+	float m_pitch = 0.0f;
 
 	int m_prevMouseX = 0;
 	int m_prevMouseY = 0;
 
-	float m_forwardYaw = 0.0f;
-	float m_forwardPitch = 0.0f;
-
-	float m_yaw = 0.0f;
-	float m_pitch = 0.0f;
+	bool m_onTheGround = false;
 };

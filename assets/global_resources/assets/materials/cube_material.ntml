@@ -1,10 +1,29 @@
 {
+	"alphaCutoff": 0.0,
 	"diffuse": {
 		"color": [
-			0.5,
-			0.5,
-			0.5,
+			0.5137255191802979,
+			0.08627451211214066,
+			0.0941176488995552,
 			1.0
 		]
+	},
+	"emissive": {
+		"color": [
+			0.0,
+			0.0,
+			0.0
+		],
+		"factor": 1.0
+	},
+	"indexOfRefraction": 0.0,
+	"metalness": {
+		"value": 0.5
+	},
+	"occlusion": {
+		"value": 1.0
+	},
+	"roughness": {
+		"value": 0.5
 	}
 }
