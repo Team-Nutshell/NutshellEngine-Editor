@@ -90,6 +90,11 @@ bool BuildBar::build() {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
 	}
 
+	// Clear assets directory
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/assets")) {
+		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/assets");
+	}
+
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
@@ -194,6 +199,9 @@ bool BuildBar::build() {
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
 		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
@@ -277,6 +285,9 @@ bool BuildBar::build() {
 
 		return false;
 	}
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_build_logs"));
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
@@ -300,9 +311,6 @@ bool BuildBar::build() {
 	}
 	std::filesystem::copy("assets", buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 #endif
-
-	// Reset current path
-	std::filesystem::current_path(previousCurrentPath);
 
 	return buildSuccess;
 }
@@ -358,6 +366,9 @@ void BuildBar::run() {
 	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
 		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
@@ -402,10 +413,10 @@ void BuildBar::run() {
 	FILE* fp = popen(runCommand.c_str(), "r");
 	if (fp == NULL) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_cannot_launch"));
-
-		// Reset current path
-		std::filesystem::current_path(previousCurrentPath);
 	}
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 	char stdOutBuffer[4096];
@@ -425,9 +436,6 @@ void BuildBar::run() {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_close_error"));
 	}
 #endif
-
-	// Reset current path
-	std::filesystem::current_path(previousCurrentPath);
 }
 
 void BuildBar::exportApplication(const std::string& exportDirectory) {
@@ -510,6 +518,9 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
+		// Reset current path
+		std::filesystem::current_path(previousCurrentPath);
+
 		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_logs"));
 		CHAR stdOutBuffer[4096];
 		DWORD bytesRead;
@@ -559,6 +570,9 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		std::filesystem::current_path(previousCurrentPath);
 	}
 
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
+
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_export_logs"));
 	char stdOutBuffer[4096];
 	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
@@ -572,9 +586,6 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_export_error"));
 	}
 #endif
-
-	// Reset current path
-	std::filesystem::current_path(previousCurrentPath);
 
 	// Destroy temporary directory
 	std::filesystem::remove_all(tmpExportDirectory);
