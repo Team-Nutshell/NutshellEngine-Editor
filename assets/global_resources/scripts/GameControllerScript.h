@@ -10,6 +10,8 @@ struct GameControllerScript : public Script {
 	}
 
 	void update(float dt) {
+		NTSHENGN_UNUSED(dt);
+
 		if (getConnectedGamepads().size() > 0) {
 			gamepad = getConnectedGamepads()[0];
 		} else {
