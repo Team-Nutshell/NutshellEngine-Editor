@@ -92,7 +92,7 @@ void LogsWidget::onLogsCleared() {
 }
 
 void LogsWidget::onScrollBarRangeChanged(int min, int max) {
-	(void)(min);
+	(void)min;
 	logsTable->verticalScrollBar()->setSliderPosition(max);
 }
 

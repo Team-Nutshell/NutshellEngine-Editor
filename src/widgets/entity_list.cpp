@@ -28,6 +28,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &EntityList::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onEntityNameChanged);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityList::onEntityPersistenceChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &EntityList::onEntityVisibilityToggled);
 	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &EntityList::onLineEditClose);
 }
@@ -76,6 +77,13 @@ void EntityList::onEntitySelected() {
 
 void EntityList::onEntityNameChanged(EntityID entityID, const std::string& name) {
 	findItemWithEntityID(entityID)->setText(QString::fromStdString(name));
+
+	SaveTitleChanger::change(m_globalInfo.mainWindow);
+}
+
+void EntityList::onEntityPersistenceChanged(EntityID entityID, bool isPersistent) {
+	(void)entityID;
+	(void)isPersistent;
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
