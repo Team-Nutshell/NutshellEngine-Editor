@@ -889,6 +889,14 @@ namespace NtshEngn {
 			graphicsModule->stopAnimation(entity);
 		}
 
+		void setAnimationCurrentTime(Entity entity, float time) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->setAnimationCurrentTime(entity, time);
+		}
+
 		bool isAnimationPlaying(Entity entity, uint32_t animationIndex) {
 			if (!graphicsModule) {
 				return false;
