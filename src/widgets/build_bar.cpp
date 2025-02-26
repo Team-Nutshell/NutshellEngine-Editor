@@ -95,6 +95,11 @@ bool BuildBar::build() {
 		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/assets");
 	}
 
+	// Clear modules directory
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/modules")) {
+		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/modules");
+	}
+
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
