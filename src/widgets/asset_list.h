@@ -15,6 +15,10 @@ class AssetList : public QListWidget {
 public:
 	AssetList(GlobalInfo& globalInfo);
 
+	void deleteAsset(const std::string& path);
+	void duplicateAsset(const std::string& path);
+	void reloadAsset(const std::string& assetPath, const std::string& assetName);
+
 private:
 	void enterDirectory(const std::string& directory);
 	void actionOnFile(const std::string& file);

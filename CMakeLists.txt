@@ -113,6 +113,7 @@ set(WIDGET_SOURCES
 	src/widgets/asset_info_scroll_area.cpp
 	src/widgets/asset_list.cpp
 	src/widgets/asset_list_menu.cpp
+	src/widgets/asset_panel.cpp
 	src/widgets/build_bar.cpp
 	src/widgets/boolean_widget.cpp
 	src/widgets/camera_component_widget.cpp
@@ -125,6 +126,7 @@ set(WIDGET_SOURCES
 	src/widgets/component_scroll_area.cpp
 	src/widgets/component_title_widget.cpp
 	src/widgets/delete_asset_widget.cpp
+	src/widgets/delete_script_widget.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/editor_parameters_widget.cpp
 	src/widgets/entity_info_name_widget.cpp
@@ -165,10 +167,13 @@ set(WIDGET_SOURCES
 	src/widgets/recent_project_widget.cpp
 	src/widgets/recent_projects_widget.cpp
 	src/widgets/renderable_component_widget.cpp
-	src/widgets/resource_panel.cpp
+	src/widgets/resource_splitter.cpp
 	src/widgets/rigidbody_component_widget.cpp
 	src/widgets/sampler_ntsp_file_widget.cpp
 	src/widgets/scalar_widget.cpp
+	src/widgets/script_list.cpp
+	src/widgets/script_list_menu.cpp
+	src/widgets/script_panel.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
 	src/widgets/sound_listener_component_widget.cpp
@@ -188,6 +193,7 @@ set(WIDGET_HEADERS
 	src/widgets/asset_info_scroll_area.h
 	src/widgets/asset_list.h
 	src/widgets/asset_list_menu.h
+	src/widgets/asset_panel.h
 	src/widgets/build_bar.h
 	src/widgets/boolean_widget.h
 	src/widgets/camera_component_widget.h
@@ -200,6 +206,7 @@ set(WIDGET_HEADERS
 	src/widgets/component_scroll_area.h
 	src/widgets/component_title_widget.h
 	src/widgets/delete_asset_widget.h
+	src/widgets/delete_script_widget.h
 	src/widgets/edit_menu.h
 	src/widgets/editor_parameters_widget.h
 	src/widgets/entity_info_name_widget.h
@@ -240,10 +247,13 @@ set(WIDGET_HEADERS
 	src/widgets/recent_project_widget.h
 	src/widgets/recent_projects_widget.h
 	src/widgets/renderable_component_widget.h
-	src/widgets/resource_panel.h
+	src/widgets/resource_splitter.h
 	src/widgets/rigidbody_component_widget.h
 	src/widgets/sampler_ntsp_file_widget.h
 	src/widgets/scalar_widget.h
+	src/widgets/script_list.h
+	src/widgets/script_list_menu.h
+	src/widgets/script_panel.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
 	src/widgets/sound_listener_component_widget.h

@@ -1,9 +1,9 @@
-#include "resource_panel.h"
+#include "asset_panel.h"
 #include <QVBoxLayout>
 
-ResourcePanel::ResourcePanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
+AssetPanel::AssetPanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
-	layout()->setContentsMargins(2, 2, 2, 0);
+	layout()->setContentsMargins(2, 2, 0, 0);
 	assetsLabel = new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_list_assets")));
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
 		assetsLabel->setText(QString::fromStdString(m_globalInfo.localization.getString("assets_list_assets")) + " (<i>assets/</i>)");
@@ -15,10 +15,10 @@ ResourcePanel::ResourcePanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	assetList = new AssetList(m_globalInfo);
 	layout()->addWidget(assetList);
 
-	connect(assetList, &AssetList::directoryChanged, this, &ResourcePanel::onDirectoryChanged);
+	connect(assetList, &AssetList::directoryChanged, this, &AssetPanel::onDirectoryChanged);
 }
 
-void ResourcePanel::onDirectoryChanged(const std::string& directory) {
+void AssetPanel::onDirectoryChanged(const std::string& directory) {
 	if (!directory.empty()) {
 		assetsLabel->setText(QString::fromStdString(m_globalInfo.localization.getString("assets_list_assets")) + " (<i>" + QString::fromStdString(directory) + "/</i>)");
 	}

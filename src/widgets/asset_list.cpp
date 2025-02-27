@@ -27,6 +27,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setDragDropMode(QListWidget::DragDrop);
 	setResizeMode(QListWidget::Adjust);
 	menu = new AssetListMenu(m_globalInfo);
+	menu->assetList = this;
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 
 	QSizePolicy sizePolicy;
@@ -45,6 +46,65 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&m_directoryWatcher, &QFileSystemWatcher::directoryChanged, this, &AssetList::onDirectoryChanged);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::renameFileSignal, this, &AssetList::onFileRenamed);
 	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &AssetList::onLineEditClose);
+}
+
+void AssetList::deleteAsset(const std::string& path) {
+	DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, path);
+	deleteAssetWidget->show();
+}
+
+void AssetList::duplicateAsset(const std::string& path) {
+	size_t lastSlashPosition = path.find_last_of('/');
+	std::string directory = path.substr(0, lastSlashPosition);
+	std::string filename = path.substr(lastSlashPosition + 1);
+
+	bool isDirectory = false;
+	if (std::filesystem::is_directory(directory + "/" + filename)) {
+		filename.pop_back();
+		isDirectory = true;
+	}
+
+	std::string extension = "";
+	std::string baseAssetName = filename;
+	size_t lastDot = baseAssetName.rfind('.');
+	if (lastDot != std::string::npos) {
+		extension = "." + filename.substr(lastDot + 1);
+		baseAssetName = filename.substr(0, lastDot);
+	}
+	uint32_t fileNameIndex = 0;
+	std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+	while (std::filesystem::exists(directory + "/" + duplicatedAssetName)) {
+		fileNameIndex++;
+		duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+	}
+	std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
+	if (isDirectory) {
+		copyOptions = std::filesystem::copy_options::recursive;
+	}
+	std::filesystem::copy(directory + "/" + filename, directory + "/" + duplicatedAssetName, copyOptions);
+	if (!isDirectory) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + duplicatedAssetName, NO_ENTITY, std::set<EntityID>()));
+	}
+}
+
+void AssetList::reloadAsset(const std::string& assetPath, const std::string& assetName) {
+	size_t lastDot = assetName.rfind('.');
+	if (lastDot != std::string::npos) {
+		std::string extension = assetName.substr(lastDot + 1);
+		RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
+		if (assetType == RendererResourceManager::AssetType::Model) {
+			m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::Material) {
+			m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::Image) {
+			m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
+		}
+		else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
+			m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
+		}
+	}
 }
 
 void AssetList::enterDirectory(const std::string& directory) {
@@ -245,61 +305,16 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else if (event->key() == Qt::Key_Delete) {
-			std::string itemFileName = listItem->text().toStdString();
-			DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, m_currentDirectory + "/" + itemFileName);
-			deleteAssetWidget->show();
+			deleteAsset(m_currentDirectory + "/" + listItem->text().toStdString());
 		}
 		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_D)) {
-			std::string itemFileName = listItem->text().toStdString();
-			bool isDirectory = false;
-			if (std::filesystem::is_directory(m_currentDirectory + "/" + itemFileName)) {
-				itemFileName.pop_back();
-				isDirectory = true;
-			}
-
-			std::string extension = "";
-			std::string baseAssetName = itemFileName;
-			size_t lastDot = baseAssetName.rfind('.');
-			if (lastDot != std::string::npos) {
-				extension = "." + itemFileName.substr(lastDot + 1);
-				baseAssetName = itemFileName.substr(0, lastDot);
-			}
-			uint32_t fileNameIndex = 0;
-			std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
-			while (std::filesystem::exists(m_currentDirectory + "/" + duplicatedAssetName)) {
-				fileNameIndex++;
-				duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
-			}
-			std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
-			if (isDirectory) {
-				copyOptions = std::filesystem::copy_options::recursive;
-			}
-			std::filesystem::copy(m_currentDirectory + "/" + itemFileName, m_currentDirectory + "/" + duplicatedAssetName, copyOptions);
-			if (!isDirectory) {
-				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_currentDirectory + "/" + duplicatedAssetName, NO_ENTITY, std::set<EntityID>()));
-			}
+			duplicateAsset(m_currentDirectory + "/" + listItem->text().toStdString());
 		}
 		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_R)) {
 			std::string itemFileName = listItem->text().toStdString();
 			std::string assetPath = m_currentDirectory + "/" + itemFileName;
 			std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
-			size_t lastDot = assetName.rfind('.');
-			if (lastDot != std::string::npos) {
-				std::string extension = assetName.substr(lastDot + 1);
-				RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
-				if (assetType == RendererResourceManager::AssetType::Model) {
-					m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
-				}
-				else if (assetType == RendererResourceManager::AssetType::Material) {
-					m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
-				}
-				else if (assetType == RendererResourceManager::AssetType::Image) {
-					m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
-				}
-				else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
-					m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
-				}
-			}
+			reloadAsset(assetPath, assetName);
 		}
 	}
 }
@@ -347,6 +362,7 @@ void AssetList::dropEvent(QDropEvent* event) {
 void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {
 	(void)hint;
 	QListWidgetItem* currentItem = selectedItems()[0];
+	currentItem->setFlags(currentItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
 	std::string newName = reinterpret_cast<QLineEdit*>(lineEdit)->text().toStdString();
 	if (std::filesystem::is_directory(m_currentDirectory + "/" + currentlyEditedItemName)) {
 		if (newName.back() == '/') {

@@ -10,7 +10,7 @@
 #include "entity_panel.h"
 #include "log_bar.h"
 #include "info_panel.h"
-#include "resource_panel.h"
+#include "resource_splitter.h"
 #include "../renderer/renderer.h"
 #include <QMainWindow>
 #include <QVBoxLayout>
@@ -31,7 +31,7 @@ private:
 	void createEntityPanel();
 	void createRenderer();
 	void createInfoPanel();
-	void createResourcePanel();
+	void createResourceSplitter();
 	void createLogBar();
 
 private slots:
@@ -51,7 +51,7 @@ public:
 	EntityPanel* entityPanel;
 	Renderer* renderer;
 	InfoPanel* infoPanel;
-	ResourcePanel* resourcePanel;
+	ResourceSplitter* resourceSplitter;
 	LogBar* logBar;
 	BuildBar* buildBar;
 	FileMenu* fileMenu;

@@ -51,13 +51,13 @@ void LogsWidget::updateLogs() {
 
 		logsTable->insertRow(logsTable->rowCount());
 		QTableWidgetItem* timeItem = new QTableWidgetItem(QString::fromStdString(time));
-		timeItem->setFlags(timeItem->flags() & ~Qt::ItemIsEditable);
+		timeItem->setFlags(timeItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
 		logsTable->setItem(logsTable->rowCount() - 1, 0, timeItem);
 		QTableWidgetItem* levelItem = new QTableWidgetItem(QString::fromStdString(level));
-		levelItem->setFlags(levelItem->flags() & ~Qt::ItemIsEditable);
+		levelItem->setFlags(levelItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
 		logsTable->setItem(logsTable->rowCount() - 1, 1, levelItem);
 		QTableWidgetItem* logItem = new QTableWidgetItem(QString::fromStdString(logString));
-		logItem->setFlags(logItem->flags() & ~Qt::ItemIsEditable);
+		logItem->setFlags(logItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
 		logsTable->setItem(logsTable->rowCount() - 1, 2, logItem);
 		logsTable->resizeRowToContents(logsTable->rowCount() - 1);
 

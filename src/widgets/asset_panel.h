@@ -4,10 +4,10 @@
 #include <QWidget>
 #include <QLabel>
 
-class ResourcePanel : public QWidget {
+class AssetPanel : public QWidget {
 	Q_OBJECT
 public:
-	ResourcePanel(GlobalInfo& globalInfo);
+	AssetPanel(GlobalInfo& globalInfo);
 
 private slots:
 	void onDirectoryChanged(const std::string& directory);

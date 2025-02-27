@@ -26,7 +26,7 @@ MainWindow::MainWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	verticalSplitter->setOrientation(Qt::Orientation::Vertical);
 	verticalSplitter->addWidget(horizontalSplitter);
 	mainWidget->layout()->addWidget(verticalSplitter);
-	createResourcePanel();
+	createResourceSplitter();
 	verticalSplitter->setSizes({ 520, 200 });
 	createLogBar();
 }
@@ -78,9 +78,9 @@ void MainWindow::createInfoPanel() {
 	horizontalSplitter->addWidget(infoPanel);
 }
 
-void MainWindow::createResourcePanel() {
-	resourcePanel = new ResourcePanel(m_globalInfo);
-	verticalSplitter->addWidget(resourcePanel);
+void MainWindow::createResourceSplitter() {
+	resourceSplitter = new ResourceSplitter(m_globalInfo);
+	verticalSplitter->addWidget(resourceSplitter);
 }
 
 void MainWindow::createLogBar() {

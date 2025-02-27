@@ -1,4 +1,5 @@
 #include "asset_list_menu.h"
+#include "asset_list.h"
 #include "asset_info_name_widget.h"
 #include "delete_asset_widget.h"
 #include "main_window.h"
@@ -31,67 +32,24 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 }
 
 void AssetListMenu::renameAsset() {
-	m_globalInfo.mainWindow->resourcePanel->assetList->currentlyEditedItemName = filename;
-	QListWidgetItem* item = m_globalInfo.mainWindow->resourcePanel->assetList->selectedItems()[0];
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = filename;
+	QListWidgetItem* item = m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->selectedItems()[0];
 	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
-	m_globalInfo.mainWindow->resourcePanel->assetList->editItem(item);
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->editItem(item);
 }
 
 void AssetListMenu::deleteAsset() {
-	DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, directory + "/" + filename);
-	deleteAssetWidget->show();
+	assetList->deleteAsset(directory + "/" + filename);
 }
 
 void AssetListMenu::duplicateAsset() {
-	bool isDirectory = false;
-	if (std::filesystem::is_directory(directory + "/" + filename)) {
-		filename.pop_back();
-		isDirectory = true;
-	}
-
-	std::string extension = "";
-	std::string baseAssetName = filename;
-	size_t lastDot = filename.rfind('.');
-	if (lastDot != std::string::npos) {
-		extension = "." + filename.substr(lastDot + 1);
-		baseAssetName = filename.substr(0, lastDot);
-	}
-	uint32_t fileNameIndex = 0;
-	std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
-	while (std::filesystem::exists(directory + "/" + duplicatedAssetName)) {
-		fileNameIndex++;
-		duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
-	}
-	std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
-	if (isDirectory) {
-		copyOptions = std::filesystem::copy_options::recursive;
-	}
-	std::filesystem::copy(directory + "/" + filename, directory + "/" + duplicatedAssetName, copyOptions);
-	if (!isDirectory) {
-		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + duplicatedAssetName, NO_ENTITY, std::set<EntityID>()));
-	}
+	assetList->duplicateAsset(directory + "/" + filename);
 }
 
 void AssetListMenu::reloadAsset() {
 	std::string assetPath = directory + "/" + filename;
 	std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
-	size_t lastDot = assetName.rfind('.');
-	if (lastDot != std::string::npos) {
-		std::string extension = assetName.substr(lastDot + 1);
-		RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
-		if (assetType == RendererResourceManager::AssetType::Model) {
-			m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::Material) {
-			m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::Image) {
-			m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
-			m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
-		}
-	}
+	assetList->reloadAsset(assetPath, assetName);
 }
 
 void AssetListMenu::newDirectory() {

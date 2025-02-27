@@ -4,6 +4,8 @@
 #include <QAction>
 #include <string>
 
+class AssetList;
+
 class AssetListMenu : public QMenu {
 	Q_OBJECT
 public:
@@ -25,6 +27,8 @@ private:
 	GlobalInfo& m_globalInfo;
 
 public:
+	AssetList* assetList = nullptr;
+
 	std::string directory = "";
 	std::string filename = "";
 
