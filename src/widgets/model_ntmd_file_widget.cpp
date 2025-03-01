@@ -39,6 +39,11 @@ void ModelNtmdFileWidget::setPath(const std::string& path) {
 		return;
 	}
 
+	while (QLayoutItem* item = primitivesWidget->layout()->takeAt(0)) {
+		delete item->widget();
+		delete item;
+	}
+
 	modelFile = std::fstream(m_modelFilePath, std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(modelFile);
 
@@ -51,7 +56,7 @@ void ModelNtmdFileWidget::setPath(const std::string& path) {
 			}
 			if (primitive.contains("materialPath")) {
 				std::string materialPath = primitive["materialPath"];
-				newPrimitiveWidget->primitiveMeshWidget->setPath(materialPath);
+				newPrimitiveWidget->primitiveMaterialWidget->setPath(materialPath);
 			}
 			primitivesWidget->layout()->addWidget(newPrimitiveWidget);
 
