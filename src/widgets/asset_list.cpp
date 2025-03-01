@@ -213,6 +213,7 @@ void AssetList::showMenu(const QPoint& pos) {
 	QListWidgetItem* item = itemAt(pos);
 	if (!item) {
 		menu->directory = m_currentDirectory;
+		menu->filename = "";
 		menu->renameAction->setEnabled(false);
 		menu->deleteAction->setEnabled(false);
 		menu->duplicateAction->setEnabled(false);
@@ -234,6 +235,7 @@ void AssetList::showMenu(const QPoint& pos) {
 		}
 		else {
 			menu->directory = m_currentDirectory;
+			menu->filename = "";
 			menu->renameAction->setEnabled(false);
 			menu->deleteAction->setEnabled(false);
 			menu->duplicateAction->setEnabled(false);
