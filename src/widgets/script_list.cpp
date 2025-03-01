@@ -206,15 +206,18 @@ void ScriptList::onDirectoryChanged() {
 void ScriptList::showMenu(const QPoint& pos) {
 	QListWidgetItem* item = itemAt(pos);
 	if (!item) {
+		menu->scriptName = "";
 		menu->renameAction->setEnabled(false);
 		menu->deleteAction->setEnabled(false);
 		menu->duplicateAction->setEnabled(false);
+		menu->copyNameAction->setEnabled(false);
 	}
 	else {
 		menu->scriptName = item->text().toStdString();
 		menu->renameAction->setEnabled(true);
 		menu->deleteAction->setEnabled(true);
 		menu->duplicateAction->setEnabled(true);
+		menu->copyNameAction->setEnabled(true);
 	}
 	menu->popup(QCursor::pos());
 }
