@@ -177,6 +177,9 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.gridScale = j["renderer"]["gridScale"];
 		}
 
+		if (j["renderer"].contains("maintainGuizmoSize")) {
+			renderer.maintainGuizmoSize = j["renderer"]["maintainGuizmoSize"];
+		}
 		if (j["renderer"].contains("guizmoSize")) {
 			renderer.guizmoSize = j["renderer"]["guizmoSize"];
 		}
@@ -268,6 +271,7 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridScale"] = renderer.gridScale;
+	j["renderer"]["maintainGuizmoSize"] = renderer.maintainGuizmoSize;
 	j["renderer"]["guizmoSize"] = renderer.guizmoSize;
 	j["renderer"]["guizmoTranslationStep"] = { renderer.guizmoTranslationStep.x, renderer.guizmoTranslationStep.y, renderer.guizmoTranslationStep.z };
 	j["renderer"]["guizmoRotationStep"] = { renderer.guizmoRotationStep.x, renderer.guizmoRotationStep.y, renderer.guizmoRotationStep.z };

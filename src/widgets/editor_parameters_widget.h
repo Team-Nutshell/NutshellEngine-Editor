@@ -3,6 +3,7 @@
 #include "file_selector_widget.h"
 #include "string_widget.h"
 #include "key_select_widget.h"
+#include "boolean_widget.h"
 #include "color_picker_widget.h"
 #include "scalar_widget.h"
 #include "vector3_widget.h"
@@ -22,6 +23,7 @@ private:
 
 private slots:
 	void onKeyChanged(const std::string& key);
+	void onBooleanChanged(bool value);
 	void onScalarChanged(float value);
 	void onStringChanged(const std::string& text);
 	void onVector3Changed(const nml::vec3& value);
@@ -64,6 +66,7 @@ public:
 	ScalarWidget* cameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridScaleWidget;
+	BooleanWidget* maintainGuizmoSizeWidget;
 	ScalarWidget* guizmoSizeWidget;
 	Vector3Widget* guizmoTranslationStepWidget;
 	Vector3Widget* guizmoRotationStepWidget;

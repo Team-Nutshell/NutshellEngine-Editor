@@ -36,6 +36,7 @@ struct RendererParameters {
 
 	float gridScale = 10.0f;
 
+	bool maintainGuizmoSize = false;
 	float guizmoSize = 1.0f;
 	nml::vec3 guizmoTranslationStep = nml::vec3(0.25f, 0.25f, 0.25f);
 	nml::vec3 guizmoRotationStep = nml::vec3(10.0f, 10.0f, 10.0f);

@@ -187,6 +187,12 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	rendererGuizmoLayoutWidget->setLayout(rendererGuizmoLayout);
 	rendererVerticalLayout->addWidget(rendererGuizmoLayoutWidget);
 
+	maintainGuizmoSizeWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_maintain_guizmo_size"));
+	maintainGuizmoSizeWidget->setValue(m_globalInfo.editorParameters.renderer.maintainGuizmoSize);
+	maintainGuizmoSizeWidget->layout()->setAlignment(maintainGuizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	maintainGuizmoSizeWidget->layout()->setAlignment(maintainGuizmoSizeWidget->checkBox, Qt::AlignmentFlag::AlignLeft);
+	rendererGuizmoLayout->addWidget(maintainGuizmoSizeWidget);
+
 	guizmoSizeWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_size"));
 	guizmoSizeWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.guizmoSize, 'g', 7));
 	guizmoSizeWidget->layout()->setAlignment(guizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
@@ -279,6 +285,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gridScaleWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(maintainGuizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
 	connect(guizmoSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(guizmoTranslationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
 	connect(guizmoRotationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
@@ -548,6 +555,15 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_toggle_colliders_visibility"), key }));
 			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 		}
+	}
+
+	save();
+}
+
+void EditorParametersWidget::onBooleanChanged(bool value) {
+	QObject* senderWidget = sender();
+	if (senderWidget == maintainGuizmoSizeWidget) {
+		m_globalInfo.editorParameters.renderer.maintainGuizmoSize = value;
 	}
 
 	save();

@@ -997,7 +997,17 @@ void Renderer::paintGL() {
 					gl.glClear(GL_DEPTH_BUFFER_BIT);
 					gl.glEnable(GL_CULL_FACE);
 
-					nml::mat4 modelMatrix = nml::translate(guizmoPosition) * nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize));
+					float guizmoScaling = 1.0f;
+					if (m_globalInfo.editorParameters.renderer.maintainGuizmoSize) {
+						if (m_camera.useOrthographicProjection) {
+							guizmoScaling = m_camera.orthographicHalfExtent;
+						}
+						else {
+							guizmoScaling = (m_camera.perspectivePosition - guizmoPosition).length() / 4.0f;
+						}
+					}
+					nml::mat4 scaleMatrix = nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize * guizmoScaling));
+					nml::mat4 modelMatrix = nml::translate(guizmoPosition) * scaleMatrix;
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
 					const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
@@ -1235,7 +1245,17 @@ void Renderer::paintGL() {
 				gl.glDepthMask(GL_TRUE);
 				gl.glEnable(GL_CULL_FACE);
 
-				nml::mat4 modelMatrix = nml::translate(guizmoPosition) * nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize));
+				float guizmoScaling = 1.0f;
+				if (m_globalInfo.editorParameters.renderer.maintainGuizmoSize) {
+					if (m_camera.useOrthographicProjection) {
+						guizmoScaling = m_camera.orthographicHalfExtent;
+					}
+					else {
+						guizmoScaling = (m_camera.perspectivePosition - guizmoPosition).length() / 4.0f;
+					}
+				}
+				nml::mat4 scaleMatrix = nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize * guizmoScaling));
+				nml::mat4 modelMatrix = nml::translate(guizmoPosition) * scaleMatrix;
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_guizmoProgram, "model"), 1, false, modelMatrix.data());
 
 				const RendererModel& guizmoModel = m_globalInfo.rendererResourceManager.rendererModels[guizmoModelName];
