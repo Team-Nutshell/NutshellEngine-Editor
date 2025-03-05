@@ -91,13 +91,13 @@ bool BuildBar::build() {
 	}
 
 	// Clear assets directory
-	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/assets")) {
-		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/assets");
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/assets")) {
+		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/assets");
 	}
 
 	// Clear modules directory
-	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/modules")) {
-		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/modules");
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/modules")) {
+		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/modules");
 	}
 
 	// Set current path
@@ -195,7 +195,7 @@ bool BuildBar::build() {
 
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " -DNTSHENGN_BUILD_IN_EDITOR=ON --build . --config " + buildType;
+	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType;
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
@@ -238,12 +238,6 @@ bool BuildBar::build() {
 		CloseHandle(pipeRead);
 	}
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-	// Clear build type directory
-	if (std::filesystem::exists(buildType)) {
-		std::filesystem::remove_all(buildType);
-		std::filesystem::create_directory(buildType);
-	}
-
 	// CMake
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " -DNTSHENGN_BUILD_IN_EDITOR=ON 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
