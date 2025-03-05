@@ -104,10 +104,6 @@ bool BuildBar::build() {
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
-	if (!std::filesystem::exists(buildType)) {
-		std::filesystem::create_directory(buildType);
-	}
-
 	bool buildSuccess = true;
 #if defined(NTSHENGN_OS_WINDOWS)
 	HANDLE pipeRead = NULL;
@@ -199,7 +195,7 @@ bool BuildBar::build() {
 
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType;
+	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " -DNTSHENGN_BUILD_IN_EDITOR=ON --build . --config " + buildType;
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
@@ -242,6 +238,12 @@ bool BuildBar::build() {
 		CloseHandle(pipeRead);
 	}
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+	// Clear build type directory
+	if (std::filesystem::exists(buildType)) {
+		std::filesystem::remove_all(buildType);
+		std::filesystem::create_directory(buildType);
+	}
+
 	// CMake
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " -DNTSHENGN_BUILD_IN_EDITOR=ON 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
@@ -309,12 +311,15 @@ bool BuildBar::build() {
 	}
 
 	std::string scriptsLibrary = "libNutshellEngine-Scripts.so";
-	std::filesystem::copy(scriptsLibrary, buildType, std::filesystem::copy_options::overwrite_existing);
+	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/" + scriptsLibrary, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing);
 	std::string buildAssetsDirectory = buildType + "/assets";
-	if (!std::filesystem::exists(buildAssetsDirectory)) {
-		std::filesystem::create_directory(buildAssetsDirectory);
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory)) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory);
 	}
-	std::filesystem::copy("assets", buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/assets", m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
+	// Reset current path
+	std::filesystem::current_path(previousCurrentPath);
 #endif
 
 	return buildSuccess;
@@ -562,10 +567,12 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	const std::string exportedFileName = projectNameNoSpace + "_" + buildType + ".tar.gz";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
+	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build/export_tmp");
+
 	// Rename executable
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + projectNameNoSpace);
 	
-	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " export_tmp/" + projectNameNoSpace;
+	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " " + projectNameNoSpace;
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
 	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {
