@@ -11,7 +11,25 @@ ProjectMenu::ProjectMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdS
 	m_openProjectSettingsAction->setShortcut(QKeySequence::fromString("Ctrl+Shift+P"));
 	addSeparator();
 	m_importGlobalResources = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_import_global_resources")), this, &ProjectMenu::importGlobalResources);
-	m_updateBaseProject = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_project_update_base_project")), this, &ProjectMenu::updateBaseProject);
+	m_updateBaseProject = addAction("", this, &ProjectMenu::updateBaseProject);
+
+	bool signalVersion = false;
+	std::fstream projectFile(m_globalInfo.projectDirectory + "/project.ntpj", std::ios::in);
+	if (projectFile.is_open()) {
+		nlohmann::json j = nlohmann::json::parse(projectFile);
+		if (j.contains("engineVersion")) {
+			if (j["engineVersion"] != m_globalInfo.version) {
+				signalVersion = true;
+			}
+		}
+		projectFile.close();
+	}
+	if (signalVersion) {
+		m_updateBaseProject->setText(QString::fromStdString(m_globalInfo.localization.getString("header_project_update_base_project")) + " \u26A0");
+	}
+	else {
+		m_updateBaseProject->setText(QString::fromStdString(m_globalInfo.localization.getString("header_project_update_base_project")));
+	}
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportStarted);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &ProjectMenu::onBuildRunExportEnded);
@@ -60,6 +78,18 @@ void ProjectMenu::importGlobalResources() {
 
 void ProjectMenu::updateBaseProject() {
 	std::filesystem::copy("assets/base_project", m_globalInfo.projectDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
+	std::fstream projectFile(m_globalInfo.projectDirectory + "/project.ntpj", std::ios::in);
+	if (projectFile.is_open()) {
+		nlohmann::json j = nlohmann::json::parse(projectFile);
+		j["engineVersion"] = m_globalInfo.version;
+		projectFile.close();
+
+		projectFile = std::fstream(m_globalInfo.projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
+		projectFile << j.dump(1, '\t');
+	}
+
+	m_updateBaseProject->setText(QString::fromStdString(m_globalInfo.localization.getString("header_project_update_base_project")));
 }
 
 void ProjectMenu::onBuildRunExportStarted() {
