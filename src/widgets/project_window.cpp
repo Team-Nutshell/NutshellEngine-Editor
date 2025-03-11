@@ -24,11 +24,11 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	m_logoPixmap = new QPixmap("assets/logo.png");
 	m_logoLabel->setPixmap(m_logoPixmap->scaledToWidth(m_leftWidget->width() - 20, Qt::TransformationMode::SmoothTransformation));
 	m_leftWidget->layout()->addWidget(m_logoLabel);
-	m_leftWidget->layout()->addWidget(new SeparatorLine(globalInfo));
+	m_leftWidget->layout()->addWidget(new SeparatorLine());
 	m_leftWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("open_project")) + "</b>"));
 	m_openProjectWidget = new OpenProjectWidget(m_globalInfo);
 	m_leftWidget->layout()->addWidget(m_openProjectWidget);
-	m_leftWidget->layout()->addWidget(new SeparatorLine(globalInfo));
+	m_leftWidget->layout()->addWidget(new SeparatorLine());
 	m_leftWidget->layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("new_project")) + "</b>"));
 	m_newProjectWidget = new NewProjectWidget(m_globalInfo);
 	m_leftWidget->layout()->addWidget(m_newProjectWidget);

@@ -25,7 +25,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->addWidget(directionWidget);
 	cutoffWidget = new Vector2Widget(m_globalInfo, m_globalInfo.localization.getString("component_light_cutoff"));
 	layout()->addWidget(cutoffWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementChanged);
 	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorChanged);

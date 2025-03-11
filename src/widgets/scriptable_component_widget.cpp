@@ -44,7 +44,7 @@ ScriptableComponentWidget::ScriptableComponentWidget(GlobalInfo& globalInfo) : m
 	editableScriptVariablesWidget->layout()->setContentsMargins(0, 0, 0, 0);
 	editableScriptVariablesWidget->layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_editable_variables"))));
 	layout()->addWidget(editableScriptVariablesWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(scriptNameWidget, &ComboBoxWidget::elementSelected, this, &ScriptableComponentWidget::onElementChanged);
 	connect(openCodeEditorButton, &QPushButton::clicked, this, &ScriptableComponentWidget::onOpenCodeEditorButtonClicked);

@@ -14,7 +14,7 @@ ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(primitiveMeshWidget);
 	primitiveMaterialWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_model_primitive_material"), m_globalInfo.localization.getString("assets_model_primitive_no_material_selected"), "");
 	layout()->addWidget(primitiveMaterialWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(removePrimitiveButton, &QPushButton::clicked, this, &ModelNtmdPrimitiveWidget::onRemovePrimitiveButtonClicked);
 	connect(primitiveMeshWidget, &FileSelectorWidget::fileSelected, this, &ModelNtmdPrimitiveWidget::onValueChanged);

@@ -23,12 +23,12 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	opacityValueWidget->setMin(0.0f);
 	opacityValueWidget->setMax(1.0f);
 	layout()->addWidget(opacityValueWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	normalTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_normal_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(normalTextureImageWidget);
 	normalTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_normal_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(normalTextureImageSamplerWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	metalnessTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(metalnessTextureImageWidget);
 	metalnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
@@ -38,7 +38,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	metalnessValueWidget->setMin(0.0f);
 	metalnessValueWidget->setMax(1.0f);
 	layout()->addWidget(metalnessValueWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	roughnessTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(roughnessTextureImageWidget);
 	roughnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
@@ -48,7 +48,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	roughnessValueWidget->setMin(0.0f);
 	roughnessValueWidget->setMax(1.0f);
 	layout()->addWidget(roughnessValueWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	occlusionTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(occlusionTextureImageWidget);
 	occlusionTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
@@ -58,7 +58,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	occlusionValueWidget->setMin(0.0f);
 	occlusionValueWidget->setMax(1.0f);
 	layout()->addWidget(occlusionValueWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	emissiveTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(emissiveTextureImageWidget);
 	emissiveTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
@@ -68,7 +68,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	emissiveFactorWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_factor"));
 	emissiveFactorWidget->setValue(1.0f);
 	layout()->addWidget(emissiveFactorWidget);
-	layout()->addWidget(new SeparatorLine(globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	alphaCutoffWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_alpha_cutoff"));
 	alphaCutoffWidget->setMin(0.0f);
 	alphaCutoffWidget->setMax(1.0f);

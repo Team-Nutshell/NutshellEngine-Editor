@@ -24,7 +24,7 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(primitiveIndexWidget);
 	materialPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_material"), m_globalInfo.localization.getString("component_renderable_no_material_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(materialPathWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);

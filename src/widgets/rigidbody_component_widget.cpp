@@ -28,7 +28,7 @@ RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(staticFrictionWidget);
 	dynamicFrictionWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_rigidbody_dynamic_friction"));
 	layout()->addWidget(dynamicFrictionWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(isStaticWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanChanged);
 	connect(isAffectedByConstantsWidget, &BooleanWidget::stateChanged, this, &RigidbodyComponentWidget::onBooleanChanged);

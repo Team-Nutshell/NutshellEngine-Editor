@@ -63,13 +63,13 @@ void LogBar::paintEvent(QPaintEvent* event) {
 
 	LogLevel logLevel = std::get<1>(log);
 	if (logLevel == LogLevel::Info) {
-		setStyleSheet("color: rgba(225, 225, 225, 255)");
+		setStyleSheet("color: rgba(225, 225, 225, 255);");
 	}
 	else if (logLevel == LogLevel::Warning) {
-		setStyleSheet("color: rgba(225, 115, 0, 255)");
+		setStyleSheet("color: rgba(225, 115, 0, 255);");
 	}
 	else if (logLevel == LogLevel::Error) {
-		setStyleSheet("color: rgba(225, 25, 0, 255)");
+		setStyleSheet("color: rgba(225, 25, 0, 255);");
 	}
 
 	QLabel::paintEvent(event);

@@ -141,7 +141,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
 
-	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
+	rendererVerticalLayout->addWidget(new SeparatorLine());
 
 	QWidget* rendererCameraGridLayoutWidget = new QWidget();
 	QGridLayout* rendererCameraGridLayout = new QGridLayout();
@@ -179,7 +179,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	gridScaleWidget->layout()->setAlignment(gridScaleWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(gridScaleWidget, 0, 2);
 
-	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
+	rendererVerticalLayout->addWidget(new SeparatorLine());
 
 	QWidget* rendererGuizmoLayoutWidget = new QWidget();
 	QVBoxLayout* rendererGuizmoLayout = new QVBoxLayout();
@@ -223,7 +223,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	guizmoScaleStepWidget->layout()->setAlignment(guizmoScaleStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererGuizmoLayout->addWidget(guizmoScaleStepWidget);
 
-	rendererVerticalLayout->addWidget(new SeparatorLine(m_globalInfo));
+	rendererVerticalLayout->addWidget(new SeparatorLine());
 
 	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_current_entity_outline_color"), nml::vec3(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor));
 	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);

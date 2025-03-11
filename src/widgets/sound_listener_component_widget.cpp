@@ -15,7 +15,7 @@ SoundListenerComponentWidget::SoundListenerComponentWidget(GlobalInfo& globalInf
 	layout()->addWidget(forwardWidget);
 	upWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_sound_listener_up"));
 	layout()->addWidget(upWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(forwardWidget, &Vector3Widget::valueChanged, this, &SoundListenerComponentWidget::onVec3Changed);
 	connect(upWidget, &Vector3Widget::valueChanged, this, &SoundListenerComponentWidget::onVec3Changed);

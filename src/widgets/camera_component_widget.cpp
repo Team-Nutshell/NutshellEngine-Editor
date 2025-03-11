@@ -35,7 +35,7 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->addWidget(nearPlaneWidget);
 	farPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_far_plane"));
 	layout()->addWidget(farPlaneWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(forwardWidget, &Vector3Widget::valueChanged, this, &CameraComponentWidget::onVec3Changed);
 	connect(projectionTypeWidget, &ComboBoxWidget::elementSelected, this, &CameraComponentWidget::onElementChanged);

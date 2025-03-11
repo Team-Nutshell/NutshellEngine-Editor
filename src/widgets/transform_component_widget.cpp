@@ -10,7 +10,7 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_transform")));
 	positionWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_transform_position"));
 	layout()->addWidget(positionWidget);
@@ -18,7 +18,7 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(rotationWidget);
 	scaleWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_transform_scale"));
 	layout()->addWidget(scaleWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
 	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);

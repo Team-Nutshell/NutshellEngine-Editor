@@ -33,9 +33,9 @@ RecentProjectWidget::RecentProjectWidget(GlobalInfo& globalInfo, const std::stri
 	hBoxLayoutWidget->layout()->setAlignment(removeRecentProjectButton, Qt::AlignmentFlag::AlignRight);
 	layout()->addWidget(hBoxLayoutWidget);
 	projectDirectoryLabel = new QLabel(QString::fromStdString(projectDirectory));
-	projectDirectoryLabel->setStyleSheet("color: rgba(200, 200, 200, 255)");
+	projectDirectoryLabel->setStyleSheet("color: rgba(200, 200, 200, 255);");
 	layout()->addWidget(projectDirectoryLabel);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(removeRecentProjectButton, &QPushButton::clicked, this, &RecentProjectWidget::onRemoveRecentProjectButtonClicked);
 }

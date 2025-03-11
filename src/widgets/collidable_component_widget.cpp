@@ -33,7 +33,7 @@ CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(tipWidget);
 	fromRenderableWidget = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("component_collidable_from_renderable")));
 	layout()->addWidget(fromRenderableWidget);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 
 	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &CollidableComponentWidget::onElementChanged);
 	connect(centerWidget, &Vector3Widget::valueChanged, this, &CollidableComponentWidget::onVec3Changed);

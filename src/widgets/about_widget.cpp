@@ -20,7 +20,7 @@ AboutWidget::AboutWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	layout()->addWidget(logoLabel);
 	QLabel* versionLabel = new QLabel("<b>NutshellEngine " + QString::fromStdString(m_globalInfo.version) + "</b>");
 	layout()->addWidget(versionLabel);
-	layout()->addWidget(new SeparatorLine(m_globalInfo));
+	layout()->addWidget(new SeparatorLine());
 	layout()->setAlignment(versionLabel, Qt::AlignmentFlag::AlignCenter);
 	QLabel* aboutNutshellEngineLabel = new QLabel(QString::fromStdString(m_globalInfo.localization.getString("about_nutshell_engine", { "<b><a href=\"https://github.com/Team-Nutshell\">" + m_globalInfo.localization.getString("about_nutshell_engine_team_nutshell_github") + "</a></b>" })));
 	aboutNutshellEngineLabel->setWordWrap(true);
