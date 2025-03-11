@@ -214,6 +214,30 @@ namespace NtshEngn {
 			return ecs->isEntityPersistent(entity);
 		}
 
+		void addEntityToEntityGroup(Entity entity, const std::string& entityGroupName) {
+			ecs->addEntityToEntityGroup(entity, entityGroupName);
+		}
+
+		void removeEntityFromEntityGroup(Entity entity, const std::string& entityGroupName) {
+			ecs->removeEntityFromEntityGroup(entity, entityGroupName);
+		}
+
+		bool entityGroupExists(const std::string& entityGroupName) {
+			return ecs->entityGroupExists(entityGroupName);
+		}
+
+		bool isEntityInEntityGroup(Entity entity, const std::string& entityGroupName) {
+			return ecs->isEntityInEntityGroup(entity, entityGroupName);
+		}
+
+		std::set<Entity> getEntitiesInEntityGroup(const std::string& entityGroupName) {
+			return ecs->getEntitiesInEntityGroup(entityGroupName);
+		}
+
+		std::set<std::string> getEntityGroupsOfEntity(Entity entity) {
+			return ecs->getEntityGroupsOfEntity(entity);
+		}
+
 		template <typename T>
 		void addEntityComponent(Entity entity, T component) {
 			ecs->addComponent(entity, component);

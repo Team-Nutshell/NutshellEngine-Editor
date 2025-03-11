@@ -10,9 +10,8 @@
 #include "components/transform.h"
 #include "../../external/nlohmann/json.hpp"
 #include <string>
-#include <map>
-#include <memory>
 #include <optional>
+#include <vector>
 #include <cstdint>
 
 typedef uint32_t EntityID;
@@ -22,6 +21,7 @@ struct Entity {
 	EntityID entityID = NO_ENTITY;
 	std::string name = "";
 	bool isPersistent = false;
+	std::vector<std::string> entityGroups;
 
 	Transform transform = {};
 	std::optional<Camera> camera;
@@ -60,6 +60,9 @@ struct Entity {
 		if (scriptable) {
 			j["scriptable"] = scriptable->toJson();
 		}
+		if (!entityGroups.empty()) {
+			j["entityGroups"] = entityGroups;
+		}
 
 		return j;
 	}
@@ -95,6 +98,9 @@ struct Entity {
 		}
 		if (j.contains("scriptable")) {
 			entity.scriptable = Scriptable::fromJson(j["scriptable"]);
+		}
+		if (j.contains("entityGroups")) {
+			entity.entityGroups = j["entityGroups"];
 		}
 
 		return entity;

@@ -75,6 +75,19 @@ namespace NtshEngn {
 			if (m_persistentEntities.find(entity) != m_persistentEntities.end()) {
 				m_persistentEntities.erase(entity);
 			}
+
+			if (m_entityGroupsOfEntities.find(entity) != m_entityGroupsOfEntities.end()) {
+				const std::set<std::string>& entityGroupNames = m_entityGroupsOfEntities[entity];
+				for (const std::string& entityGroupName : entityGroupNames) {
+					m_entityGroups[entityGroupName].erase(entity);
+
+					if (m_entityGroups[entityGroupName].empty()) {
+						m_entityGroups.erase(entityGroupName);
+					}
+				}
+
+				m_entityGroupsOfEntities.erase(entity);
+			}
 		}
 
 		void setComponents(Entity entity, ComponentMask componentMask) {
@@ -144,12 +157,61 @@ namespace NtshEngn {
 			return m_persistentEntities;
 		}
 
+		void addEntityToEntityGroup(Entity entity, const std::string& entityGroupName) {
+			m_entityGroups[entityGroupName].insert(entity);
+			m_entityGroupsOfEntities[entity].insert(entityGroupName);
+		}
+
+		void removeEntityFromEntityGroup(Entity entity, const std::string& entityGroupName) {
+			if (m_entityGroups.find(entityGroupName) != m_entityGroups.end()) {
+				m_entityGroups[entityGroupName].erase(entity);
+
+				if (m_entityGroups[entityGroupName].empty()) {
+					m_entityGroups.erase(entityGroupName);
+				}
+			}
+
+			if (m_entityGroupsOfEntities.find(entity) != m_entityGroupsOfEntities.end()) {
+				m_entityGroupsOfEntities[entity].erase(entityGroupName);
+			}
+		}
+
+		bool entityGroupExists(const std::string& entityGroupName) {
+			return m_entityGroups.find(entityGroupName) != m_entityGroups.end();
+		}
+
+		bool isEntityInEntityGroup(Entity entity, const std::string& entityGroupName) {
+			if (m_entityGroupsOfEntities.find(entity) != m_entityGroupsOfEntities.end()) {
+				return m_entityGroupsOfEntities[entity].find(entityGroupName) != m_entityGroupsOfEntities[entity].end();
+			}
+
+			return false;
+		}
+
+		std::set<Entity> getEntitiesInEntityGroup(const std::string& entityGroupName) {
+			if (m_entityGroups.find(entityGroupName) != m_entityGroups.end()) {
+				return m_entityGroups[entityGroupName];
+			}
+
+			return std::set<Entity>();
+		}
+
+		std::set<std::string> getEntityGroupsOfEntity(Entity entity) {
+			if (m_entityGroupsOfEntities.find(entity) != m_entityGroupsOfEntities.end()) {
+				return m_entityGroupsOfEntities[entity];
+			}
+
+			return std::set<std::string>();
+		}
+
 	private:
 		std::deque<Entity> m_availableEntities;
 		std::set<Entity> m_existingEntities;
 		std::array<ComponentMask, NTSHENGN_MAX_ENTITIES> m_componentMasks;
 		Bimap<Entity, std::string> m_entityNames;
 		std::set<Entity> m_persistentEntities;
+		std::unordered_map<std::string, std::set<Entity>> m_entityGroups;
+		std::unordered_map<Entity, std::set<std::string>> m_entityGroupsOfEntities;
 		uint32_t m_numberOfEntities = 0;
 	};
 
@@ -371,6 +433,15 @@ namespace NtshEngn {
 
 		virtual void setEntityPersistence(Entity entity, bool persistent) = 0;
 		virtual bool isEntityPersistent(Entity entity) = 0;
+
+		virtual void addEntityToEntityGroup(Entity entity, const std::string& entityGroupName) = 0;
+		virtual void removeEntityFromEntityGroup(Entity entity, const std::string& entityGroupName) = 0;
+
+		virtual bool entityGroupExists(const std::string& entityGroupName) = 0;
+
+		virtual bool isEntityInEntityGroup(Entity entity, const std::string& entityGroupName) = 0;
+		virtual std::set<Entity> getEntitiesInEntityGroup(const std::string& entityGroupName) = 0;
+		virtual std::set<std::string> getEntityGroupsOfEntity(Entity entity) = 0;
 
 		// Component
 		template <typename T>

@@ -79,6 +79,7 @@ set(RENDERER_HEADERS
 set(UNDO_COMMANDS_SOURCES
 	src/undo_commands/add_entity_component_command.cpp
 	src/undo_commands/change_entities_component_command.cpp
+	src/undo_commands/change_entities_entity_groups_command.cpp
 	src/undo_commands/change_entity_name_command.cpp
 	src/undo_commands/change_entity_persistence_command.cpp
 	src/undo_commands/clear_scene_command.cpp
@@ -92,6 +93,7 @@ set(UNDO_COMMANDS_SOURCES
 set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/add_entity_component_command.h
 	src/undo_commands/change_entities_component_command.h
+	src/undo_commands/change_entities_entity_groups_command.h
 	src/undo_commands/change_entity_name_command.h
 	src/undo_commands/change_entity_persistence_command.h
 	src/undo_commands/clear_scene_command.h
@@ -120,6 +122,7 @@ set(WIDGET_SOURCES
 	src/widgets/close_scene_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/collidable_component_widget.cpp
+	src/widgets/collapsable_widget.cpp
 	src/widgets/combo_box_no_scroll_widget.cpp
 	src/widgets/combo_box_widget.cpp
 	src/widgets/component_list.cpp
@@ -129,6 +132,8 @@ set(WIDGET_SOURCES
 	src/widgets/delete_script_widget.cpp
 	src/widgets/edit_menu.cpp
 	src/widgets/editor_parameters_widget.cpp
+	src/widgets/entity_group_name_widget.cpp
+	src/widgets/entity_groups_widget.cpp
 	src/widgets/entity_info_name_widget.cpp
 	src/widgets/entity_info_panel.cpp
 	src/widgets/entity_info_persistence_widget.cpp
@@ -200,6 +205,7 @@ set(WIDGET_HEADERS
 	src/widgets/close_scene_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/collidable_component_widget.h
+	src/widgets/collapsable_widget.h
 	src/widgets/combo_box_no_scroll_widget.h
 	src/widgets/combo_box_widget.h
 	src/widgets/component_list.h
@@ -209,6 +215,8 @@ set(WIDGET_HEADERS
 	src/widgets/delete_script_widget.h
 	src/widgets/edit_menu.h
 	src/widgets/editor_parameters_widget.h
+	src/widgets/entity_group_name_widget.h
+	src/widgets/entity_groups_widget.h
 	src/widgets/entity_info_name_widget.h
 	src/widgets/entity_info_panel.h
 	src/widgets/entity_info_persistence_widget.h

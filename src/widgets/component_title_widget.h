@@ -10,7 +10,7 @@ public:
 	ComponentTitleWidget(GlobalInfo& globalInfo, const std::string& name);
 
 private slots:
-	void onClick();
+	void onRemoveWidgetClicked();
 
 private:
 	GlobalInfo& m_globalInfo;

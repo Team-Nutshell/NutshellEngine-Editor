@@ -15,12 +15,12 @@ ComponentTitleWidget::ComponentTitleWidget(GlobalInfo& globalInfo, const std::st
 		removeWidgetButton->setFixedWidth(20);
 		layout()->addWidget(removeWidgetButton);
 		
-		connect(removeWidgetButton, &QPushButton::clicked, this, &ComponentTitleWidget::onClick);
+		connect(removeWidgetButton, &QPushButton::clicked, this, &ComponentTitleWidget::onRemoveWidgetClicked);
 	}
 	layout()->addWidget(new QLabel("<b>" + QString::fromStdString(name) + "</b>"));
 }
 
-void ComponentTitleWidget::onClick() {
+void ComponentTitleWidget::onRemoveWidgetClicked() {
 	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
 

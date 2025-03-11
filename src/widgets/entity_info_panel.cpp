@@ -10,6 +10,9 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->addWidget(entityInfoNameWidget);
 	entityInfoPersistenceWidget = new EntityInfoPersistenceWidget(m_globalInfo);
 	layout()->addWidget(entityInfoPersistenceWidget);
+	entityGroupsWidget = new EntityGroupsWidget(m_globalInfo);
+	collapsableEntityGroupsWidget = new CollapsableWidget(m_globalInfo.localization.getString("entity_groups"), entityGroupsWidget);
+	layout()->addWidget(collapsableEntityGroupsWidget);
 	componentScrollArea = new ComponentScrollArea(m_globalInfo);
 	layout()->addWidget(componentScrollArea);
 }

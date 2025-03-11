@@ -1,6 +1,5 @@
 #include "string_widget.h"
 #include <QHBoxLayout>
-#include <stdlib.h>
 
 StringWidget::StringWidget(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
