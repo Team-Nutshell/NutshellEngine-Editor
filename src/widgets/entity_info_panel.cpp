@@ -15,4 +15,13 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->addWidget(collapsableEntityGroupsWidget);
 	componentScrollArea = new ComponentScrollArea(m_globalInfo);
 	layout()->addWidget(componentScrollArea);
+
+	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::updateEntityGroupsNumber);
+	connect(entityGroupsWidget, &EntityGroupsWidget::updateEntityGroupsSignal, this, &EntityInfoPanel::updateEntityGroupsNumber);
+}
+
+void EntityInfoPanel::updateEntityGroupsNumber() {
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		collapsableEntityGroupsWidget->setText(m_globalInfo.localization.getString("entity_groups") + " (" + std::to_string(m_globalInfo.entities[m_globalInfo.currentEntityID].entityGroups.size()) + ")");
+	}
 }

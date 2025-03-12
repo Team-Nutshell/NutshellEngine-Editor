@@ -15,6 +15,9 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
+private slots:
+	void updateEntityGroupsNumber();
+
 public:
 	EntityInfoNameWidget* entityInfoNameWidget;
 	EntityInfoPersistenceWidget* entityInfoPersistenceWidget;

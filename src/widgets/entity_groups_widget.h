@@ -15,6 +15,9 @@ private:
 
 	EntityGroupNameWidget* addEntityGroupNameWidget();
 
+signals:
+	void updateEntityGroupsSignal();
+
 private slots:
 	void onEntitySelected();
 	void onEntityGroupNameChanged();

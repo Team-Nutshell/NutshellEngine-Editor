@@ -27,16 +27,33 @@ void EntityGroupsWidget::updateEntityGroups() {
 		}
 	}
 	m_globalInfo.actionUndoStack->push(new ChangeEntitiesEntityGroupsCommand(m_globalInfo, changedEntityIDs, changedEntityGroupNames));
+
+	emit updateEntityGroupsSignal();
 }
 
 EntityGroupNameWidget* EntityGroupsWidget::addEntityGroupNameWidget() {
 	EntityGroupNameWidget* newEntityGroupNameWidget = new EntityGroupNameWidget(m_globalInfo);
 	static_cast<QVBoxLayout*>(layout())->insertWidget(layout()->count() - 1, newEntityGroupNameWidget);
 
-	connect(newEntityGroupNameWidget, &EntityGroupNameWidget::entityGroupNameChanged, this, &EntityGroupsWidget::onEntityGroupNameChanged);
-	connect(newEntityGroupNameWidget, &EntityGroupNameWidget::removeEntityGroupClicked, this, &EntityGroupsWidget::onRemoveEntityGroupClicked);
+	connect(newEntityGroupNameWidget, &EntityGroupNameWidget::changeEntityGroupNameSignal, this, &EntityGroupsWidget::onEntityGroupNameChanged);
+	connect(newEntityGroupNameWidget, &EntityGroupNameWidget::removeEntityGroupSignal, this, &EntityGroupsWidget::onRemoveEntityGroupClicked);
 
 	return newEntityGroupNameWidget;
+}
+
+void EntityGroupsWidget::onEntitySelected() {
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		QLayoutItem* item = nullptr;
+		while ((layout()->count() != 1) && (item = layout()->takeAt(0))) {
+			delete item->widget();
+			delete item;
+		}
+
+		for (const std::string& entityGroupName : m_globalInfo.entities[m_globalInfo.currentEntityID].entityGroups) {
+			EntityGroupNameWidget* newEntityGroupNameWidget = addEntityGroupNameWidget();
+			newEntityGroupNameWidget->setText(entityGroupName);
+		}
+	}
 }
 
 void EntityGroupsWidget::onEntityGroupNameChanged() {
@@ -62,19 +79,4 @@ void EntityGroupsWidget::onRemoveEntityGroupClicked() {
 
 void EntityGroupsWidget::onAddEntityGroupClicked() {
 	addEntityGroupNameWidget();
-}
-
-void EntityGroupsWidget::onEntitySelected() {
-	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		QLayoutItem* item = nullptr;
-		while ((layout()->count() != 1) && (item = layout()->takeAt(0))) {
-			delete item->widget();
-			delete item;
-		}
-
-		for (const std::string& entityGroupName : m_globalInfo.entities[m_globalInfo.currentEntityID].entityGroups) {
-			EntityGroupNameWidget* newEntityGroupNameWidget = addEntityGroupNameWidget();
-			newEntityGroupNameWidget->setText(entityGroupName);
-		}
-	}
 }

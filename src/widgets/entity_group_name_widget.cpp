@@ -24,14 +24,14 @@ const std::string& EntityGroupNameWidget::getText() {
 }
 
 void EntityGroupNameWidget::onRemoveEntityGroupClicked() {
-	emit removeEntityGroupClicked();
+	emit removeEntityGroupSignal();
 }
 
 void EntityGroupNameWidget::onEditingFinished() {
 	std::string newValue = entityGroupNameLineEdit->text().toStdString();
 	if (m_text != newValue) {
 		setText(newValue);
-		emit entityGroupNameChanged(m_text);
+		emit changeEntityGroupNameSignal(m_text);
 	}
 	entityGroupNameLineEdit->clearFocus();
 }

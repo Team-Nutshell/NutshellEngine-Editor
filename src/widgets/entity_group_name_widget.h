@@ -14,8 +14,8 @@ public:
 	const std::string& getText();
 
 signals:
-	void entityGroupNameChanged(const std::string&);
-	void removeEntityGroupClicked();
+	void changeEntityGroupNameSignal(const std::string&);
+	void removeEntityGroupSignal();
 
 private slots:
 	void onEditingFinished();
