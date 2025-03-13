@@ -1436,7 +1436,7 @@ void Renderer::updateCamera() {
 		}
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.perspectivePosition, m_camera.perspectivePosition + m_camera.perspectiveDirection, m_camera.perspectiveUp);
-		m_camera.projectionMatrix = nml::perspectiveRH(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = perspectiveRHOpenGL(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 	else {
 		nml::vec3 t;
@@ -1473,7 +1473,7 @@ void Renderer::updateCamera() {
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.orthographicPosition, m_camera.orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
@@ -1882,6 +1882,29 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	nml::vec4 worldSpace = invViewMatrix * viewSpace;
 
 	return nml::vec3(worldSpace) / worldSpace.w;
+}
+
+nml::mat4 Renderer::perspectiveRHOpenGL(float fovY, float aspectRatio, float near, float far) {
+	const float tanHalfFovY = std::tan(fovY / 2.0f);
+	const float farMinusNear = far - near;
+		
+	return nml::mat4(1.0f / (aspectRatio * tanHalfFovY), 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f / tanHalfFovY, 0.0f, 0.0f,
+		0.0f, 0.0f, -(far + near) / (farMinusNear), -1.0f,
+		0.0f, 0.0f, -(2.0f * far * near) / (farMinusNear), 0.0f);
+}
+
+nml::mat4 Renderer::orthographicRHOpenGL(float left, float right, float bottom, float top, float near, float far) {
+	const float rightPlusLeft = right + left;
+	const float rightMinusLeft = right - left;
+	const float topPlusBottom = top + bottom;
+	const float topMinusBottom = top - bottom;
+	const float farMinusNear = far - near;
+
+	return nml::mat4(2.0f / rightMinusLeft, 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / topMinusBottom, 0.0f, 0.0f,
+		0.0f, 0.0f, -1.0f / farMinusNear, 0.0f,
+		-(rightPlusLeft / rightMinusLeft), -(topPlusBottom / topMinusBottom), -(far + near) / farMinusNear, 1.0f);
 }
 
 void Renderer::onEntityDestroyed(EntityID entityID) {

@@ -49,6 +49,9 @@ private:
 	nml::vec2 project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix);
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
+	nml::mat4 perspectiveRHOpenGL(float fovY, float aspectRatio, float near, float far);
+	nml::mat4 orthographicRHOpenGL(float left, float right, float bottom, float top, float near, float far);
+
 private slots:
 	void onEntityDestroyed(EntityID entityID);
 	void onEntitySelected();
