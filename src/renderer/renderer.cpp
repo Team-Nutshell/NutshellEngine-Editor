@@ -1473,7 +1473,7 @@ void Renderer::updateCamera() {
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.orthographicPosition, m_camera.orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
