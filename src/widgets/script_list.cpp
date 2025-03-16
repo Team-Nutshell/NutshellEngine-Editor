@@ -273,10 +273,7 @@ void ScriptList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEd
 	currentItem->setFlags(currentItem->flags() & ~Qt::ItemFlag::ItemIsEditable);
 	std::string newName = reinterpret_cast<QLineEdit*>(lineEdit)->text().toStdString();
 
-	if (renameScriptFile(currentlyEditedItemName, newName)) {
-		renameScriptClass(currentlyEditedItemName, newName);
-	}
-	else {
+	if (!renameScriptFile(currentlyEditedItemName, newName)) {
 		currentItem->setText(QString::fromStdString(currentlyEditedItemName));
 	}
 
