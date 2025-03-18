@@ -257,7 +257,52 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	}
 
 	// OBB
-	nml::mat4 rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	nml::mat4 rotationMatrix;
+	if ((eigen[0].second == nml::vec3(1.0f, 0.0f, 0.0f)) &&
+		(eigen[1].second == nml::vec3(0.0f, 0.0f, 1.0f)) &&
+		(eigen[2].second == nml::vec3(0.0f, 1.0f, 0.0f))) {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		float tmp = mesh.obb.halfExtent.y;
+		mesh.obb.halfExtent.y = mesh.obb.halfExtent.z;
+		mesh.obb.halfExtent.z = tmp;
+	}
+	else if ((eigen[0].second == nml::vec3(0.0f, 1.0f, 0.0f)) &&
+		(eigen[1].second == nml::vec3(1.0f, 0.0f, 0.0f)) &&
+		(eigen[2].second == nml::vec3(0.0f, 0.0f, 1.0f))) {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		float tmp = mesh.obb.halfExtent.x;
+		mesh.obb.halfExtent.x = mesh.obb.halfExtent.y;
+		mesh.obb.halfExtent.y = tmp;
+	}
+	else if ((eigen[0].second == nml::vec3(0.0f, 0.0f, 1.0f)) &&
+		(eigen[1].second == nml::vec3(1.0f, 0.0f, 0.0f)) &&
+		(eigen[2].second == nml::vec3(0.0f, 1.0f, 0.0f))) {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(eigen[0].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		float tmp = mesh.obb.halfExtent.x;
+		mesh.obb.halfExtent.x = mesh.obb.halfExtent.y;
+		mesh.obb.halfExtent.y = mesh.obb.halfExtent.z;
+		mesh.obb.halfExtent.z = tmp;
+	}
+	else if ((eigen[0].second == nml::vec3(0.0f, 1.0f, 0.0f)) &&
+		(eigen[1].second == nml::vec3(0.0f, 0.0f, 1.0f)) &&
+		(eigen[2].second == nml::vec3(1.0f, 0.0f, 0.0f))) {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[2].second, 0.0f), nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		float tmp = mesh.obb.halfExtent.x;
+		mesh.obb.halfExtent.x = mesh.obb.halfExtent.z;
+		mesh.obb.halfExtent.z = mesh.obb.halfExtent.y;
+		mesh.obb.halfExtent.y = tmp;
+	}
+	else if ((eigen[0].second == nml::vec3(0.0f, 0.0f, 1.0f)) &&
+		(eigen[1].second == nml::vec3(0.0f, 1.0f, 0.0f)) &&
+		(eigen[2].second == nml::vec3(1.0f, 0.0f, 0.0f))) {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[2].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[0].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		float tmp = mesh.obb.halfExtent.x;
+		mesh.obb.halfExtent.x = mesh.obb.halfExtent.z;
+		mesh.obb.halfExtent.z = tmp;
+	}
+	else {
+		rotationMatrix = nml::mat4(nml::vec4(eigen[0].second, 0.0f), nml::vec4(eigen[1].second, 0.0f), nml::vec4(eigen[2].second, 0.0f), nml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	}
 	mesh.obb.rotation = nml::rotationMatrixToEulerAngles(rotationMatrix);
 	mesh.obb.rotation.x = nml::toDeg(mesh.obb.rotation.x);
 	mesh.obb.rotation.y = nml::toDeg(mesh.obb.rotation.y);
