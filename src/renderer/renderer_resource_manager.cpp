@@ -25,6 +25,7 @@
 #include <set>
 #include <functional>
 #include <numeric>
+#include <limits>
 #include <algorithm>
 #include <fstream>
 
@@ -180,7 +181,29 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 
 	std::set<nml::vec3, decltype(uniquePositionsCmp)> uniquePositions(uniquePositionsCmp);
 
+	nml::vec3 positionMin = nml::vec3(std::numeric_limits<float>::max());
+	nml::vec3 positionMax = nml::vec3(std::numeric_limits<float>::lowest());
+
 	for (size_t j = 0; j < mesh.vertices.size(); j++) {
+		if (mesh.vertices[j].position.x < positionMin.x) {
+			positionMin.x = mesh.vertices[j].position.x;
+		}
+		if (mesh.vertices[j].position.x > positionMax.x) {
+			positionMax.x = mesh.vertices[j].position.x;
+		}
+		if (mesh.vertices[j].position.y < positionMin.y) {
+			positionMin.y = mesh.vertices[j].position.y;
+		}
+		if (mesh.vertices[j].position.y > positionMax.y) {
+			positionMax.y = mesh.vertices[j].position.y;
+		}
+		if (mesh.vertices[j].position.z < positionMin.z) {
+			positionMin.z = mesh.vertices[j].position.z;
+		}
+		if (mesh.vertices[j].position.z > positionMax.z) {
+			positionMax.z = mesh.vertices[j].position.z;
+		}
+
 		uniquePositions.insert(mesh.vertices[j].position);
 	}
 
@@ -213,14 +236,15 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 		return a.first > b.first;
 		});
 
-	mesh.obb.center = means;
-	mesh.sphere.center = means;
+	nml::vec3 center = (positionMin + positionMax) / 2.0f;
+	mesh.obb.center = center;
+	mesh.sphere.center = center;
 	mesh.sphere.radius = 0.0f;
 	mesh.capsule.radius = 0.0f;
 
 	float segmentLengthMax = 0.0f;
 	for (const nml::vec3& position : uniquePositions) {
-		const nml::vec3 positionMinusCenter = position - means;
+		const nml::vec3 positionMinusCenter = position - center;
 
 		// OBB
 		const float extentX = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
@@ -307,8 +331,8 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.sphere.radius = std::sqrt(mesh.sphere.radius);
 
 	// Capsule
-	mesh.capsule.base = mesh.obb.center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
-	mesh.capsule.tip = mesh.obb.center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+	mesh.capsule.base = center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+	mesh.capsule.tip = center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
 
 	mesh.collidersCalculated = true;
 }
