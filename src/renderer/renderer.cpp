@@ -846,6 +846,8 @@ void Renderer::paintGL() {
 
 	// Entities Colliders
 	if (m_globalInfo.editorParameters.renderer.showColliders) {
+		gl.glDepthFunc(GL_LEQUAL);
+
 		gl.glUseProgram(m_colliderProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
