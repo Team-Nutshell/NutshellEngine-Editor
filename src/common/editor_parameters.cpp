@@ -166,8 +166,11 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 		if (j["renderer"].contains("cameraFarPlane")) {
 			renderer.cameraFarPlane = j["renderer"]["cameraFarPlane"];
 		}
-		if (j["renderer"].contains("cameraSpeed")) {
-			renderer.cameraSpeed = j["renderer"]["cameraSpeed"];
+		if (j["renderer"].contains("perspectiveCameraSpeed")) {
+			renderer.perspectiveCameraSpeed = j["renderer"]["perspectiveCameraSpeed"];
+		}
+		if (j["renderer"].contains("orthographicCameraSpeed")) {
+			renderer.orthographicCameraSpeed = j["renderer"]["orthographicCameraSpeed"];
 		}
 		if (j["renderer"].contains("cameraSensitivity")) {
 			renderer.cameraSensitivity = j["renderer"]["cameraSensitivity"];
@@ -268,7 +271,8 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
 	j["renderer"]["cameraNearPlane"] = renderer.cameraNearPlane;
 	j["renderer"]["cameraFarPlane"] = renderer.cameraFarPlane;
-	j["renderer"]["cameraSpeed"] = renderer.cameraSpeed;
+	j["renderer"]["perspectiveCameraSpeed"] = renderer.perspectiveCameraSpeed;
+	j["renderer"]["orthographicCameraSpeed"] = renderer.orthographicCameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridScale"] = renderer.gridScale;
 	j["renderer"]["maintainGuizmoSize"] = renderer.maintainGuizmoSize;

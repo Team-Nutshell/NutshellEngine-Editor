@@ -1416,7 +1416,7 @@ void Renderer::updateCamera() {
 
 		nml::vec3 t = nml::normalize(nml::vec3(-m_camera.perspectiveDirection.z, 0.0f, m_camera.perspectiveDirection.x));
 
-		float cameraSpeed = m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime;
+		float cameraSpeed = m_globalInfo.editorParameters.renderer.perspectiveCameraSpeed * deltaTime;
 
 		if (m_cameraForwardKeyPressed) {
 			m_camera.perspectivePosition += m_camera.perspectiveDirection * cameraSpeed;
@@ -1449,9 +1449,9 @@ void Renderer::updateCamera() {
 			t = nml::normalize(nml::vec3(-m_camera.orthographicDirection.z, 0.0f, m_camera.orthographicDirection.x));
 		}
 
-		float horizontalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime * ((m_mouseCursorDifference.x == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.x));
-		float verticalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.cameraSpeed * deltaTime * ((m_mouseCursorDifference.y == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.y));
-		float halfExtentSpeed = m_globalInfo.editorParameters.renderer.cameraSpeed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
+		float horizontalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.orthographicCameraSpeed * deltaTime * ((m_mouseCursorDifference.x == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.x));
+		float verticalSpeed = m_camera.orthographicHalfExtent * m_globalInfo.editorParameters.renderer.orthographicCameraSpeed * deltaTime * ((m_mouseCursorDifference.y == 0.0f) ? 1.0f : std::abs(m_mouseCursorDifference.y));
+		float halfExtentSpeed = m_globalInfo.editorParameters.renderer.orthographicCameraSpeed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
 
 		if (m_cameraForwardKeyPressed || (m_mouseCursorDifference.y < 0.0f)) {
 			m_camera.orthographicPosition += m_camera.orthographicUp * verticalSpeed;

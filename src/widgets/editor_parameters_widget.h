@@ -63,7 +63,8 @@ public:
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
 	ScalarWidget* cameraNearPlaneWidget;
 	ScalarWidget* cameraFarPlaneWidget;
-	ScalarWidget* cameraSpeedWidget;
+	ScalarWidget* perspectiveCameraSpeedWidget;
+	ScalarWidget* orthographicCameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridScaleWidget;
 	BooleanWidget* maintainGuizmoSizeWidget;

@@ -6,7 +6,7 @@
 #include <fstream>
 
 EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	resize(1000, 450);
+	resize(1000, 525);
 	setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("editor_parameters")));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
@@ -161,17 +161,23 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	cameraFarPlaneWidget->layout()->setAlignment(cameraFarPlaneWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraFarPlaneWidget, 1, 0);
 
-	cameraSpeedWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_speed"));
-	cameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSpeed, 'g', 7));
-	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	cameraSpeedWidget->layout()->setAlignment(cameraSpeedWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererCameraGridLayout->addWidget(cameraSpeedWidget, 0, 1);
+	perspectiveCameraSpeedWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_perspective_camera_speed"));
+	perspectiveCameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.perspectiveCameraSpeed, 'g', 7));
+	perspectiveCameraSpeedWidget->layout()->setAlignment(perspectiveCameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	perspectiveCameraSpeedWidget->layout()->setAlignment(perspectiveCameraSpeedWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(perspectiveCameraSpeedWidget, 0, 1);
+
+	orthographicCameraSpeedWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_orthographic_camera_speed"));
+	orthographicCameraSpeedWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.orthographicCameraSpeed, 'g', 7));
+	orthographicCameraSpeedWidget->layout()->setAlignment(orthographicCameraSpeedWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	orthographicCameraSpeedWidget->layout()->setAlignment(orthographicCameraSpeedWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(orthographicCameraSpeedWidget, 1, 1);
 
 	cameraSensitivityWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_sensitivity"));
 	cameraSensitivityWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.cameraSensitivity, 'g', 7));
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererCameraGridLayout->addWidget(cameraSensitivityWidget, 1, 1);
+	rendererCameraGridLayout->addWidget(cameraSensitivityWidget, 2, 1);
 
 	gridScaleWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_grid_scale"));
 	gridScaleWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridScale, 'g', 7));
@@ -282,7 +288,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(cameraNearPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraFarPlaneWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(cameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(perspectiveCameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(orthographicCameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gridScaleWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(maintainGuizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
@@ -577,8 +584,11 @@ void EditorParametersWidget::onScalarChanged(float value) {
 	else if (senderWidget == cameraFarPlaneWidget) {
 		m_globalInfo.editorParameters.renderer.cameraFarPlane = value;
 	}
-	else if (senderWidget == cameraSpeedWidget) {
-		m_globalInfo.editorParameters.renderer.cameraSpeed = value;
+	else if (senderWidget == perspectiveCameraSpeedWidget) {
+		m_globalInfo.editorParameters.renderer.perspectiveCameraSpeed = value;
+	}
+	else if (senderWidget == orthographicCameraSpeedWidget) {
+		m_globalInfo.editorParameters.renderer.orthographicCameraSpeed = value;
 	}
 	else if (senderWidget == cameraSensitivityWidget) {
 		m_globalInfo.editorParameters.renderer.cameraSensitivity = value;
