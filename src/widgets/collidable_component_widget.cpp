@@ -338,7 +338,8 @@ void CollidableComponentWidget::onFromRenderableButtonClicked() {
 	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
 	for (EntityID selectedEntityID : selectedEntityIDs) {
-		if (m_globalInfo.entities[selectedEntityID].renderable && ((!m_globalInfo.entities[selectedEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[selectedEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE))) {
+		if (m_globalInfo.entities[selectedEntityID].collidable &&
+			(m_globalInfo.entities[selectedEntityID].renderable && ((!m_globalInfo.entities[selectedEntityID].renderable->modelPath.empty()) && (m_globalInfo.entities[selectedEntityID].renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE)))) {
 			RendererResourceManager::Mesh& mesh = m_globalInfo.rendererResourceManager.models[m_globalInfo.entities[selectedEntityID].renderable->modelPath].primitives[m_globalInfo.entities[selectedEntityID].renderable->primitiveIndex].mesh;
 			if (!mesh.collidersCalculated) {
 				m_globalInfo.rendererResourceManager.loadMeshColliders(mesh);
