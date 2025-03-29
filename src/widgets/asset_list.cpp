@@ -307,16 +307,22 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 			}
 		}
 		else if (event->key() == Qt::Key_Delete) {
-			deleteAsset(m_currentDirectory + "/" + listItem->text().toStdString());
+			if (listItem && (listItem->text() != "../")) {
+				deleteAsset(m_currentDirectory + "/" + listItem->text().toStdString());
+			}
 		}
 		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_D)) {
-			duplicateAsset(m_currentDirectory + "/" + listItem->text().toStdString());
+			if (listItem && (listItem->text() != "../")) {
+				duplicateAsset(m_currentDirectory + "/" + listItem->text().toStdString());
+			}
 		}
 		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_R)) {
-			std::string itemFileName = listItem->text().toStdString();
-			std::string assetPath = m_currentDirectory + "/" + itemFileName;
-			std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
-			reloadAsset(assetPath, assetName);
+			if (listItem && (listItem->text() != "../")) {
+				std::string itemFileName = listItem->text().toStdString();
+				std::string assetPath = m_currentDirectory + "/" + itemFileName;
+				std::string assetName = AssetHelper::absoluteToRelative(assetPath, m_globalInfo.projectDirectory);
+				reloadAsset(assetPath, assetName);
+			}
 		}
 	}
 }
