@@ -1005,7 +1005,7 @@ void Renderer::paintGL() {
 							guizmoScaling = m_camera.orthographicHalfExtent;
 						}
 						else {
-							guizmoScaling = (m_camera.perspectivePosition - guizmoPosition).length() / 4.0f;
+							guizmoScaling = (m_camera.position - guizmoPosition).length() / 4.0f;
 						}
 					}
 					nml::mat4 scaleMatrix = nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize * guizmoScaling));
@@ -1253,7 +1253,7 @@ void Renderer::paintGL() {
 						guizmoScaling = m_camera.orthographicHalfExtent;
 					}
 					else {
-						guizmoScaling = (m_camera.perspectivePosition - guizmoPosition).length() / 4.0f;
+						guizmoScaling = (m_camera.position - guizmoPosition).length() / 4.0f;
 					}
 				}
 				nml::mat4 scaleMatrix = nml::scale(nml::vec3(m_globalInfo.editorParameters.renderer.guizmoSize * guizmoScaling));
@@ -1419,25 +1419,25 @@ void Renderer::updateCamera() {
 		float cameraSpeed = m_globalInfo.editorParameters.renderer.perspectiveCameraSpeed * deltaTime;
 
 		if (m_cameraForwardKeyPressed) {
-			m_camera.perspectivePosition += m_camera.perspectiveDirection * cameraSpeed;
+			m_camera.position += m_camera.perspectiveDirection * cameraSpeed;
 		}
 		if (m_cameraBackwardKeyPressed) {
-			m_camera.perspectivePosition -= m_camera.perspectiveDirection * cameraSpeed;
+			m_camera.position -= m_camera.perspectiveDirection * cameraSpeed;
 		}
 		if (m_cameraLeftKeyPressed) {
-			m_camera.perspectivePosition -= t * cameraSpeed;
+			m_camera.position -= t * cameraSpeed;
 		}
 		if (m_cameraRightKeyPressed) {
-			m_camera.perspectivePosition += t * cameraSpeed;
+			m_camera.position += t * cameraSpeed;
 		}
 		if (m_cameraUpKeyPressed) {
-			m_camera.perspectivePosition.y += cameraSpeed;
+			m_camera.position.y += cameraSpeed;
 		}
 		if (m_cameraDownKeyPressed) {
-			m_camera.perspectivePosition.y -= cameraSpeed;
+			m_camera.position.y -= cameraSpeed;
 		}
 
-		m_camera.viewMatrix = nml::lookAtRH(m_camera.perspectivePosition, m_camera.perspectivePosition + m_camera.perspectiveDirection, m_camera.perspectiveUp);
+		m_camera.viewMatrix = nml::lookAtRH(m_camera.position, m_camera.position + m_camera.perspectiveDirection, m_camera.perspectiveUp);
 		m_camera.projectionMatrix = perspectiveRHOpenGL(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 	else {
@@ -1454,16 +1454,16 @@ void Renderer::updateCamera() {
 		float halfExtentSpeed = m_globalInfo.editorParameters.renderer.orthographicCameraSpeed * 5.0f * ((m_mouseScrollY == 0.0f) ? 1.0f : 2.0f) * deltaTime;
 
 		if (m_cameraForwardKeyPressed || (m_mouseCursorDifference.y < 0.0f)) {
-			m_camera.orthographicPosition += m_camera.orthographicUp * verticalSpeed;
+			m_camera.position += m_camera.orthographicUp * verticalSpeed;
 		}
 		if (m_cameraBackwardKeyPressed || (m_mouseCursorDifference.y > 0.0f)) {
-			m_camera.orthographicPosition -= m_camera.orthographicUp * verticalSpeed;
+			m_camera.position -= m_camera.orthographicUp * verticalSpeed;
 		}
 		if (m_cameraLeftKeyPressed || (m_mouseCursorDifference.x < 0.0f)) {
-			m_camera.orthographicPosition -= t * horizontalSpeed;
+			m_camera.position -= t * horizontalSpeed;
 		}
 		if (m_cameraRightKeyPressed || (m_mouseCursorDifference.x > 0.0f)) {
-			m_camera.orthographicPosition += t * horizontalSpeed;
+			m_camera.position += t * horizontalSpeed;
 		}
 		if (m_cameraUpKeyPressed || (m_mouseScrollY < 0.0f)) {
 			m_camera.orthographicHalfExtent += halfExtentSpeed;
@@ -1473,7 +1473,7 @@ void Renderer::updateCamera() {
 			m_camera.orthographicHalfExtent = std::max(m_camera.orthographicHalfExtent, 0.01f);
 		}
 
-		m_camera.viewMatrix = nml::lookAtRH(m_camera.orthographicPosition, m_camera.orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
+		m_camera.viewMatrix = nml::lookAtRH(m_camera.position, m_camera.position + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
 		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
@@ -1685,7 +1685,7 @@ void Renderer::calculateTranslation(const std::set<EntityID> entityIDs, const nm
 		guizmoAxisIndex = 2;
 	}
 
-	nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.perspectivePosition;
+	nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.position;
 	float cameraEntityDifferenceLength = (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) ? cameraEntityDifference.length() : 0.0f;
 	nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
 	nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
@@ -1928,13 +1928,13 @@ void Renderer::onCameraReset() {
 	cancelTransform();
 
 	if (!m_camera.useOrthographicProjection) {
-		m_camera.perspectivePosition = m_camera.basePerspectivePosition;
+		m_camera.position = m_camera.basePerspectivePosition;
 		m_camera.perspectiveDirection = m_camera.basePerspectiveDirection;
 		m_camera.perspectiveYaw = nml::toDeg(std::atan2(m_camera.perspectiveDirection[2], m_camera.perspectiveDirection[0]));
 		m_camera.perspectivePitch = nml::toDeg(-std::asin(m_camera.perspectiveDirection[1]));
 	}
 	else {
-		m_camera.orthographicPosition = m_camera.baseOrthographicPosition;
+		m_camera.position = m_camera.baseOrthographicPosition;
 		m_camera.orthographicDirection = m_camera.baseOrthographicDirection;
 		m_camera.orthographicUp = m_camera.baseOrthographicUp;
 		m_camera.orthographicHalfExtent = m_camera.baseOrthographicHalfExtent;
@@ -1945,7 +1945,6 @@ void Renderer::onOrthographicCameraToAxisChanged(const nml::vec3& axis) {
 	cancelTransform();
 
 	m_camera.useOrthographicProjection = true;
-	m_camera.orthographicPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 	m_camera.orthographicDirection = axis;
 	if ((axis.y == -1.0f) || (axis.y == 1.0f)) {
 		m_camera.orthographicUp = nml::vec3(0.0f, 0.0f, -1.0f);
