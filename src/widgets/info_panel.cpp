@@ -7,7 +7,7 @@ InfoPanel::InfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 2, 2, 2);
+	layout()->setContentsMargins(5, 2, 7, 2);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("info"))));
 	entityInfoPanel = new EntityInfoPanel(m_globalInfo);
 	entityInfoPanel->hide();

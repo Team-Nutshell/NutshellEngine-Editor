@@ -142,7 +142,16 @@ void AssetListMenu::newMaterial() {
 		"factor": 1.0
 	},
 	"alphaCutoff": 0.0,
-	"indexOfRefraction": 0.0
+	"indexOfRefraction": 0.0,
+	"useTriplanarMapping": false,
+	"scaleUV": [
+		1.0,
+		1.0
+	],
+	"offsetUV": [
+		0.0,
+		0.0
+	]
 })";
 	newMaterialFile.close();
 

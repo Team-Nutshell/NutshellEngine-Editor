@@ -113,6 +113,12 @@ void Renderer::initializeGL() {
 	std::string entityFragmentShaderCode = R"GLSL(
 	#version 460
 
+	struct TriplanarUV {
+		vec2 x;
+		vec2 y;
+		vec2 z;
+	};
+
 	const mat4 ditheringThreshold = mat4(
 		1.0 / 17.0, 13.0 / 17.0, 4.0 / 17.0, 16.0 / 17.0,
 		9.0 / 17.0, 5.0 / 17.0, 12.0 / 17.0, 8.0 / 17.0,
@@ -136,6 +142,9 @@ void Renderer::initializeGL() {
 	uniform sampler2D emissiveTextureSampler;
 	uniform float emissiveFactor;
 	uniform float alphaCutoff;
+	uniform bool useTriplanarMapping;
+	uniform vec2 scaleUV;
+	uniform vec2 offsetUV;
 	uniform bool enableShading;
 	restrict readonly buffer LightBuffer {
 		uvec4 count;
@@ -145,11 +154,50 @@ void Renderer::initializeGL() {
 	out vec4 outColor;
 
 	void main() {
-		vec4 diffuseTextureSample = texture(diffuseTextureSampler, fragUV);
+		vec4 diffuseTextureSample = vec4(0.0, 0.0, 0.0, 0.0);
+		vec3 emissiveTextureSample = vec3(0.0, 0.0, 0.0);
+
+		if (!useTriplanarMapping) {
+			vec2 scaleOffsetUV = (fragUV * scaleUV) + offsetUV;
+
+			diffuseTextureSample = texture(diffuseTextureSampler, scaleOffsetUV);
+			emissiveTextureSample = texture(emissiveTextureSampler, scaleOffsetUV).rgb;
+		}
+		else {
+			TriplanarUV triplanarUV;
+			triplanarUV.x = fragPosition.zy;
+			triplanarUV.x.y = -triplanarUV.x.y;
+			if (fragNormal.x >= 0.0) {
+				triplanarUV.x.x = -triplanarUV.x.x;
+			}
+			triplanarUV.y = fragPosition.xz;
+			if (fragNormal.y < 0.0) {
+				triplanarUV.y.y = -triplanarUV.y.y;
+			}
+			triplanarUV.z = fragPosition.xy;
+			triplanarUV.z.y = -triplanarUV.z.y;
+			if (fragNormal.z < 0.0) {
+				triplanarUV.z.x = -triplanarUV.z.x;
+			}
+
+			triplanarUV.x = (triplanarUV.x * scaleUV) + offsetUV;
+			triplanarUV.y = (triplanarUV.y * scaleUV) + offsetUV;
+			triplanarUV.z = (triplanarUV.z * scaleUV) + offsetUV;
+
+			vec3 triplanarWeights = abs(fragNormal);
+			triplanarWeights /= (triplanarWeights.x + triplanarWeights.y + triplanarWeights.z);
+
+			diffuseTextureSample = (texture(diffuseTextureSampler, triplanarUV.x) * triplanarWeights.x) +
+				(texture(diffuseTextureSampler, triplanarUV.y) * triplanarWeights.y) +
+				(texture(diffuseTextureSampler, triplanarUV.z) * triplanarWeights.z);
+			emissiveTextureSample = (texture(emissiveTextureSampler, triplanarUV.x).rgb * triplanarWeights.x) +
+				(texture(emissiveTextureSampler, triplanarUV.y).rgb * triplanarWeights.y) +
+				(texture(emissiveTextureSampler, triplanarUV.z).rgb * triplanarWeights.z);
+		}
+
 		if ((diffuseTextureSample.a < alphaCutoff) || (diffuseTextureSample.a < ditheringThreshold[int(mod(gl_FragCoord.x, 4.0))][int(mod(gl_FragCoord.y, 4.0))])) {
 			discard;
 		}
-		vec3 emissiveTextureSample = texture(emissiveTextureSampler, fragUV).rgb;
 		outColor = vec4(0.0, 0.0, 0.0, 1.0);
 
 		if (enableShading) {
@@ -719,6 +767,12 @@ void Renderer::paintGL() {
 						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
 
 						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
+
+						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
+
+						gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
+
+						gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
 					}
 					else {
 						gl.glActiveTexture(GL_TEXTURE0);
@@ -765,6 +819,12 @@ void Renderer::paintGL() {
 
 					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
 
+					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), 0);
+
+					gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), 1.0f, 1.0f);
+
+					gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), 0.0f, 0.0f);
+
 					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -799,6 +859,12 @@ void Renderer::paintGL() {
 				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), 0.0f);
 
 				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
+
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), 0);
+
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), 1.0f, 1.0f);
+
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), 0.0f, 0.0f);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
@@ -1598,6 +1664,12 @@ void Renderer::loadResourcesToGPU() {
 			newRendererPrimitive.material.emissiveFactor = material.emissiveFactor;
 
 			newRendererPrimitive.material.alphaCutoff = material.alphaCutoff;
+
+			newRendererPrimitive.material.useTriplanarMapping = material.useTriplanarMapping;
+
+			newRendererPrimitive.material.scaleUV = material.scaleUV;
+
+			newRendererPrimitive.material.offsetUV = material.offsetUV;
 
 			newRendererModel.primitives.push_back(newRendererPrimitive);
 		}

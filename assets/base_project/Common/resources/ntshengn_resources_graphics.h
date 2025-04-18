@@ -145,6 +145,15 @@ namespace NtshEngn {
 
 		// Index of refraction
 		float indexOfRefraction = 1.0f;
+
+		// Triplanar mapping
+		bool useTriplanarMapping = false;
+
+		// Scale UV
+		Math::vec2 scaleUV = Math::vec2(1.0f, 1.0f);
+
+		// Offset UV
+		Math::vec2 offsetUV = Math::vec2(0.0f, 0.0f);
 	};
 
 	// Animation

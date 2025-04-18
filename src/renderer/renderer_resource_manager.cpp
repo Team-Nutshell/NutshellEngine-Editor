@@ -552,6 +552,24 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Material
 			material.emissiveFactor = j["emissive"]["factor"];
 		}
 	}
+
+	if (j.contains("alphaCutoff")) {
+		material.alphaCutoff = j["alphaCutoff"];
+	}
+
+	if (j.contains("useTriplanarMapping")) {
+		material.useTriplanarMapping = j["useTriplanarMapping"];
+	}
+
+	if (j.contains("scaleUV")) {
+		material.scaleUV.x = j["scaleUV"][0];
+		material.scaleUV.y = j["scaleUV"][1];
+	}
+
+	if (j.contains("offsetUV")) {
+		material.offsetUV.x = j["offsetUV"][0];
+		material.offsetUV.y = j["offsetUV"][1];
+	}
 }
 
 void RendererResourceManager::loadNtim(const std::string& imagePath, ImageToGPU& image) {

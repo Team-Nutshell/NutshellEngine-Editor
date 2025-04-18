@@ -3,6 +3,8 @@
 #include "file_selector_widget.h"
 #include "scalar_widget.h"
 #include "color_picker_widget.h"
+#include "boolean_widget.h"
+#include "vector2_widget.h"
 #include <string>
 
 struct MaterialNtml {
@@ -27,6 +29,9 @@ struct MaterialNtml {
 	float emissiveFactor = 1.0f;
 	float alphaCutoff = 0.0f;
 	float indexOfRefraction = 0.0f;
+	bool useTriplanarMapping = false;
+	nml::vec2 scaleUV = nml::vec2(1.0f, 1.0f);
+	nml::vec2 offsetUV = nml::vec2(0.0f, 0.0f);
 
 	bool operator==(const MaterialNtml& rhs) {
 		return (diffuseTextureImagePath == rhs.diffuseTextureImagePath) &&
@@ -49,7 +54,10 @@ struct MaterialNtml {
 			(emissiveColor == rhs.emissiveColor) &&
 			(emissiveFactor == rhs.emissiveFactor) &&
 			(alphaCutoff == rhs.alphaCutoff) &&
-			(indexOfRefraction == rhs.indexOfRefraction);
+			(indexOfRefraction == rhs.indexOfRefraction) &&
+			(useTriplanarMapping == rhs.useTriplanarMapping) &&
+			(scaleUV == rhs.scaleUV) &&
+			(offsetUV == rhs.offsetUV);
 	}
 
 	bool operator!=(const MaterialNtml& rhs) {
@@ -99,6 +107,9 @@ public:
 	ScalarWidget* emissiveFactorWidget;
 	ScalarWidget* alphaCutoffWidget;
 	ScalarWidget* indexOfRefractionWidget;
+	BooleanWidget* useTriplanarMappingWidget;
+	Vector2Widget* scaleUVWidget;
+	Vector2Widget* offsetUVWidget;
 };
 
 class ChangeMaterialNtmlFile : public QUndoCommand {

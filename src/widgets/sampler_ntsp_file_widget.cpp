@@ -63,36 +63,28 @@ void SamplerNtspFileWidget::setPath(const std::string& path) {
 	samplerNtsp = SamplerNtsp();
 
 	if (j.contains("magFilter")) {
-		std::string magFilter = j["magFilter"];
-		samplerNtsp.magFilter = magFilter;
+		samplerNtsp.magFilter = j["magFilter"];
 	}
 	if (j.contains("minFilter")) {
-		std::string minFilter = j["minFilter"];
-		samplerNtsp.minFilter = minFilter;
+		samplerNtsp.minFilter = j["minFilter"];
 	}
 	if (j.contains("mipmapFilter")) {
-		std::string mipmapFilter = j["mipmapFilter"];
-		samplerNtsp.mipmapFilter = mipmapFilter;
+		samplerNtsp.mipmapFilter = j["mipmapFilter"];
 	}
 	if (j.contains("addressModeU")) {
-		std::string addressModeU = j["addressModeU"];
-		samplerNtsp.addressModeU = addressModeU;
+		samplerNtsp.addressModeU = j["addressModeU"];
 	}
 	if (j.contains("addressModeV")) {
-		std::string addressModeV = j["addressModeV"];
-		samplerNtsp.addressModeV = addressModeV;
+		samplerNtsp.addressModeV = j["addressModeV"];
 	}
 	if (j.contains("addressModeW")) {
-		std::string addressModeW = j["addressModeW"];
-		samplerNtsp.addressModeW = addressModeW;
+		samplerNtsp.addressModeW = j["addressModeW"];
 	}
 	if (j.contains("borderColor")) {
-		std::string borderColor = j["borderColor"];
-		samplerNtsp.borderColor = borderColor;
+		samplerNtsp.borderColor = j["borderColor"];
 	}
 	if (j.contains("anisotropyLevel")) {
-		int anisotropyLevel = j["anisotropyLevel"];
-		samplerNtsp.anisotropyLevel = anisotropyLevel;
+		samplerNtsp.anisotropyLevel = j["anisotropyLevel"];
 	}
 
 	updateWidgets();

@@ -50,6 +50,9 @@ struct RendererMaterial {
 	std::string emissiveTextureSamplerName = "defaultSampler";
 	float emissiveFactor = 1.0f;
 	float alphaCutoff = 0.0f;
+	bool useTriplanarMapping = false;
+	nml::vec2 scaleUV = nml::vec2(1.0f, 1.0f);
+	nml::vec2 offsetUV = nml::vec2(0.0f, 0.0f);
 };
 
 struct RendererPrimitive {

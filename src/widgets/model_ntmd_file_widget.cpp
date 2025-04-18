@@ -51,12 +51,10 @@ void ModelNtmdFileWidget::setPath(const std::string& path) {
 		for (const auto& primitive : j["primitives"]) {
 			ModelNtmdPrimitiveWidget* newPrimitiveWidget = new ModelNtmdPrimitiveWidget(m_globalInfo);
 			if (primitive.contains("meshPath")) {
-				std::string meshPath = primitive["meshPath"];
-				newPrimitiveWidget->primitiveMeshWidget->setPath(meshPath);
+				newPrimitiveWidget->primitiveMeshWidget->setPath(primitive["meshPath"]);
 			}
 			if (primitive.contains("materialPath")) {
-				std::string materialPath = primitive["materialPath"];
-				newPrimitiveWidget->primitiveMaterialWidget->setPath(materialPath);
+				newPrimitiveWidget->primitiveMaterialWidget->setPath(primitive["materialPath"]);
 			}
 			primitivesWidget->layout()->addWidget(newPrimitiveWidget);
 

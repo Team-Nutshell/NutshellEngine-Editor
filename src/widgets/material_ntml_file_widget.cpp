@@ -75,6 +75,14 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	layout()->addWidget(alphaCutoffWidget);
 	indexOfRefractionWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_index_of_refraction"));
 	layout()->addWidget(indexOfRefractionWidget);
+	useTriplanarMappingWidget = new BooleanWidget(globalInfo, m_globalInfo.localization.getString("assets_material_use_triplanar_mapping"));
+	useTriplanarMappingWidget->setValue(false);
+	layout()->addWidget(new SeparatorLine());
+	layout()->addWidget(useTriplanarMappingWidget);
+	scaleUVWidget = new Vector2Widget(globalInfo, m_globalInfo.localization.getString("assets_material_scale_uv"));
+	layout()->addWidget(scaleUVWidget);
+	offsetUVWidget = new Vector2Widget(globalInfo, m_globalInfo.localization.getString("assets_material_offset_uv"));
+	layout()->addWidget(offsetUVWidget);
 
 	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(diffuseTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
@@ -97,6 +105,9 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	connect(emissiveColorWidget, &ColorPickerWidget::colorChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(alphaCutoffWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(useTriplanarMappingWidget, &BooleanWidget::stateChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(scaleUVWidget, &Vector2Widget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(offsetUVWidget, &Vector2Widget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 }
 
 void MaterialNtmlFileWidget::setPath(const std::string& path) {
@@ -121,81 +132,66 @@ void MaterialNtmlFileWidget::setPath(const std::string& path) {
 	if (j.contains("diffuse")) {
 		if (j["diffuse"].contains("texture")) {
 			if (j["diffuse"]["texture"].contains("imagePath")) {
-				std::string imagePath = j["diffuse"]["texture"]["imagePath"];
-				materialNtml.diffuseTextureImagePath = imagePath;
+				materialNtml.diffuseTextureImagePath = j["diffuse"]["texture"]["imagePath"];
 			}
 			if (j["diffuse"]["texture"].contains("imageSamplerPath")) {
-				std::string imageSamplerPath = j["diffuse"]["texture"]["imageSamplerPath"];
-				materialNtml.diffuseTextureImageSamplerPath = imageSamplerPath;
+				materialNtml.diffuseTextureImageSamplerPath = j["diffuse"]["texture"]["imageSamplerPath"];
 			}
 		}
 		if (j["diffuse"].contains("color")) {
-			nml::vec3 diffuseColor;
-			diffuseColor.x = j["diffuse"]["color"][0];
-			diffuseColor.y = j["diffuse"]["color"][1];
-			diffuseColor.z = j["diffuse"]["color"][2];
-			materialNtml.diffuseColor = diffuseColor;
+			materialNtml.diffuseColor.x = j["diffuse"]["color"][0];
+			materialNtml.diffuseColor.y = j["diffuse"]["color"][1];
+			materialNtml.diffuseColor.z = j["diffuse"]["color"][2];
 			materialNtml.opacity = j["diffuse"]["color"][3];
 		}
 	}
 	if (j.contains("normal")) {
 		if (j["normal"].contains("texture")) {
 			if (j["normal"]["texture"].contains("imagePath")) {
-				std::string imagePath = j["normal"]["texture"]["imagePath"];
-				materialNtml.normalTextureImagePath = imagePath;
+				materialNtml.normalTextureImagePath = j["normal"]["texture"]["imagePath"];
 			}
 			if (j["normal"]["texture"].contains("imageSamplerPath")) {
-				std::string imageSamplerPath = j["normal"]["texture"]["imageSamplerPath"];
-				materialNtml.normalTextureImageSamplerPath = imageSamplerPath;
+				materialNtml.normalTextureImageSamplerPath = j["normal"]["texture"]["imageSamplerPath"];
 			}
 		}
 	}
 	if (j.contains("metalness")) {
 		if (j["metalness"].contains("texture")) {
 			if (j["metalness"]["texture"].contains("imagePath")) {
-				std::string imagePath = j["metalness"]["texture"]["imagePath"];
-				materialNtml.metalnessTextureImagePath = imagePath;
+				materialNtml.metalnessTextureImagePath = j["metalness"]["texture"]["imagePath"];
 			}
 			if (j["metalness"]["texture"].contains("imageSamplerPath")) {
-				std::string imageSamplerPath = j["metalness"]["texture"]["imageSamplerPath"];
-				materialNtml.metalnessTextureImageSamplerPath = imageSamplerPath;
+				materialNtml.metalnessTextureImageSamplerPath = j["metalness"]["texture"]["imageSamplerPath"];
 			}
 		}
 		if (j["metalness"].contains("value")) {
-			float metalnessValue = j["metalness"]["value"];
-			materialNtml.metalnessValue = metalnessValue;
+			materialNtml.metalnessValue = j["metalness"]["value"];
 		}
 	}
 	if (j.contains("roughness")) {
 		if (j["roughness"].contains("texture")) {
 			if (j["roughness"]["texture"].contains("imagePath")) {
-				std::string imagePath = j["roughness"]["texture"]["imagePath"];
-				materialNtml.roughnessTextureImagePath = imagePath;
+				materialNtml.roughnessTextureImagePath = j["roughness"]["texture"]["imagePath"];
 			}
 			if (j["roughness"]["texture"].contains("imageSamplerPath")) {
-				std::string imageSamplerPath = j["roughness"]["texture"]["imageSamplerPath"];
-				materialNtml.roughnessTextureImageSamplerPath = imageSamplerPath;
+				materialNtml.roughnessTextureImageSamplerPath = j["roughness"]["texture"]["imageSamplerPath"];
 			}
 		}
 		if (j["roughness"].contains("value")) {
-			float roughnessValue = j["roughness"]["value"];
-			materialNtml.roughnessValue = roughnessValue;
+			materialNtml.roughnessValue = j["roughness"]["value"];
 		}
 	}
 	if (j.contains("occlusion")) {
 		if (j["occlusion"].contains("texture")) {
 			if (j["occlusion"]["texture"].contains("imagePath")) {
-				std::string imagePath = j["occlusion"]["texture"]["imagePath"];
-				materialNtml.occlusionTextureImagePath = imagePath;
+				materialNtml.occlusionTextureImagePath = j["occlusion"]["texture"]["imagePath"];
 			}
 			if (j["occlusion"]["texture"].contains("imageSamplerPath")) {
-				std::string imageSamplerPath = j["occlusion"]["texture"]["imageSamplerPath"];
-				materialNtml.occlusionTextureImageSamplerPath = imageSamplerPath;
+				materialNtml.occlusionTextureImageSamplerPath = j["occlusion"]["texture"]["imageSamplerPath"];
 			}
 		}
 		if (j["occlusion"].contains("value")) {
-			float occlusionValue = j["occlusion"]["value"];
-			materialNtml.occlusionValue = occlusionValue;
+			materialNtml.occlusionValue = j["occlusion"]["value"];
 		}
 	}
 	if (j.contains("emissive")) {
@@ -210,24 +206,30 @@ void MaterialNtmlFileWidget::setPath(const std::string& path) {
 			}
 		}
 		if (j["emissive"].contains("color")) {
-			nml::vec3 emissiveColor;
-			emissiveColor.x = j["emissive"]["color"][0];
-			emissiveColor.y = j["emissive"]["color"][1];
-			emissiveColor.z = j["emissive"]["color"][2];
-			materialNtml.emissiveColor = emissiveColor;
+			materialNtml.emissiveColor.x = j["emissive"]["color"][0];
+			materialNtml.emissiveColor.y = j["emissive"]["color"][1];
+			materialNtml.emissiveColor.z = j["emissive"]["color"][2];
 		}
 		if (j["emissive"].contains("factor")) {
-			float emissiveFactor = j["emissive"]["factor"];
-			materialNtml.emissiveFactor = emissiveFactor;
+			materialNtml.emissiveFactor = j["emissive"]["factor"];
 		}
 	}
 	if (j.contains("alphaCutoff")) {
-		float alphaCutoff = j["alphaCutoff"];
-		materialNtml.alphaCutoff = alphaCutoff;
+		materialNtml.alphaCutoff = j["alphaCutoff"];
 	}
 	if (j.contains("indexOfRefraction")) {
-		float indexOfRefraction = j["indexOfRefraction"];
-		materialNtml.indexOfRefraction = indexOfRefraction;
+		materialNtml.indexOfRefraction = j["indexOfRefraction"];
+	}
+	if (j.contains("useTriplanarMapping")) {
+		materialNtml.useTriplanarMapping = j["useTriplanarMapping"];
+	}
+	if (j.contains("scaleUV")) {
+		materialNtml.scaleUV.x = j["scaleUV"][0];
+		materialNtml.scaleUV.y = j["scaleUV"][1];
+	}
+	if (j.contains("offsetUV")) {
+		materialNtml.offsetUV.x = j["offsetUV"][0];
+		materialNtml.offsetUV.y = j["offsetUV"][1];
 	}
 
 	updateWidgets();
@@ -255,6 +257,9 @@ void MaterialNtmlFileWidget::updateWidgets() {
 	emissiveFactorWidget->setValue(materialNtml.emissiveFactor);
 	alphaCutoffWidget->setValue(materialNtml.alphaCutoff);
 	indexOfRefractionWidget->setValue(materialNtml.indexOfRefraction);
+	useTriplanarMappingWidget->setValue(materialNtml.useTriplanarMapping);
+	scaleUVWidget->setValue(materialNtml.scaleUV);
+	offsetUVWidget->setValue(materialNtml.offsetUV);
 }
 
 void MaterialNtmlFileWidget::save() {
@@ -301,11 +306,13 @@ void MaterialNtmlFileWidget::save() {
 	if (!materialNtml.emissiveTextureImageSamplerPath.empty()) {
 		j["emissive"]["texture"]["imageSamplerPath"] = materialNtml.emissiveTextureImageSamplerPath;
 	}
-	nml::vec3 emissiveColor = materialNtml.emissiveColor;
-	j["emissive"]["color"] = { emissiveColor.x, emissiveColor.y, emissiveColor.z };
+	j["emissive"]["color"] = { materialNtml.emissiveColor.x, materialNtml.emissiveColor.y, materialNtml.emissiveColor.z };
 	j["emissive"]["factor"] = materialNtml.emissiveFactor;
 	j["alphaCutoff"] = materialNtml.alphaCutoff;
 	j["indexOfRefraction"] = materialNtml.indexOfRefraction;
+	j["useTriplanarMapping"] = materialNtml.useTriplanarMapping;
+	j["scaleUV"] = { materialNtml.scaleUV.x, materialNtml.scaleUV.y };
+	j["offsetUV"] = { materialNtml.offsetUV.x, materialNtml.offsetUV.y };
 
 	std::fstream materialFile(m_materialFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -398,6 +405,15 @@ void MaterialNtmlFileWidget::onValueChanged() {
 	}
 	else if (senderWidget == indexOfRefractionWidget) {
 		newMaterialNtml.indexOfRefraction = indexOfRefractionWidget->getValue();
+	}
+	else if (senderWidget == useTriplanarMappingWidget) {
+		newMaterialNtml.useTriplanarMapping = useTriplanarMappingWidget->getValue();
+	}
+	else if (senderWidget == scaleUVWidget) {
+		newMaterialNtml.scaleUV = scaleUVWidget->getValue();
+	}
+	else if (senderWidget == offsetUVWidget) {
+		newMaterialNtml.offsetUV = offsetUVWidget->getValue();
 	}
 
 	if (newMaterialNtml != materialNtml) {

@@ -24,12 +24,10 @@ ModelNtmdPrimitiveWidget::ModelNtmdPrimitiveWidget(GlobalInfo& globalInfo) : m_g
 nlohmann::json ModelNtmdPrimitiveWidget::toJson() const {
 	nlohmann::json j;
 	if (!primitiveMeshWidget->getPath().empty()) {
-		std::string meshPath = AssetHelper::absoluteToRelative(primitiveMeshWidget->getPath(), m_globalInfo.projectDirectory);
-		j["meshPath"] = meshPath;
+		j["meshPath"] = AssetHelper::absoluteToRelative(primitiveMeshWidget->getPath(), m_globalInfo.projectDirectory);
 	}
 	if (!primitiveMaterialWidget->getPath().empty()) {
-		std::string materialPath = AssetHelper::absoluteToRelative(primitiveMaterialWidget->getPath(), m_globalInfo.projectDirectory);
-		j["materialPath"] = materialPath;
+		j["materialPath"] = AssetHelper::absoluteToRelative(primitiveMaterialWidget->getPath(), m_globalInfo.projectDirectory);
 	}
 
 	return j;

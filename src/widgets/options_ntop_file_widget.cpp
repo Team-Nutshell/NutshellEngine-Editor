@@ -53,25 +53,19 @@ void OptionsNtopFileWidget::setPath(const std::string& path) {
 	optionsNtop = OptionsNtop();
 
 	if (j.contains("windowTitle")) {
-		std::string windowTitle = j["windowTitle"];
-		optionsNtop.windowTitle = windowTitle;
+		optionsNtop.windowTitle = j["windowTitle"];
 	}
 	if (j.contains("windowIconImagePath")) {
-		std::string windowIconImagePath = j["windowIconImagePath"];
-		optionsNtop.windowIconImagePath = windowIconImagePath;
+		optionsNtop.windowIconImagePath = j["windowIconImagePath"];
 	}
 	if (j.contains("maxFPS")) {
-		float maxFPSFloat = j["maxFPS"];
-		int maxFPS = static_cast<int>(std::floor(maxFPSFloat));
-		optionsNtop.maxFPS = maxFPS;
+		optionsNtop.maxFPS = j["maxFPS"];
 	}
 	if (j.contains("firstScenePath")) {
-		std::string firstScenePath = j["firstScenePath"];
-		optionsNtop.firstScenePath = firstScenePath;
+		optionsNtop.firstScenePath = j["firstScenePath"];
 	}
 	if (j.contains("startProfiling")) {
-		bool startProfiling = j["startProfiling"];
-		optionsNtop.startProfiling = startProfiling;
+		optionsNtop.startProfiling = j["startProfiling"];
 	}
 
 	updateWidgets();
