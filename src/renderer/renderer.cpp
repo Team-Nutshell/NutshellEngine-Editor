@@ -721,119 +721,37 @@ void Renderer::paintGL() {
 
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "model"), 1, false, modelMatrix.data());
 
-			if (entity.second.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+			GLuint indexCount = 0;
+
+			bool hasMesh = false;
+			if (entity.second.renderable &&
+				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+				(entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+				(entity.second.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath].primitives.size())) {
+				// Entity has a mesh
 				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath];
-				if ((entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.second.renderable->primitiveIndex < entityModel.primitives.size())) {
-					const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.second.renderable->primitiveIndex];
-					const RendererMesh& entityMesh = entityPrimitive.mesh;
-					const RendererMaterial& entityMaterial = entityPrimitive.material;
+				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.second.renderable->primitiveIndex];
+				const RendererMesh& entityMesh = entityPrimitive.mesh;
 
-					gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
-					GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
-					GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-					gl.glEnableVertexAttribArray(normalPos);
-					gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 32, (void*)12);
-					gl.glEnableVertexAttribArray(uvPos);
-					gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
+				gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
+				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
+				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
+				GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
+				gl.glEnableVertexAttribArray(positionPos);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+				gl.glEnableVertexAttribArray(normalPos);
+				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 32, (void*)12);
+				gl.glEnableVertexAttribArray(uvPos);
+				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
+				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
-					if (!entity.second.renderable->materialPath.empty()) {
-						// Bind Renderable material
-						const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
-
-						gl.glActiveTexture(GL_TEXTURE0);
-						if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
-						}
-						else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
-						}
-						m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
-						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
-
-						gl.glActiveTexture(GL_TEXTURE1);
-						if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
-						}
-						else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-							gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
-						}
-						m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
-						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
-
-						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
-
-						gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
-
-						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
-
-						gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
-
-						gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
-					}
-					else {
-						gl.glActiveTexture(GL_TEXTURE0);
-						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.diffuseTextureName]);
-						m_globalInfo.rendererResourceManager.samplers[entityMaterial.diffuseTextureSamplerName].bind(gl);
-						gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
-
-						gl.glActiveTexture(GL_TEXTURE1);
-						gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[entityMaterial.emissiveTextureName]);
-						m_globalInfo.rendererResourceManager.samplers[entityMaterial.emissiveTextureSamplerName].bind(gl);
-					}
-
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
-
-					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
-				}
-				else {
-					RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-					RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
-					RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
-					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
-					GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
-					GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
-					gl.glEnableVertexAttribArray(normalPos);
-					gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 32, (void*)12);
-					gl.glEnableVertexAttribArray(uvPos);
-					gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
-
-					gl.glActiveTexture(GL_TEXTURE0);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.diffuseTextureName]);
-					m_globalInfo.rendererResourceManager.samplers[defaultMaterial.diffuseTextureSamplerName].bind(gl);
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
-
-					gl.glActiveTexture(GL_TEXTURE1);
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.emissiveTextureName]);
-					m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
-
-					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), 0.0f);
-
-					gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
-
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), 0);
-
-					gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), 1.0f, 1.0f);
-
-					gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), 0.0f, 0.0f);
-
-					gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
-
-					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
-				}
+				indexCount = entityMesh.indexCount;
+				hasMesh = true;
 			}
 			else {
+				// Entity does not have a mesh, default cube
 				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
 				RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
-				RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
 				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
@@ -846,6 +764,52 @@ void Renderer::paintGL() {
 				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
+				indexCount = defaultMesh.indexCount;
+			}
+
+			if (entity.second.renderable &&
+				!entity.second.renderable->materialPath.empty() &&
+				hasMesh) {
+				// Entity has a material
+				const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
+
+				gl.glActiveTexture(GL_TEXTURE0);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+				}
+				else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+
+				gl.glActiveTexture(GL_TEXTURE1);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+				}
+				else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
+
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
+
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
+
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
+
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
+
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
+			}
+			else {
+				// Entity has no material or no mesh, default material
+				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
+				RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
+
 				gl.glActiveTexture(GL_TEXTURE0);
 				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.diffuseTextureName]);
 				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.diffuseTextureSamplerName].bind(gl);
@@ -856,20 +820,20 @@ void Renderer::paintGL() {
 				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
 
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), 0.0f);
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), defaultMaterial.emissiveFactor);
 
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), 0.0f);
+				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), defaultMaterial.alphaCutoff);
 
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), 0);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), defaultMaterial.useTriplanarMapping);
 
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), 1.0f, 1.0f);
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), defaultMaterial.scaleUV.x, defaultMaterial.scaleUV.y);
 
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), 0.0f, 0.0f);
+				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), defaultMaterial.offsetUV.x, defaultMaterial.offsetUV.y);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
-
-				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
+
+			gl.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, NULL);
 		}
 	}
 
