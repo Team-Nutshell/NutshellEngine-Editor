@@ -1853,7 +1853,7 @@ void Renderer::calculateScale(const std::set<EntityID> entityIDs, const nml::vec
 	if (!m_camera.useOrthographicProjection) {
 		scaleFactor = 1000.0f;
 	}
-	float scaleSign = 0.0f;
+	float scaleSign = ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
 	if ((m_guizmoMode == GuizmoMode::Scale)) {
 		if (m_guizmoAxis == GuizmoAxis::X) {
 			scaleSign = (nml::dot(previousToCurrentPosition3D, nml::vec3(1.0f, 0.0f, 0.0f)) > 0.0) ? 1.0f : -1.0f;
