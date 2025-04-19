@@ -1853,7 +1853,18 @@ void Renderer::calculateScale(const std::set<EntityID> entityIDs, const nml::vec
 	if (!m_camera.useOrthographicProjection) {
 		scaleFactor = 1000.0f;
 	}
-	float scaleSign = ((nml::dot(previousToCurrentMousePosition, objectToCurrentMousePosition) > 0.0) ? 1.0f : -1.0f);
+	float scaleSign = 0.0f;
+	if ((m_guizmoMode == GuizmoMode::Scale)) {
+		if (m_guizmoAxis == GuizmoAxis::X) {
+			scaleSign = (nml::dot(previousToCurrentPosition3D, nml::vec3(1.0f, 0.0f, 0.0f)) > 0.0) ? 1.0f : -1.0f;
+		}
+		else if (m_guizmoAxis == GuizmoAxis::Y) {
+			scaleSign = (nml::dot(previousToCurrentPosition3D, nml::vec3(0.0f, 1.0f, 0.0f)) > 0.0) ? 1.0f : -1.0f;
+		}
+		else if (m_guizmoAxis == GuizmoAxis::Z) {
+			scaleSign = (nml::dot(previousToCurrentPosition3D, nml::vec3(0.0f, 0.0f, 1.0f)) > 0.0) ? 1.0f : -1.0f;
+		}
+	}
 	float scaleDifference = ((previousToCurrentPosition3DLength * scaleFactor) / objectToCurrentMousePosition3DLength) * scaleSign;
 	if ((m_guizmoMode == GuizmoMode::Scale) && !m_rotateEntityMode && (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) && (m_globalInfo.editorParameters.renderer.guizmoRotationStep[guizmoAxisIndex] > 0.0f)) {
 		m_guizmoScaleStepAccumulation += std::abs(scaleDifference);
