@@ -18,6 +18,7 @@ namespace NtshEngn {
 		float intensity = 1.0f;
 		Math::vec3 direction = Math::vec3(0.0f, -1.0f, 0.0f);
 		Math::vec2 cutoff = Math::vec2(0.0f, 0.0f);
+		float distance = 100.0f;
 	};
 
 }

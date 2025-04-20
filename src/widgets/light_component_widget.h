@@ -39,4 +39,5 @@ public:
 	ScalarWidget* intensityWidget;
 	Vector3Widget* directionWidget;
 	Vector2Widget* cutoffWidget;
+	ScalarWidget* distanceWidget;
 };

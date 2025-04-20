@@ -123,6 +123,7 @@
 	"component_light_intensity": "Intensity",
 	"component_light_direction": "Direction",
 	"component_light_cutoff": "Cutoff",
+	"component_light_distance": "Distance",
 	"component_renderable": "Renderable",
 	"component_renderable_no_model_selected": "No model selected",
 	"component_renderable_no_primitive_index": "No primitive index",

@@ -11,6 +11,7 @@ struct Light : public Component {
 	float intensity = 1.0f;
 	nml::vec3 direction = nml::vec3(0.0f, -1.0f, 0.0f);
 	nml::vec2 cutoff = nml::vec2(10.0f, 20.0f);
+	float distance = 100.0f;
 
 	nlohmann::json toJson() const {
 		nlohmann::json j;
@@ -19,6 +20,7 @@ struct Light : public Component {
 		j["intensity"] = intensity;
 		j["direction"] = { direction.x, direction.y, direction.z };
 		j["cutoff"] = { cutoff.x, cutoff.y };
+		j["distance"] = distance;
 
 		return j;
 	}
@@ -44,6 +46,9 @@ struct Light : public Component {
 		if (j.contains("cutoff")) {
 			light.cutoff.x = j["cutoff"][0];
 			light.cutoff.y = j["cutoff"][1];
+		}
+		if (j.contains("distance")) {
+			light.distance = j["distance"];
 		}
 
 		return light;

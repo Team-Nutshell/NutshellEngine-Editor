@@ -25,6 +25,8 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	layout()->addWidget(directionWidget);
 	cutoffWidget = new Vector2Widget(m_globalInfo, m_globalInfo.localization.getString("component_light_cutoff"));
 	layout()->addWidget(cutoffWidget);
+	distanceWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_light_distance"));
+	layout()->addWidget(distanceWidget);
 	layout()->addWidget(new SeparatorLine());
 
 	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementChanged);
@@ -32,6 +34,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	connect(intensityWidget, &ScalarWidget::valueChanged, this, &LightComponentWidget::onScalarChanged);
 	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
 	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
+	connect(distanceWidget, &ScalarWidget::valueChanged, this, &LightComponentWidget::onScalarChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onEntityLightAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onEntityLightRemoved);
@@ -43,6 +46,7 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	colorWidget->setColor(nml::vec4(light.color, 1.0f));
 	intensityWidget->setValue(light.intensity);
 	directionWidget->setValue(light.direction);
+	distanceWidget->setValue(light.distance);
 	if ((light.type == "Directional") || (light.type == "Spot")) {
 		directionWidget->setEnabled(true);
 	}
@@ -55,6 +59,12 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	}
 	else {
 		cutoffWidget->setEnabled(false);
+	}
+	if ((light.type == "Point") || (light.type == "Spot")) {
+		distanceWidget->setEnabled(true);
+	}
+	else {
+		distanceWidget->setEnabled(false);
 	}
 }
 
@@ -204,6 +214,9 @@ void LightComponentWidget::onScalarChanged(float value) {
 
 			if (senderWidget == intensityWidget) {
 				newLight.intensity = value;
+			}
+			else if (senderWidget == distanceWidget) {
+				newLight.distance = value;
 			}
 
 			entityIDs.push_back(selectedEntityID);

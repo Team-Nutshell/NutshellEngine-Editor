@@ -132,6 +132,7 @@ void Renderer::initializeGL() {
 		vec3 color;
 		float intensity;
 		vec2 cutoff;
+		float distance;
 	};
 
 	in vec3 fragPosition;
@@ -229,6 +230,11 @@ void Renderer::initializeGL() {
 				}
 
 				float distance = length(lights.info[lightIndex].position - fragPosition);
+				if (distance > lights.info[lightIndex].distance) {
+					lightIndex++;
+					continue;
+				}
+
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * attenuation;
 
@@ -243,6 +249,12 @@ void Renderer::initializeGL() {
 
 				float LdotN = dot(l, fragNormal);
 				if (LdotN < 0.0f) {
+					lightIndex++;
+					continue;
+				}
+
+				float distance = length(lights.info[lightIndex].position - fragPosition);
+				if (distance > lights.info[lightIndex].distance) {
 					lightIndex++;
 					continue;
 				}
@@ -1557,7 +1569,7 @@ void Renderer::updateLights() {
 				pointLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				pointLightsInfos.push_back(nml::vec4());
 				pointLightsInfos.push_back(nml::vec4(light.color, light.intensity));
-				pointLightsInfos.push_back(nml::vec4());
+				pointLightsInfos.push_back(nml::vec4(0.0f, 0.0f, light.distance, 0.0f));
 			}
 			else if (light.type == "Spot") {
 				lightsCount[2]++;
@@ -1574,7 +1586,7 @@ void Renderer::updateLights() {
 				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(light.color, light.intensity));
-				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), 0.0f, 0.0f));
+				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), light.distance, 0.0f));
 			}
 			else if (light.type == "Ambient") {
 				lightsCount[3]++;
