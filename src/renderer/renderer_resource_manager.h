@@ -89,23 +89,11 @@ public:
 		Wrap wrapT = Wrap::ClampToEdge;
 	};
 
-	struct Material {
-		std::string diffuseTextureName = "defaultDiffuseTexture";
-		std::string diffuseTextureSamplerName = "defaultSampler";
-		std::string emissiveTextureName = "defaultEmissiveTexture";
-		std::string emissiveTextureSamplerName = "defaultSampler";
-		float emissiveFactor = 1.0f;
-		float alphaCutoff = 0.0f;
-		bool useTriplanarMapping = false;
-		nml::vec2 scaleUV = nml::vec2(1.0f, 1.0f);
-		nml::vec2 offsetUV = nml::vec2(0.0f, 0.0f);
-	};
-
 	struct ModelPrimitive {
 		std::string name = "";
 		nml::mat4 modelMatrix = nml::mat4::identity();
 		Mesh mesh;
-		Material material;
+		RendererMaterial material;
 	};
 
 	struct Model {
@@ -135,7 +123,7 @@ public:
 private:
 	void loadNtmd(const std::string& modelPath, Model& model);
 	Mesh loadNtmh(const std::string& meshPath);
-	void loadNtml(const std::string& materialPath, Material& material);
+	void loadNtml(const std::string& materialPath, RendererMaterial& material);
 	void loadNtim(const std::string& imagePath, ImageToGPU& image);
 	void loadNtsp(const std::string& samplerPath, SamplerToGPU& sampler);
 	void loadGltf(const std::string& modelPath, Model& model);
@@ -143,7 +131,7 @@ private:
 	void loadImageStb(const std::string& imagePath, ImageToGPU& image);
 	void loadImageFromMemory(void* data, size_t size, const std::string& name);
 	void loadObj(const std::string& modelPath, Model& model);
-	std::unordered_map<std::string, Material> loadMtl(const std::string& materialPath);
+	std::unordered_map<std::string, RendererMaterial> loadMtl(const std::string& materialPath);
 
 public:
 	std::unordered_map<std::string, RendererModel> rendererModels;
@@ -151,7 +139,7 @@ public:
 	std::unordered_map<std::string, RendererSampler> samplers;
 
 	std::unordered_map<std::string, Model> models;
-	std::unordered_map<std::string, Material> materials;
+	std::unordered_map<std::string, RendererMaterial> materials;
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
 	std::unordered_map<std::string, SamplerToGPU> samplersToGPU;
 

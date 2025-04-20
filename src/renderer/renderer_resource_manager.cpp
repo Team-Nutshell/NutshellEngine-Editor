@@ -84,7 +84,7 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 		}
 	}
 
-	Material material;
+	RendererMaterial material;
 	size_t lastDot = materialPath.rfind('.');
 	if (lastDot != std::string::npos) {
 		std::string extension = materialPath.substr(lastDot + 1);
@@ -466,7 +466,7 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 	return mesh;
 }
 
-void RendererResourceManager::loadNtml(const std::string& materialPath, Material& material) {
+void RendererResourceManager::loadNtml(const std::string& materialPath, RendererMaterial& material) {
 	std::fstream materialFile(materialPath, std::ios::in);
 	if (materialFile.is_open()) {
 		if (!nlohmann::json::accept(materialFile)) {
@@ -1134,7 +1134,7 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 	ModelPrimitive* currentPrimitive = &model.primitives.back();
 
 	std::string modelDirectory = modelPath.substr(0, modelPath.rfind('/'));
-	std::unordered_map<std::string, Material> mtlMaterials;
+	std::unordered_map<std::string, RendererMaterial> mtlMaterials;
 
 	std::string line;
 	while (std::getline(file, line)) {
@@ -1276,8 +1276,8 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 	file.close();
 }
 
-std::unordered_map<std::string, RendererResourceManager::Material> RendererResourceManager::loadMtl(const std::string& materialPath) {
-	std::unordered_map<std::string, Material> mtlMaterials;
+std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadMtl(const std::string& materialPath) {
+	std::unordered_map<std::string, RendererMaterial> mtlMaterials;
 
 	std::ifstream file(materialPath);
 
@@ -1287,7 +1287,7 @@ std::unordered_map<std::string, RendererResourceManager::Material> RendererResou
 		return mtlMaterials;
 	}
 
-	Material* currentMaterial = nullptr;
+	RendererMaterial* currentMaterial = nullptr;
 
 	std::string materialDirectory = materialPath.substr(0, materialPath.rfind('/'));
 
@@ -1309,7 +1309,7 @@ std::unordered_map<std::string, RendererResourceManager::Material> RendererResou
 
 		// Parse tokens
 		if (tokens[0] == "newmtl") {
-			mtlMaterials[tokens[1]] = Material();
+			mtlMaterials[tokens[1]] = RendererMaterial();
 			currentMaterial = &mtlMaterials[tokens[1]];
 		}
 		else if (tokens[0] == "Kd") {

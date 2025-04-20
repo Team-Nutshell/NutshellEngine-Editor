@@ -724,6 +724,7 @@ void Renderer::paintGL() {
 			GLuint indexCount = 0;
 
 			bool hasMesh = false;
+			RendererMaterial primitiveMaterial;
 			if (entity.second.renderable &&
 				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
 				(entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
@@ -732,6 +733,7 @@ void Renderer::paintGL() {
 				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath];
 				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.second.renderable->primitiveIndex];
 				const RendererMesh& entityMesh = entityPrimitive.mesh;
+				primitiveMaterial = entityPrimitive.material;
 
 				gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
@@ -750,8 +752,8 @@ void Renderer::paintGL() {
 			}
 			else {
 				// Entity does not have a mesh, default cube
-				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-				RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
+				const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
+				const RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
 				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
@@ -767,11 +769,10 @@ void Renderer::paintGL() {
 				indexCount = defaultMesh.indexCount;
 			}
 
-			if (entity.second.renderable &&
-				!entity.second.renderable->materialPath.empty() &&
-				hasMesh) {
+			if (hasMesh &&
+				entity.second.renderable) {
 				// Entity has a material
-				const RendererResourceManager::Material& material = m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath];
+				const RendererMaterial& material = !entity.second.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath] : primitiveMaterial;
 
 				gl.glActiveTexture(GL_TEXTURE0);
 				if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
@@ -1607,7 +1608,7 @@ void Renderer::loadResourcesToGPU() {
 		RendererModel newRendererModel;
 		for (const auto& modelPrimitive : model.primitives) {
 			const RendererResourceManager::Mesh& mesh = modelPrimitive.mesh;
-			const RendererResourceManager::Material& material = modelPrimitive.material;
+			const RendererMaterial& material = modelPrimitive.material;
 
 			RendererPrimitive newRendererPrimitive;
 			gl.glGenBuffers(1, &newRendererPrimitive.mesh.vertexBuffer);
@@ -1620,20 +1621,7 @@ void Renderer::loadResourcesToGPU() {
 
 			newRendererPrimitive.mesh.indexCount = static_cast<uint32_t>(mesh.indices.size());
 
-			newRendererPrimitive.material.diffuseTextureName = material.diffuseTextureName;
-			newRendererPrimitive.material.diffuseTextureSamplerName = material.diffuseTextureSamplerName;
-			newRendererPrimitive.material.emissiveTextureName = material.emissiveTextureName;
-			newRendererPrimitive.material.emissiveTextureSamplerName = material.emissiveTextureSamplerName;
-
-			newRendererPrimitive.material.emissiveFactor = material.emissiveFactor;
-
-			newRendererPrimitive.material.alphaCutoff = material.alphaCutoff;
-
-			newRendererPrimitive.material.useTriplanarMapping = material.useTriplanarMapping;
-
-			newRendererPrimitive.material.scaleUV = material.scaleUV;
-
-			newRendererPrimitive.material.offsetUV = material.offsetUV;
+			newRendererPrimitive.material = material;
 
 			newRendererModel.primitives.push_back(newRendererPrimitive);
 		}
