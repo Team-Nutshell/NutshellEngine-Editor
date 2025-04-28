@@ -282,6 +282,8 @@ void Renderer::initializeGL() {
 		}
 
 		outColor += vec4(emissiveTextureSample * emissiveFactor, 0.0);
+
+		outColor.rgb /= outColor.rgb + vec3(1.0);
 	}
 	)GLSL";
 	GLuint entityFragmentShader = compileShader(GL_FRAGMENT_SHADER, entityFragmentShaderCode);
