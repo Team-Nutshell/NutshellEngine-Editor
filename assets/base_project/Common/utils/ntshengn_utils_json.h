@@ -30,13 +30,13 @@
 #endif
 
 #if defined(NTSHENGN_DEBUG)
-#define NTSHENGN_JSON_ERROR(message, code) \
+#define NTSHENGN_JSON_ERROR(message) \
 	do { \
-		std::cerr << "\33[1m\33[37mJSON \33[31mERROR\33[39m\33[0m: " << message << " (" << #code << ")" << std::endl; \
+		std::cerr << "\33[1m\33[37mJSON \33[31mERROR\33[39m\33[0m: " << message << std::endl; \
 		exit(1); \
 	} while(0)
 #else
-#define NTSHENGN_JSON_ERROR(message, code) \
+#define NTSHENGN_JSON_ERROR(message) \
 	do { \
 		exit(1); \
 	} while(0)
@@ -266,7 +266,7 @@ namespace NtshEngn {
 			void open(const std::string& filePath) {
 				m_file.open(filePath, std::fstream::in | std::fstream::binary);
 				if (!m_file.is_open()) {
-					NTSHENGN_JSON_ERROR("Cannot open JSON file \"" + filePath + "\".", Result::JSONError);
+					NTSHENGN_JSON_ERROR("Cannot open JSON file \"" + filePath + "\".");
 				}
 			}
 
@@ -289,7 +289,7 @@ namespace NtshEngn {
 				char c;
 
 				if (m_file.eof()) {
-					NTSHENGN_JSON_ERROR("Reached end-of-file early.", Result::JSONError);
+					NTSHENGN_JSON_ERROR("Reached end-of-file early.");
 				}
 
 				m_previousPosition = m_file.tellg();
@@ -361,15 +361,15 @@ namespace NtshEngn {
 							token.value += c;
 
 							if (c != 'e') {
-								NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+								NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 							}
 						}
 						else {
-							NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+							NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 						}
 					}
 					else {
-						NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 					}
 				}
 				else if (c == 'f') {
@@ -392,19 +392,19 @@ namespace NtshEngn {
 								token.value += c;
 
 								if (c != 'e') {
-									NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+									NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 								}
 							}
 							else {
-								NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+								NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 							}
 						}
 						else {
-							NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+							NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 						}
 					}
 					else {
-						NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("\"" + token.value + "\" token is invalid.");
 					}
 				}
 				else if (c == 'n') {
@@ -422,22 +422,22 @@ namespace NtshEngn {
 							nullValue += c;
 
 							if (c != 'l') {
-								NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.", Result::JSONError);
+								NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.");
 							}
 						}
 						else {
-							NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.", Result::JSONError);
+							NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.");
 						}
 					}
 					else {
-						NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("\"" + nullValue + "\" token is invalid.");
 					}
 				}
 				else if (c == '\0') {
 					token.type = TokenType::EndOfFile;
 				}
 				else {
-					NTSHENGN_JSON_ERROR("Reached an unknown token (\"" + std::string() + c + "\").", Result::JSONError);
+					NTSHENGN_JSON_ERROR("Reached an unknown token (\"" + std::string() + c + "\").");
 				}
 
 				return token;
@@ -519,7 +519,7 @@ namespace NtshEngn {
 
 					// Colon
 					if (m_lexer.getNextToken().type != TokenType::Colon) {
-						NTSHENGN_JSON_ERROR("An object key (\"" + keyToken.value + "\") is not followed by a colon.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("An object key (\"" + keyToken.value + "\") is not followed by a colon.");
 					}
 
 					Token token = m_lexer.getNextToken();
@@ -551,7 +551,7 @@ namespace NtshEngn {
 					}
 
 					case TokenType::EndOfFile: {
-						NTSHENGN_JSON_ERROR("Reached end-of-file while parsing an object.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("Reached end-of-file while parsing an object.");
 					}
 
 					default:
@@ -610,7 +610,7 @@ namespace NtshEngn {
 					}
 
 					case TokenType::EndOfFile: {
-						NTSHENGN_JSON_ERROR("Reached end-of-file while parsing an array.", Result::JSONError);
+						NTSHENGN_JSON_ERROR("Reached end-of-file while parsing an array.");
 					}
 
 					default:
