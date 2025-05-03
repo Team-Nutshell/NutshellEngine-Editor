@@ -5,7 +5,6 @@
 #include <QClipboard>
 #include <filesystem>
 #include <fstream>
-#include <regex>
 
 ScriptListMenu::ScriptListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	newAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("script_new_script")), this, &ScriptListMenu::newScript);
