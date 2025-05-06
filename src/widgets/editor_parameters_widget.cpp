@@ -395,6 +395,7 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
 			m_globalInfo.editorParameters.renderer.resetCameraKey = sequence[0].key();
+			m_globalInfo.mainWindow->viewMenu->resetCameraAction->setShortcut(m_globalInfo.editorParameters.renderer.resetCameraKey);
 		}
 		else {
 			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_reset_camera"), key }));
