@@ -360,4 +360,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # NutshellEngine specific ignore
-build/
+/build/
