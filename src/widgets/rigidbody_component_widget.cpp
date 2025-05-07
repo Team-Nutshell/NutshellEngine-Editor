@@ -10,7 +10,7 @@
 RigidbodyComponentWidget::RigidbodyComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_rigidbody")));
 	isStaticWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("component_rigidbody_is_static"));
 	layout()->addWidget(isStaticWidget);

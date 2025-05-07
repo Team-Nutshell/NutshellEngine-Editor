@@ -15,7 +15,7 @@
 RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable")));
 	modelPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_model"), m_globalInfo.localization.getString("component_renderable_no_model_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(modelPathWidget);

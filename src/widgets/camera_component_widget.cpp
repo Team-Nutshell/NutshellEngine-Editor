@@ -11,7 +11,7 @@
 CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera")));
 	forwardWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("component_camera_forward"));
 	layout()->addWidget(forwardWidget);

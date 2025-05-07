@@ -12,6 +12,7 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	projectNameWidget = new StringWidget(m_globalInfo, "Project Name");
 	layout()->addWidget(projectNameWidget);
 

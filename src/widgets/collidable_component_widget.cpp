@@ -13,7 +13,7 @@
 CollidableComponentWidget::CollidableComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_collidable")));
 	std::vector<std::string> elements = { m_globalInfo.localization.getString("component_collidable_type_box"), m_globalInfo.localization.getString("component_collidable_type_sphere"), m_globalInfo.localization.getString("component_collidable_type_capsule") };
 	typeWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_collidable_type"), elements);

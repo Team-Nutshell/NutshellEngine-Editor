@@ -9,7 +9,7 @@
 ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_model_primitives"))));
 	primitivesWidget = new QWidget();
 	primitivesWidget->setLayout(new QVBoxLayout());

@@ -12,7 +12,7 @@
 LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new ComponentTitleWidget(m_globalInfo, m_globalInfo.localization.getString("component_light")));
 	std::vector<std::string> elementList = { m_globalInfo.localization.getString("component_light_type_directional"), m_globalInfo.localization.getString("component_light_type_point"), m_globalInfo.localization.getString("component_light_type_spot"), m_globalInfo.localization.getString("component_light_type_ambient") };
 	typeWidget = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("component_light_type"), elementList);
