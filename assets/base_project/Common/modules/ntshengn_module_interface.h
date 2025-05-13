@@ -23,11 +23,12 @@ namespace NtshEngn {
 			profiler = passProfiler;
 		}
 
+	protected:
+		ProfilerInterface* profiler = nullptr;
+
 	private:
 		ModuleType m_type = ModuleType::Unknown;
 		std::string m_name = "";
-
-		ProfilerInterface* profiler = nullptr;
 	};
 
 }
