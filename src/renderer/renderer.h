@@ -31,7 +31,9 @@ private:
 	GLuint compileProgram(GLuint vertexShader, GLuint fragmentShader);
 
 	void createPickingImages();
+	void destroyPickingImages();
 	void createOutlineSoloImages();
+	void destroyOutlineSoloImages();
 	void createLightBuffer();
 
 	bool anyEntityTransformMode();

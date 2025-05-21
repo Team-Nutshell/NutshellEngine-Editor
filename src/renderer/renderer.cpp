@@ -692,7 +692,9 @@ void Renderer::initializeGL() {
 
 void Renderer::paintGL() {
 	if (m_gotResized) {
+		destroyPickingImages();
 		createPickingImages();
+		destroyOutlineSoloImages();
 		createOutlineSoloImages();
 
 		m_gotResized = false;
@@ -1412,6 +1414,11 @@ void Renderer::createPickingImages() {
 	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_pickingDepthImage);
 }
 
+void Renderer::destroyPickingImages() {
+	gl.glDeleteTextures(1, &m_pickingImage);
+	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
+}
+
 void Renderer::createOutlineSoloImages() {
 	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
 
@@ -1428,6 +1435,11 @@ void Renderer::createOutlineSoloImages() {
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_outlineSoloDepthImage);
 	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_outlineSoloDepthImage);
+}
+
+void Renderer::destroyOutlineSoloImages() {
+	gl.glDeleteTextures(1, &m_outlineSoloImage);
+	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
 }
 
 void Renderer::createLightBuffer() {
