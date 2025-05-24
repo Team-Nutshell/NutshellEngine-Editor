@@ -67,11 +67,11 @@ public:
 	ScalarWidget* orthographicCameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridScaleWidget;
-	BooleanWidget* maintainGuizmoSizeWidget;
-	ScalarWidget* guizmoSizeWidget;
-	Vector3Widget* guizmoTranslationStepWidget;
-	Vector3Widget* guizmoRotationStepWidget;
-	Vector3Widget* guizmoScaleStepWidget;
+	BooleanWidget* maintainGizmoSizeWidget;
+	ScalarWidget* gizmoSizeWidget;
+	Vector3Widget* gizmoTranslationStepWidget;
+	Vector3Widget* gizmoRotationStepWidget;
+	Vector3Widget* gizmoScaleStepWidget;
 	ColorPickerWidget* currentEntityOutlineColorWidget;
 	ColorPickerWidget* otherEntitiesOutlineColorWidget;
 

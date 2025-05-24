@@ -187,56 +187,56 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
-	QWidget* rendererGuizmoLayoutWidget = new QWidget();
-	QVBoxLayout* rendererGuizmoLayout = new QVBoxLayout();
-	rendererGuizmoLayout->setContentsMargins(0, 0, 0, 0);
-	rendererGuizmoLayoutWidget->setLayout(rendererGuizmoLayout);
-	rendererVerticalLayout->addWidget(rendererGuizmoLayoutWidget);
+	QWidget* rendererGizmoLayoutWidget = new QWidget();
+	QVBoxLayout* rendererGizmoLayout = new QVBoxLayout();
+	rendererGizmoLayout->setContentsMargins(0, 0, 0, 0);
+	rendererGizmoLayoutWidget->setLayout(rendererGizmoLayout);
+	rendererVerticalLayout->addWidget(rendererGizmoLayoutWidget);
 
-	maintainGuizmoSizeWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_maintain_guizmo_size"));
-	maintainGuizmoSizeWidget->setValue(m_globalInfo.editorParameters.renderer.maintainGuizmoSize);
-	maintainGuizmoSizeWidget->layout()->setAlignment(maintainGuizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	maintainGuizmoSizeWidget->layout()->setAlignment(maintainGuizmoSizeWidget->checkBox, Qt::AlignmentFlag::AlignLeft);
-	rendererGuizmoLayout->addWidget(maintainGuizmoSizeWidget);
+	maintainGizmoSizeWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_maintain_gizmo_size"));
+	maintainGizmoSizeWidget->setValue(m_globalInfo.editorParameters.renderer.maintainGizmoSize);
+	maintainGizmoSizeWidget->layout()->setAlignment(maintainGizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	maintainGizmoSizeWidget->layout()->setAlignment(maintainGizmoSizeWidget->checkBox, Qt::AlignmentFlag::AlignLeft);
+	rendererGizmoLayout->addWidget(maintainGizmoSizeWidget);
 
-	guizmoSizeWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_size"));
-	guizmoSizeWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.guizmoSize, 'g', 7));
-	guizmoSizeWidget->layout()->setAlignment(guizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	guizmoSizeWidget->layout()->setAlignment(guizmoSizeWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererGuizmoLayout->addWidget(guizmoSizeWidget);
+	gizmoSizeWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_size"));
+	gizmoSizeWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gizmoSize, 'g', 7));
+	gizmoSizeWidget->layout()->setAlignment(gizmoSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	gizmoSizeWidget->layout()->setAlignment(gizmoSizeWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererGizmoLayout->addWidget(gizmoSizeWidget);
 
-	guizmoTranslationStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_translation_step"));
-	guizmoTranslationStepWidget->setValue(m_globalInfo.editorParameters.renderer.guizmoTranslationStep);
-	guizmoTranslationStepWidget->layout()->setAlignment(guizmoTranslationStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
-	guizmoTranslationStepWidget->layout()->setAlignment(guizmoTranslationStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoTranslationStepWidget->layout()->setAlignment(guizmoTranslationStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoTranslationStepWidget->layout()->setAlignment(guizmoTranslationStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererGuizmoLayout->addWidget(guizmoTranslationStepWidget);
+	gizmoTranslationStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_translation_step"));
+	gizmoTranslationStepWidget->setValue(m_globalInfo.editorParameters.renderer.gizmoTranslationStep);
+	gizmoTranslationStepWidget->layout()->setAlignment(gizmoTranslationStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
+	gizmoTranslationStepWidget->layout()->setAlignment(gizmoTranslationStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoTranslationStepWidget->layout()->setAlignment(gizmoTranslationStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoTranslationStepWidget->layout()->setAlignment(gizmoTranslationStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererGizmoLayout->addWidget(gizmoTranslationStepWidget);
 
-	guizmoRotationStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_rotation_step"));
-	guizmoRotationStepWidget->setValue(m_globalInfo.editorParameters.renderer.guizmoRotationStep);
-	guizmoRotationStepWidget->layout()->setAlignment(guizmoRotationStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
-	guizmoRotationStepWidget->layout()->setAlignment(guizmoRotationStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoRotationStepWidget->layout()->setAlignment(guizmoRotationStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoRotationStepWidget->layout()->setAlignment(guizmoRotationStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererGuizmoLayout->addWidget(guizmoRotationStepWidget);
+	gizmoRotationStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_rotation_step"));
+	gizmoRotationStepWidget->setValue(m_globalInfo.editorParameters.renderer.gizmoRotationStep);
+	gizmoRotationStepWidget->layout()->setAlignment(gizmoRotationStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
+	gizmoRotationStepWidget->layout()->setAlignment(gizmoRotationStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoRotationStepWidget->layout()->setAlignment(gizmoRotationStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoRotationStepWidget->layout()->setAlignment(gizmoRotationStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererGizmoLayout->addWidget(gizmoRotationStepWidget);
 
-	guizmoScaleStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_scale_step"));
-	guizmoScaleStepWidget->setValue(m_globalInfo.editorParameters.renderer.guizmoScaleStep);
-	guizmoScaleStepWidget->layout()->setAlignment(guizmoScaleStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
-	guizmoScaleStepWidget->layout()->setAlignment(guizmoScaleStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoScaleStepWidget->layout()->setAlignment(guizmoScaleStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
-	guizmoScaleStepWidget->layout()->setAlignment(guizmoScaleStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererGuizmoLayout->addWidget(guizmoScaleStepWidget);
+	gizmoScaleStepWidget = new Vector3Widget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_scale_step"));
+	gizmoScaleStepWidget->setValue(m_globalInfo.editorParameters.renderer.gizmoScaleStep);
+	gizmoScaleStepWidget->layout()->setAlignment(gizmoScaleStepWidget->nameLabel, Qt::AlignmentFlag::AlignLeft);
+	gizmoScaleStepWidget->layout()->setAlignment(gizmoScaleStepWidget->xLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoScaleStepWidget->layout()->setAlignment(gizmoScaleStepWidget->yLineEdit, Qt::AlignmentFlag::AlignLeft);
+	gizmoScaleStepWidget->layout()->setAlignment(gizmoScaleStepWidget->zLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererGizmoLayout->addWidget(gizmoScaleStepWidget);
 
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
-	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_current_entity_outline_color"), nml::vec3(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor));
+	currentEntityOutlineColorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_current_entity_outline_color"), nml::vec3(m_globalInfo.editorParameters.renderer.currentEntityOutlineColor));
 	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	currentEntityOutlineColorWidget->layout()->setAlignment(currentEntityOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
 	rendererVerticalLayout->addWidget(currentEntityOutlineColorWidget);
 
-	otherEntitiesOutlineColorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_guizmo_other_selected_entities_outline_color"), nml::vec3(m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor));
+	otherEntitiesOutlineColorWidget = new ColorPickerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_gizmo_other_selected_entities_outline_color"), nml::vec3(m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor));
 	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
 	otherEntitiesOutlineColorWidget->layout()->setAlignment(otherEntitiesOutlineColorWidget->colorButton, Qt::AlignmentFlag::AlignLeft);
 	rendererVerticalLayout->addWidget(otherEntitiesOutlineColorWidget);
@@ -292,11 +292,11 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(orthographicCameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gridScaleWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(maintainGuizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
-	connect(guizmoSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(guizmoTranslationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
-	connect(guizmoRotationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
-	connect(guizmoScaleStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
+	connect(maintainGizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
+	connect(gizmoSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(gizmoTranslationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
+	connect(gizmoRotationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
+	connect(gizmoScaleStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
@@ -570,8 +570,8 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 
 void EditorParametersWidget::onBooleanChanged(bool value) {
 	QObject* senderWidget = sender();
-	if (senderWidget == maintainGuizmoSizeWidget) {
-		m_globalInfo.editorParameters.renderer.maintainGuizmoSize = value;
+	if (senderWidget == maintainGizmoSizeWidget) {
+		m_globalInfo.editorParameters.renderer.maintainGizmoSize = value;
 	}
 
 	save();
@@ -597,8 +597,8 @@ void EditorParametersWidget::onScalarChanged(float value) {
 	else if (senderWidget == gridScaleWidget) {
 		m_globalInfo.editorParameters.renderer.gridScale = value;
 	}
-	else if (senderWidget == guizmoSizeWidget) {
-		m_globalInfo.editorParameters.renderer.guizmoSize = value;
+	else if (senderWidget == gizmoSizeWidget) {
+		m_globalInfo.editorParameters.renderer.gizmoSize = value;
 	}
 
 	save();
@@ -633,14 +633,14 @@ void EditorParametersWidget::onVector3Changed(const nml::vec3& value) {
 		senderWidget->setValue(clampedValue);
 	}
 
-	if (senderWidget == guizmoTranslationStepWidget) {
-		m_globalInfo.editorParameters.renderer.guizmoTranslationStep = clampedValue;
+	if (senderWidget == gizmoTranslationStepWidget) {
+		m_globalInfo.editorParameters.renderer.gizmoTranslationStep = clampedValue;
 	}
-	else if (senderWidget == guizmoRotationStepWidget) {
-		m_globalInfo.editorParameters.renderer.guizmoRotationStep = clampedValue;
+	else if (senderWidget == gizmoRotationStepWidget) {
+		m_globalInfo.editorParameters.renderer.gizmoRotationStep = clampedValue;
 	}
-	else if (senderWidget == guizmoScaleStepWidget) {
-		m_globalInfo.editorParameters.renderer.guizmoScaleStep = clampedValue;
+	else if (senderWidget == gizmoScaleStepWidget) {
+		m_globalInfo.editorParameters.renderer.gizmoScaleStep = clampedValue;
 	}
 
 	save();

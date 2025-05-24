@@ -180,26 +180,26 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.gridScale = j["renderer"]["gridScale"];
 		}
 
-		if (j["renderer"].contains("maintainGuizmoSize")) {
-			renderer.maintainGuizmoSize = j["renderer"]["maintainGuizmoSize"];
+		if (j["renderer"].contains("maintainGizmoSize")) {
+			renderer.maintainGizmoSize = j["renderer"]["maintainGizmoSize"];
 		}
-		if (j["renderer"].contains("guizmoSize")) {
-			renderer.guizmoSize = j["renderer"]["guizmoSize"];
+		if (j["renderer"].contains("gizmoSize")) {
+			renderer.gizmoSize = j["renderer"]["gizmoSize"];
 		}
-		if (j["renderer"].contains("guizmoTranslationStep")) {
-			renderer.guizmoTranslationStep.x = j["renderer"]["guizmoTranslationStep"][0];
-			renderer.guizmoTranslationStep.y = j["renderer"]["guizmoTranslationStep"][1];
-			renderer.guizmoTranslationStep.z = j["renderer"]["guizmoTranslationStep"][2];
+		if (j["renderer"].contains("gizmoTranslationStep")) {
+			renderer.gizmoTranslationStep.x = j["renderer"]["gizmoTranslationStep"][0];
+			renderer.gizmoTranslationStep.y = j["renderer"]["gizmoTranslationStep"][1];
+			renderer.gizmoTranslationStep.z = j["renderer"]["gizmoTranslationStep"][2];
 		}
-		if (j["renderer"].contains("guizmoRotationStep")) {
-			renderer.guizmoRotationStep.x = j["renderer"]["guizmoRotationStep"][0];
-			renderer.guizmoRotationStep.y = j["renderer"]["guizmoRotationStep"][1];
-			renderer.guizmoRotationStep.z = j["renderer"]["guizmoRotationStep"][2];
+		if (j["renderer"].contains("gizmoRotationStep")) {
+			renderer.gizmoRotationStep.x = j["renderer"]["gizmoRotationStep"][0];
+			renderer.gizmoRotationStep.y = j["renderer"]["gizmoRotationStep"][1];
+			renderer.gizmoRotationStep.z = j["renderer"]["gizmoRotationStep"][2];
 		}
-		if (j["renderer"].contains("guizmoScaleStep")) {
-			renderer.guizmoScaleStep.x = j["renderer"]["guizmoScaleStep"][0];
-			renderer.guizmoScaleStep.y = j["renderer"]["guizmoScaleStep"][1];
-			renderer.guizmoScaleStep.z = j["renderer"]["guizmoScaleStep"][2];
+		if (j["renderer"].contains("gizmoScaleStep")) {
+			renderer.gizmoScaleStep.x = j["renderer"]["gizmoScaleStep"][0];
+			renderer.gizmoScaleStep.y = j["renderer"]["gizmoScaleStep"][1];
+			renderer.gizmoScaleStep.z = j["renderer"]["gizmoScaleStep"][2];
 		}
 
 		if (j["renderer"].contains("currentEntityOutlineColor")) {
@@ -275,11 +275,11 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["orthographicCameraSpeed"] = renderer.orthographicCameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridScale"] = renderer.gridScale;
-	j["renderer"]["maintainGuizmoSize"] = renderer.maintainGuizmoSize;
-	j["renderer"]["guizmoSize"] = renderer.guizmoSize;
-	j["renderer"]["guizmoTranslationStep"] = { renderer.guizmoTranslationStep.x, renderer.guizmoTranslationStep.y, renderer.guizmoTranslationStep.z };
-	j["renderer"]["guizmoRotationStep"] = { renderer.guizmoRotationStep.x, renderer.guizmoRotationStep.y, renderer.guizmoRotationStep.z };
-	j["renderer"]["guizmoScaleStep"] = { renderer.guizmoScaleStep.x, renderer.guizmoScaleStep.y, renderer.guizmoScaleStep.z };
+	j["renderer"]["maintainGizmoSize"] = renderer.maintainGizmoSize;
+	j["renderer"]["gizmoSize"] = renderer.gizmoSize;
+	j["renderer"]["gizmoTranslationStep"] = { renderer.gizmoTranslationStep.x, renderer.gizmoTranslationStep.y, renderer.gizmoTranslationStep.z };
+	j["renderer"]["gizmoRotationStep"] = { renderer.gizmoRotationStep.x, renderer.gizmoRotationStep.y, renderer.gizmoRotationStep.z };
+	j["renderer"]["gizmoScaleStep"] = { renderer.gizmoScaleStep.x, renderer.gizmoScaleStep.y, renderer.gizmoScaleStep.z };
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
 	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
 	j["renderer"]["showGrid"] = renderer.showGrid;

@@ -90,25 +90,25 @@ private:
 	bool m_rotateEntityMode = false;
 	bool m_scaleEntityMode = false;
 
-	float m_guizmoTranslationStepAccumulation = 0.0f;
-	float m_guizmoRotationStepAccumulation = 0.0f;
-	float m_guizmoScaleStepAccumulation = 0.0f;
+	float m_gizmoTranslationStepAccumulation = 0.0f;
+	float m_gizmoRotationStepAccumulation = 0.0f;
+	float m_gizmoScaleStepAccumulation = 0.0f;
 
-	enum class GuizmoMode {
+	enum class GizmoMode {
 		Translate,
 		Rotate,
 		Scale,
 		None
 	};
-	GuizmoMode m_guizmoMode = GuizmoMode::None;
+	GizmoMode m_gizmoMode = GizmoMode::None;
 
-	enum class GuizmoAxis {
+	enum class GizmoAxis {
 		X,
 		Y,
 		Z,
 		None
 	};
-	GuizmoAxis m_guizmoAxis = GuizmoAxis::None;
+	GizmoAxis m_gizmoAxis = GizmoAxis::None;
 
 	bool m_multiSelectionKeyPressed = false;
 
@@ -135,7 +135,7 @@ private:
 	GLuint m_entityProgram;
 	GLuint m_cameraFrustumProgram;
 	GLuint m_gridProgram;
-	GLuint m_guizmoProgram;
+	GLuint m_gizmoProgram;
 	GLuint m_pickingProgram;
 	GLuint m_outlineSoloProgram;
 	GLuint m_outlineProgram;
