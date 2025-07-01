@@ -30,7 +30,7 @@
 #define NTSHENGN_ASSERT(expression, message) \
 	do { \
 		if (!(expression)) { \
-			std::cerr << "\33[1m\33[31mASSERTION FAILED\33[39m\33[0m: " + std::string(#expression) + " (" + message + ")" + "\nLine \33[1m" + std::to_string(__LINE__) + "\33[0m in file \33[1m" + std::filesystem::path(__FILE__).filename().string() + "\33[0m." << std::endl; \
+			std::cout << "\33[1m\33[31mASSERTION FAILED\33[39m\33[0m: " + std::string(#expression) + " (" + message + ")" + "\nLine \33[1m" + std::to_string(__LINE__) + "\33[0m in file \33[1m" + std::filesystem::path(__FILE__).filename().string() + "\33[0m." << std::endl; \
 			NTSHENGN_BREAKPOINT(); \
 			exit(1); \
 		} \

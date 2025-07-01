@@ -426,6 +426,8 @@ namespace NtshEngn {
 
 		virtual bool entityExists(Entity entity) = 0;
 
+		virtual const std::set<Entity>& getEntities() = 0;
+
 		virtual void setEntityName(Entity entity, const std::string& name) = 0;
 		virtual bool entityHasName(Entity entity) = 0;
 		virtual std::string getEntityName(Entity entity) = 0;

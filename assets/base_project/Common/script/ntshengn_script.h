@@ -190,6 +190,10 @@ namespace NtshEngn {
 			return ecs->entityExists(entity);
 		}
 
+		const std::set<Entity>& getEntities() {
+			return ecs->getEntities();
+		}
+
 		void setEntityName(Entity entity, const std::string& name) {
 			ecs->setEntityName(entity, name);
 		}

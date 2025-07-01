@@ -50,6 +50,13 @@ namespace NtshEngn {
 	struct ScriptBase {
 		virtual ~ScriptBase() {}
 
+		virtual void onSceneEnter(const std::string& scenePath) {
+			NTSHENGN_UNUSED(scenePath);
+		}
+		virtual void onSceneExit(const std::string& scenePath) {
+			NTSHENGN_UNUSED(scenePath);
+		}
+
 		virtual void onCollisionEnter(CollisionInfo collisionInfo) {
 			NTSHENGN_UNUSED(collisionInfo);
 		}
