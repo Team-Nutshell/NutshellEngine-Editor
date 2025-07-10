@@ -103,8 +103,12 @@ namespace NtshEngn {
 			return assetManager->createFont(fontName);
 		}
 
-		Font* loadFont(const std::string& filePath, float fontHeight) {
-			return assetManager->loadFont(filePath, fontHeight);
+		Font* loadFontBitmap(const std::string& filePath, float fontHeight) {
+			return assetManager->loadFontBitmap(filePath, fontHeight);
+		}
+
+		Font* loadFontSDF(const std::string& filePath) {
+			return assetManager->loadFontSDF(filePath);
 		}
 
 		FontID getFontID(const Font& font) {
@@ -934,22 +938,22 @@ namespace NtshEngn {
 		}
 
 		// UI
-		void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUIText(fontID, text, position, color);
+			graphicsModule->drawUIText(fontID, text, position, scale, color);
 		}
 
-		void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
 			std::wstring wideString(text.begin(), text.end());
 
-			graphicsModule->drawUIText(fontID, wideString, position, color);
+			graphicsModule->drawUIText(fontID, wideString, position, scale, color);
 		}
 
 		void drawUILine(const Math::vec2& start, const Math::vec2& end, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {

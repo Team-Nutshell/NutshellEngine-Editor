@@ -257,6 +257,12 @@ namespace NtshEngn {
 	// Font
 	typedef uint32_t FontID;
 	#define NTSHENGN_FONT_UNKNOWN 0xFFFFFFFF
+	
+	enum class FontType {
+		Bitmap,
+		SDF,
+		Unknown
+	};
 
 	struct FontGlyph {
 		Math::vec2 positionTopLeft;
@@ -267,6 +273,7 @@ namespace NtshEngn {
 	};
 
 	struct Font {
+		FontType type = FontType::Unknown;
 		Image* image = nullptr;
 		ImageSamplerFilter imageSamplerFilter = ImageSamplerFilter::Unknown;
 		std::unordered_map<wchar_t, FontGlyph> glyphs;

@@ -24,8 +24,10 @@ namespace NtshEngn {
 		virtual Model loadModel(const std::string& filePath) = 0;
 		// Loads the material in file at path filePath
 		virtual Material loadMaterial(const std::string& filePath) = 0;
-		// Loads the font in file at path filePath
-		virtual Font loadFont(const std::string& filePath, float fontHeight) = 0;
+		// Loads the bitmap font in file at path filePath
+		virtual Font loadFontBitmap(const std::string& filePath, float fontHeight) = 0;
+		// Loads the SDF font in file at path filePath
+		virtual Font loadFontSDF(const std::string& filePath) = 0;
 
 	public:
 		void setAssetManager(AssetManagerInterface* passAssetManager) {

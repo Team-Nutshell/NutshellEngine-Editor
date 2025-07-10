@@ -36,7 +36,8 @@ namespace NtshEngn {
 		virtual Image* loadImage(const std::string& filePath) = 0;
 
 		virtual Font* createFont(const std::string& fontName) = 0;
-		virtual Font* loadFont(const std::string& filePath, float fontHeight) = 0;
+		virtual Font* loadFontBitmap(const std::string& filePath, float fontHeight) = 0;
+		virtual Font* loadFontSDF(const std::string& filePath) = 0;
 		
 		virtual Sound* createSound(const std::string& soundName) = 0;
 		virtual Sound* loadSound(const std::string& filePath) = 0;
