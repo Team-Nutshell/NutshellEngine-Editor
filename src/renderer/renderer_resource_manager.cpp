@@ -862,6 +862,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
 					if (baseColorTexture != NULL) {
 						cgltf_image* baseColorImage = baseColorTexture->image;
+						bool hasImage = false;
 						if (baseColorImage->uri) {
 							std::string imageURI = baseColorImage->uri;
 
@@ -890,6 +891,25 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								imageURI = modelDirectory + "/" + imageURI;
 							}
 
+							primitive.material.diffuseTextureName = imageURI;
+
+							hasImage = true;
+						}
+						else if (baseColorImage->buffer_view) {
+							cgltf_buffer_view* bufferView = baseColorImage->buffer_view;
+							std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data) + bufferView->offset;
+							std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":diffuse";
+							if (bufferView->name) {
+								imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + std::string(bufferView->name) + ":diffuse";
+							}
+							loadImageFromMemory(buffer, bufferView->size, imageName);
+
+							primitive.material.diffuseTextureName = imageName;
+
+							hasImage = true;
+						}
+
+						if (hasImage) {
 							SamplerToGPU sampler;
 							if (baseColorTexture->sampler != NULL) {
 								if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
@@ -929,7 +949,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							}
 							samplersToGPU[sampler.toString()] = sampler;
 
-							primitive.material.diffuseTextureName = imageURI;
 							primitive.material.diffuseTextureSamplerName = sampler.toString();
 						}
 					}
@@ -959,6 +978,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				cgltf_float* emissiveFactor = primitiveMaterial->emissive_factor;
 				if (emissiveTexture != NULL) {
 					cgltf_image* emissiveImage = emissiveTexture->image;
+					bool hasImage = false;
 					if (emissiveImage->uri) {
 						std::string imageURI = emissiveImage->uri;
 
@@ -987,6 +1007,25 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							imageURI = modelDirectory + "/" + imageURI;
 						}
 
+						hasImage = true;
+
+						primitive.material.emissiveTextureName = imageURI;
+					}
+					else if (emissiveImage->buffer_view) {
+						cgltf_buffer_view* bufferView = emissiveImage->buffer_view;
+						std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data) + bufferView->offset;
+						std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":emissive";
+						if (bufferView->name) {
+							imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + std::string(bufferView->name) + ":emissive";
+						}
+						loadImageFromMemory(buffer, bufferView->size, imageName);
+
+						primitive.material.diffuseTextureName = imageName;
+
+						hasImage = true;
+					}
+
+					if (hasImage) {
 						SamplerToGPU sampler;
 						if (emissiveTexture->sampler != NULL) {
 							if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
@@ -1026,7 +1065,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 						samplersToGPU[sampler.toString()] = sampler;
 
-						primitive.material.emissiveTextureName = imageURI;
 						primitive.material.emissiveTextureSamplerName = sampler.toString();
 					}
 				}
