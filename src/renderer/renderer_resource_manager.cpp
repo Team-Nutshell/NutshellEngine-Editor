@@ -878,7 +878,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 									loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 								}
 								else {
-									logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, "base color texture"}));
+									logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, localization->getString("log_gltf_base_color_texture", {}) }));
 								}
 							}
 							else {
@@ -994,7 +994,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
 							}
 							else {
-								logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, "emissive texture" }));
+								logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, localization->getString("log_gltf_emissive_texture", {}) }));
 							}
 						}
 						else {

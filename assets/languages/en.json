@@ -337,6 +337,8 @@
 	"log_gltf_buffers_cannot_be_loaded": "Could not load buffers for model file \"${0}\".",
 	"log_gltf_index_component_type_invalid": "Index component type invalid for model file \"${0}\".",
 	"log_gltf_invalid_base64_texture": "Invalid Base64 data when loading glTF embedded texture for model file \"${0}\" (${1}).",
+	"log_gltf_base_color_texture": "base color texture",
+	"log_gltf_emissive_texture": "emissive texture",
 	"log_build_launching_build": "[Build] Launching ${0} build.",
 	"log_build_launching_cmake_command": "[Build] Launching CMake with command: ${0}",
 	"log_build_cmake_logs": "[Build] CMake logs:",
