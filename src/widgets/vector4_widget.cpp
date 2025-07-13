@@ -63,9 +63,30 @@ const nml::vec4& Vector4Widget::getValue() {
 
 void Vector4Widget::onEditingFinished() {
 	nml::vec4 newValue = nml::vec4(std::atof(xLineEdit->text().toStdString().c_str()), std::atof(yLineEdit->text().toStdString().c_str()), std::atof(zLineEdit->text().toStdString().c_str()), std::atof(wLineEdit->text().toStdString().c_str()));
+	QObject* senderWidget = sender();
+	if (senderWidget == xLineEdit) {
+		if (m_value.x != newValue.x) {
+			emit xChanged(newValue.x);
+		}
+	}
+	else if (senderWidget == yLineEdit) {
+		if (m_value.y != newValue.y) {
+			emit yChanged(newValue.y);
+		}
+	}
+	else if (senderWidget == zLineEdit) {
+		if (m_value.z != newValue.z) {
+			emit zChanged(newValue.z);
+		}
+	}
+	else if (senderWidget == wLineEdit) {
+		if (m_value.w != newValue.w) {
+			emit wChanged(newValue.w);
+		}
+	}
 	if (m_value != newValue) {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
-	static_cast<QWidget*>(sender())->clearFocus();
+	static_cast<QWidget*>(senderWidget)->clearFocus();
 }

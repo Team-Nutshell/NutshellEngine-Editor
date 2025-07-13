@@ -63,9 +63,30 @@ const nml::quat& QuaternionWidget::getValue() {
 
 void QuaternionWidget::onEditingFinished() {
 	nml::quat newValue = nml::quat(std::atof(aLineEdit->text().toStdString().c_str()), std::atof(bLineEdit->text().toStdString().c_str()), std::atof(cLineEdit->text().toStdString().c_str()), std::atof(dLineEdit->text().toStdString().c_str()));
+	QObject* senderWidget = sender();
+	if (senderWidget == aLineEdit) {
+		if (m_value.a != newValue.a) {
+			emit aChanged(newValue.a);
+		}
+	}
+	else if (senderWidget == bLineEdit) {
+		if (m_value.b != newValue.b) {
+			emit bChanged(newValue.b);
+		}
+	}
+	else if (senderWidget == cLineEdit) {
+		if (m_value.c != newValue.c) {
+			emit cChanged(newValue.c);
+		}
+	}
+	else if (senderWidget == dLineEdit) {
+		if (m_value.d != newValue.d) {
+			emit dChanged(newValue.d);
+		}
+	}
 	if (m_value != newValue) {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
-	static_cast<QWidget*>(sender())->clearFocus();
+	static_cast<QWidget*>(senderWidget)->clearFocus();
 }

@@ -15,6 +15,9 @@ public:
 
 signals:
 	void valueChanged(const nml::vec3&);
+	void xChanged(float);
+	void yChanged(float);
+	void zChanged(float);
 
 private slots:
 	void onEditingFinished();

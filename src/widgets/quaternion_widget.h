@@ -15,6 +15,10 @@ public:
 
 signals:
 	void valueChanged(const nml::quat&);
+	void aChanged(float);
+	void bChanged(float);
+	void cChanged(float);
+	void dChanged(float);
 
 private slots:
 	void onEditingFinished();

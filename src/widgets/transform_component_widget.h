@@ -16,7 +16,9 @@ private:
 private slots:
 	void onEntitySelected();
 	void onEntityTransformChanged(EntityID entityID, const Transform& transform);
-	void onVec3Changed(const nml::vec3& value);
+	void onXChanged(float value);
+	void onYChanged(float value);
+	void onZChanged(float value);
 
 private:
 	GlobalInfo& m_globalInfo;

@@ -20,9 +20,15 @@ TransformComponentWidget::TransformComponentWidget(GlobalInfo& globalInfo) : m_g
 	layout()->addWidget(scaleWidget);
 	layout()->addWidget(new SeparatorLine());
 
-	connect(positionWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
-	connect(rotationWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
-	connect(scaleWidget, &Vector3Widget::valueChanged, this, &TransformComponentWidget::onVec3Changed);
+	connect(positionWidget, &Vector3Widget::xChanged, this, &TransformComponentWidget::onXChanged);
+	connect(positionWidget, &Vector3Widget::yChanged, this, &TransformComponentWidget::onYChanged);
+	connect(positionWidget, &Vector3Widget::zChanged, this, &TransformComponentWidget::onZChanged);
+	connect(rotationWidget, &Vector3Widget::xChanged, this, &TransformComponentWidget::onXChanged);
+	connect(rotationWidget, &Vector3Widget::yChanged, this, &TransformComponentWidget::onYChanged);
+	connect(rotationWidget, &Vector3Widget::zChanged, this, &TransformComponentWidget::onZChanged);
+	connect(scaleWidget, &Vector3Widget::xChanged, this, &TransformComponentWidget::onXChanged);
+	connect(scaleWidget, &Vector3Widget::yChanged, this, &TransformComponentWidget::onYChanged);
+	connect(scaleWidget, &Vector3Widget::zChanged, this, &TransformComponentWidget::onZChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &TransformComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityTransformSignal, this, &TransformComponentWidget::onEntityTransformChanged);
 }
@@ -63,58 +69,110 @@ void TransformComponentWidget::onEntityTransformChanged(EntityID entityID, const
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void TransformComponentWidget::onVec3Changed(const nml::vec3& value) {
+void TransformComponentWidget::onXChanged(float value) {
 	QObject* senderWidget = sender();
 
 	std::vector<EntityID> entityIDs;
 	std::vector<Transform> newTransforms;
 
 	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
-
-	uint8_t changedIndex = 255;
 	if (senderWidget == positionWidget) {
-		for (uint8_t i = 0; i < 3; i++) {
-			if (newTransform.position[i] != value[i]) {
-				changedIndex = i;
-				break;
-			}
-		}
-		newTransform.position = value;
+		newTransform.position.x = value;
 	}
 	else if (senderWidget == rotationWidget) {
-		for (uint8_t i = 0; i < 3; i++) {
-			if (newTransform.rotation[i] != value[i]) {
-				changedIndex = i;
-				break;
-			}
-		}
-		newTransform.rotation = value;
+		newTransform.rotation.x = value;
 	}
 	else if (senderWidget == scaleWidget) {
-		for (uint8_t i = 0; i < 3; i++) {
-			if (newTransform.scale[i] != value[i]) {
-				changedIndex = i;
-				break;
-			}
-		}
-		newTransform.scale = value;
+		newTransform.scale.x = value;
 	}
 	entityIDs.push_back(m_globalInfo.currentEntityID);
 	newTransforms.push_back(newTransform);
 
 	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
 		newTransform = m_globalInfo.entities[otherSelectedEntityID].transform;
-
 		if (senderWidget == positionWidget) {
-			newTransform.position[changedIndex] = value[changedIndex];
+			newTransform.position.x = value;
 		}
 		else if (senderWidget == rotationWidget) {
-			newTransform.rotation[changedIndex] = value[changedIndex];
+			newTransform.rotation.x = value;
 		}
 		else if (senderWidget == scaleWidget) {
-			newTransform.scale[changedIndex] = value[changedIndex];
+			newTransform.scale.x = value;
 		}
+		entityIDs.push_back(otherSelectedEntityID);
+		newTransforms.push_back(newTransform);
+	}
 
+	updateComponents(entityIDs, newTransforms);
+}
+
+void TransformComponentWidget::onYChanged(float value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Transform> newTransforms;
+
+	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+	if (senderWidget == positionWidget) {
+		newTransform.position.y = value;
+	}
+	else if (senderWidget == rotationWidget) {
+		newTransform.rotation.y = value;
+	}
+	else if (senderWidget == scaleWidget) {
+		newTransform.scale.y = value;
+	}
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newTransforms.push_back(newTransform);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		newTransform = m_globalInfo.entities[otherSelectedEntityID].transform;
+		if (senderWidget == positionWidget) {
+			newTransform.position.y = value;
+		}
+		else if (senderWidget == rotationWidget) {
+			newTransform.rotation.y = value;
+		}
+		else if (senderWidget == scaleWidget) {
+			newTransform.scale.y = value;
+		}
+		entityIDs.push_back(otherSelectedEntityID);
+		newTransforms.push_back(newTransform);
+	}
+
+	updateComponents(entityIDs, newTransforms);
+}
+
+void TransformComponentWidget::onZChanged(float value) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Transform> newTransforms;
+
+	Transform newTransform = m_globalInfo.entities[m_globalInfo.currentEntityID].transform;
+	if (senderWidget == positionWidget) {
+		newTransform.position.z = value;
+	}
+	else if (senderWidget == rotationWidget) {
+		newTransform.rotation.z = value;
+	}
+	else if (senderWidget == scaleWidget) {
+		newTransform.scale.z = value;
+	}
+	entityIDs.push_back(m_globalInfo.currentEntityID);
+	newTransforms.push_back(newTransform);
+
+	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+		newTransform = m_globalInfo.entities[otherSelectedEntityID].transform;
+		if (senderWidget == positionWidget) {
+			newTransform.position.z = value;
+		}
+		else if (senderWidget == rotationWidget) {
+			newTransform.rotation.z = value;
+		}
+		else if (senderWidget == scaleWidget) {
+			newTransform.scale.z = value;
+		}
 		entityIDs.push_back(otherSelectedEntityID);
 		newTransforms.push_back(newTransform);
 	}

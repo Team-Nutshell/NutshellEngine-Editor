@@ -45,9 +45,20 @@ const nml::vec2& Vector2Widget::getValue() {
 
 void Vector2Widget::onEditingFinished() {
 	nml::vec2 newValue = nml::vec2(std::atof(xLineEdit->text().toStdString().c_str()), std::atof(yLineEdit->text().toStdString().c_str()));
+	QObject* senderWidget = sender();
+	if (senderWidget == xLineEdit) {
+		if (m_value.x != newValue.x) {
+			emit xChanged(newValue.x);
+		}
+	}
+	else if (senderWidget == yLineEdit) {
+		if (m_value.y != newValue.y) {
+			emit yChanged(newValue.y);
+		}
+	}
 	if (m_value != newValue) {
 		setValue(newValue);
 		emit valueChanged(m_value);
 	}
-	static_cast<QWidget*>(sender())->clearFocus();
+	static_cast<QWidget*>(senderWidget)->clearFocus();
 }
