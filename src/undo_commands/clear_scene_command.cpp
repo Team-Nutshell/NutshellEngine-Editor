@@ -24,7 +24,7 @@ void ClearSceneCommand::undo() {
 }
 
 void ClearSceneCommand::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);

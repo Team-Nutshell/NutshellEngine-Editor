@@ -15,7 +15,7 @@ OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::vector<Ent
 }
 
 void OpenSceneCommand::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);
@@ -38,7 +38,7 @@ void OpenSceneCommand::undo() {
 }
 
 void OpenSceneCommand::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 	while (!m_globalInfo.entities.empty()) {
 		EntityID destroyedEntityID = m_globalInfo.entities.begin()->first;
 		m_globalInfo.entities.erase(destroyedEntityID);

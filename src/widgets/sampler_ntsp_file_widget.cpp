@@ -277,7 +277,7 @@ ChangeSamplerNtspFile::ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp
 }
 
 void ChangeSamplerNtspFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_samplerNtspFileWidget->samplerNtsp = m_oldSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();
@@ -286,7 +286,7 @@ void ChangeSamplerNtspFile::undo() {
 }
 
 void ChangeSamplerNtspFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_samplerNtspFileWidget->samplerNtsp = m_newSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();

@@ -63,7 +63,7 @@ void FileSelectorWidget::onResetFilePathClicked() {
 void FileSelectorWidget::mousePressEvent(QMouseEvent* event) {
 	if (event->buttons() & Qt::RightButton) {
 		if (!m_path.empty() && !std::filesystem::path(m_path).is_absolute() && std::filesystem::exists(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory))) {
-			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory), NO_ENTITY, std::set<EntityID>()));
+			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory), NO_ENTITY, {}));
 		}
 	}
 	event->accept();

@@ -77,7 +77,7 @@ void AssetListMenu::newModel() {
 })";
 	newModelFile.close();
 
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newModelName + modelExtension, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newModelName + modelExtension, NO_ENTITY, {}));
 }
 
 void AssetListMenu::newImageSampler() {
@@ -102,7 +102,7 @@ void AssetListMenu::newImageSampler() {
 })";
 	newImageSamplerFile.close();
 
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newImageSamplerName + imageSamplerExtension, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newImageSamplerName + imageSamplerExtension, NO_ENTITY, {}));
 }
 
 void AssetListMenu::newMaterial() {
@@ -155,7 +155,7 @@ void AssetListMenu::newMaterial() {
 })";
 	newMaterialFile.close();
 
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, {}));
 }
 
 void AssetListMenu::newScene() {
@@ -172,7 +172,7 @@ void AssetListMenu::newScene() {
 })";
 	newSceneFile.close();
 
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, {}));
 }
 
 void AssetListMenu::copyPath() {

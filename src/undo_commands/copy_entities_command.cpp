@@ -43,10 +43,10 @@ void CopyEntitiesCommand::undo() {
 	}
 
 	if (clearAllSelection) {
-		emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 	}
 	else {
-		emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	}
 }
 
@@ -69,6 +69,6 @@ void CopyEntitiesCommand::redo() {
 			otherSelectedEntityIDs.insert(pastedEntity.entityID);
 		}
 	}
-	emit m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	m_globalInfo.mainWindow->entityPanel->entityList->updateSelection();
 }

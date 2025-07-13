@@ -35,7 +35,7 @@ void DeleteAssetWidget::onOkButtonClicked() {
 		else {
 			std::filesystem::remove(m_path);
 		}
-		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, "", NO_ENTITY, std::set<EntityID>()));
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, "", NO_ENTITY, {}));
 	}
 	close();
 }

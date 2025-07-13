@@ -139,7 +139,7 @@ ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop
 }
 
 void ChangeOptionsNtopFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_optionsNtopFileWidget->optionsNtop = m_oldOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
@@ -148,7 +148,7 @@ void ChangeOptionsNtopFile::undo() {
 }
 
 void ChangeOptionsNtopFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_optionsNtopFileWidget->optionsNtop = m_newOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();

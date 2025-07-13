@@ -20,7 +20,7 @@ void CreateEntitiesFromModelCommand::undo() {
 		m_globalInfo.entities.erase(entityID);
 		emit m_globalInfo.signalEmitter.destroyEntitySignal(entityID);
 	}
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 }
 
 void CreateEntitiesFromModelCommand::redo() {

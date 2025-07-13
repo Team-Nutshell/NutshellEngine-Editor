@@ -431,7 +431,7 @@ ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialN
 }
 
 void ChangeMaterialNtmlFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_materialNtmlFileWidget->materialNtml = m_oldMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
@@ -440,7 +440,7 @@ void ChangeMaterialNtmlFile::undo() {
 }
 
 void ChangeMaterialNtmlFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, std::set<EntityID>()));
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
 
 	m_materialNtmlFileWidget->materialNtml = m_newMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
