@@ -1,4 +1,5 @@
 #include "create_entity_command.h"
+#include "select_asset_entities_command.h"
 
 CreateEntityCommand::CreateEntityCommand(GlobalInfo& globalInfo, const std::string& name) : m_globalInfo(globalInfo) {
 	m_entityID = NO_ENTITY;
@@ -18,6 +19,7 @@ CreateEntityCommand::CreateEntityCommand(GlobalInfo& globalInfo, const std::stri
 void CreateEntityCommand::undo() {
 	m_globalInfo.entities.erase(m_entityID);
 	emit m_globalInfo.signalEmitter.destroyEntitySignal(m_entityID);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 }
 
 void CreateEntityCommand::redo() {
@@ -32,4 +34,5 @@ void CreateEntityCommand::redo() {
 	newEntity.name = m_entityName;
 	m_globalInfo.entities[m_entityID] = newEntity;
 	emit m_globalInfo.signalEmitter.createEntitySignal(m_entityID);
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", m_entityID, {}));
 }
