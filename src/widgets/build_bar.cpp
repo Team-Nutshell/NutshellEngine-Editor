@@ -20,6 +20,79 @@
 #endif
 #include <cctype>
 
+#if defined(NTSHENGN_OS_WINDOWS)
+// https://learn.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)
+#pragma pack(push)
+#pragma pack(2)
+struct GRPICONDIRENTRY {
+	BYTE bWidth;
+	BYTE bHeight;
+	BYTE bColorCount;
+	BYTE bReserved;
+	WORD wPlanes;
+	WORD wBitCount;
+	DWORD dwBytesInRes;
+	WORD nID;
+};
+
+struct GRPICONDIR {
+	WORD idReserved;
+	WORD idType;
+	WORD idCount;
+};
+#pragma pack(pop)
+
+struct IcoFile {
+	void* iconDir;
+	std::vector<std::pair<WORD, std::vector<char>>> icons;
+};
+
+IcoFile readIco(const std::string& icoPath) {
+	IcoFile icoFile;
+
+	GRPICONDIR iconDir;
+	std::ifstream file(icoPath, std::ios::binary);
+	file.read(reinterpret_cast<char*>(&iconDir.idReserved), sizeof(WORD));
+	file.read(reinterpret_cast<char*>(&iconDir.idType), sizeof(WORD));
+	file.read(reinterpret_cast<char*>(&iconDir.idCount), sizeof(WORD));
+	std::vector<GRPICONDIRENTRY> iconDirEntries(iconDir.idCount);
+	icoFile.icons.resize(iconDir.idCount);
+	size_t cursorPosition = file.tellg();
+	for (WORD i = 0; i < iconDir.idCount; i++) {
+		file.seekg(cursorPosition);
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].bWidth), sizeof(BYTE));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].bHeight), sizeof(BYTE));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].bColorCount), sizeof(BYTE));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].bReserved), sizeof(BYTE));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].wPlanes), sizeof(WORD));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].wBitCount), sizeof(WORD));
+		file.read(reinterpret_cast<char*>(&iconDirEntries[i].dwBytesInRes), sizeof(DWORD));
+		iconDirEntries[i].nID = i + 101;
+		icoFile.icons[i].first = iconDirEntries[i].nID;
+		icoFile.icons[i].second.resize(iconDirEntries[i].dwBytesInRes);
+
+		DWORD iconOffset = 0;
+		file.read(reinterpret_cast<char*>(&iconOffset), sizeof(DWORD));
+
+		cursorPosition = file.tellg();
+		file.seekg(iconOffset);
+		file.read(icoFile.icons[i].second.data(), iconDirEntries[i].dwBytesInRes);
+	}
+
+	icoFile.iconDir = malloc(sizeof(GRPICONDIR) + (sizeof(GRPICONDIRENTRY) * iconDir.idCount));
+	memcpy(icoFile.iconDir, &iconDir, sizeof(GRPICONDIR));
+	memcpy(reinterpret_cast<char*>(icoFile.iconDir) + sizeof(GRPICONDIR), iconDirEntries.data(), sizeof(GRPICONDIRENTRY) * iconDir.idCount);
+
+	return icoFile;
+}
+
+void freeIco(IcoFile& ico) {
+	if (ico.iconDir) {
+		free(ico.iconDir);
+	}
+}
+#endif
+
 BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QHBoxLayout());
 	layout()->setContentsMargins(0, 5, 0, 0);
@@ -452,7 +525,7 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
-		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_no_build_to_export"));
+		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_no_build_to_export"));
 
 		return;
 	}
@@ -476,6 +549,9 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
+	// Icon path
+	std::string icoPath = tmpExportDirectory + "/assets/icon.ico";
+
 #if defined(NTSHENGN_OS_WINDOWS)
 	// Remove some files
 	const std::string scriptsExp = tmpExportDirectory + "/NutshellEngine-Scripts.exp";
@@ -497,6 +573,28 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	// Rename executable
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine.exe", tmpExportDirectory + "/" + projectNameNoSpace + ".exe");
 
+	// Update executable icon
+	if (std::filesystem::exists(icoPath)) {
+		std::string exportedExecutablePath = tmpExportDirectory + "/" + projectNameNoSpace + ".exe";
+		HANDLE executableHandle = BeginUpdateResourceA(exportedExecutablePath.c_str(), FALSE);
+		IcoFile ico = readIco(icoPath);
+		if (!UpdateResource(executableHandle, RT_GROUP_ICON, L"MAINICON", MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), ico.iconDir, static_cast<DWORD>(sizeof(GRPICONDIR) + (sizeof(GRPICONDIRENTRY) * ico.icons.size())))) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_export_cannot_update_icon"));
+		}
+		for (size_t i = 0; i < ico.icons.size(); i++) {
+			if (!UpdateResource(executableHandle, RT_ICON, MAKEINTRESOURCE(ico.icons[i].first), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), ico.icons[i].second.data(), static_cast<DWORD>(ico.icons[i].second.size()))) {
+				m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_export_cannot_update_icon"));
+			}
+		}
+		if (!EndUpdateResourceA(executableHandle, FALSE)) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_export_cannot_update_icon"));
+		}
+		freeIco(ico);
+
+		std::filesystem::remove(icoPath);
+	}
+
+	// Compress folder
 	HANDLE pipeRead = NULL;
 	HANDLE pipeWrite = NULL;
 	DWORD exitCode;
@@ -522,7 +620,7 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
 	const std::string exportCommand = "powershell Compress-Archive -Path export_tmp/" + projectNameNoSpace + " -DestinationPath " + exportedFullPath + " -Force";
-	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_launching_export_command", { exportCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(exportCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
@@ -569,9 +667,15 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 
 	// Rename executable
 	std::filesystem::rename(tmpExportDirectory + "/NutshellEngine", tmpExportDirectory + "/" + projectNameNoSpace);
+
+	// Remove icon from assets
+	if (std::filesystem::exists(icoPath)) {
+		std::filesystem::remove(icoPath);
+	}
 	
+	// Compress folder
 	const std::string exportCommand = "tar -zcvf " + exportedFullPath + " " + projectNameNoSpace;
-	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_no_build_to_export", { exportCommand }));
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_no_build_to_export", { exportCommand }));
 	FILE* fp = popen(exportCommand.c_str(), "r");
 	if (fp == NULL) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_export_cannot_export"));
