@@ -96,50 +96,55 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	orthographicCameraToZPKeySelect->layout()->setAlignment(orthographicCameraToZPKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererKeyGridLayout->addWidget(orthographicCameraToZPKeySelect, 5, 1);
 
+	QKeySequence cameraGoToEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.cameraGoToEntityKey);
+	cameraGoToEntityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_camera_go_to_entity"), cameraGoToEntityKeySequence.toString().toStdString());
+	cameraGoToEntityKeySelect->layout()->setAlignment(cameraGoToEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
+	rendererKeyGridLayout->addWidget(cameraGoToEntityKeySelect, 6, 1);
+
 	QKeySequence translateEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.translateEntityKey);
 	translateEntityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_translate_entity"), translateEntityKeySequence.toString().toStdString());
 	translateEntityKeySelect->layout()->setAlignment(translateEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(translateEntityKeySelect, 6, 1);
+	rendererKeyGridLayout->addWidget(translateEntityKeySelect, 7, 1);
 
 	QKeySequence rotateEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.rotateEntityKey);
 	rotateEntityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_rotate_entity"), rotateEntityKeySequence.toString().toStdString());
 	rotateEntityKeySelect->layout()->setAlignment(rotateEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(rotateEntityKeySelect, 7, 1);
+	rendererKeyGridLayout->addWidget(rotateEntityKeySelect, 0, 2);
 
 	QKeySequence scaleEntityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.scaleEntityKey);
 	scaleEntityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_scale_entity"), scaleEntityKeySequence.toString().toStdString());
 	scaleEntityKeySelect->layout()->setAlignment(scaleEntityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(scaleEntityKeySelect, 0, 2);
+	rendererKeyGridLayout->addWidget(scaleEntityKeySelect, 1, 2);
 
 	QKeySequence toggleCurrentEntityVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCurrentEntityVisibilityKey);
 	toggleCurrentEntityVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_current_entity_visibility"), toggleCurrentEntityVisibilityKeySequence.toString().toStdString());
 	toggleCurrentEntityVisibilityKeySelect->layout()->setAlignment(toggleCurrentEntityVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleCurrentEntityVisibilityKeySelect, 1, 2);
+	rendererKeyGridLayout->addWidget(toggleCurrentEntityVisibilityKeySelect, 2, 2);
 
 	QKeySequence toggleGridVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
 	toggleGridVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_grid_visibility"), toggleGridVisibilityKeySequence.toString().toStdString());
 	toggleGridVisibilityKeySelect->layout()->setAlignment(toggleGridVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleGridVisibilityKeySelect, 2, 2);
+	rendererKeyGridLayout->addWidget(toggleGridVisibilityKeySelect, 3, 2);
 
 	QKeySequence toggleBackfaceCullingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
 	toggleBackfaceCullingKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_backface_culling"), toggleBackfaceCullingKeySequence.toString().toStdString());
 	toggleBackfaceCullingKeySelect->layout()->setAlignment(toggleBackfaceCullingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleBackfaceCullingKeySelect, 3, 2);
+	rendererKeyGridLayout->addWidget(toggleBackfaceCullingKeySelect, 4, 2);
 
 	QKeySequence toggleCamerasVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 	toggleCamerasVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_cameras_visibility"), toggleCamerasVisibilityKeySequence.toString().toStdString());
 	toggleCamerasVisibilityKeySelect->layout()->setAlignment(toggleCamerasVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleCamerasVisibilityKeySelect, 4, 2);
+	rendererKeyGridLayout->addWidget(toggleCamerasVisibilityKeySelect, 5, 2);
 
 	QKeySequence toggleLightingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 	toggleLightingKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_lighting"), toggleLightingKeySequence.toString().toStdString());
 	toggleLightingKeySelect->layout()->setAlignment(toggleLightingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleLightingKeySelect, 5, 2);
+	rendererKeyGridLayout->addWidget(toggleLightingKeySelect, 6, 2);
 
 	QKeySequence toggleCollidersVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 	toggleCollidersVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_colliders_visibility"), toggleCollidersVisibilityKeySequence.toString().toStdString());
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
+	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 7, 2);
 
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
@@ -277,6 +282,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(orthographicCameraToYPKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(orthographicCameraToZMKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(orthographicCameraToZPKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
+	connect(cameraGoToEntityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(translateEntityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(rotateEntityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(scaleEntityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
@@ -466,6 +472,17 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 		else {
 			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_orthographic_camera_zp"), key }));
 			senderWidget->setKey(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
+		}
+	}
+	else if (senderWidget == cameraGoToEntityKeySelect) {
+		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
+			m_globalInfo.editorParameters.renderer.cameraGoToEntityKey = sequence[0].key();
+			m_globalInfo.mainWindow->viewMenu->cameraGoToEntityAction->setShortcut(m_globalInfo.editorParameters.renderer.cameraGoToEntityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_camera_go_to_entity"), key }));
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.cameraGoToEntityKey);
 		}
 	}
 	else if (senderWidget == translateEntityKeySelect) {

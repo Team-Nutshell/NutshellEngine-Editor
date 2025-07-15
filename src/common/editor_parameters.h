@@ -19,6 +19,7 @@ struct RendererParameters {
 	Qt::Key orthographicCameraToYPKey = Qt::Key_7;
 	Qt::Key orthographicCameraToZMKey = Qt::Key_8;
 	Qt::Key orthographicCameraToZPKey = Qt::Key_2;
+	Qt::Key cameraGoToEntityKey = Qt::Key_Period;
 	Qt::Key translateEntityKey = Qt::Key_T;
 	Qt::Key rotateEntityKey = Qt::Key_R;
 	Qt::Key scaleEntityKey = Qt::Key_E;

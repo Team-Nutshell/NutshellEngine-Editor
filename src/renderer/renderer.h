@@ -60,6 +60,7 @@ private slots:
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 	void onCameraReset();
 	void onOrthographicCameraToAxisChanged(const nml::vec3& axis);
+	void onCameraGoToEntity(EntityID entityID);
 
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);

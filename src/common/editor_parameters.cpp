@@ -105,6 +105,12 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 				renderer.orthographicCameraToZPKey = sequence[0].key();
 			}
 		}
+		if (j["renderer"].contains("cameraGoToEntityKey")) {
+			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["cameraGoToEntityKey"]));
+			if (!sequence.isEmpty()) {
+				renderer.cameraGoToEntityKey = sequence[0].key();
+			}
+		}
 		if (j["renderer"].contains("translateEntityKey")) {
 			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["translateEntityKey"]));
 			if (!sequence.isEmpty()) {
@@ -260,6 +266,7 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["orthographicCameraToYPKey"] = QKeySequence(renderer.orthographicCameraToYPKey).toString().toStdString();
 	j["renderer"]["orthographicCameraToZMKey"] = QKeySequence(renderer.orthographicCameraToZMKey).toString().toStdString();
 	j["renderer"]["orthographicCameraToZPKey"] = QKeySequence(renderer.orthographicCameraToZPKey).toString().toStdString();
+	j["renderer"]["cameraGoToEntityKey"] = QKeySequence(renderer.cameraGoToEntityKey).toString().toStdString();
 	j["renderer"]["translateEntityKey"] = QKeySequence(renderer.translateEntityKey).toString().toStdString();
 	j["renderer"]["rotateEntityKey"] = QKeySequence(renderer.rotateEntityKey).toString().toStdString();
 	j["renderer"]["scaleEntityKey"] = QKeySequence(renderer.scaleEntityKey).toString().toStdString();

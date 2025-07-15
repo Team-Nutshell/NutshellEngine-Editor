@@ -23,6 +23,7 @@ private:
 	void orthographicCameraToYP();
 	void orthographicCameraToZM();
 	void orthographicCameraToZP();
+	void cameraGoToEntity();
 
 	void setGridVisibility(bool showGrid);
 	void setBackfaceCulling(bool backfaceCullingEnabled);
@@ -57,4 +58,5 @@ public:
 	QAction* orthographicCameraToYPAction;
 	QAction* orthographicCameraToZMAction;
 	QAction* orthographicCameraToZPAction;
+	QAction* cameraGoToEntityAction;
 };

@@ -52,6 +52,7 @@ public:
 	KeySelectWidget* orthographicCameraToYPKeySelect;
 	KeySelectWidget* orthographicCameraToZMKeySelect;
 	KeySelectWidget* orthographicCameraToZPKeySelect;
+	KeySelectWidget* cameraGoToEntityKeySelect;
 	KeySelectWidget* translateEntityKeySelect;
 	KeySelectWidget* rotateEntityKeySelect;
 	KeySelectWidget* scaleEntityKeySelect;

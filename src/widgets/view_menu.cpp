@@ -33,6 +33,8 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	orthographicCameraToZMAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZMKey);
 	orthographicCameraToZPAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_camera_orthographic_zp")), this, &ViewMenu::orthographicCameraToZP);
 	orthographicCameraToZPAction->setShortcut(m_globalInfo.editorParameters.renderer.orthographicCameraToZPKey);
+	cameraGoToEntityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_camera_go_to_entity")), this, &ViewMenu::cameraGoToEntity);
+	cameraGoToEntityAction->setShortcut(m_globalInfo.editorParameters.renderer.cameraGoToEntityKey);
 
 	setGridVisibility(m_globalInfo.editorParameters.renderer.showGrid);
 	setBackfaceCulling(m_globalInfo.editorParameters.renderer.enableBackfaceCulling);
@@ -132,6 +134,12 @@ void ViewMenu::orthographicCameraToZP() {
 		emit m_globalInfo.signalEmitter.switchCameraProjectionSignal(true);
 	}
 	emit m_globalInfo.signalEmitter.orthographicCameraToAxisSignal(nml::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void ViewMenu::cameraGoToEntity() {
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		emit m_globalInfo.signalEmitter.cameraGoToEntitySignal(m_globalInfo.currentEntityID);
+	}
 }
 
 void ViewMenu::save() {
