@@ -32,8 +32,6 @@ RecentProjectsWidget::RecentProjectsWidget(GlobalInfo& globalInfo) : m_globalInf
 	recentProjectsFile = std::fstream("recent_projects.json", std::ios::in);
 	nlohmann::json j = nlohmann::json::parse(recentProjectsFile);
 
-	recentProjectsFile = std::fstream("recent_projects.json", std::ios::out | std::ios::trunc);
-
 	if (j.contains("projects")) {
 		for (size_t i = 0; i < j["projects"].size(); i++) {
 			const auto& project = j["projects"][i];
@@ -50,6 +48,7 @@ RecentProjectsWidget::RecentProjectsWidget(GlobalInfo& globalInfo) : m_globalInf
 		}
 	}
 
+	recentProjectsFile = std::fstream("recent_projects.json", std::ios::out | std::ios::trunc);
 	recentProjectsFile << j.dump(1, '\t');
 }
 
@@ -76,7 +75,6 @@ void RecentProjectsWidget::onRemoveRecentProjectButtonClicked() {
 		return;
 	}
 
-	recentProjectsFile = std::fstream("recent_projects.json", std::ios::out | std::ios::trunc);
 	if (j.contains("projects")) {
 		for (size_t i = 0; i < j["projects"].size(); i++) {
 			const auto& project = j["projects"][i];
@@ -86,6 +84,7 @@ void RecentProjectsWidget::onRemoveRecentProjectButtonClicked() {
 		}
 	}
 
+	recentProjectsFile = std::fstream("recent_projects.json", std::ios::out | std::ios::trunc);
 	recentProjectsFile << j.dump(1, '\t');
 
 	projectsWidget->layout()->takeAt(projectsWidget->layout()->indexOf(senderWidget));
