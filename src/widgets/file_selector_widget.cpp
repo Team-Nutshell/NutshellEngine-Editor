@@ -12,6 +12,9 @@ FileSelectorWidget::FileSelectorWidget(GlobalInfo& globalInfo, const std::string
 	filePathLabel = new QLabel(QString::fromStdString(labelText));
 	layout()->addWidget(filePathLabel);
 	std::string filePath = defaultPath;
+	if (filePath.empty() && std::filesystem::exists("assets")) {
+		filePath = "assets";
+	}
 	if (!std::filesystem::path(filePath).is_absolute()) {
 		filePath = AssetHelper::relativeToAbsolute(filePath, m_globalInfo.projectDirectory);
 	}
