@@ -2155,7 +2155,9 @@ void Renderer::keyReleaseEvent(QKeyEvent* event) {
 void Renderer::mousePressEvent(QMouseEvent* event) {
 	if (!anyEntityTransformMode()) {
 		if (event->button() == Qt::LeftButton) {
-			m_doPicking = true;
+			if (!m_moveCameraButtonPressed) {
+				m_doPicking = true;
+			}
 		}
 		else if (event->button() == Qt::RightButton) {
 			if (m_gizmoAxis == GizmoAxis::None) {
@@ -2228,28 +2230,30 @@ void Renderer::mouseReleaseEvent(QMouseEvent* event) {
 void Renderer::mouseMoveEvent(QMouseEvent* event) {
 	if (!anyEntityTransformMode()) {
 		if (event->buttons() & Qt::LeftButton) {
-			if (m_gizmoAxis != GizmoAxis::None) {
-				nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
-				std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
-				selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+			if (!m_moveCameraButtonPressed) {
+				if (m_gizmoAxis != GizmoAxis::None) {
+					nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(event->pos().x()), static_cast<float>(height()) - static_cast<float>(event->pos().y()));
+					std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+					selectedEntityIDs.insert(m_globalInfo.currentEntityID);
 
-				if (m_gizmoMode == GizmoMode::Translate) {
-					calculateTranslation(selectedEntityIDs, mouseCursorCurrentPosition);
-				}
-				else if (m_gizmoMode == GizmoMode::Rotate) {
-					calculateRotation(selectedEntityIDs, mouseCursorCurrentPosition);
-				}
-				else if (m_gizmoMode == GizmoMode::Scale) {
-					calculateScale(selectedEntityIDs, mouseCursorCurrentPosition);
-				}
-				m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
+					if (m_gizmoMode == GizmoMode::Translate) {
+						calculateTranslation(selectedEntityIDs, mouseCursorCurrentPosition);
+					}
+					else if (m_gizmoMode == GizmoMode::Rotate) {
+						calculateRotation(selectedEntityIDs, mouseCursorCurrentPosition);
+					}
+					else if (m_gizmoMode == GizmoMode::Scale) {
+						calculateScale(selectedEntityIDs, mouseCursorCurrentPosition);
+					}
+					m_mouseCursorPreviousPosition = mouseCursorCurrentPosition;
 
-				// Update Transform Widget
-				MainWindow* mainWindow = m_globalInfo.mainWindow;
-				mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
+					// Update Transform Widget
+					MainWindow* mainWindow = m_globalInfo.mainWindow;
+					mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_entityMoveTransforms[m_globalInfo.currentEntityID]);
+				}
 			}
 		}
-		else if (event->buttons() & Qt::RightButton) {
+		if (event->buttons() & Qt::RightButton) {
 			if (m_moveCameraButtonPressed) {
 				if (!m_mouseMoveFlag) {
 					nml::vec2 mouseCursorCurrentPosition = nml::vec2(static_cast<float>(QCursor::pos().x()), static_cast<float>(QCursor::pos().y()));
