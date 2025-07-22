@@ -48,6 +48,16 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &AssetList::onLineEditClose);
 }
 
+void AssetList::openPath(const std::string& path) {
+	std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
+	size_t slashPosition = path.find('/');
+	std::string firstDirectory = relativePath.substr(0, slashPosition);
+	std::string pathDirectory = m_globalInfo.projectDirectory + "/" + std::filesystem::path(relativePath).parent_path().string();
+	if (!relativePath.empty() && (firstDirectory == "assets") && std::filesystem::exists(pathDirectory)) {
+		enterDirectory(pathDirectory);
+	}
+}
+
 void AssetList::deleteAsset(const std::string& path) {
 	DeleteAssetWidget* deleteAssetWidget = new DeleteAssetWidget(m_globalInfo, path);
 	deleteAssetWidget->show();

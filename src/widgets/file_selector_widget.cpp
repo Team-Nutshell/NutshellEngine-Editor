@@ -1,4 +1,5 @@
 #include "file_selector_widget.h"
+#include "main_window.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QHBoxLayout>
@@ -67,6 +68,11 @@ void FileSelectorWidget::mousePressEvent(QMouseEvent* event) {
 	if (event->buttons() & Qt::RightButton) {
 		if (!m_path.empty() && !std::filesystem::path(m_path).is_absolute() && std::filesystem::exists(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory))) {
 			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory), NO_ENTITY, {}));
+		}
+	}
+	else if (event->buttons() & Qt::MiddleButton) {
+		if (!m_path.empty() && !std::filesystem::path(m_path).is_absolute() && std::filesystem::exists(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory))) {
+			m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->openPath(m_path);
 		}
 	}
 	event->accept();
