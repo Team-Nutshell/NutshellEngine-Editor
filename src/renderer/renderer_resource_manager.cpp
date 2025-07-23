@@ -239,6 +239,11 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.sphere.radius = 0.0f;
 	mesh.capsule.radius = 0.0f;
 
+	std::array<std::pair<float, nml::vec3>, 3> eigenSorted = eigen;
+	std::sort(eigenSorted.begin(), eigenSorted.end(), [](const std::pair<float, nml::vec3>& a, const std::pair<float, nml::vec3>& b) {
+		return a.first > b.first;
+		});
+
 	float segmentLengthMax = 0.0f;
 	for (const nml::vec3& position : uniquePositions) {
 		const nml::vec3 positionMinusCenter = position - center;
@@ -266,12 +271,12 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 		}
 
 		// Capsule
-		const float segmentLength = std::abs(nml::dot(eigen[0].second, positionMinusCenter));
+		const float segmentLength = std::abs(nml::dot(eigenSorted[0].second, positionMinusCenter));
 		if (segmentLength > segmentLengthMax) {
 			segmentLengthMax = segmentLength;
 		}
 
-		const float radius = std::abs(nml::dot(eigen[1].second, positionMinusCenter));
+		const float radius = std::abs(nml::dot(eigenSorted[1].second, positionMinusCenter));
 		if (radius > mesh.capsule.radius) {
 			mesh.capsule.radius = radius;
 		}
@@ -288,8 +293,8 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.sphere.radius = std::sqrt(mesh.sphere.radius);
 
 	// Capsule
-	mesh.capsule.base = center - (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
-	mesh.capsule.tip = center + (eigen[0].second * (segmentLengthMax - mesh.capsule.radius));
+	mesh.capsule.base = center - (eigenSorted[0].second * (segmentLengthMax - mesh.capsule.radius));
+	mesh.capsule.tip = center + (eigenSorted[0].second * (segmentLengthMax - mesh.capsule.radius));
 
 	mesh.collidersCalculated = true;
 }
