@@ -657,6 +657,30 @@ namespace NtshEngn {
 			return windowModule->getWindowDroppedFiles(windowID);
 		}
 
+		void setWindowFocus(WindowID windowID = NTSHENGN_WINDOW_UNKNOWN) {
+			if (!windowModule) {
+				return;
+			}
+
+			if (windowID == NTSHENGN_WINDOW_UNKNOWN) {
+				windowID = windowModule->getMainWindowID();
+			}
+
+			windowModule->setWindowFocus(windowID);
+		}
+
+		bool isWindowFocused(WindowID windowID = NTSHENGN_WINDOW_UNKNOWN) {
+			if (!windowModule) {
+				return false;
+			}
+
+			if (windowID == NTSHENGN_WINDOW_UNKNOWN) {
+				windowID = windowModule->getMainWindowID();
+			}
+
+			return windowModule->isWindowFocused(windowID);
+		}
+
 		void setWindowTitle(const std::string& title, WindowID windowID = NTSHENGN_WINDOW_UNKNOWN) {
 			if (!windowModule) {
 				return;

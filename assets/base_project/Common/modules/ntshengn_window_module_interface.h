@@ -63,6 +63,11 @@ namespace NtshEngn {
 		// Returns the path to the files dropped on the window with identifier windowID
 		virtual std::vector<std::string> getWindowDroppedFiles(WindowID windowID) = 0;
 
+		// Focuses the window with identified windowID
+		virtual void setWindowFocus(WindowID windowID) = 0;
+		// Returns true if the window with identifier windowID is focused, else, returns false
+		virtual bool isWindowFocused(WindowID windowID) = 0;
+
 		// Polls events of the windows
 		virtual void pollEvents() = 0;
 
