@@ -1,5 +1,5 @@
 #include "entity_info_persistence_widget.h"
-#include "../undo_commands/change_entity_persistence_command.h"
+#include "../undo_commands/change_entities_persistence_command.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSignalBlocker>
@@ -27,7 +27,11 @@ void EntityInfoPersistenceWidget::onEntitySelected() {
 }
 
 void EntityInfoPersistenceWidget::onStateChanged(int state) {
-	m_globalInfo.actionUndoStack->push(new ChangeEntityPersistenceCommand(m_globalInfo, m_globalInfo.currentEntityID, Qt::CheckState(state) == Qt::CheckState::Checked));
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		std::vector<EntityID> entityIDs{ m_globalInfo.currentEntityID };
+		std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entityIDs));
+		m_globalInfo.actionUndoStack->push(new ChangeEntitiesPersistenceCommand(m_globalInfo, entityIDs, Qt::CheckState(state) == Qt::CheckState::Checked));
+	}
 }
 
 void EntityInfoPersistenceWidget::onEntityPersistenceChanged(EntityID entityID, bool isPersistent) {

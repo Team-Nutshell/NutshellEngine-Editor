@@ -80,8 +80,8 @@ set(UNDO_COMMANDS_SOURCES
 	src/undo_commands/add_entity_component_command.cpp
 	src/undo_commands/change_entities_component_command.cpp
 	src/undo_commands/change_entities_entity_groups_command.cpp
+	src/undo_commands/change_entities_persistence_command.cpp
 	src/undo_commands/change_entity_name_command.cpp
-	src/undo_commands/change_entity_persistence_command.cpp
 	src/undo_commands/clear_scene_command.cpp
 	src/undo_commands/copy_entities_command.cpp
 	src/undo_commands/create_entities_from_model_command.cpp
@@ -94,8 +94,8 @@ set(UNDO_COMMANDS_HEADERS
 	src/undo_commands/add_entity_component_command.h
 	src/undo_commands/change_entities_component_command.h
 	src/undo_commands/change_entities_entity_groups_command.h
+	src/undo_commands/change_entities_persistence_command.h
 	src/undo_commands/change_entity_name_command.h
-	src/undo_commands/change_entity_persistence_command.h
 	src/undo_commands/clear_scene_command.h
 	src/undo_commands/copy_entities_command.h
 	src/undo_commands/create_entities_from_model_command.h
