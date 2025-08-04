@@ -1,5 +1,5 @@
 #include "entity_info_name_widget.h"
-#include "../undo_commands/change_entity_name_command.h"
+#include "../undo_commands/change_entities_name_command.h"
 
 EntityInfoNameWidget::EntityInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(this, &QLineEdit::editingFinished, this, &EntityInfoNameWidget::onEditingFinished);
@@ -17,7 +17,9 @@ void EntityInfoNameWidget::onEntitySelected() {
 void EntityInfoNameWidget::onEditingFinished() {
 	if (m_previousName != text().toStdString()) {
 		m_previousName = text().toStdString();
-		m_globalInfo.actionUndoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, text().toStdString()));
+		std::vector<EntityID> entityIDs { m_globalInfo.currentEntityID };
+		std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entityIDs));
+		m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDs, text().toStdString()));
 	}
 }
 

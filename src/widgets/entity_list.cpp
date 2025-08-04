@@ -2,7 +2,7 @@
 #include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/destroy_entities_command.h"
-#include "../undo_commands/change_entity_name_command.h"
+#include "../undo_commands/change_entities_name_command.h"
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QSizePolicy>
 #include <QLabel>
@@ -291,5 +291,7 @@ void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEd
 		return;
 	}
 
-	m_globalInfo.actionUndoStack->push(new ChangeEntityNameCommand(m_globalInfo, m_globalInfo.currentEntityID, newEntityName));
+	std::vector<EntityID> entityIDs{ m_globalInfo.currentEntityID };
+	std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entityIDs));
+	m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDs, newEntityName));
 }
