@@ -8,6 +8,7 @@ namespace NtshEngn {
 		Window,
 		Audio,
 		AssetLoader,
+		Platform,
 		Unknown
 	};
 

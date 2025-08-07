@@ -11,6 +11,10 @@ namespace NtshEngn {
 		ModuleInterface(const ModuleType type, const std::string& name) : m_type(type), m_name(name) {}
 		virtual ~ModuleInterface() {}
 
+		virtual void init() = 0;
+		virtual void update(float dt) = 0;
+		virtual void destroy() = 0;
+
 		const ModuleType getType() const {
 			return m_type;
 		}

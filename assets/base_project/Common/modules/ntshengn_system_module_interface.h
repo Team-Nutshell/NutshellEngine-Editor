@@ -18,10 +18,6 @@ namespace NtshEngn {
 		SystemModuleInterface(const ModuleType type, const std::string& name) : ModuleInterface(type, name) {}
 		virtual ~SystemModuleInterface() {}
 
-		virtual void init() = 0;
-		virtual void update(float dt) = 0;
-		virtual void destroy() = 0;
-
 		virtual const ComponentMask getComponentMask() const {
 			return ComponentMask();
 		}
