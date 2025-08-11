@@ -22,9 +22,6 @@ namespace NtshEngn {
 		// Number of bits per sample
 		uint8_t bitsPerSample = 0;
 
-		// Size of the data
-		size_t size = 0;
-
 		// Data
 		std::vector<uint8_t> data;
 	};

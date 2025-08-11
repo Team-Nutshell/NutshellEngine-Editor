@@ -8,6 +8,8 @@ namespace NtshEngn {
 		PlatformModuleInterface() {}
 		PlatformModuleInterface(const std::string& name) : ModuleInterface(ModuleType::AssetLoader, name) {}
 		virtual ~PlatformModuleInterface() {}
+
+		// 
 	};
 
 }

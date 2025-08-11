@@ -14,10 +14,10 @@ namespace NtshEngn {
 		// Loads the sound described in the sound parameter in the internal format and returns a unique identifier
 		virtual SoundID load(const Sound& sound) = 0;
 
-		// Plays the sound with identifier soundID at a certain gain and pitch and returns a unique identifier
-		virtual SoundSourceID playSound(SoundID soundID, float gain, float pitch) = 0;
-		// Plays the sound with identifier soundID at a specific position and at a certain gain and pitch and returns a unique identifier
-		virtual SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain, float pitch) = 0;
+		// Plays the sound with identifier soundID at a certain gain and pitch, looping or not, and returns a unique identifier
+		virtual SoundSourceID playSound(SoundID soundID, float gain, float pitch, bool looping) = 0;
+		// Plays the sound with identifier soundID at a specific position and at a certain gain and pitch, looping or not, and returns a unique identifier
+		virtual SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain, float pitch, bool looping) = 0;
 		// Pauses the sound with identifier soundSourceID
 		virtual void resumeSoundSource(SoundSourceID soundSourceID) = 0;
 		// Pauses the sound with identifier soundSourceID
@@ -44,6 +44,11 @@ namespace NtshEngn {
 		virtual void setSoundSourcePitch(SoundSourceID soundSourceID, float newPitch) = 0;
 		// Gets the pitch of the sound source with identifier soundSourceID
 		virtual float getSoundSourcePitch(SoundSourceID soundSourceID) = 0;
+
+		// If the looping parameter is true, makes the sound source with identifier soundSourceID looping, else, makes the sound source with identifier soundSourceID not looping
+		virtual void setSoundSourceLooping(SoundSourceID soundSourceID, bool looping) = 0;
+		// Returns true if the sound source with identifier soundSourceID is looping, else, returns false
+		virtual bool isSoundSourceLooping(SoundSourceID soundSourceID) = 0;
 	};
 
 }
