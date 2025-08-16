@@ -49,6 +49,8 @@ struct GlobalInfo {
 	Logger logger;
 	RendererResourceManager rendererResourceManager = RendererResourceManager(&localization, &logger);
 
+	uint32_t steamAppID = 0;
+
 	EntityID findEntityByName(const std::string& entityName) {
 		for (const auto& entity : entities) {
 			if (entity.second.name == entityName) {

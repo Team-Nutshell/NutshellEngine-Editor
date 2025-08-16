@@ -99,7 +99,7 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	layout()->setAlignment(Qt::AlignmentFlag::AlignCenter);
 	buildAndRunButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("header_project_build_and_run")));
 	layout()->addWidget(buildAndRunButton);
-	std::vector<std::string> buildTypeList{ "Debug", "Release" };
+	std::vector<std::string> buildTypeList{ "Debug", "Release", "Debug (Steam)", "Release (Steam)" };
 	buildTypeComboBox = new ComboBoxWidget(m_globalInfo, m_globalInfo.localization.getString("build_type"), buildTypeList);
 	layout()->addWidget(buildTypeComboBox);
 	exportButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("build_export")));
@@ -156,11 +156,29 @@ void BuildBar::launchExport() {
 bool BuildBar::build() {
 	generateScriptManager();
 
-	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
-	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build", { buildType }));
+	const std::string buildSelected = buildTypeComboBox->comboBox->currentText().toStdString();
+	const std::string buildType = buildSelected.substr(0, buildSelected.find('(') - 1);
+	std::string platform = "";
+	if (buildSelected.find('(') != std::string::npos) {
+		platform = buildSelected.substr(buildSelected.find('(') + 1, buildSelected.find(')') - (buildSelected.find('(') + 1));
+	}
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build", { buildSelected }));
+
+	if (platform == "Steam") {
+		if (m_globalInfo.steamAppID == 0) {
+			m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_missing_steam_appid", { m_globalInfo.localization.getString("header_project"), m_globalInfo.localization.getString("header_project_open_project_settings") }));
+
+			return false;
+		}
+	}
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build");
+	}
+
+	// Clear platform assets
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_appid.txt")) {
+		std::filesystem::remove(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_appid.txt");
 	}
 
 	// Clear assets directory
@@ -173,12 +191,20 @@ bool BuildBar::build() {
 		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/modules");
 	}
 
+	// Copy runtime
+	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build");
 
 	bool buildSuccess = true;
 #if defined(NTSHENGN_OS_WINDOWS)
+	// Clear platform assets
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_api64.dll")) {
+		std::filesystem::remove(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_api64.dll");
+	}
+
 	HANDLE pipeRead = NULL;
 	HANDLE pipeWrite = NULL;
 	DWORD exitCode;
@@ -269,7 +295,7 @@ bool BuildBar::build() {
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
 	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType;
-	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildSelected, cMakeBuildCommand }));
 	if (CreateProcessA(NULL, const_cast<char*>(cMakeBuildCommand.c_str()), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
@@ -309,10 +335,22 @@ bool BuildBar::build() {
 
 	if (buildSuccess) {
 		CloseHandle(pipeRead);
+
+		if (platform == "Steam") {
+			std::filesystem::copy("assets/runtime/platforms/Steam/steam_api64.dll", m_globalInfo.projectDirectory + "/editor_build/" + buildType);
+			std::filesystem::copy("assets/runtime/platforms/Steam/" + buildType + "/modules/NutshellEngine-PlatformModule-Steam.dll", m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/modules");
+			std::ofstream steamAppIdTxt(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_appid.txt");
+			steamAppIdTxt << m_globalInfo.steamAppID;
+		}
 	}
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 	if (!std::filesystem::exists(buildType)) {
 		std::filesystem::create_directory(buildType);
+	}
+
+	// Clear platform assets
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/libsteam_api.so")) {
+		std::filesystem::remove(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/libsteam_api.so");
 	}
 
 	// CMake
@@ -353,7 +391,7 @@ bool BuildBar::build() {
 
 	// Build
 	const std::string cMakeBuildCommand = m_globalInfo.editorParameters.build.cMakePath + " --build . --config " + buildType + " 2>&1";
-	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildType, cMakeBuildCommand }));
+	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_build_command", { buildSelected, cMakeBuildCommand }));
 	fp = popen(cMakeBuildCommand.c_str(), "r");
 	if (fp == NULL) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_build_cmake_cannot_launch"));
@@ -388,6 +426,12 @@ bool BuildBar::build() {
 		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory);
 	}
 	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/assets", m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+	if (platform == "Steam") {
+		std::filesystem::copy("assets/runtime/platforms/Steam/libsteam_api.so", m_globalInfo.projectDirectory + "/editor_build/" + buildPath);
+		std::filesystem::copy("assets/runtime/platforms/Steam/" + buildType + "/modules/libNutshellEngine-PlatformModule-Steam.so", m_globalInfo.projectDirectory + "/editor_build/" + buildPath + "/modules");
+		std::ofstream steamAppIdTxt(m_globalInfo.projectDirectory + "/editor_build/" + buildPath + "/steam_appid.txt");
+		steamAppIdTxt << m_globalInfo.steamAppID;
+	}
 
 	// Reset current path
 	std::filesystem::current_path(previousCurrentPath);
@@ -397,7 +441,16 @@ bool BuildBar::build() {
 }
 
 void BuildBar::run() {
-	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
+	const std::string buildSelected = buildTypeComboBox->comboBox->currentText().toStdString();
+	const std::string buildType = buildSelected.substr(0, buildSelected.find('(') - 1);
+	std::string platform = "";
+	if (buildSelected.find('(') != std::string::npos) {
+		platform = buildSelected.substr(buildSelected.find('(') + 1, buildSelected.find(')') - (buildSelected.find('(') + 1));
+	}
+	std::string buildPath = buildType;
+	if (!platform.empty()) {
+		buildPath = buildType + "_" + platform;
+	}
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run"));
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
@@ -406,9 +459,6 @@ void BuildBar::run() {
 
 		return;
 	}
-
-	// Copy runtime
-	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
 	// Set current path
 	const std::string previousCurrentPath = std::filesystem::current_path().string();
@@ -520,7 +570,16 @@ void BuildBar::run() {
 }
 
 void BuildBar::exportApplication(const std::string& exportDirectory) {
-	const std::string buildType = buildTypeComboBox->comboBox->currentText().toStdString();
+	const std::string buildSelected = buildTypeComboBox->comboBox->currentText().toStdString();
+	const std::string buildType = buildSelected.substr(0, buildSelected.find('(') - 1);
+	std::string platform = "";
+	if (buildSelected.find('(') != std::string::npos) {
+		platform = buildSelected.substr(buildSelected.find('(') + 1, buildSelected.find(')') - (buildSelected.find('(') + 1));
+	}
+	std::string buildPath = buildType;
+	if (!platform.empty()) {
+		buildPath = buildType + "_" + platform;
+	}
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_export_launching_export"));
 
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build")) {
@@ -536,9 +595,6 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 
 	std::string projectNameNoSpace = m_globalInfo.projectName;
 	std::replace(projectNameNoSpace.begin(), projectNameNoSpace.end(), ' ', '_');
-
-	// Copy runtime
-	std::filesystem::copy("assets/runtime/" + buildType, m_globalInfo.projectDirectory + "/editor_build/" + buildType, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 
 	// Copy to another directory
 	const std::string tmpExportDirectory = m_globalInfo.projectDirectory + "/editor_build/export_tmp/" + projectNameNoSpace;
@@ -566,8 +622,14 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	if (std::filesystem::exists(scriptsPdb)) {
 		std::filesystem::remove(scriptsPdb);
 	}
+	if (platform == "Steam") {
+		const std::string steamAppIdTxt = tmpExportDirectory + "/steam_appid.txt";
+		if (std::filesystem::exists(steamAppIdTxt)) {
+			std::filesystem::remove(steamAppIdTxt);
+		}
+	}
 
-	const std::string exportedFileName = projectNameNoSpace + "_" + buildType + ".zip";
+	const std::string exportedFileName = projectNameNoSpace + "_" + buildPath + ".zip";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	// Rename executable
@@ -660,7 +722,15 @@ void BuildBar::exportApplication(const std::string& exportDirectory) {
 	}
 	CloseHandle(pipeRead);
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-	const std::string exportedFileName = projectNameNoSpace + "_" + buildType + ".tar.gz";
+	// Remove some files
+	if (platform == "Steam") {
+		const std::string steamAppIdTxt = tmpExportDirectory + "/steam_appid.txt";
+		if (std::filesystem::exists(steamAppIdTxt)) {
+			std::filesystem::remove(steamAppIdTxt);
+		}
+	}
+
+	const std::string exportedFileName = projectNameNoSpace + "_" + buildPath + ".tar.gz";
 	const std::string exportedFullPath = exportDirectory + "/" + exportedFileName;
 
 	std::filesystem::current_path(m_globalInfo.projectDirectory + "/editor_build/export_tmp");

@@ -361,3 +361,4 @@ FodyWeavers.xsd
 
 # NutshellEngine specific ignore
 /build/
+*.dll

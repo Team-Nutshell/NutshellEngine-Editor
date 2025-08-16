@@ -6,17 +6,22 @@
 
 ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(640, 360);
-	setWindowTitle("NutshellEngine - Project Settings");
+	setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("project_settings")));
 	setWindowIcon(QIcon("assets/icon.png"));
 	setAttribute(Qt::WA_DeleteOnClose);
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(2, 0, 2, 0);
-	projectNameWidget = new StringWidget(m_globalInfo, "Project Name");
+	layout()->setContentsMargins(5, 5, 5, 5);
+	projectNameWidget = new StringWidget(m_globalInfo, m_globalInfo.localization.getString("project_settings_project_name"));
+	projectNameWidget->setText(m_globalInfo.projectName);
 	layout()->addWidget(projectNameWidget);
+	steamAppIDWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("project_settings_steam_appid"));
+	steamAppIDWidget->setValue(m_globalInfo.steamAppID);
+	layout()->addWidget(steamAppIDWidget);
 
-	connect(projectNameWidget, &StringWidget::valueChanged, this, &ProjectNtpjFileWidget::onValueChanged);
+	connect(projectNameWidget, &StringWidget::valueChanged, this, &ProjectNtpjFileWidget::onStringChanged);
+	connect(steamAppIDWidget, &IntegerWidget::valueChanged, this, &ProjectNtpjFileWidget::onIntegerChanged);
 
 	std::string projectFilePath = m_globalInfo.projectDirectory + "/project.ntpj";
 
@@ -32,29 +37,31 @@ ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalI
 		newProjectFile << "{\n}";
 		newProjectFile.close();
 	}
-
-	projectFile = std::fstream(projectFilePath, std::ios::in);
-	nlohmann::json j = nlohmann::json::parse(projectFile);
-
-	if (j.contains("projectName")) {
-		projectNameWidget->setText(j["projectName"]);
-	}
-	else {
-		m_globalInfo.projectName = m_globalInfo.projectDirectory.substr(m_globalInfo.projectDirectory.rfind('/') + 1);
-		projectNameWidget->setText(m_globalInfo.projectName);
-	}
 }
 
-void ProjectNtpjFileWidget::onValueChanged() {
-	if (!projectNameWidget->getText().empty()) {
-		m_globalInfo.projectName = projectNameWidget->getText();
-	}
-	else {
-		m_globalInfo.projectName = m_globalInfo.projectDirectory.substr(m_globalInfo.projectDirectory.rfind('/') + 1);
-		projectNameWidget->setText(m_globalInfo.projectName);
+void ProjectNtpjFileWidget::onStringChanged(const std::string& value) {
+	QObject* senderWidget = sender();
+
+	if (senderWidget == projectNameWidget) {
+		if (!value.empty()) {
+			m_globalInfo.projectName = projectNameWidget->getText();
+		}
+		else {
+			m_globalInfo.projectName = m_globalInfo.projectDirectory.substr(m_globalInfo.projectDirectory.rfind('/') + 1);
+			projectNameWidget->setText(m_globalInfo.projectName);
+		}
+		m_globalInfo.mainWindow->updateTitle();
 	}
 
-	m_globalInfo.mainWindow->updateTitle();
+	save();
+}
+
+void ProjectNtpjFileWidget::onIntegerChanged(int value) {
+	QObject* senderWidget = sender();
+
+	if (senderWidget == steamAppIDWidget) {
+		m_globalInfo.steamAppID = value;
+	}
 
 	save();
 }
@@ -63,9 +70,8 @@ void ProjectNtpjFileWidget::save() {
 	std::string projectFilePath = m_globalInfo.projectDirectory + "/project.ntpj";
 
 	nlohmann::json j;
-	if (!projectNameWidget->getText().empty()) {
-		j["projectName"] = projectNameWidget->getText();
-	}
+	j["projectName"] = m_globalInfo.projectName;
+	j["steamAppID"] = m_globalInfo.steamAppID;
 
 	std::fstream projectFile(projectFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {

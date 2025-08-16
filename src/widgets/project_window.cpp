@@ -109,6 +109,15 @@ void ProjectWindow::openMainWindow(const std::string& projectDirectory, const st
 	}
 
 	recentProjectsFile << j.dump(1, '\t');
+	recentProjectsFile.close();
+
+	std::fstream projectFile(projectDirectory + "/project.ntpj", std::ios::in);
+	if (projectFile.is_open()) {
+		j = nlohmann::json::parse(projectFile);
+		if (j.contains("steamAppID")) {
+			m_globalInfo.steamAppID = j["steamAppID"];
+		}
+	}
 
 	m_globalInfo.projectDirectory = projectDirectory;
 	m_globalInfo.rendererResourceManager.projectDirectory = projectDirectory;

@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include "string_widget.h"
+#include "integer_widget.h"
 
 class ProjectNtpjFileWidget : public QWidget {
 	Q_OBJECT
@@ -8,7 +9,8 @@ public:
 	ProjectNtpjFileWidget(GlobalInfo& globalInfo);
 
 private slots:
-	void onValueChanged();
+	void onStringChanged(const std::string& value);
+	void onIntegerChanged(int value);
 	void save();
 
 private:
@@ -16,4 +18,5 @@ private:
 
 public:
 	StringWidget* projectNameWidget;
+	IntegerWidget* steamAppIDWidget;
 };
