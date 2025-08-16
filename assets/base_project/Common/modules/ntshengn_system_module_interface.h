@@ -11,6 +11,7 @@ namespace NtshEngn {
 	class PhysicsModuleInterface;
 	class WindowModuleInterface;
 	class AudioModuleInterface;
+	class PlatformModuleInterface;
 
 	class SystemModuleInterface : public ModuleInterface, public System {
 	public:
@@ -22,11 +23,12 @@ namespace NtshEngn {
 			return ComponentMask();
 		}
 
-		void setSystemModules(GraphicsModuleInterface* passGraphicsModule, PhysicsModuleInterface* passPhysicsModule, WindowModuleInterface* passWindowModule, AudioModuleInterface* passAudioModule) {
+		void setModules(GraphicsModuleInterface* passGraphicsModule, PhysicsModuleInterface* passPhysicsModule, WindowModuleInterface* passWindowModule, AudioModuleInterface* passAudioModule, PlatformModuleInterface* passPlatformModule) {
 			graphicsModule = passGraphicsModule;
 			physicsModule = passPhysicsModule;
 			windowModule = passWindowModule;
 			audioModule = passAudioModule;
+			platformModule = passPlatformModule;
 		}
 
 		void setECS(ECSInterface* passECS) {
@@ -46,6 +48,7 @@ namespace NtshEngn {
 		PhysicsModuleInterface* physicsModule = nullptr;
 		WindowModuleInterface* windowModule = nullptr;
 		AudioModuleInterface* audioModule = nullptr;
+		PlatformModuleInterface* platformModule = nullptr;
 
 		ECSInterface* ecs = nullptr;
 

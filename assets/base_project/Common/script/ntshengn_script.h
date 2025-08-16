@@ -4,6 +4,7 @@
 #include "../modules/ntshengn_physics_module_interface.h"
 #include "../modules/ntshengn_window_module_interface.h"
 #include "../modules/ntshengn_audio_module_interface.h"
+#include "../modules/ntshengn_platform_module_interface.h"
 #include "../ecs/ntshengn_ecs_interface.h"
 #include "../asset_manager/ntshengn_asset_manager_interface.h"
 #include "../job_system/ntshengn_job_system_interface.h"
@@ -1020,6 +1021,63 @@ namespace NtshEngn {
 			graphicsModule->drawUIImage(imageID, imageSamplerFilter, position, rotation, scale, color);
 		}
 
+		// Platform
+		PlatformUserInfo getPlatformUserInfo() {
+			if (!platformModule) {
+				return PlatformUserInfo();
+			}
+
+			return platformModule->getUserInfo();
+		}
+
+		std::vector<PlatformUserInfo> getPlatformUserFriendsInfo() {
+			if (!platformModule) {
+				return {};
+			}
+
+			return platformModule->getUserFriendsInfo();
+		}
+
+		void unlockPlatformAchievement(const std::string& achievementID) {
+			if (!platformModule) {
+				return;
+			}
+
+			platformModule->unlockAchievement(achievementID);
+		}
+
+		void lockPlatformAchievement(const std::string& achievementID) {
+			if (!platformModule) {
+				return;
+			}
+
+			platformModule->lockAchievement(achievementID);
+		}
+
+		bool isPlatformAchievementUnlocked(const std::string& achievementID) {
+			if (!platformModule) {
+				return false;
+			}
+
+			return platformModule->isAchievementUnlocked(achievementID);
+		}
+
+		void showPlatformOverlay() {
+			if (!platformModule) {
+				return;
+			}
+
+			platformModule->showOverlay();
+		}
+
+		bool isPlatformOverlayVisible() {
+			if (!platformModule) {
+				return false;
+			}
+
+			return platformModule->isOverlayVisible();
+		}
+
 		// Frame Limiter
 		void setMaxFPS(uint32_t maxFPS) {
 			frameLimiter->setMaxFPS(maxFPS);
@@ -1096,11 +1154,12 @@ namespace NtshEngn {
 	
 	public:
 		void setEntityID(Entity passEntityID) { entityID = passEntityID; }
-		void setSystemModules(GraphicsModuleInterface* passGraphicsModule, PhysicsModuleInterface* passPhysicsModule, WindowModuleInterface* passWindowModule, AudioModuleInterface* passAudioModule) {
+		void setModules(GraphicsModuleInterface* passGraphicsModule, PhysicsModuleInterface* passPhysicsModule, WindowModuleInterface* passWindowModule, AudioModuleInterface* passAudioModule, PlatformModuleInterface* passPlatformModule) {
 			graphicsModule = passGraphicsModule;
 			physicsModule = passPhysicsModule;
 			windowModule = passWindowModule;
 			audioModule = passAudioModule;
+			platformModule = passPlatformModule;
 		}
 		void setScriptManager(ScriptManagerInterface* passScriptManager) { scriptManager = passScriptManager; }
 		void setECS(ECSInterface* passECS) { ecs = passECS; }
@@ -1118,6 +1177,7 @@ namespace NtshEngn {
 		PhysicsModuleInterface* physicsModule = nullptr;
 		WindowModuleInterface* windowModule = nullptr;
 		AudioModuleInterface* audioModule = nullptr;
+		PlatformModuleInterface* platformModule = nullptr;
 
 		ScriptManagerInterface* scriptManager = nullptr;
 
