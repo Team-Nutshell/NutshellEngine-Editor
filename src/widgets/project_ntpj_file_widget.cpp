@@ -67,17 +67,14 @@ void ProjectNtpjFileWidget::onIntegerChanged(int value) {
 }
 
 void ProjectNtpjFileWidget::save() {
-	std::string projectFilePath = m_globalInfo.projectDirectory + "/project.ntpj";
+	std::fstream projectFile(m_globalInfo.projectDirectory + "/project.ntpj", std::ios::in);
+	if (projectFile.is_open()) {
+		nlohmann::json j = nlohmann::json::parse(projectFile);
+		j["projectName"] = m_globalInfo.projectName;
+		j["steamAppID"] = m_globalInfo.steamAppID;
+		projectFile.close();
 
-	nlohmann::json j;
-	j["projectName"] = m_globalInfo.projectName;
-	j["steamAppID"] = m_globalInfo.steamAppID;
-
-	std::fstream projectFile(projectFilePath, std::ios::out | std::ios::trunc);
-	if (j.empty()) {
-		projectFile << "{\n}";
-	}
-	else {
+		projectFile = std::fstream(m_globalInfo.projectDirectory + "/project.ntpj", std::ios::out | std::ios::trunc);
 		projectFile << j.dump(1, '\t');
 	}
 }

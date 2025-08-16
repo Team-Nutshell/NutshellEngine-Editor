@@ -73,7 +73,13 @@ void ProjectMenu::importGlobalResources() {
 	if (!j.contains("firstScenePath")) {
 		j["firstScenePath"] = "assets/scenes/default_scene.ntsn";
 	}
-	optionsFile << j.dump(1, '\t');
+
+	if (j.empty()) {
+		optionsFile << "{\n}";
+	}
+	else {
+		optionsFile << j.dump(1, '\t');
+	}
 }
 
 void ProjectMenu::updateBaseProject() {
