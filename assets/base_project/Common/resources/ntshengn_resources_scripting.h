@@ -57,6 +57,10 @@ namespace NtshEngn {
 			NTSHENGN_UNUSED(scenePath);
 		}
 
+		virtual void physicsUpdate(float dt) {
+			NTSHENGN_UNUSED(dt);
+		}
+
 		virtual void onCollisionEnter(CollisionInfo collisionInfo) {
 			NTSHENGN_UNUSED(collisionInfo);
 		}
