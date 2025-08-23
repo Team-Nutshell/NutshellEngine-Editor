@@ -14,10 +14,19 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 			m_pastedEntityNames.push_back(copiedEntity.name);
 		}
 		else {
-			while (m_globalInfo.findEntityByName(copiedEntity.name + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
+			std::string prefix = copiedEntity.name;
+			size_t lastUnderscorePos = copiedEntity.name.find_last_of('_');
+			if (lastUnderscorePos != std::string::npos) {
+				prefix = copiedEntity.name.substr(0, lastUnderscorePos);
+				std::string suffix = copiedEntity.name.substr(lastUnderscorePos + 1);
+				if (!suffix.empty() && std::all_of(suffix.begin(), suffix.end(), isdigit)) {
+					entityNameIndex = atoi(suffix.c_str()) + 1;
+				}
+			}
+			while (m_globalInfo.findEntityByName(prefix + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
 				entityNameIndex++;
 			}
-			m_pastedEntityNames.push_back(copiedEntity.name + "_" + std::to_string(entityNameIndex));
+			m_pastedEntityNames.push_back(prefix + "_" + std::to_string(entityNameIndex));
 		}
 		m_pastedEntityIDs[i] = m_globalInfo.globalEntityID++;
 	}
