@@ -24,7 +24,6 @@ SelectAssetEntitiesCommand::SelectAssetEntitiesCommand(GlobalInfo& globalInfo, S
 	}
 }
 
-
 void SelectAssetEntitiesCommand::undo() {
 	if (m_oldType == SelectionType::Asset) {
 		if (std::filesystem::exists(m_oldSelectedAssetPath)) {

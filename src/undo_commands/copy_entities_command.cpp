@@ -22,7 +22,7 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 		m_pastedEntityIDs[i] = m_globalInfo.globalEntityID++;
 	}
 	if (m_copiedEntities.size() == 1) {
-		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entities", { m_copiedEntities[0].name, m_pastedEntityNames[0] })));
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entity", { m_copiedEntities[0].name, m_pastedEntityNames[0] })));
 	}
 	else {
 		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entities")));
@@ -70,5 +70,4 @@ void CopyEntitiesCommand::redo() {
 		}
 	}
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
-	m_globalInfo.mainWindow->entityPanel->entityList->updateSelection();
 }

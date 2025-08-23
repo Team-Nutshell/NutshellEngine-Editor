@@ -312,7 +312,7 @@
 	"undo_create_entity": "Create Entity ${0}",
 	"undo_destroy_entity": "Destroy Entity ${0}",
 	"undo_destroy_entities": "Destroy multiple Entities",
-	"undo_copy_entity": "Copy Entity ${0} to Entity ${0}",
+	"undo_copy_entity": "Copy Entity ${0} to Entity ${1}",
 	"undo_copy_entities": "Copy multiple Entities",
 	"undo_add_component_entity": "Add ${0} Component to Entity ${1}",
 	"undo_add_component_entities": "Add ${0} Component to multiple Entities",
