@@ -17,4 +17,6 @@ private:
 	std::vector<Entity> m_copiedEntities;
 	std::vector<std::string> m_pastedEntityNames;
 	std::vector<EntityID> m_pastedEntityIDs;
+
+	int row = 0;
 };

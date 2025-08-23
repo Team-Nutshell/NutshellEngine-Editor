@@ -31,6 +31,17 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 		}
 		m_pastedEntityIDs[i] = m_globalInfo.globalEntityID++;
 	}
+	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		row = entityList->row(entityList->findItemWithEntityID(m_globalInfo.currentEntityID));
+		for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
+			row = std::max(row, entityList->row(entityList->findItemWithEntityID(otherSelectedEntityID)));
+		}
+		row++;
+	}
+	else {
+		row = entityList->count();
+	}
 	if (m_copiedEntities.size() == 1) {
 		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_copy_entity", { m_copiedEntities[0].name, m_pastedEntityNames[0] })));
 	}
@@ -63,6 +74,8 @@ void CopyEntitiesCommand::undo() {
 void CopyEntitiesCommand::redo() {
 	EntityID currentEntityID = m_globalInfo.currentEntityID;
 	std::set<EntityID> otherSelectedEntityIDs;
+	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
+	int copyRow = row;
 	for (size_t i = 0; i < m_copiedEntities.size(); i++) {
 		Entity& copiedEntity = m_copiedEntities[i];
 
@@ -78,6 +91,9 @@ void CopyEntitiesCommand::redo() {
 		else {
 			otherSelectedEntityIDs.insert(pastedEntity.entityID);
 		}
+
+		EntityListItem* entityListItem = static_cast<EntityListItem*>(entityList->takeItem(entityList->count() - 1));
+		entityList->insertItem(copyRow++, entityListItem);
 	}
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 }
