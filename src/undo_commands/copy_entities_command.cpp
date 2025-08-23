@@ -23,7 +23,8 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 					entityNameIndex = atoi(suffix.c_str()) + 1;
 				}
 			}
-			while (m_globalInfo.findEntityByName(prefix + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) {
+			while ((m_globalInfo.findEntityByName(prefix + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) ||
+				(std::find(m_pastedEntityNames.begin(), m_pastedEntityNames.end(), prefix + "_" + std::to_string(entityNameIndex)) != m_pastedEntityNames.end())) {
 				entityNameIndex++;
 			}
 			m_pastedEntityNames.push_back(prefix + "_" + std::to_string(entityNameIndex));
