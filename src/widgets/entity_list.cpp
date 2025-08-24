@@ -22,6 +22,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 	setDragEnabled(true);
 	setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+	setAutoScroll(true);
 	
 	connect(this, &QListWidget::customContextMenuRequested, this, &EntityList::showMenu);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &EntityList::onEntityCreated);
