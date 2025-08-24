@@ -5,7 +5,7 @@
 #include <QListWidget>
 #include <QPoint>
 #include <QKeyEvent>
-#include <QBrush>
+#include <QDropEvent>
 #include <string>
 
 class EntityList : public QListWidget {
@@ -25,7 +25,8 @@ private slots:
 	void onEntityPersistenceChanged(EntityID entityID, bool isPersistent);
 	void onEntityVisibilityToggled(EntityID entityID, bool isVisible);
 	void showMenu(const QPoint& pos);
-	void onItemPressed(QListWidgetItem* listWidgetItem);
+	void dropEvent(QDropEvent* event);
+	void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);
@@ -33,10 +34,9 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
-	QColor m_currentSelectionColor{ QColor::fromRgb(136, 51, 156) };
-	QColor m_multiSelectionColor{ QColor::fromRgb(86, 11, 136) };
-
 	bool m_moveEntityOrderKeyPressed = false;
+
+	bool m_selfSignal = false;
 
 public:
 	EntityListMenu* menu;

@@ -6,7 +6,6 @@
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QSizePolicy>
 #include <QLabel>
-#include <QSignalBlocker>
 #include <QFont>
 #include <QGuiApplication>
 #include <algorithm>
@@ -20,10 +19,11 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setSizePolicy(sizePolicy);
 	menu = new EntityListMenu(m_globalInfo);
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-	setSelectionMode(QAbstractItemView::SelectionMode::NoSelection);
+	setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+	setDragEnabled(true);
+	setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
 	
 	connect(this, &QListWidget::customContextMenuRequested, this, &EntityList::showMenu);
-	connect(this, &QListWidget::itemPressed, this, &EntityList::onItemPressed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &EntityList::onEntityCreated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &EntityList::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityList::onEntitySelected);
@@ -45,18 +45,21 @@ EntityListItem* EntityList::findItemWithEntityID(EntityID entityID) {
 }
 
 void EntityList::updateSelection() {
+	m_selfSignal = true;
 	for (int i = 0; i < count(); i++) {
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(item(i));
 		if (m_globalInfo.currentEntityID == entityListItem->entityID) {
-			entityListItem->setBackground(m_currentSelectionColor);
+			entityListItem->setSelected(true);
+			setCurrentItem(entityListItem);
 		}
 		else if (m_globalInfo.otherSelectedEntityIDs.find(entityListItem->entityID) != m_globalInfo.otherSelectedEntityIDs.end()) {
-			entityListItem->setBackground(m_multiSelectionColor);
+			entityListItem->setSelected(true);
 		}
 		else {
-			entityListItem->setBackground(QBrush());
+			entityListItem->setSelected(false);
 		}
 	}
+	m_selfSignal = false;
 }
 
 void EntityList::onEntityCreated(EntityID entityID) {
@@ -89,12 +92,15 @@ void EntityList::onEntityPersistenceChanged(EntityID entityID, bool isPersistent
 }
 
 void EntityList::onEntityVisibilityToggled(EntityID entityID, bool isVisible) {
-	QFont font = findItemWithEntityID(entityID)->font();
+	EntityListItem* item = findItemWithEntityID(entityID);
+	QFont font = item->font();
 	if (isVisible) {
 		font.setItalic(false);
+		item->setForeground(QBrush());
 	}
 	else {
 		font.setItalic(true);
+		item->setForeground(QBrush(QColor(120.0f, 120.0f, 120.0f)));
 	}
 	findItemWithEntityID(entityID)->setFont(font);
 }
@@ -113,33 +119,39 @@ void EntityList::showMenu(const QPoint& pos) {
 	menu->popup(QCursor::pos());
 }
 
-void EntityList::onItemPressed(QListWidgetItem* listWidgetItem) {
-	EntityListItem* entityListItem = static_cast<EntityListItem*>(listWidgetItem);
-
-	EntityID currentEntityID = m_globalInfo.currentEntityID;
-	std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
-	if (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier) {
-		if (m_globalInfo.currentEntityID != NO_ENTITY) {
-			int currentEntityIndex = row(findItemWithEntityID(m_globalInfo.currentEntityID));
-			int selectionIndex = row(listWidgetItem);
-			int startRange = std::min(currentEntityIndex, selectionIndex);
-			int endRange = std::max(currentEntityIndex, selectionIndex);
-			otherSelectedEntityIDs.insert(m_globalInfo.currentEntityID);
-			for (int i = startRange; i < endRange; i++) {
-				otherSelectedEntityIDs.insert(static_cast<EntityListItem*>(item(i))->entityID);
-			}
-		}
-		otherSelectedEntityIDs.erase(entityListItem->entityID);
-		currentEntityID = entityListItem->entityID;
+void EntityList::dropEvent(QDropEvent* event) {
+	if (event->source() == this) {
+		SaveTitleChanger::change(m_globalInfo.mainWindow);
 	}
-	else if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-		otherSelectedEntityIDs.erase(entityListItem->entityID);
+	QListWidget::dropEvent(event);
+}
+
+void EntityList::selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
+	(void)selected;
+	(void)deselected;
+	if (m_selfSignal) {
+		return;
+	}
+
+	QListWidget::selectionChanged(selected, deselected);
+
+	if (!selectedItems().empty()) {
+		QList<QListWidgetItem*> otherSelectedItems = selectedItems();
+		EntityID currentEntityID = static_cast<EntityListItem*>(otherSelectedItems.back())->entityID;
+		otherSelectedItems.pop_back();
+
+		std::set<EntityID> otherSelectedEntityIDs;
+		for (QListWidgetItem* item : otherSelectedItems) {
+			EntityListItem* entityListItem = static_cast<EntityListItem*>(item);
+
+			otherSelectedEntityIDs.insert(entityListItem->entityID);
+		}
+
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	}
 	else {
-		otherSelectedEntityIDs.clear();
-		currentEntityID = entityListItem->entityID;
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 	}
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 }
 
 void EntityList::keyPressEvent(QKeyEvent* event) {
