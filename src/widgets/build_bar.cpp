@@ -427,9 +427,9 @@ bool BuildBar::build() {
 	}
 	std::filesystem::copy(m_globalInfo.projectDirectory + "/editor_build/assets", m_globalInfo.projectDirectory + "/editor_build/" + buildAssetsDirectory, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 	if (platform == "Steam") {
-		std::filesystem::copy("assets/runtime/platforms/Steam/libsteam_api.so", m_globalInfo.projectDirectory + "/editor_build/" + buildPath);
-		std::filesystem::copy("assets/runtime/platforms/Steam/" + buildType + "/modules/libNutshellEngine-PlatformModule-Steam.so", m_globalInfo.projectDirectory + "/editor_build/" + buildPath + "/modules");
-		std::ofstream steamAppIdTxt(m_globalInfo.projectDirectory + "/editor_build/" + buildPath + "/steam_appid.txt");
+		std::filesystem::copy("assets/runtime/platforms/Steam/libsteam_api.so", m_globalInfo.projectDirectory + "/editor_build/" + buildType);
+		std::filesystem::copy("assets/runtime/platforms/Steam/" + buildType + "/modules/libNutshellEngine-PlatformModule-Steam.so", m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/modules");
+		std::ofstream steamAppIdTxt(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/steam_appid.txt");
 		steamAppIdTxt << m_globalInfo.steamAppID;
 	}
 
