@@ -22,6 +22,9 @@ CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Ent
 				if (!suffix.empty() && std::all_of(suffix.begin(), suffix.end(), isdigit)) {
 					entityNameIndex = atoi(suffix.c_str()) + 1;
 				}
+				else {
+					prefix += "_" + suffix;
+				}
 			}
 			while ((m_globalInfo.findEntityByName(prefix + "_" + std::to_string(entityNameIndex)) != NO_ENTITY) ||
 				(std::find(m_pastedEntityNames.begin(), m_pastedEntityNames.end(), prefix + "_" + std::to_string(entityNameIndex)) != m_pastedEntityNames.end())) {

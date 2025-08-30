@@ -82,10 +82,22 @@ void AssetList::duplicateAsset(const std::string& path) {
 		baseAssetName = filename.substr(0, lastDot);
 	}
 	uint32_t fileNameIndex = 0;
-	std::string duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+	std::string prefix = baseAssetName;
+	size_t lastUnderscorePos = baseAssetName.find_last_of('_');
+	if (lastUnderscorePos != std::string::npos) {
+		prefix = baseAssetName.substr(0, lastUnderscorePos);
+		std::string suffix = baseAssetName.substr(lastUnderscorePos + 1);
+		if (!suffix.empty() && std::all_of(suffix.begin(), suffix.end(), isdigit)) {
+			fileNameIndex = atoi(suffix.c_str()) + 1;
+		}
+		else {
+			prefix += "_" + suffix;
+		}
+	}
+	std::string duplicatedAssetName = prefix + "_" + std::to_string(fileNameIndex) + extension;
 	while (std::filesystem::exists(directory + "/" + duplicatedAssetName)) {
 		fileNameIndex++;
-		duplicatedAssetName = baseAssetName + "_" + std::to_string(fileNameIndex) + extension;
+		duplicatedAssetName = prefix + "_" + std::to_string(fileNameIndex) + extension;
 	}
 	std::filesystem::copy_options copyOptions = std::filesystem::copy_options::none;
 	if (isDirectory) {
