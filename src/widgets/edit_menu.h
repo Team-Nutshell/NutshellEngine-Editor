@@ -11,6 +11,7 @@ public:
 private:
 	void copyEntities();
 	void pasteEntities();
+	void duplicateEntities();
 
 private slots:
 	void onEntitySelected();
@@ -24,4 +25,5 @@ private:
 	QAction* m_redoSelectionAction;
 	QAction* m_copyEntitiesAction;
 	QAction* m_pasteEntitiesAction;
+	QAction* m_duplicateEntitiesAction;
 };

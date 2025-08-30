@@ -25,6 +25,9 @@ EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	m_pasteEntitiesAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entity")), this, &EditMenu::pasteEntities);
 	m_pasteEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+V"));
 	m_pasteEntitiesAction->setEnabled(false);
+	m_duplicateEntitiesAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_edit_duplicate_entity")), this, &EditMenu::duplicateEntities);
+	m_duplicateEntitiesAction->setShortcut(QKeySequence::fromString("Ctrl+D"));
+	m_duplicateEntitiesAction->setEnabled(false);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EditMenu::onEntitySelected);
 }
@@ -46,20 +49,38 @@ void EditMenu::pasteEntities() {
 	}
 }
 
+void EditMenu::duplicateEntities() {
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+		selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+
+		std::vector<Entity> entitiesToDuplicate;
+		for (EntityID selectedEntityID : selectedEntityIDs) {
+			entitiesToDuplicate.push_back(m_globalInfo.entities[selectedEntityID]);
+		}
+
+		m_globalInfo.actionUndoStack->push(new CopyEntitiesCommand(m_globalInfo, entitiesToDuplicate));
+	}
+}
+
 void EditMenu::onEntitySelected() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		m_copyEntitiesAction->setEnabled(true);
+		m_duplicateEntitiesAction->setEnabled(true);
 	}
 	else {
 		m_copyEntitiesAction->setEnabled(false);
+		m_duplicateEntitiesAction->setEnabled(false);
 	}
 
 	if (m_globalInfo.otherSelectedEntityIDs.empty()) {
 		m_copyEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entity")));
 		m_pasteEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entity")));
+		m_duplicateEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_duplicate_entity")));
 	}
 	else {
 		m_copyEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_copy_entities")));
 		m_pasteEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_paste_entities")));
+		m_duplicateEntitiesAction->setText(QString::fromStdString(m_globalInfo.localization.getString("header_edit_duplicate_entities")));
 	}
 }
