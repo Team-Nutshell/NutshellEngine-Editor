@@ -1,4 +1,5 @@
 #include "edit_menu.h"
+#include "main_window.h"
 #include "../undo_commands/copy_entities_command.h"
 #include <QKeySequence>
 #include <algorithm>
@@ -50,15 +51,15 @@ void EditMenu::pasteEntities() {
 }
 
 void EditMenu::duplicateEntities() {
-	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
-		selectedEntityIDs.insert(m_globalInfo.currentEntityID);
-
-		std::vector<Entity> entitiesToDuplicate;
-		for (EntityID selectedEntityID : selectedEntityIDs) {
-			entitiesToDuplicate.push_back(m_globalInfo.entities[selectedEntityID]);
+	std::vector<Entity> entitiesToDuplicate;
+	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
+	for (int i = 0; i < entityList->count(); i++) {
+		if (entityList->item(i)->isSelected()) {
+			entitiesToDuplicate.push_back(m_globalInfo.entities[static_cast<EntityListItem*>(entityList->item(i))->entityID]);
 		}
+	}
 
+	if (!entitiesToDuplicate.empty()) {
 		m_globalInfo.actionUndoStack->push(new CopyEntitiesCommand(m_globalInfo, entitiesToDuplicate));
 	}
 }
