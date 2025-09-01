@@ -1,4 +1,5 @@
 #include "entity_info_name_widget.h"
+#include "main_window.h"
 #include "../undo_commands/change_entities_name_command.h"
 
 EntityInfoNameWidget::EntityInfoNameWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -17,9 +18,10 @@ void EntityInfoNameWidget::onEntitySelected() {
 void EntityInfoNameWidget::onEditingFinished() {
 	if (m_previousName != text().toStdString()) {
 		m_previousName = text().toStdString();
-		std::vector<EntityID> entityIDs { m_globalInfo.currentEntityID };
-		std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entityIDs));
-		m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDs, text().toStdString()));
+		std::vector<EntityID> entityIDsToRename = m_globalInfo.mainWindow->entityPanel->entityList->getRowSortedSelectedEntityIDs();
+		if (!entityIDsToRename.empty()) {
+			m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDsToRename, text().toStdString()));
+		}
 	}
 }
 

@@ -323,7 +323,8 @@ void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEd
 		return;
 	}
 
-	std::vector<EntityID> entityIDs{ m_globalInfo.currentEntityID };
-	std::copy(m_globalInfo.otherSelectedEntityIDs.begin(), m_globalInfo.otherSelectedEntityIDs.end(), std::back_inserter(entityIDs));
-	m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDs, newEntityName));
+	std::vector<EntityID> entityIDsToRename = m_globalInfo.mainWindow->entityPanel->entityList->getRowSortedSelectedEntityIDs();
+	if (!entityIDsToRename.empty()) {
+		m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDsToRename, newEntityName));
+	}
 }
