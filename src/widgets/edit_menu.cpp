@@ -51,12 +51,10 @@ void EditMenu::pasteEntities() {
 }
 
 void EditMenu::duplicateEntities() {
-	std::vector<Entity> entitiesToDuplicate;
-	EntityList* entityList = m_globalInfo.mainWindow->entityPanel->entityList;
-	for (int i = 0; i < entityList->count(); i++) {
-		if (entityList->item(i)->isSelected()) {
-			entitiesToDuplicate.push_back(m_globalInfo.entities[static_cast<EntityListItem*>(entityList->item(i))->entityID]);
-		}
+	std::vector<EntityID> entityIDsToDuplicate = m_globalInfo.mainWindow->entityPanel->entityList->getRowSortedSelectedEntityIDs();
+	std::vector<Entity> entitiesToDuplicate(entityIDsToDuplicate.size());
+	for (size_t i = 0; i < entityIDsToDuplicate.size(); i++) {
+		entitiesToDuplicate[i] = m_globalInfo.entities[entityIDsToDuplicate[i]];
 	}
 
 	if (!entitiesToDuplicate.empty()) {

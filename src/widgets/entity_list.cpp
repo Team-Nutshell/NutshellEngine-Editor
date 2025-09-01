@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iterator>
 #include <functional>
+#include <utility>
 
 EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	QSizePolicy sizePolicy;
@@ -43,6 +44,24 @@ EntityListItem* EntityList::findItemWithEntityID(EntityID entityID) {
 	}
 
 	return nullptr;
+}
+
+std::vector<EntityID> EntityList::getRowSortedSelectedEntityIDs() {
+	std::vector<std::pair<EntityID, int>> selectedEntities;
+	for (QListWidgetItem* selectedItem : selectedItems()) {
+		selectedEntities.push_back({ static_cast<EntityListItem*>(selectedItem)->entityID, row(selectedItem) });
+	}
+
+	std::sort(selectedEntities.begin(), selectedEntities.end(), [](const std::pair<EntityID, int>& a, const std::pair<EntityID, int>& b) {
+		return a.second < b.second;
+		});
+
+	std::vector<EntityID> sortedSelectedEntities(selectedEntities.size());
+	for (size_t i = 0; i < selectedEntities.size(); i++) {
+		sortedSelectedEntities[i] = selectedEntities[i].first;
+	}
+
+	return sortedSelectedEntities;
 }
 
 void EntityList::updateSelection() {

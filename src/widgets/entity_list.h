@@ -14,6 +14,7 @@ public:
 	EntityList(GlobalInfo& globalInfo);
 
 	EntityListItem* findItemWithEntityID(EntityID entityID);
+	std::vector<EntityID> getRowSortedSelectedEntityIDs();
 
 	void updateSelection();
 
