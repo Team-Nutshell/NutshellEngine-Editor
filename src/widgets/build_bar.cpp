@@ -353,6 +353,11 @@ bool BuildBar::build() {
 		std::filesystem::remove(m_globalInfo.projectDirectory + "/editor_build/" + buildType + "/libsteam_api.so");
 	}
 
+	// Clear temporary assets directory
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/editor_build/assets")) {
+		std::filesystem::remove_all(m_globalInfo.projectDirectory + "/editor_build/assets");
+	}
+
 	// CMake
 	const std::string cMakeCommand = m_globalInfo.editorParameters.build.cMakePath + " " + m_globalInfo.projectDirectory + " -DNTSHENGN_COMMON_PATH=" + m_globalInfo.projectDirectory + "/Common -DCMAKE_BUILD_TYPE=" + buildType + " -DNTSHENGN_BUILD_IN_EDITOR=ON 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_build_launching_cmake_command", { cMakeCommand }));
