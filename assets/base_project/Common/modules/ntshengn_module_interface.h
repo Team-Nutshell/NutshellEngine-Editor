@@ -1,5 +1,6 @@
 #pragma once
 #include "../utils/ntshengn_enums.h"
+#include "../command_line/ntshengn_command_line_interface.h"
 #include "../profiler/ntshengn_profiler_interface.h"
 #include <string>
 
@@ -23,11 +24,16 @@ namespace NtshEngn {
 			return m_name;
 		}
 
+		void setCommandLine(CommandLineInterface* passCommandLine) {
+			commandLine = passCommandLine;
+		}
+
 		void setProfiler(ProfilerInterface* passProfiler) {
 			profiler = passProfiler;
 		}
 
 	protected:
+		CommandLineInterface* commandLine = nullptr;
 		ProfilerInterface* profiler = nullptr;
 
 	private:

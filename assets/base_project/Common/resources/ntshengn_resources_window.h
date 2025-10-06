@@ -72,6 +72,7 @@ namespace NtshEngn {
 		NumMinus, // Numpad -
 		NumTimes, // Numpad *
 		NumDivision, // Numpad /
+		NumEnter, // Numpad Enter
 		Left, // Left Arrow
 		Right, // Right Arrow
 		Up, // Up Arrow

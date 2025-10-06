@@ -23,6 +23,11 @@ namespace NtshEngn {
 		virtual void destroy() = 0;
 
 	protected:
+		// Command Line
+		const std::unordered_map<std::string, std::vector<std::string>>& getCommandLine() {
+			return commandLine->get();
+		}
+
 		// Resources
 		Model* createModel(const std::string& modelName) {
 			return assetManager->createModel(modelName);
@@ -1162,6 +1167,7 @@ namespace NtshEngn {
 			platformModule = passPlatformModule;
 		}
 		void setScriptManager(ScriptManagerInterface* passScriptManager) { scriptManager = passScriptManager; }
+		void setCommandLine(CommandLineInterface* passCommandLine) { commandLine = passCommandLine; }
 		void setECS(ECSInterface* passECS) { ecs = passECS; }
 		void setAssetManager(AssetManagerInterface* passAssetManager) { assetManager = passAssetManager; }
 		void setFrameLimiter(FrameLimiterInterface* passFrameLimiter) { frameLimiter = passFrameLimiter; }
@@ -1180,6 +1186,8 @@ namespace NtshEngn {
 		PlatformModuleInterface* platformModule = nullptr;
 
 		ScriptManagerInterface* scriptManager = nullptr;
+
+		CommandLineInterface* commandLine = nullptr;
 
 		ECSInterface* ecs = nullptr;
 

@@ -24,6 +24,7 @@ set(NTSHENGN_DEFINES ${NTSHENGN_COMMON_DEFINES} PARENT_SCOPE)
 
 add_library(Common INTERFACE)
 target_include_directories(Common INTERFACE asset_manager)
+target_include_directories(Common INTERFACE command_line)
 target_include_directories(Common INTERFACE ecs)
 target_include_directories(Common INTERFACE frame_limiter)
 target_include_directories(Common INTERFACE job_system)
