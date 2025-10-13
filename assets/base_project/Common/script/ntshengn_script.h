@@ -256,14 +256,17 @@ namespace NtshEngn {
 		void addEntityComponent(Entity entity, T component) {
 			ecs->addComponent(entity, component);
 		}
+
 		template <typename T>
 		void removeEntityComponent(Entity entity) {
 			ecs->removeComponent<T>(entity);
 		}
+
 		template <typename T>
 		bool hasEntityComponent(Entity entity) {
 			return ecs->hasComponent<T>(entity);
 		}
+
 		template <typename T>
 		T& getEntityComponent(Entity entity) {
 			return ecs->getComponent<T>(entity);
@@ -940,6 +943,22 @@ namespace NtshEngn {
 			}
 
 			return audioModule->isSoundSourceLooping(soundSourceID);
+		}
+
+		void setMasterGain(float gain) {
+			if (!audioModule) {
+				return;
+			}
+
+			audioModule->setMasterGain(gain);
+		}
+
+		float getMasterGain() {
+			if (!audioModule) {
+				return 0.0f;
+			}
+
+			return audioModule->getMasterGain();
 		}
 
 		// Animation

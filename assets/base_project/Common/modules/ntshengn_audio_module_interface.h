@@ -49,6 +49,11 @@ namespace NtshEngn {
 		virtual void setSoundSourceLooping(SoundSourceID soundSourceID, bool looping) = 0;
 		// Returns true if the sound source with identifier soundSourceID is looping, else, returns false
 		virtual bool isSoundSourceLooping(SoundSourceID soundSourceID) = 0;
+
+		// Sets the master gain
+		virtual void setMasterGain(float gain) = 0;
+		// Returns the master gain
+		virtual float getMasterGain() = 0;
 	};
 
 }
