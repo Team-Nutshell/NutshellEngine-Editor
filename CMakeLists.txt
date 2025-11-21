@@ -322,6 +322,10 @@ target_compile_definitions(${PROJECT_NAME}
 		$<$<CONFIG:Release>:NTSHENGN_RELEASE>
 		$<$<CONFIG:RelWithDebInfo>:NTSHENGN_DEBUG>)
 
+set_target_properties(${PROJECT_NAME}
+	PROPERTIES
+	VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
+
 add_custom_target(CopyAssets
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/assets
 	COMMENT "Copy assets from ${CMAKE_SOURCE_DIR}/assets to project build folder ${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/assets.")
