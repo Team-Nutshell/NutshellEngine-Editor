@@ -18,7 +18,6 @@ ScriptList::ScriptList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setWrapping(true);
 	setAcceptDrops(true);
-	setDragDropMode(QListWidget::DragDrop);
 	setResizeMode(QListWidget::Adjust);
 	menu = new ScriptListMenu(m_globalInfo);
 	menu->scriptList = this;
