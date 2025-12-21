@@ -61,6 +61,8 @@ void AssetListMenu::newDirectory() {
 		directoryNameIndex++;
 	}
 	std::filesystem::create_directory(directory + "/" + newDirectoryName);
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newDirectoryName + "/";
 }
 
 void AssetListMenu::newModel() {
@@ -78,6 +80,8 @@ void AssetListMenu::newModel() {
 	newModelFile.close();
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newModelName + modelExtension, NO_ENTITY, {}));
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newModelName + modelExtension;
 }
 
 void AssetListMenu::newImageSampler() {
@@ -103,6 +107,8 @@ void AssetListMenu::newImageSampler() {
 	newImageSamplerFile.close();
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newImageSamplerName + imageSamplerExtension, NO_ENTITY, {}));
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newImageSamplerName + imageSamplerExtension;
 }
 
 void AssetListMenu::newMaterial() {
@@ -156,6 +162,8 @@ void AssetListMenu::newMaterial() {
 	newMaterialFile.close();
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, {}));
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newMaterialName + materialExtension;
 }
 
 void AssetListMenu::newScene() {
@@ -173,6 +181,8 @@ void AssetListMenu::newScene() {
 	newSceneFile.close();
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, {}));
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newSceneName + sceneExtension;
 }
 
 void AssetListMenu::copyPath() {

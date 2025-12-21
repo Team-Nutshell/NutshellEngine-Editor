@@ -199,6 +199,16 @@ void AssetList::updateAssetList() {
 	for (const std::string& fileName : fileNames) {
 		addItem(QString::fromStdString(fileName));
 	}
+
+	if (!currentlyEditedItemName.empty()) {
+		QList<QListWidgetItem*> editedItems = findItems(QString::fromStdString(currentlyEditedItemName), Qt::MatchFlag::MatchExactly);
+		if (!editedItems.empty()) {
+			QListWidgetItem* editedItem = editedItems[0];
+			setCurrentItem(editedItem);
+			editedItem->setFlags(editedItem->flags() | Qt::ItemFlag::ItemIsEditable);
+			editItem(editedItem);
+		}
+	}
 }
 
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
