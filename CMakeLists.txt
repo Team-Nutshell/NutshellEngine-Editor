@@ -113,7 +113,9 @@ set(WIDGET_SOURCES
 	src/widgets/asset_info_name_widget.cpp
 	src/widgets/asset_info_panel.cpp
 	src/widgets/asset_info_scroll_area.cpp
+	src/widgets/asset_line_edit.cpp
 	src/widgets/asset_list.cpp
+	src/widgets/asset_list_item_delegate.cpp
 	src/widgets/asset_list_menu.cpp
 	src/widgets/asset_panel.cpp
 	src/widgets/build_bar.cpp
@@ -196,7 +198,9 @@ set(WIDGET_HEADERS
 	src/widgets/asset_info_name_widget.h
 	src/widgets/asset_info_panel.h
 	src/widgets/asset_info_scroll_area.h
+	src/widgets/asset_line_edit.h
 	src/widgets/asset_list.h
+	src/widgets/asset_list_item_delegate.h
 	src/widgets/asset_list_menu.h
 	src/widgets/asset_panel.h
 	src/widgets/build_bar.h

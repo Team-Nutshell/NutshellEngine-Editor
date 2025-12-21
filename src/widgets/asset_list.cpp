@@ -1,4 +1,5 @@
 #include "asset_list.h"
+#include "asset_list_item_delegate.h"
 #include "asset_info_name_widget.h"
 #include "delete_asset_widget.h"
 #include "close_scene_widget.h"
@@ -34,6 +35,8 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	sizePolicy.setHorizontalPolicy(QSizePolicy::Policy::Ignored);
 	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Expanding);
 	setSizePolicy(sizePolicy);
+
+	setItemDelegate(new AssetListItemDelegate());
 
 	updateAssetList();
 
