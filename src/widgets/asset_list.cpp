@@ -38,6 +38,8 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setItemDelegate(new AssetListItemDelegate());
 
+	loadIcons();
+
 	updateAssetList();
 
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/assets/")) {
@@ -183,7 +185,7 @@ void AssetList::updateAssetList() {
 		std::replace(entryPath.begin(), entryPath.end(), '\\', '/');
 
 		if (std::filesystem::is_directory(entry)) {
-			directoryNames.push_back(entryPath.substr(entryPath.find_last_of('/') + 1) + '/');
+			directoryNames.push_back(entryPath.substr(entryPath.find_last_of('/') + 1));
 		}
 		else {
 			fileNames.push_back(entryPath.substr(entryPath.find_last_of('/') + 1));
@@ -194,10 +196,53 @@ void AssetList::updateAssetList() {
 	std::sort(fileNames.begin(), fileNames.end());
 
 	for (const std::string& directoryName : directoryNames) {
-		addItem(QString::fromStdString(directoryName));
+		QListWidgetItem* newItem = new QListWidgetItem(m_directoryIcon, QString::fromStdString(directoryName));
+		addItem(newItem);
 	}
 	for (const std::string& fileName : fileNames) {
-		addItem(QString::fromStdString(fileName));
+		QListWidgetItem* newItem = new QListWidgetItem(m_unknownIcon, QString::fromStdString(fileName));
+
+		size_t lastDot = fileName.rfind('.');
+		if (lastDot != std::string::npos) {
+			std::string extension = fileName.substr(lastDot + 1);
+			if ((extension == "ntim") ||
+				(extension == "jpg") ||
+				(extension == "jpeg") ||
+				(extension == "png") ||
+				(extension == "tga") ||
+				(extension == "bmp") ||
+				(extension == "gif")) {
+				newItem->setIcon(m_imageIcon);
+			}
+			else if (extension == "ntmh") {
+				newItem->setIcon(m_meshIcon);
+			}
+			else if (extension == "ntsp") {
+				newItem->setIcon(m_imageSamplerIcon);
+			}
+			else if (extension == "ntml") {
+				newItem->setIcon(m_materialIcon);
+			}
+			else if ((extension == "ntmd") ||
+				(extension == "gltf") ||
+				(extension == "glb") ||
+				(extension == "obj")) {
+				newItem->setIcon(m_modelIcon);
+			}
+			else if ((extension == "ntsd") ||
+				(extension == "wav") ||
+				(extension == "ogg")) {
+				newItem->setIcon(m_soundIcon);
+			}
+			else if (extension == "ntop") {
+				newItem->setIcon(m_optionsIcon);
+			}
+			else if (extension == "ntsn") {
+				newItem->setIcon(m_sceneIcon);
+			}
+		}
+
+		addItem(newItem);
 	}
 
 	if (!currentlyEditedItemName.empty()) {
@@ -209,6 +254,19 @@ void AssetList::updateAssetList() {
 			editItem(editedItem);
 		}
 	}
+}
+
+void AssetList::loadIcons() {
+	m_directoryIcon = QIcon("assets/icons/directory.png");
+	m_imageIcon = QIcon("assets/icons/image.png");
+	m_meshIcon = QIcon("assets/icons/mesh.png");
+	m_imageSamplerIcon = QIcon("assets/icons/image_sampler.png");
+	m_materialIcon = QIcon("assets/icons/material.png");
+	m_modelIcon = QIcon("assets/icons/model.png");
+	m_soundIcon = QIcon("assets/icons/sound.png");
+	m_optionsIcon = QIcon("assets/icons/options.png");
+	m_sceneIcon = QIcon("assets/icons/scene.png");
+	m_unknownIcon = QIcon("assets/icons/unknown.png");
 }
 
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {

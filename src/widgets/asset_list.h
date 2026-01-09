@@ -26,6 +26,8 @@ private:
 	void actionOnFile(const std::string& file);
 	void updateAssetList();
 
+	void loadIcons();
+
 signals:
 	void directoryChanged(const std::string& directory);
 
@@ -56,6 +58,17 @@ private:
 	QFileSystemWatcher m_directoryWatcher;
 
 	std::string m_openScenePath;
+
+	QIcon m_directoryIcon;
+	QIcon m_imageIcon;
+	QIcon m_meshIcon;
+	QIcon m_imageSamplerIcon;
+	QIcon m_materialIcon;
+	QIcon m_modelIcon;
+	QIcon m_soundIcon;
+	QIcon m_optionsIcon;
+	QIcon m_sceneIcon;
+	QIcon m_unknownIcon;
 
 public:
 	AssetListMenu* menu;
