@@ -62,7 +62,7 @@ void AssetListMenu::newDirectory() {
 	}
 	std::filesystem::create_directory(directory + "/" + newDirectoryName);
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newDirectoryName + "/";
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newDirectoryName;
 }
 
 void AssetListMenu::newModel() {
