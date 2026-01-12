@@ -214,6 +214,9 @@ void AssetList::updateAssetList() {
 				(extension == "gif")) {
 				newItem->setIcon(m_imageIcon);
 			}
+			else if (extension == "ttf") {
+				newItem->setIcon(m_fontIcon);
+			}
 			else if (extension == "ntmh") {
 				newItem->setIcon(m_meshIcon);
 			}
@@ -259,6 +262,7 @@ void AssetList::updateAssetList() {
 void AssetList::loadIcons() {
 	m_directoryIcon = QIcon("assets/icons/directory.png");
 	m_imageIcon = QIcon("assets/icons/image.png");
+	m_fontIcon = QIcon("assets/icons/font.png");
 	m_meshIcon = QIcon("assets/icons/mesh.png");
 	m_imageSamplerIcon = QIcon("assets/icons/image_sampler.png");
 	m_materialIcon = QIcon("assets/icons/material.png");

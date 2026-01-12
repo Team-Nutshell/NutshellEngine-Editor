@@ -61,6 +61,7 @@ private:
 
 	QIcon m_directoryIcon;
 	QIcon m_imageIcon;
+	QIcon m_fontIcon;
 	QIcon m_meshIcon;
 	QIcon m_imageSamplerIcon;
 	QIcon m_materialIcon;
