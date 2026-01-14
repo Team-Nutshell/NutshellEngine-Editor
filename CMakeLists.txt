@@ -151,6 +151,7 @@ set(WIDGET_SOURCES
 	src/widgets/info_label_widget.cpp
 	src/widgets/info_panel.cpp
 	src/widgets/integer_widget.cpp
+	src/widgets/json_model.cpp
 	src/widgets/key_select_widget.cpp
 	src/widgets/light_component_widget.cpp
 	src/widgets/log_bar.cpp
@@ -236,6 +237,7 @@ set(WIDGET_HEADERS
 	src/widgets/info_label_widget.h
 	src/widgets/info_panel.h
 	src/widgets/integer_widget.h
+	src/widgets/json_model.h
 	src/widgets/key_select_widget.h
 	src/widgets/light_component_widget.h
 	src/widgets/log_bar.h

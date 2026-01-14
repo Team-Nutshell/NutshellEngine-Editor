@@ -232,6 +232,8 @@
 	"assets_options_first_scene": "First Scene",
 	"assets_options_no_first_scene_selected": "No first scene selected",
 	"assets_options_start_profiling": "Start Profiling",
+	"assets_json_key": "Key",
+	"assets_json_value": "Value",
 	"assets_rename": "Rename",
 	"assets_delete": "Delete",
 	"assets_duplicate": "Duplicate",
