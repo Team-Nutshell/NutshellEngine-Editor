@@ -243,6 +243,9 @@ void AssetList::updateAssetList() {
 			else if (extension == "ntsn") {
 				newItem->setIcon(m_sceneIcon);
 			}
+			else if (extension == "json") {
+				newItem->setIcon(m_jsonIcon);
+			}
 		}
 
 		addItem(newItem);
@@ -270,6 +273,7 @@ void AssetList::loadIcons() {
 	m_soundIcon = QIcon("assets/icons/sound.png");
 	m_optionsIcon = QIcon("assets/icons/options.png");
 	m_sceneIcon = QIcon("assets/icons/scene.png");
+	m_jsonIcon = QIcon("assets/icons/json.png");
 	m_unknownIcon = QIcon("assets/icons/unknown.png");
 }
 

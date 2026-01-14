@@ -69,6 +69,7 @@ private:
 	QIcon m_soundIcon;
 	QIcon m_optionsIcon;
 	QIcon m_sceneIcon;
+	QIcon m_jsonIcon;
 	QIcon m_unknownIcon;
 
 public:
