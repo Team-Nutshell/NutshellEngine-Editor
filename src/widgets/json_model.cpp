@@ -31,7 +31,7 @@ void JSONModelItem::appendChild(std::unique_ptr<JSONModelItem>&& child) {
 }
 
 JSONModelItem* JSONModelItem::child(int row) {
-	if ((row < 0) || (row > m_children.size() - 1)) {
+	if ((row < 0) || (row > static_cast<int>(m_children.size() - 1))) {
 		return nullptr;
 	}
 
