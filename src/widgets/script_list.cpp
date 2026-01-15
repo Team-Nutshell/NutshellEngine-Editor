@@ -1,5 +1,4 @@
 #include "script_list.h"
-#include "new_script_message_box.h"
 #include "delete_script_widget.h"
 #include "main_window.h"
 #include <QSizePolicy>
@@ -41,64 +40,49 @@ ScriptList::ScriptList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 void ScriptList::newScript() {
-	NewScriptMessageBox newScriptMessageBox(m_globalInfo);
-	if (newScriptMessageBox.exec() == QMessageBox::StandardButton::Ok) {
-		std::string newScriptName = newScriptMessageBox.scriptNameLineEdit->text().toStdString();
-		newScriptName.erase(newScriptName.begin(), std::find_if(newScriptName.begin(), newScriptName.end(), [](unsigned char c) {
-			return !std::isspace(c);
-			}));
-		newScriptName.erase(std::find_if(newScriptName.rbegin(), newScriptName.rend(), [](unsigned char c) {
-			return !std::isspace(c);
-			}).base(), newScriptName.end());
+	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
+		std::filesystem::create_directory(m_globalInfo.projectDirectory + "/scripts/");
+	}
 
-		if (!newScriptName.empty()) {
-			if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
-				std::filesystem::create_directory(m_globalInfo.projectDirectory + "/scripts/");
-			}
-
-			const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
-			if (std::regex_search(newScriptName, validFilenameRegex)) {
-				std::string finalScriptName = newScriptName;
-				if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/" + newScriptName + ".h")) {
-					uint32_t scriptNameIndex = 0;
-					finalScriptName = newScriptName + "_" + std::to_string(scriptNameIndex);
-					while (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h")) {
-						scriptNameIndex++;
-						finalScriptName = newScriptName + "_" + std::to_string(scriptNameIndex);
-					}
-					m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_name_already_taken", { newScriptName, finalScriptName }));
-				}
-
-				std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h", std::ios::out | std::ios::trunc);
-				newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << finalScriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << finalScriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(float dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
-			}
-			else {
-				m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_name_not_valid", { newScriptName }));
-			}
+	std::string newScriptName = "NewScript";
+	std::string finalScriptName = newScriptName;
+	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/" + newScriptName + ".h")) {
+		uint32_t scriptNameIndex = 0;
+		finalScriptName = newScriptName + "_" + std::to_string(scriptNameIndex);
+		while (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h")) {
+			scriptNameIndex++;
+			finalScriptName = newScriptName + "_" + std::to_string(scriptNameIndex);
 		}
 	}
+	std::fstream newScriptFile(m_globalInfo.projectDirectory + "/scripts/" + finalScriptName + ".h", std::ios::out | std::ios::trunc);
+	newScriptFile << "#pragma once\n#include \"../Common/script/ntshengn_script.h\"\n\nusing namespace NtshEngn;\nstruct " << finalScriptName << " : public Script {\n\tNTSHENGN_SCRIPT(" << finalScriptName << ");\n\n\tvoid init() {\n\n\t}\n\n\tvoid update(float dt) {\n\t\tNTSHENGN_UNUSED(dt);\n\t}\n\n\tvoid destroy() {\n\n\t}\n};";
+
+	currentlyEditedItemName = finalScriptName;
 }
 
 bool ScriptList::renameScriptFile(const std::string& oldScriptName, const std::string& newScriptName) {
-	if (oldScriptName != newScriptName) {
-		const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
-		if (!std::regex_search(newScriptName, validFilenameRegex)) {
-			return false;
-		}
-
-		if (newScriptName.empty()) {
-			return false;
-		}
-
-		if (std::filesystem::exists(m_scriptsDirectory + "/" + newScriptName + ".h")) {
-			return false;
-		}
-
-		if (std::filesystem::exists(m_scriptsDirectory + "/" + oldScriptName + ".h")) {
-			std::filesystem::rename(m_scriptsDirectory + "/" + oldScriptName + ".h", m_scriptsDirectory + "/" + newScriptName + ".h");
-		}
+	if (oldScriptName == newScriptName) {
+		return false;
 	}
 
+	const std::regex validFilenameRegex(R"(^[a-zA-Z0-9._ -]+$)");
+	if (!std::regex_search(newScriptName, validFilenameRegex)) {
+		return false;
+	}
+
+	if (newScriptName.empty()) {
+		return false;
+	}
+
+	if (std::filesystem::exists(m_scriptsDirectory + "/" + newScriptName + ".h")) {
+		return false;
+	}
+
+	if (!std::filesystem::exists(m_scriptsDirectory + "/" + oldScriptName + ".h")) {
+		return false;
+	}
+
+	std::filesystem::rename(m_scriptsDirectory + "/" + oldScriptName + ".h", m_scriptsDirectory + "/" + newScriptName + ".h");
 	renameScriptClass(oldScriptName, newScriptName);
 
 	return true;
@@ -168,6 +152,16 @@ void ScriptList::updateScriptList() {
 
 	for (const std::string& scriptName : scriptNames) {
 		addItem(QString::fromStdString(scriptName));
+	}
+
+	if (!currentlyEditedItemName.empty()) {
+		QList<QListWidgetItem*> editedItems = findItems(QString::fromStdString(currentlyEditedItemName), Qt::MatchFlag::MatchExactly);
+		if (!editedItems.empty()) {
+			QListWidgetItem* editedItem = editedItems[0];
+			setCurrentItem(editedItem);
+			editedItem->setFlags(editedItem->flags() | Qt::ItemFlag::ItemIsEditable);
+			editItem(editedItem);
+		}
 	}
 }
 
