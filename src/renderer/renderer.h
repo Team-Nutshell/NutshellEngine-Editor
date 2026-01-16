@@ -131,6 +131,8 @@ private:
 	bool m_doPicking = false;
 	bool m_gotResized = false;
 
+	std::string m_dragDropMaterial;
+
 	std::unordered_map<EntityID, Transform> m_entityMoveTransforms;
 
 	GLuint m_entityProgram;

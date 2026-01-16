@@ -1106,7 +1106,18 @@ void Renderer::paintGL() {
 						currentEntityID = pickedEntityID;
 					}
 				}
-				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
+				if (!m_dragDropMaterial.empty()) {
+					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
+					if (pickedEntity.renderable) {
+						Renderable newRenderable = pickedEntity.renderable.value();
+						newRenderable.materialPath = m_dragDropMaterial;
+						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropMaterial, m_globalInfo.projectDirectory), m_dragDropMaterial);
+						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					}
+				}
+				else {
+					m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
+				}
 			}
 			else {
 				if (pickedEntityID == (NO_ENTITY - 3)) {
@@ -1350,6 +1361,8 @@ void Renderer::paintGL() {
 	}
 
 	gl.glDisable(GL_CULL_FACE);
+
+	m_dragDropMaterial.clear();
 }
 
 GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode) {
@@ -2333,21 +2346,36 @@ void Renderer::dropEvent(QDropEvent* event) {
 		std::string path = sources[0].toLocalFile().toStdString();
 		std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
 		if (!path.empty()) {
-			m_globalInfo.rendererResourceManager.loadModel(path, relativePath);
-			if (m_globalInfo.rendererResourceManager.models.find(relativePath) != m_globalInfo.rendererResourceManager.models.end()) {
-				std::string name = relativePath;
-				size_t lastSlashPosition = name.find_last_of('/');
-				if (lastSlashPosition != std::string::npos) {
-					name = name.substr(lastSlashPosition + 1);
+			size_t lastDot = relativePath.rfind('.');
+			if (lastDot != std::string::npos) {
+				std::string extension = relativePath.substr(lastDot + 1);
+				if ((extension == "ntmd") ||
+					(extension == "gltf") ||
+					(extension == "glb") ||
+					(extension == "obj")) { // Drag and drop model
+					m_globalInfo.rendererResourceManager.loadModel(path, relativePath);
+					if (m_globalInfo.rendererResourceManager.models.find(relativePath) != m_globalInfo.rendererResourceManager.models.end()) {
+						std::string name = relativePath;
+						size_t lastSlashPosition = name.find_last_of('/');
+						if (lastSlashPosition != std::string::npos) {
+							name = name.substr(lastSlashPosition + 1);
+						}
+						size_t dotPosition = name.find_last_of('.');
+						if (dotPosition != std::string::npos) {
+							name = name.substr(0, dotPosition);
+						}
+						m_globalInfo.actionUndoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
+					}
 				}
-				size_t dotPosition = name.find_last_of('.');
-				if (dotPosition != std::string::npos) {
-					name = name.substr(0, dotPosition);
+				else if (extension == "ntml") { // Drag and drop material
+					m_doPicking = true;
+					m_dragDropMaterial = relativePath;
 				}
-				m_globalInfo.actionUndoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
 			}
 		}
 	}
+
+	setFocus();
 }
 
 void Renderer::leaveEvent(QEvent* event) {
