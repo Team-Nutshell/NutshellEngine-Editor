@@ -131,7 +131,13 @@ private:
 	bool m_doPicking = false;
 	bool m_gotResized = false;
 
-	std::string m_dragDropMaterial;
+	enum class DragDropResourceType {
+		Model,
+		Material,
+		None
+	};
+	DragDropResourceType m_dragDropResourceType = DragDropResourceType::None;
+	std::string m_dragDropResourcePath;
 
 	std::unordered_map<EntityID, Transform> m_entityMoveTransforms;
 

@@ -1106,16 +1106,7 @@ void Renderer::paintGL() {
 						currentEntityID = pickedEntityID;
 					}
 				}
-				if (!m_dragDropMaterial.empty()) {
-					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
-					if (pickedEntity.renderable) {
-						Renderable newRenderable = pickedEntity.renderable.value();
-						newRenderable.materialPath = m_dragDropMaterial;
-						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropMaterial, m_globalInfo.projectDirectory), m_dragDropMaterial);
-						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
-					}
-				}
-				else {
+				if (m_dragDropResourceType == DragDropResourceType::None) {
 					m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 				}
 			}
@@ -1134,6 +1125,51 @@ void Renderer::paintGL() {
 		}
 		else {
 			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
+		}
+
+		if (m_dragDropResourceType != DragDropResourceType::None) {
+			if (m_dragDropResourceType == DragDropResourceType::Model) {
+				m_globalInfo.rendererResourceManager.loadModel(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
+				if (pickedEntityID < (NO_ENTITY - 3)) {
+					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
+					if (pickedEntity.renderable) {
+						Renderable newRenderable = pickedEntity.renderable.value();
+						newRenderable.modelPath = m_dragDropResourcePath;
+						newRenderable.primitiveIndex = 0;
+						if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
+							if (m_globalInfo.rendererResourceManager.models[m_dragDropResourcePath].primitives.empty()) {
+								newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
+							}
+						}
+						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					}
+				}
+				else {
+					if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
+						std::string name = m_dragDropResourcePath;
+						size_t lastSlashPosition = name.find_last_of('/');
+						if (lastSlashPosition != std::string::npos) {
+							name = name.substr(lastSlashPosition + 1);
+						}
+						size_t dotPosition = name.find_last_of('.');
+						if (dotPosition != std::string::npos) {
+							name = name.substr(0, dotPosition);
+						}
+						m_globalInfo.actionUndoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, m_dragDropResourcePath));
+					}
+				}
+			}
+			else if (m_dragDropResourceType == DragDropResourceType::Material) {
+				if (pickedEntityID < (NO_ENTITY - 3)) {
+					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
+					if (pickedEntity.renderable) {
+						Renderable newRenderable = pickedEntity.renderable.value();
+						newRenderable.materialPath = m_dragDropResourcePath;
+						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
+						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					}
+				}
+			}
 		}
 
 		m_doPicking = false;
@@ -1362,7 +1398,8 @@ void Renderer::paintGL() {
 
 	gl.glDisable(GL_CULL_FACE);
 
-	m_dragDropMaterial.clear();
+	m_dragDropResourceType = DragDropResourceType::None;
+	m_dragDropResourcePath.clear();
 }
 
 GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode) {
@@ -2353,23 +2390,14 @@ void Renderer::dropEvent(QDropEvent* event) {
 					(extension == "gltf") ||
 					(extension == "glb") ||
 					(extension == "obj")) { // Drag and drop model
-					m_globalInfo.rendererResourceManager.loadModel(path, relativePath);
-					if (m_globalInfo.rendererResourceManager.models.find(relativePath) != m_globalInfo.rendererResourceManager.models.end()) {
-						std::string name = relativePath;
-						size_t lastSlashPosition = name.find_last_of('/');
-						if (lastSlashPosition != std::string::npos) {
-							name = name.substr(lastSlashPosition + 1);
-						}
-						size_t dotPosition = name.find_last_of('.');
-						if (dotPosition != std::string::npos) {
-							name = name.substr(0, dotPosition);
-						}
-						m_globalInfo.actionUndoStack->push(new CreateEntitiesFromModelCommand(m_globalInfo, name, relativePath));
-					}
+					m_doPicking = true;
+					m_dragDropResourceType = DragDropResourceType::Model;
+					m_dragDropResourcePath = relativePath;
 				}
 				else if (extension == "ntml") { // Drag and drop material
 					m_doPicking = true;
-					m_dragDropMaterial = relativePath;
+					m_dragDropResourceType = DragDropResourceType::Material;
+					m_dragDropResourcePath = relativePath;
 				}
 			}
 		}
