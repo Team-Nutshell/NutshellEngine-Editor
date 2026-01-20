@@ -20,6 +20,10 @@ struct AssetHelper {
 	}
 
 	static std::string relativeToAbsolute(const std::string& path, const std::string& projectDirectory) {
+		if (std::filesystem::path(path).is_absolute()) {
+			return path;
+		}
+
 		return projectDirectory + "/" + path;
 	}
 };
