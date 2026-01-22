@@ -198,6 +198,9 @@ void AssetList::updateAssetList() {
 		if (fileType == AssetHelper::FileType::Image) {
 			newItem->setIcon(m_imageIcon);
 		}
+		else if (fileType == AssetHelper::FileType::Icon) {
+			newItem->setIcon(m_iconIcon);
+		}
 		else if (fileType == AssetHelper::FileType::Font) {
 			newItem->setIcon(m_fontIcon);
 		}
@@ -246,6 +249,7 @@ void AssetList::updateAssetList() {
 void AssetList::loadIcons() {
 	m_directoryIcon = QIcon("assets/icons/directory.png");
 	m_imageIcon = QIcon("assets/icons/image.png");
+	m_iconIcon = QIcon("assets/icons/icon.png");
 	m_fontIcon = QIcon("assets/icons/font.png");
 	m_meshIcon = QIcon("assets/icons/mesh.png");
 	m_imageSamplerIcon = QIcon("assets/icons/image_sampler.png");

@@ -29,6 +29,7 @@ struct AssetHelper {
 
 	enum class FileType {
 		Image,
+		Icon,
 		Font,
 		Mesh,
 		ImageSampler,
@@ -54,6 +55,9 @@ struct AssetHelper {
 				(extension == "bmp") ||
 				(extension == "gif")) {
 				return FileType::Image;
+			}
+			else if (extension == "ico") {
+				return FileType::Icon;
 			}
 			else if (extension == "ttf") {
 				return FileType::Font;
