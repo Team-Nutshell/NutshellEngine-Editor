@@ -1124,7 +1124,9 @@ void Renderer::paintGL() {
 			}
 		}
 		else {
-			m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
+			if (m_globalInfo.currentEntityID != NO_ENTITY) {
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
+			}
 		}
 
 		if (m_dragDropResourceType != DragDropResourceType::None) {
