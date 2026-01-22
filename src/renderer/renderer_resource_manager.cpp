@@ -299,36 +299,6 @@ void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
 	mesh.collidersCalculated = true;
 }
 
-RendererResourceManager::AssetType RendererResourceManager::getFileAssetType(const std::string& path) {
-	size_t lastDot = path.rfind('.');
-	if (lastDot != std::string::npos) {
-		std::string extension = path.substr(lastDot + 1);
-
-		if ((extension == "gltf") ||
-			(extension == "glb") ||
-			(extension == "obj") ||
-			(extension == "ntmd")) {
-			return AssetType::Model;
-		}
-		else if (extension == "ntml") {
-			return AssetType::Material;
-		}
-		else if ((extension == "jpg") ||
-			(extension == "jpeg") ||
-			(extension == "png") ||
-			(extension == "tga") ||
-			(extension == "bmp") ||
-			(extension == "gif")) {
-			return AssetType::Image;
-		}
-		else if (extension == "ntsp") {
-			return AssetType::ImageSampler;
-		}
-	}
-
-	return AssetType::Unknown;
-}
-
 void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& model) {
 	std::fstream modelFile(modelPath, std::ios::in);
 	if (modelFile.is_open()) {

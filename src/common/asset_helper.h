@@ -26,4 +26,72 @@ struct AssetHelper {
 
 		return projectDirectory + "/" + path;
 	}
+
+	enum class FileType {
+		Image,
+		Font,
+		Mesh,
+		ImageSampler,
+		Material,
+		Model,
+		Sound,
+		Options,
+		Scene,
+		Json,
+		Text,
+		Unknown
+	};
+
+	static FileType fileType(const std::string& path) {
+		size_t lastDot = path.rfind('.');
+		if (lastDot != std::string::npos) {
+			std::string extension = path.substr(lastDot + 1);
+			if ((extension == "ntim") ||
+				(extension == "jpg") ||
+				(extension == "jpeg") ||
+				(extension == "png") ||
+				(extension == "tga") ||
+				(extension == "bmp") ||
+				(extension == "gif")) {
+				return FileType::Image;
+			}
+			else if (extension == "ttf") {
+				return FileType::Font;
+			}
+			else if (extension == "ntmh") {
+				return FileType::Mesh;
+			}
+			else if (extension == "ntsp") {
+				return FileType::ImageSampler;
+			}
+			else if (extension == "ntml") {
+				return FileType::Material;
+			}
+			else if ((extension == "ntmd") ||
+				(extension == "gltf") ||
+				(extension == "glb") ||
+				(extension == "obj")) {
+				return FileType::Model;
+			}
+			else if ((extension == "ntsd") ||
+				(extension == "wav") ||
+				(extension == "ogg")) {
+				return FileType::Sound;
+			}
+			else if (extension == "ntop") {
+				return FileType::Options;
+			}
+			else if (extension == "ntsn") {
+				return FileType::Scene;
+			}
+			else if (extension == "json") {
+				return FileType::Json;
+			}
+			else if (extension == "txt") {
+				return FileType::Text;
+			}
+		}
+
+		return FileType::Unknown;
+	}
 };

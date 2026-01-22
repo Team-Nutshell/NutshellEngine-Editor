@@ -118,8 +118,6 @@ public:
 
 	void loadMeshColliders(Mesh& mesh);
 
-	AssetType getFileAssetType(const std::string& path);
-
 private:
 	void loadNtmd(const std::string& modelPath, Model& model);
 	Mesh loadNtmh(const std::string& meshPath);

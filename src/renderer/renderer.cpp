@@ -2383,22 +2383,16 @@ void Renderer::dropEvent(QDropEvent* event) {
 		std::string path = sources[0].toLocalFile().toStdString();
 		std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
 		if (!path.empty()) {
-			size_t lastDot = relativePath.rfind('.');
-			if (lastDot != std::string::npos) {
-				std::string extension = relativePath.substr(lastDot + 1);
-				if ((extension == "ntmd") ||
-					(extension == "gltf") ||
-					(extension == "glb") ||
-					(extension == "obj")) { // Drag and drop model
-					m_doPicking = true;
-					m_dragDropResourceType = DragDropResourceType::Model;
-					m_dragDropResourcePath = relativePath;
-				}
-				else if (extension == "ntml") { // Drag and drop material
-					m_doPicking = true;
-					m_dragDropResourceType = DragDropResourceType::Material;
-					m_dragDropResourcePath = relativePath;
-				}
+			AssetHelper::FileType fileType = AssetHelper::fileType(path);
+			if (fileType == AssetHelper::FileType::Model) { // Drag and drop model
+				m_doPicking = true;
+				m_dragDropResourceType = DragDropResourceType::Model;
+				m_dragDropResourcePath = relativePath;
+			}
+			else if (fileType == AssetHelper::FileType::Material) { // Drag and drop material
+				m_doPicking = true;
+				m_dragDropResourceType = DragDropResourceType::Material;
+				m_dragDropResourcePath = relativePath;
 			}
 		}
 	}

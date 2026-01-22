@@ -115,22 +115,18 @@ void AssetList::duplicateAsset(const std::string& path) {
 }
 
 void AssetList::reloadAsset(const std::string& assetPath, const std::string& assetName) {
-	size_t lastDot = assetName.rfind('.');
-	if (lastDot != std::string::npos) {
-		std::string extension = assetName.substr(lastDot + 1);
-		RendererResourceManager::AssetType assetType = m_globalInfo.rendererResourceManager.getFileAssetType(assetPath);
-		if (assetType == RendererResourceManager::AssetType::Model) {
-			m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::Material) {
-			m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::Image) {
-			m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
-		}
-		else if (assetType == RendererResourceManager::AssetType::ImageSampler) {
-			m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
-		}
+	AssetHelper::FileType fileType = AssetHelper::fileType(assetPath);
+	if (fileType == AssetHelper::FileType::Model) {
+		m_globalInfo.rendererResourceManager.loadModel(assetPath, assetName);
+	}
+	else if (fileType == AssetHelper::FileType::Material) {
+		m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
+	}
+	else if (fileType == AssetHelper::FileType::Image) {
+		m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
+	}
+	else if (fileType == AssetHelper::FileType::ImageSampler) {
+		m_globalInfo.rendererResourceManager.loadSampler(assetPath, assetName);
 	}
 }
 
@@ -149,21 +145,17 @@ void AssetList::enterDirectory(const std::string& directory) {
 }
 
 void AssetList::actionOnFile(const std::string& file) {
-	size_t lastDot = file.rfind('.');
-	if (lastDot != std::string::npos) {
-		std::string extension = file.substr(lastDot + 1);
+	AssetHelper::FileType fileType = AssetHelper::fileType(file);
+	if (fileType == AssetHelper::FileType::Scene) {
+		if ((m_globalInfo.mainWindow->windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
+			CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
+			closeSceneWidget->show();
+			m_openScenePath = file;
 
-		if (extension == "ntsn") {
-			if ((m_globalInfo.mainWindow->windowTitle()[0] == '*') && !m_globalInfo.currentScenePath.empty()) {
-				CloseSceneWidget* closeSceneWidget = new CloseSceneWidget(m_globalInfo);
-				closeSceneWidget->show();
-				m_openScenePath = file;
-
-				connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &AssetList::onCloseSceneConfirmed);
-			}
-			else {
-				SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
-			}
+			connect(closeSceneWidget, &CloseSceneWidget::confirmSignal, this, &AssetList::onCloseSceneConfirmed);
+		}
+		else {
+			SceneManager::openScene(m_globalInfo, m_currentDirectory + "/" + file);
 		}
 	}
 }
@@ -202,53 +194,39 @@ void AssetList::updateAssetList() {
 	for (const std::string& fileName : fileNames) {
 		QListWidgetItem* newItem = new QListWidgetItem(m_unknownIcon, QString::fromStdString(fileName));
 
-		size_t lastDot = fileName.rfind('.');
-		if (lastDot != std::string::npos) {
-			std::string extension = fileName.substr(lastDot + 1);
-			if ((extension == "ntim") ||
-				(extension == "jpg") ||
-				(extension == "jpeg") ||
-				(extension == "png") ||
-				(extension == "tga") ||
-				(extension == "bmp") ||
-				(extension == "gif")) {
-				newItem->setIcon(m_imageIcon);
-			}
-			else if (extension == "ttf") {
-				newItem->setIcon(m_fontIcon);
-			}
-			else if (extension == "ntmh") {
-				newItem->setIcon(m_meshIcon);
-			}
-			else if (extension == "ntsp") {
-				newItem->setIcon(m_imageSamplerIcon);
-			}
-			else if (extension == "ntml") {
-				newItem->setIcon(m_materialIcon);
-			}
-			else if ((extension == "ntmd") ||
-				(extension == "gltf") ||
-				(extension == "glb") ||
-				(extension == "obj")) {
-				newItem->setIcon(m_modelIcon);
-			}
-			else if ((extension == "ntsd") ||
-				(extension == "wav") ||
-				(extension == "ogg")) {
-				newItem->setIcon(m_soundIcon);
-			}
-			else if (extension == "ntop") {
-				newItem->setIcon(m_optionsIcon);
-			}
-			else if (extension == "ntsn") {
-				newItem->setIcon(m_sceneIcon);
-			}
-			else if (extension == "json") {
-				newItem->setIcon(m_jsonIcon);
-			}
-			else if (extension == "txt") {
-				newItem->setIcon(m_textIcon);
-			}
+		AssetHelper::FileType fileType = AssetHelper::fileType(fileName);
+		if (fileType == AssetHelper::FileType::Image) {
+			newItem->setIcon(m_imageIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Font) {
+			newItem->setIcon(m_fontIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Mesh) {
+			newItem->setIcon(m_meshIcon);
+		}
+		else if (fileType == AssetHelper::FileType::ImageSampler) {
+			newItem->setIcon(m_imageSamplerIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Material) {
+			newItem->setIcon(m_materialIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Model) {
+			newItem->setIcon(m_modelIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Sound) {
+			newItem->setIcon(m_soundIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Options) {
+			newItem->setIcon(m_optionsIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Scene) {
+			newItem->setIcon(m_sceneIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Json) {
+			newItem->setIcon(m_jsonIcon);
+		}
+		else if (fileType == AssetHelper::FileType::Text) {
+			newItem->setIcon(m_textIcon);
 		}
 
 		addItem(newItem);

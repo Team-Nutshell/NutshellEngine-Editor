@@ -1,5 +1,6 @@
 #include "asset_info_list.h"
 #include "json_model.h"
+#include "../common/asset_helper.h"
 #include <QVBoxLayout>
 
 AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -34,91 +35,87 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 void AssetInfoList::onAssetSelected(const std::string& path) {
 	if (!path.empty() && !std::filesystem::is_directory(path)) {
 		currentAssetPath = path;
-		size_t lastDot = path.rfind('.');
-		if (lastDot != std::string::npos) {
-			std::string extension = path.substr(lastDot + 1);
-
-			if (extension == "ntml") {
-				materialNtmlFileWidget->setPath(path);
-				materialNtmlFileWidget->show();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
-			else if (extension == "ntmd") {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->setPath(path);
-				modelNtmdFileWidget->show();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
-			else if (extension == "ntop") {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->setPath(path);
-				optionsNtopFileWidget->show();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
-			else if (extension == "ntsp") {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->setPath(path);
-				samplerNtspFileWidget->show();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
-			else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->setPath(path);
-				imageFileWidget->show();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
-			else if (extension == "json") {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->setModel(new JSONModel(m_globalInfo, path));
-				jsonFileWidget->model()->setHeaderData(0, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_key")));
-				jsonFileWidget->model()->setHeaderData(1, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_value")));
-				jsonFileWidget->show();
-				textFileWidget->hide();
-			}
-			else if (extension == "txt") {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->setPath(path);
-				textFileWidget->show();
-			}
-			else {
-				materialNtmlFileWidget->hide();
-				modelNtmdFileWidget->hide();
-				optionsNtopFileWidget->hide();
-				samplerNtspFileWidget->hide();
-				imageFileWidget->hide();
-				jsonFileWidget->hide();
-				textFileWidget->hide();
-			}
+		AssetHelper::FileType fileType = AssetHelper::fileType(path);
+		if (fileType == AssetHelper::FileType::Material) {
+			materialNtmlFileWidget->setPath(path);
+			materialNtmlFileWidget->show();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::Model) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->setPath(path);
+			modelNtmdFileWidget->show();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::Options) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->setPath(path);
+			optionsNtopFileWidget->show();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::ImageSampler) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->setPath(path);
+			samplerNtspFileWidget->show();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::Image) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->setPath(path);
+			imageFileWidget->show();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::Json) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->setModel(new JSONModel(m_globalInfo, path));
+			jsonFileWidget->model()->setHeaderData(0, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_key")));
+			jsonFileWidget->model()->setHeaderData(1, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_value")));
+			jsonFileWidget->show();
+			textFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::Text) {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->setPath(path);
+			textFileWidget->show();
+		}
+		else {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
 		}
 	}
 	else {
