@@ -246,6 +246,9 @@ void AssetList::updateAssetList() {
 			else if (extension == "json") {
 				newItem->setIcon(m_jsonIcon);
 			}
+			else if (extension == "txt") {
+				newItem->setIcon(m_textIcon);
+			}
 		}
 
 		addItem(newItem);
@@ -274,6 +277,7 @@ void AssetList::loadIcons() {
 	m_optionsIcon = QIcon("assets/icons/options.png");
 	m_sceneIcon = QIcon("assets/icons/scene.png");
 	m_jsonIcon = QIcon("assets/icons/json.png");
+	m_textIcon = QIcon("assets/icons/text.png");
 	m_unknownIcon = QIcon("assets/icons/unknown.png");
 }
 

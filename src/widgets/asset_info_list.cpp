@@ -24,6 +24,9 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	jsonFileWidget = new QTreeView();
 	jsonFileWidget->hide();
 	layout()->addWidget(jsonFileWidget);
+	textFileWidget = new TextFileWidget(m_globalInfo);
+	textFileWidget->hide();
+	layout()->addWidget(textFileWidget);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectAssetSignal, this, &AssetInfoList::onAssetSelected);
 }
@@ -43,6 +46,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				samplerNtspFileWidget->hide();
 				imageFileWidget->hide();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 			else if (extension == "ntmd") {
 				materialNtmlFileWidget->hide();
@@ -52,6 +56,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				samplerNtspFileWidget->hide();
 				imageFileWidget->hide();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 			else if (extension == "ntop") {
 				materialNtmlFileWidget->hide();
@@ -61,6 +66,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				samplerNtspFileWidget->hide();
 				imageFileWidget->hide();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 			else if (extension == "ntsp") {
 				materialNtmlFileWidget->hide();
@@ -70,6 +76,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				samplerNtspFileWidget->show();
 				imageFileWidget->hide();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 			else if ((extension == "jpg") || (extension == "jpeg") || (extension == "png") || (extension == "ntim")) {
 				materialNtmlFileWidget->hide();
@@ -79,6 +86,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				imageFileWidget->setPath(path);
 				imageFileWidget->show();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 			else if (extension == "json") {
 				materialNtmlFileWidget->hide();
@@ -90,6 +98,17 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				jsonFileWidget->model()->setHeaderData(0, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_key")));
 				jsonFileWidget->model()->setHeaderData(1, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_value")));
 				jsonFileWidget->show();
+				textFileWidget->hide();
+			}
+			else if (extension == "txt") {
+				materialNtmlFileWidget->hide();
+				modelNtmdFileWidget->hide();
+				optionsNtopFileWidget->hide();
+				samplerNtspFileWidget->hide();
+				imageFileWidget->hide();
+				jsonFileWidget->hide();
+				textFileWidget->setPath(path);
+				textFileWidget->show();
 			}
 			else {
 				materialNtmlFileWidget->hide();
@@ -98,6 +117,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 				samplerNtspFileWidget->hide();
 				imageFileWidget->hide();
 				jsonFileWidget->hide();
+				textFileWidget->hide();
 			}
 		}
 	}
@@ -108,5 +128,6 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 		samplerNtspFileWidget->hide();
 		imageFileWidget->hide();
 		jsonFileWidget->hide();
+		textFileWidget->hide();
 	}
 }

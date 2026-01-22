@@ -186,6 +186,8 @@ set(WIDGET_SOURCES
 	src/widgets/separator_line.cpp
 	src/widgets/sound_listener_component_widget.cpp
 	src/widgets/string_widget.cpp
+	src/widgets/text_file_widget.cpp
+	src/widgets/text_widget.cpp
 	src/widgets/transform_component_widget.cpp
 	src/widgets/vector2_widget.cpp
 	src/widgets/vector3_widget.cpp
@@ -272,6 +274,8 @@ set(WIDGET_HEADERS
 	src/widgets/separator_line.h
 	src/widgets/sound_listener_component_widget.h
 	src/widgets/string_widget.h
+	src/widgets/text_file_widget.h
+	src/widgets/text_widget.h
 	src/widgets/transform_component_widget.h
 	src/widgets/vector2_widget.h
 	src/widgets/vector3_widget.h
