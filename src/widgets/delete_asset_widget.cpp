@@ -1,4 +1,5 @@
 #include "delete_asset_widget.h"
+#include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QLabel>
 #include <QVBoxLayout>
@@ -13,7 +14,7 @@ DeleteAssetWidget::DeleteAssetWidget(GlobalInfo& globalInfo, const std::string& 
 
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignHCenter);
-	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_confirm_delete", { m_path }))));
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_confirm_delete", { AssetHelper::absoluteToRelative(m_path, m_globalInfo.projectDirectory) }))));
 	layout()->addWidget(new QLabel("<b>" + QString::fromStdString(m_globalInfo.localization.getString("assets_delete_cannot_undo")) + "</b>"));
 	QWidget* buttonLayoutWidget = new QWidget();
 	buttonLayoutWidget->setLayout(new QHBoxLayout());

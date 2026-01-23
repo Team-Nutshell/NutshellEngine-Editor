@@ -1,10 +1,11 @@
 #include "open_scene_command.h"
 #include "select_asset_entities_command.h"
 #include "../common/save_title_changer.h"
+#include "../common/asset_helper.h"
 #include "../widgets/main_window.h"
 
 OpenSceneCommand::OpenSceneCommand(GlobalInfo& globalInfo, const std::vector<Entity>& newEntities, const std::string& newScenePath) : m_globalInfo(globalInfo), m_newEntities(newEntities), m_previousScenePath(globalInfo.currentScenePath), m_newScenePath(newScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_open_scene", { m_newScenePath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_open_scene", { AssetHelper::absoluteToRelative(m_newScenePath, m_globalInfo.projectDirectory) })));
 
 	m_previousEntities.resize(globalInfo.entities.size());
 	for (int i = 0; i < m_globalInfo.mainWindow->entityPanel->entityList->count(); i++) {

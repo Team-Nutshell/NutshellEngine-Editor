@@ -422,7 +422,7 @@ void MaterialNtmlFileWidget::onValueChanged() {
 }
 
 ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialNtml newMaterialNtml, const std::string& filePath) : m_globalInfo(globalInfo) {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_material", { filePath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_material", { AssetHelper::absoluteToRelative(filePath, m_globalInfo.projectDirectory) })));
 
 	m_materialNtmlFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->materialNtmlFileWidget;
 	m_oldMaterialNtml = m_materialNtmlFileWidget->materialNtml;

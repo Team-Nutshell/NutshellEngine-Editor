@@ -268,7 +268,7 @@ void SamplerNtspFileWidget::onValueChanged() {
 }
 
 ChangeSamplerNtspFile::ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp newSamplerNtsp, const std::string& filePath) : m_globalInfo(globalInfo) {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_sampler", { filePath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_sampler", { AssetHelper::absoluteToRelative(filePath, m_globalInfo.projectDirectory) })));
 
 	m_samplerNtspFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->samplerNtspFileWidget;
 	m_oldSamplerNtsp = m_samplerNtspFileWidget->samplerNtsp;

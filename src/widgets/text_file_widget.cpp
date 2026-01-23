@@ -1,5 +1,6 @@
 #include "text_file_widget.h"
 #include "main_window.h"
+#include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QVBoxLayout>
 #include <fstream>
@@ -37,6 +38,8 @@ void TextFileWidget::onValueChanged() {
 }
 
 ChangeTextFile::ChangeTextFile(GlobalInfo& globalInfo, std::string newText, const std::string& filePath) : m_globalInfo(globalInfo) {
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_text_file", { AssetHelper::absoluteToRelative(filePath, m_globalInfo.projectDirectory) })));
+
 	m_textFileWidget = m_globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->textFileWidget;
 	m_oldText = m_textFileWidget->text;
 	m_newText = newText;

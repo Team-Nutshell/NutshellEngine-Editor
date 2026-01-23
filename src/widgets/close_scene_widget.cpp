@@ -1,5 +1,6 @@
 #include "close_scene_widget.h"
 #include "../common/scene_manager.h"
+#include "../common/asset_helper.h"
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QFileDialog>
@@ -15,7 +16,7 @@ CloseSceneWidget::CloseSceneWidget(GlobalInfo& globalInfo) : m_globalInfo(global
 	setLayout(new QVBoxLayout());
 	std::string unsavedSceneString;
 	if (!m_scenePath.empty()) {
-		unsavedSceneString = m_globalInfo.localization.getString("unsaved_scene_changes", { m_scenePath });
+		unsavedSceneString = m_globalInfo.localization.getString("unsaved_scene_changes", { AssetHelper::absoluteToRelative(m_scenePath, m_globalInfo.projectDirectory) });
 	}
 	else {
 		unsavedSceneString = m_globalInfo.localization.getString("unsaved_scene_changes_no_file");

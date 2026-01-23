@@ -1,10 +1,11 @@
 #include "clear_scene_command.h"
 #include "select_asset_entities_command.h"
 #include "../common/save_title_changer.h"
+#include "../common/asset_helper.h"
 #include "../widgets/main_window.h"
 
 ClearSceneCommand::ClearSceneCommand(GlobalInfo& globalInfo) : m_globalInfo(globalInfo), m_previousEntities(globalInfo.entities), m_previousScenePath(globalInfo.currentScenePath), m_previousSceneModified(globalInfo.mainWindow->windowTitle()[0] == '*') {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_clear_scene", { m_previousScenePath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_clear_scene", { AssetHelper::absoluteToRelative(m_previousScenePath, m_globalInfo.projectDirectory) })));
 }
 
 void ClearSceneCommand::undo() {

@@ -130,7 +130,7 @@ void OptionsNtopFileWidget::onValueChanged() {
 }
 
 ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop newOptionsNtop, const std::string& filePath) : m_globalInfo(globalInfo) {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_options", { filePath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_change_options", { AssetHelper::absoluteToRelative(filePath, m_globalInfo.projectDirectory) })));
 
 	m_optionsNtopFileWidget = globalInfo.mainWindow->infoPanel->assetInfoPanel->assetInfoScrollArea->assetInfoList->optionsNtopFileWidget;
 	m_oldOptionsNtop = m_optionsNtopFileWidget->optionsNtop;

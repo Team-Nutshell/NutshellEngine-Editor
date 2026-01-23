@@ -1,8 +1,9 @@
 #include "create_entities_from_model_command.h"
 #include "select_asset_entities_command.h"
+#include "../common/asset_helper.h"
 
 CreateEntitiesFromModelCommand::CreateEntitiesFromModelCommand(GlobalInfo& globalInfo, const std::string& name, const std::string& modelPath) : m_globalInfo(globalInfo), m_modelPath(modelPath) {
-	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_create_entities_from_model", { modelPath })));
+	setText(QString::fromStdString(m_globalInfo.localization.getString("undo_create_entities_from_model", { AssetHelper::absoluteToRelative(modelPath, m_globalInfo.projectDirectory) })));
 	if (m_globalInfo.findEntityByName(name) == NO_ENTITY) {
 		m_baseEntityName = name;
 	}
