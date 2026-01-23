@@ -2,7 +2,6 @@
 #include "asset_line_edit.h"
 
 QWidget* AssetListItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const {
-	(void)parent;
 	(void)option;
 	(void)index;
 
