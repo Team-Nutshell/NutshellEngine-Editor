@@ -37,8 +37,8 @@ private:
 
 	bool m_moveEntityOrderKeyPressed = false;
 
-	bool m_selfSignal = false;
-
 public:
 	EntityListMenu* menu;
+
+	bool blockSelectionSignal = false;
 };

@@ -65,7 +65,7 @@ std::vector<EntityID> EntityList::getRowSortedSelectedEntityIDs() {
 }
 
 void EntityList::updateSelection() {
-	m_selfSignal = true;
+	blockSelectionSignal = true;
 	for (int i = 0; i < count(); i++) {
 		EntityListItem* entityListItem = static_cast<EntityListItem*>(item(i));
 		if (m_globalInfo.currentEntityID == entityListItem->entityID) {
@@ -79,7 +79,7 @@ void EntityList::updateSelection() {
 			entityListItem->setSelected(false);
 		}
 	}
-	m_selfSignal = false;
+	blockSelectionSignal = false;
 }
 
 void EntityList::onEntityCreated(EntityID entityID) {
@@ -147,13 +147,11 @@ void EntityList::dropEvent(QDropEvent* event) {
 }
 
 void EntityList::selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
-	(void)selected;
-	(void)deselected;
-	if (m_selfSignal) {
+	QListWidget::selectionChanged(selected, deselected);
+
+	if (blockSelectionSignal) {
 		return;
 	}
-
-	QListWidget::selectionChanged(selected, deselected);
 
 	if (!selectedItems().empty()) {
 		QList<QListWidgetItem*> otherSelectedItems = selectedItems();

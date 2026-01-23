@@ -1,7 +1,5 @@
 #include "select_asset_entities_command.h"
 #include "../widgets/main_window.h"
-#include <QSignalBlocker>
-#include <algorithm>
 #include <filesystem>
 
 SelectAssetEntitiesCommand::SelectAssetEntitiesCommand(GlobalInfo& globalInfo, SelectionType newType, const std::string& newSelectedAssetPath, EntityID newCurrentEntityID, const std::set<EntityID>& newOtherSelectedEntityIDs) : m_globalInfo(globalInfo) {
@@ -33,11 +31,6 @@ void SelectAssetEntitiesCommand::undo() {
 		else {
 			emit m_globalInfo.signalEmitter.selectAssetSignal("");
 		}
-
-		{
-			const QSignalBlocker signalBlocker(m_globalInfo.mainWindow->entityPanel->entityList);
-			m_globalInfo.mainWindow->entityPanel->entityList->clearSelection();
-		}
 	}
 	else if (m_oldType == SelectionType::Entities) {
 		m_globalInfo.currentEntityID = NO_ENTITY;
@@ -46,19 +39,18 @@ void SelectAssetEntitiesCommand::undo() {
 		if (m_globalInfo.entities.find(m_oldCurrentEntityID) != m_globalInfo.entities.end()) {
 			m_globalInfo.currentEntityID = m_oldCurrentEntityID;
 		}
-
-		for (EntityID otherSelectedEntityID : m_oldOtherSelectedEntityIDs) {
+		for (EntityID otherSelectedEntityID : m_newOtherSelectedEntityIDs) {
 			if (m_globalInfo.entities.find(otherSelectedEntityID) != m_globalInfo.entities.end()) {
-				m_globalInfo.otherSelectedEntityIDs.insert(otherSelectedEntityID);
+				if (m_globalInfo.currentEntityID == NO_ENTITY) {
+					m_globalInfo.currentEntityID = otherSelectedEntityID;
+				}
+				else {
+					m_globalInfo.otherSelectedEntityIDs.insert(otherSelectedEntityID);
+				}
 			}
 		}
 
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
-
-		{
-			const QSignalBlocker signalBlocker(m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList);
-			m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->clearSelection();
-		}
 	}
 
 	m_globalInfo.lastSelectionType = m_oldType;
@@ -72,11 +64,6 @@ void SelectAssetEntitiesCommand::redo() {
 		else {
 			emit m_globalInfo.signalEmitter.selectAssetSignal("");
 		}
-
-		{
-			const QSignalBlocker signalBlocker(m_globalInfo.mainWindow->entityPanel->entityList);
-			m_globalInfo.mainWindow->entityPanel->entityList->clearSelection();
-		}
 	}
 	else if (m_newType == SelectionType::Entities) {
 		m_globalInfo.currentEntityID = NO_ENTITY;
@@ -85,19 +72,18 @@ void SelectAssetEntitiesCommand::redo() {
 		if (m_globalInfo.entities.find(m_newCurrentEntityID) != m_globalInfo.entities.end()) {
 			m_globalInfo.currentEntityID = m_newCurrentEntityID;
 		}
-
 		for (EntityID otherSelectedEntityID : m_newOtherSelectedEntityIDs) {
 			if (m_globalInfo.entities.find(otherSelectedEntityID) != m_globalInfo.entities.end()) {
-				m_globalInfo.otherSelectedEntityIDs.insert(otherSelectedEntityID);
+				if (m_globalInfo.currentEntityID == NO_ENTITY) {
+					m_globalInfo.currentEntityID = otherSelectedEntityID;
+				}
+				else {
+					m_globalInfo.otherSelectedEntityIDs.insert(otherSelectedEntityID);
+				}
 			}
 		}
 
 		emit m_globalInfo.signalEmitter.selectEntitySignal();
-
-		{
-			const QSignalBlocker signalBlocker(m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList);
-			m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->clearSelection();
-		}
 	}
 
 	m_globalInfo.lastSelectionType = m_newType;
