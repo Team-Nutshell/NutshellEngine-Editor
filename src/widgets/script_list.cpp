@@ -269,6 +269,9 @@ void ScriptList::wheelEvent(QWheelEvent* event) {
 			setFont(newFont);
 		}
 	}
+	else {
+		QListWidget::wheelEvent(event);
+	}
 }
 
 void ScriptList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {

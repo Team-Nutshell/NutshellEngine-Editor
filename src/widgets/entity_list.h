@@ -5,6 +5,7 @@
 #include <QListWidget>
 #include <QPoint>
 #include <QKeyEvent>
+#include <QWheelEvent>
 #include <QDropEvent>
 #include <string>
 
@@ -30,6 +31,7 @@ private slots:
 	void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
+	void wheelEvent(QWheelEvent* event);
 	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);
 
 private:

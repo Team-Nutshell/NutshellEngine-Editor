@@ -425,6 +425,9 @@ void AssetList::wheelEvent(QWheelEvent* event) {
 			setFont(newFont);
 		}
 	}
+	else {
+		QListWidget::wheelEvent(event);
+	}
 }
 
 void AssetList::dragEnterEvent(QDragEnterEvent* event) {

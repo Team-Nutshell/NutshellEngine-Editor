@@ -299,6 +299,20 @@ void EntityList::keyReleaseEvent(QKeyEvent* event) {
 	}
 }
 
+void EntityList::wheelEvent(QWheelEvent* event) {
+	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+		QFont newFont = font();
+		int newSize = event->angleDelta().y() / 120;
+		if ((newFont.pointSize() + newSize) > 0) {
+			newFont.setPointSize(newFont.pointSize() + newSize);
+			setFont(newFont);
+		}
+	}
+	else {
+		QListWidget::wheelEvent(event);
+	}
+}
+
 void EntityList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {
 	(void)hint;
 	EntityListItem* currentItem = findItemWithEntityID(m_globalInfo.currentEntityID);
