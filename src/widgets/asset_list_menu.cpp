@@ -27,6 +27,8 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	newImageSamplerAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("image_sampler")), this, &AssetListMenu::newImageSampler);
 	newMaterialAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("material")), this, &AssetListMenu::newMaterial);
 	newSceneAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("scene")), this, &AssetListMenu::newScene);
+	QMenu* createOtherMenu = createMenu->addMenu(QString::fromStdString(m_globalInfo.localization.getString("assets_create_other")));
+	newTextFileAction = createOtherMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("text_file")), this, &AssetListMenu::newTextFile);
 	addSeparator();
 	copyPathAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_copy_path")), this, &AssetListMenu::copyPath);
 }
@@ -183,6 +185,22 @@ void AssetListMenu::newScene() {
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, {}));
 
 	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newSceneName + sceneExtension;
+}
+
+void AssetListMenu::newTextFile() {
+	std::string baseNewTextFileName = "text";
+	std::string textFileExtension = ".txt";
+	std::string newTextFileName = baseNewTextFileName;
+	uint32_t textFileNameIndex = 0;
+	while (std::filesystem::exists(directory + "/" + newTextFileName + textFileExtension)) {
+		newTextFileName = baseNewTextFileName + "_" + std::to_string(textFileNameIndex);
+		textFileNameIndex++;
+	}
+	std::ofstream newTextFileFile(directory + "/" + newTextFileName + textFileExtension);
+	newTextFileFile.close();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newTextFileName + textFileExtension, NO_ENTITY, {}));
+
+	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newTextFileName + textFileExtension;
 }
 
 void AssetListMenu::copyPath() {
