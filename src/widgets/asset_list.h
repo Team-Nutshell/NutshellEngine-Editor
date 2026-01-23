@@ -5,6 +5,7 @@
 #include <QFileSystemWatcher>
 #include <QMimeData>
 #include <QKeyEvent>
+#include <QWheelEvent>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
@@ -45,6 +46,7 @@ private slots:
 	QMimeData* mimeData(const QList<QListWidgetItem*>& items) const;
 
 	void keyPressEvent(QKeyEvent* event);
+	void wheelEvent(QWheelEvent* event);
 	void dragEnterEvent(QDragEnterEvent* event);
 	void dragMoveEvent(QDragMoveEvent* event);
 	void dropEvent(QDropEvent* event);
@@ -73,6 +75,7 @@ private:
 	QIcon m_jsonIcon;
 	QIcon m_textIcon;
 	QIcon m_unknownIcon;
+	int m_iconSize = 16;
 
 public:
 	AssetListMenu* menu;

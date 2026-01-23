@@ -260,6 +260,17 @@ void ScriptList::keyPressEvent(QKeyEvent* event) {
 	}
 }
 
+void ScriptList::wheelEvent(QWheelEvent* event) {
+	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+		QFont newFont = font();
+		int newSize = event->angleDelta().y() / 120;
+		if ((newFont.pointSize() + newSize) > 0) {
+			newFont.setPointSize(newFont.pointSize() + newSize);
+			setFont(newFont);
+		}
+	}
+}
+
 void ScriptList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint) {
 	(void)hint;
 	QListWidgetItem* currentItem = selectedItems()[0];

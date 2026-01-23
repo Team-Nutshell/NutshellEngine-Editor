@@ -4,6 +4,7 @@
 #include <QListWidget>
 #include <QFileSystemWatcher>
 #include <QKeyEvent>
+#include <QWheelEvent>
 #include <string>
 
 class ScriptList : public QListWidget {
@@ -29,6 +30,7 @@ private slots:
 	void showMenu(const QPoint& pos);
 
 	void keyPressEvent(QKeyEvent* event);
+	void wheelEvent(QWheelEvent* event);
 	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);
 
 private:

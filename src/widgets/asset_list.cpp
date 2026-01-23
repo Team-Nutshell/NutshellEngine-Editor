@@ -414,6 +414,19 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 	}
 }
 
+void AssetList::wheelEvent(QWheelEvent* event) {
+	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
+		QFont newFont = font();
+		int newSize = event->angleDelta().y() / 120;
+		if ((newFont.pointSize() + newSize) > 0) {
+			m_iconSize += newSize;
+			setIconSize(QSize(m_iconSize, m_iconSize));
+			newFont.setPointSize(newFont.pointSize() + newSize);
+			setFont(newFont);
+		}
+	}
+}
+
 void AssetList::dragEnterEvent(QDragEnterEvent* event) {
 	if (event->source() == this) {
 		return;
