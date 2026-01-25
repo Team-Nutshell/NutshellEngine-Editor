@@ -13,11 +13,6 @@
 #include <vector>
 #include <utility>
 #include <tuple>
-#if defined(NTSHENGN_OS_WINDOWS)
-#include <windows.h>
-#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-#include <stdio.h>
-#endif
 #include <cctype>
 
 #if defined(NTSHENGN_OS_WINDOWS)
@@ -104,9 +99,13 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	layout()->addWidget(buildTypeComboBox);
 	exportButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("build_export")));
 	layout()->addWidget(exportButton);
+	stopRunButton = new QPushButton(QString::fromStdString(m_globalInfo.localization.getString("build_stop_run")));
+	stopRunButton->setEnabled(false);
+	layout()->addWidget(stopRunButton);
 
 	connect(buildAndRunButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
 	connect(exportButton, &QPushButton::clicked, this, &BuildBar::launchExport);
+	connect(stopRunButton, &QPushButton::clicked, this, &BuildBar::stopRun);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &BuildBar::onBuildRunExportStarted);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &BuildBar::onBuildRunExportEnded);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startExportSignal, this, &BuildBar::onBuildRunExportStarted);
@@ -502,6 +501,9 @@ void BuildBar::run() {
 	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
+		m_process = processInformation.hProcess;
+		stopRunButton->setEnabled(true);
+
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
 
@@ -546,17 +548,19 @@ void BuildBar::run() {
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "./NutshellEngine 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
-	FILE* fp = popen(runCommand.c_str(), "r");
-	if (fp == NULL) {
+	m_process = popen(runCommand.c_str(), "r");
+	if (m_process == NULL) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_cannot_launch"));
 	}
+
+	stopRunButton->setEnabled(true);
 
 	// Reset current path
 	std::filesystem::current_path(previousCurrentPath);
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 	char stdOutBuffer[4096];
-	while (fgets(stdOutBuffer, 4096, fp) != NULL) {
+	while (fgets(stdOutBuffer, 4096, m_process) != NULL) {
 		std::string log = std::string(stdOutBuffer);
 
 		std::stringstream syntaxSugarRegexResult;
@@ -565,13 +569,23 @@ void BuildBar::run() {
 		addLog(syntaxSugarRegexResult.str());
 	}
 
-	if (pclose(fp) == 0) {
+	if (pclose(m_process) == 0) {
 		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_close_success"));
 	}
 	else {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_close_error"));
 	}
 #endif
+}
+
+void BuildBar::stopRun() {
+	if (m_process) {
+#if defined(NTSHENGN_OS_WINDOWS)
+		TerminateProcess(m_process, 0);
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+		pclose(m_process);
+#endif
+	}
 }
 
 void BuildBar::exportApplication(const std::string& exportDirectory) {
@@ -989,4 +1003,6 @@ void BuildBar::onBuildRunExportEnded() {
 	buildAndRunButton->setEnabled(true);
 	buildTypeComboBox->comboBox->setEnabled(true);
 	exportButton->setEnabled(true);
+	stopRunButton->setEnabled(false);
+	m_process = 0;
 }

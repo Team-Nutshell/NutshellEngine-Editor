@@ -85,6 +85,7 @@
 	"header_about_nutshell_engine": "About NutshellEngine",
 	"build_type": "Build Type",
 	"build_export": "Export",
+	"build_stop_run": "Stop Run",
 	"entity_list": "Entity List",
 	"entity_rename": "Rename Entity",
 	"entity_new": "New Entity",

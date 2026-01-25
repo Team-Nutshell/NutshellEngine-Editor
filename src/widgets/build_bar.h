@@ -3,6 +3,13 @@
 #include "combo_box_widget.h"
 #include <QWidget>
 #include <QPushButton>
+#if defined(NTSHENGN_OS_WINDOWS)
+#include <windows.h>
+#undef far
+#undef near
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+#include <stdio.h>
+#endif
 
 class BuildBar : public QWidget {
 	Q_OBJECT
@@ -16,6 +23,7 @@ private:
 
 	bool build();
 	void run();
+	void stopRun();
 	void exportApplication(const std::string& exportDirectory);
 
 	void addLog(std::string log);
@@ -30,8 +38,15 @@ private slots:
 private:
 	GlobalInfo& m_globalInfo;
 
+#if defined(NTSHENGN_OS_WINDOWS)
+	HANDLE m_process = 0;
+#elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+	FILE* m_process = 0;
+#endif
+
 public:
 	QPushButton* buildAndRunButton;
 	QPushButton* exportButton;
 	ComboBoxWidget* buildTypeComboBox;
+	QPushButton* stopRunButton;
 };
