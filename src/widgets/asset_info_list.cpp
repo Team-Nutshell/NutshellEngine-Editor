@@ -35,6 +35,15 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 void AssetInfoList::onAssetSelected(const std::string& path) {
 	if (!path.empty() && !std::filesystem::is_directory(path)) {
 		currentAssetPath = path;
+
+		std::string extension;
+		size_t lastDot = path.rfind('.');
+		if (lastDot != std::string::npos) {
+			if (extension != "ntmd") {
+				extension = path.substr(lastDot + 1);
+			}
+		}
+
 		AssetHelper::FileType fileType = AssetHelper::fileType(path);
 		if (fileType == AssetHelper::FileType::Material) {
 			materialNtmlFileWidget->setPath(path);
@@ -46,7 +55,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			jsonFileWidget->hide();
 			textFileWidget->hide();
 		}
-		else if (fileType == AssetHelper::FileType::Model) {
+		else if ((fileType == AssetHelper::FileType::Model) && (extension == "ntmd")) {
 			materialNtmlFileWidget->hide();
 			modelNtmdFileWidget->setPath(path);
 			modelNtmdFileWidget->show();
@@ -76,7 +85,8 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			jsonFileWidget->hide();
 			textFileWidget->hide();
 		}
-		else if (fileType == AssetHelper::FileType::Image) {
+		else if ((fileType == AssetHelper::FileType::Image) ||
+			(fileType == AssetHelper::FileType::Icon)) {
 			materialNtmlFileWidget->hide();
 			modelNtmdFileWidget->hide();
 			optionsNtopFileWidget->hide();

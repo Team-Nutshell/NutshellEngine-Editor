@@ -23,7 +23,10 @@ void ImageFileWidget::setPath(const std::string& path) {
 	QImage image;
 	size_t lastDot = path.rfind('.');
 	std::string extension = path.substr(lastDot + 1);
-	if ((extension == "jpg") || (extension == "jpeg") || (extension == "png")) {
+	if ((extension == "jpg") ||
+		(extension == "jpeg") ||
+		(extension == "png") ||
+		(extension == "ico")) {
 		image = QImage(QString::fromStdString(path));
 	}
 	else if (extension == "ntim") {
