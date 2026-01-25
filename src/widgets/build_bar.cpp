@@ -14,6 +14,11 @@
 #include <utility>
 #include <tuple>
 #include <cctype>
+#if defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+#include <unistd.h>
+#include <poll.h>
+#include <sys/signal.h>
+#endif
 
 #if defined(NTSHENGN_OS_WINDOWS)
 // https://learn.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)
@@ -548,8 +553,10 @@ void BuildBar::run() {
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "./NutshellEngine 2>&1";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
-	m_process = popen(runCommand.c_str(), "r");
-	if (m_process == NULL) {
+	int applicationStdOut;
+	std::array<const char*, 3> command = { "./NutshellEngine", "2>&1", NULL };
+	m_process = popen2(command.data(), nullptr, &applicationStdOut);
+	if (m_process <= 0) {
 		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_cannot_launch"));
 	}
 
@@ -560,8 +567,9 @@ void BuildBar::run() {
 	
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_application_logs"));
 	char stdOutBuffer[4096];
-	while (fgets(stdOutBuffer, 4096, m_process) != NULL) {
-		std::string log = std::string(stdOutBuffer);
+	int bytesRead = 0;
+	while ((bytesRead = read(applicationStdOut, stdOutBuffer, 4096))) {
+		std::string log = std::string(stdOutBuffer, bytesRead);
 
 		std::stringstream syntaxSugarRegexResult;
 		std::regex_replace(std::ostream_iterator<char>(syntaxSugarRegexResult), log.begin(), log.end(), syntaxSugarRegex, "");
@@ -569,12 +577,7 @@ void BuildBar::run() {
 		addLog(syntaxSugarRegexResult.str());
 	}
 
-	if (pclose(m_process) == 0) {
-		m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_close_success"));
-	}
-	else {
-		m_globalInfo.logger.addLog(LogLevel::Error, m_globalInfo.localization.getString("log_run_close_error"));
-	}
+	::close(applicationStdOut);
 #endif
 }
 
@@ -583,7 +586,7 @@ void BuildBar::stopRun() {
 #if defined(NTSHENGN_OS_WINDOWS)
 		TerminateProcess(m_process, 0);
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-		pclose(m_process);
+		kill(m_process, SIGKILL);
 #endif
 	}
 }
@@ -992,6 +995,52 @@ void BuildBar::generateScriptManager() {
 	std::fstream scriptManagerFile(m_globalInfo.projectDirectory + "/scripts/script_manager/ntshengn_script_manager.cpp", std::ios::out | std::ios::trunc);
 	scriptManagerFile << scriptManagerFileContent;
 }
+
+#if defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+pid_t BuildBar::popen2(const char** command, int* inFp, int* outFp) {
+	int stdin[2];
+	int stdout[2];
+	pid_t pid;
+
+	if ((pipe(stdin) != 0) || (pipe(stdout) != 0)) {
+		return -1;
+	}
+
+	pid = fork();
+	if (pid < 0) {
+		return pid;
+	}
+	else if (pid == 0) {
+		::close(stdin[1]);
+		dup2(stdin[0], 0);
+		::close(stdout[0]);
+		dup2(stdout[1], 1);
+
+		execvp(*command, const_cast<char* const*>(command));
+		perror("execvp");
+
+		exit(1);
+	}
+
+	if (!inFp) {
+		::close(stdin[1]);
+	}
+	else {
+		*inFp = stdin[1];
+		::close(stdin[0]);
+	}
+
+	if (!outFp) {
+		::close(stdout[0]);
+	}
+	else {
+		*outFp = stdout[0];
+		::close(stdout[1]);
+	}
+
+	return pid;
+}
+#endif
 
 void BuildBar::onBuildRunExportStarted() {
 	buildAndRunButton->setEnabled(false);

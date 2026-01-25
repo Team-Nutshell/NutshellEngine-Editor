@@ -9,6 +9,7 @@
 #undef near
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 #include <stdio.h>
+#include <sys/types.h>
 #endif
 
 class BuildBar : public QWidget {
@@ -31,6 +32,10 @@ private:
 	std::pair<std::string, std::string> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
 	void generateScriptManager();
 
+#if defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
+	pid_t popen2(const char** command, int* inFp, int* outFp);
+#endif
+
 private slots:
 	void onBuildRunExportStarted();
 	void onBuildRunExportEnded();
@@ -41,7 +46,7 @@ private:
 #if defined(NTSHENGN_OS_WINDOWS)
 	HANDLE m_process = 0;
 #elif defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
-	FILE* m_process = 0;
+	pid_t m_process = 0;
 #endif
 
 public:
