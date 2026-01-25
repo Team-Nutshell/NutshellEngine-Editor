@@ -38,7 +38,7 @@ struct RendererParameters {
 
 	float gridScale = 10.0f;
 
-	bool maintainGizmoSize = false;
+	bool maintainGizmoSize = true;
 	float gizmoSize = 1.0f;
 	nml::vec3 gizmoTranslationStep = nml::vec3(0.25f, 0.25f, 0.25f);
 	nml::vec3 gizmoRotationStep = nml::vec3(10.0f, 10.0f, 10.0f);
@@ -49,9 +49,9 @@ struct RendererParameters {
 
 	bool showGrid = true;
 	bool enableBackfaceCulling = true;
-	bool showCameras = false;
-	bool enableLighting = false;
-	bool showColliders = false;
+	bool showCameras = true;
+	bool enableLighting = true;
+	bool showColliders = true;
 };
 
 struct BuildParameters {
