@@ -48,7 +48,7 @@ struct RendererParameters {
 	nml::vec3 otherEntitiesOutlineColor = nml::vec3(1.0f, 0.7f, 0.0f);
 
 	bool showGrid = true;
-	bool enableBackfaceCulling = false;
+	bool enableBackfaceCulling = true;
 	bool showCameras = false;
 	bool enableLighting = false;
 	bool showColliders = false;
