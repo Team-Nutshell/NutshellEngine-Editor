@@ -112,6 +112,8 @@ void AssetList::duplicateAsset(const std::string& path) {
 	if (!isDirectory) {
 		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + duplicatedAssetName, NO_ENTITY, {}));
 	}
+
+	currentlyEditedItemName = duplicatedAssetName;
 }
 
 void AssetList::reloadAsset(const std::string& assetPath, const std::string& assetName) {
