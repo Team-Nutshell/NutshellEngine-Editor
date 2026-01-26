@@ -2049,8 +2049,6 @@ void Renderer::onCameraReset() {
 	}
 	else {
 		m_camera.position = m_camera.baseOrthographicPosition;
-		m_camera.orthographicDirection = m_camera.baseOrthographicDirection;
-		m_camera.orthographicUp = m_camera.baseOrthographicUp;
 		m_camera.orthographicHalfExtent = m_camera.baseOrthographicHalfExtent;
 	}
 }
