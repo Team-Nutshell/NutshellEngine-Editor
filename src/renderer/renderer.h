@@ -143,7 +143,8 @@ private:
 
 	GLuint m_entityProgram;
 	GLuint m_cameraFrustumProgram;
-	GLuint m_gridProgram;
+	GLuint m_grid2DProgram;
+	GLuint m_grid3DProgram;
 	GLuint m_gizmoProgram;
 	GLuint m_pickingProgram;
 	GLuint m_outlineSoloProgram;

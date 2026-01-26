@@ -65,7 +65,7 @@ Renderer::~Renderer() {
 
 	gl.glDeleteProgram(m_entityProgram);
 	gl.glDeleteProgram(m_cameraFrustumProgram);
-	gl.glDeleteProgram(m_gridProgram);
+	gl.glDeleteProgram(m_grid3DProgram);
 	gl.glDeleteProgram(m_pickingProgram);
 	gl.glDeleteProgram(m_outlineSoloProgram);
 	gl.glDeleteProgram(m_outlineProgram);
@@ -319,8 +319,125 @@ void Renderer::initializeGL() {
 
 	m_cameraFrustumProgram = compileProgram(cameraFrustumVertexShader, cameraFrustumFragmentShader);
 
-	// Grid
-	std::string gridVertexShaderCode = R"GLSL(
+	// Grid 2D
+	std::string grid2DVertexShaderCode = R"GLSL(
+	#version 460
+
+	uniform mat4 view;
+	uniform mat4 projection;
+	uniform vec3 axis;
+
+	out vec3 fragPos;
+	out flat vec3 fragAxis;
+
+	vec2 plane[6] = vec2[](
+		vec2(1.0, 1.0),
+		vec2(-1.0, -1.0),
+		vec2(-1.0, 1.0),
+		vec2(-1.0, -1.0),
+		vec2(1.0, 1.0),
+		vec2(1.0, -1.0)
+	);
+
+	vec3 unprojectPoint(vec3 p) {
+		vec4 unprojected = inverse(view) * inverse(projection) * vec4(p, 1.0);
+
+		return unprojected.xyz / unprojected.w;
+	}
+
+	void main() {
+		vec2 p = plane[gl_VertexID];
+
+		fragPos = unprojectPoint(vec3(p, 0.0));
+		fragAxis = axis;
+
+		gl_Position = vec4(p, 0.0, 1.0);
+	}
+	)GLSL";
+	GLuint grid2DVertexShader = compileShader(GL_VERTEX_SHADER, grid2DVertexShaderCode);
+
+	std::string grid2DFragmentShaderCode = R"GLSL(
+	#version 460
+
+	in vec3 fragPos;
+	in flat vec3 fragAxis;
+
+	uniform mat4 viewProj;
+	uniform float near;
+	uniform float far;
+	uniform float gridScale;
+
+	out vec4 outColor;
+
+	vec4 grid(vec3 p, float scale) {
+		vec3 coord = p * scale;
+		vec3 derivative = fwidth(coord);
+		vec3 g = abs(fract(coord - vec3(0.5)) - vec3(0.5)) / derivative;
+		float line = min(g.x, min(g.y, g.z));
+		float minX = min(derivative.x, 1.0);
+		float minY = min(derivative.y, 1.0);
+		float minZ = min(derivative.z, 1.0);
+		vec4 color = vec4(0.2, 0.2, 0.2, 0.5 - min(line, 0.5));
+
+		if (fragAxis.x != 0.0) {
+			if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
+				color.g = 1.0;
+			}
+
+			if ((p.y > -0.1 * minY) && (p.y < 0.1 * minY)) {
+				color.b = 1.0;
+			}
+		}
+		else if (fragAxis.y != 0.0) {
+			if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
+				color.r = 1.0;
+			}
+
+			if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
+				color.b = 1.0;
+			}
+		}
+		else if (fragAxis.z != 0.0) {
+			if ((p.y > -0.1 * minY) && (p.y < 0.1 * minY)) {
+				color.r = 1.0;
+			}
+
+			if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
+				color.g = 1.0;
+			}
+		}
+
+		/*((p.x > -0.1 * minX) && (p.x < 0.1 * minX))
+		((p.y > -0.1 * minY) && (p.y < 0.1 * minY))
+		((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ))*/
+
+		return color;
+	}
+
+	float depth(vec3 p) {
+		vec4 clipSpace = viewProj * vec4(p, 1.0);
+
+		return clipSpace.z / clipSpace.w;
+	}
+
+	float linearizeDepth(float depth) {
+		float linearDepth = (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (far - near));
+
+		return linearDepth / far;
+	}
+
+	void main() {
+		gl_FragDepth = 0.0;
+
+		outColor = grid(fragPos, gridScale);
+	}
+	)GLSL";
+	GLuint grid2DFragmentShader = compileShader(GL_FRAGMENT_SHADER, grid2DFragmentShaderCode);
+
+	m_grid2DProgram = compileProgram(grid2DVertexShader, grid2DFragmentShader);
+
+	// Grid 3D
+	std::string grid3DVertexShaderCode = R"GLSL(
 	#version 460
 
 	uniform mat4 view;
@@ -353,9 +470,9 @@ void Renderer::initializeGL() {
 		gl_Position = vec4(p, 0.0, 1.0);
 	}
 	)GLSL";
-	GLuint gridVertexShader = compileShader(GL_VERTEX_SHADER, gridVertexShaderCode);
+	GLuint grid3DVertexShader = compileShader(GL_VERTEX_SHADER, grid3DVertexShaderCode);
 
-	std::string gridFragmentShaderCode = R"GLSL(
+	std::string grid3DFragmentShaderCode = R"GLSL(
 	#version 460
 
 	in vec3 nearPoint;
@@ -410,9 +527,9 @@ void Renderer::initializeGL() {
 		outColor.a *= fading;
 	}
 	)GLSL";
-	GLuint gridFragmentShader = compileShader(GL_FRAGMENT_SHADER, gridFragmentShaderCode);
+	GLuint grid3DFragmentShader = compileShader(GL_FRAGMENT_SHADER, grid3DFragmentShaderCode);
 
-	m_gridProgram = compileProgram(gridVertexShader, gridFragmentShader);
+	m_grid3DProgram = compileProgram(grid3DVertexShader, grid3DFragmentShader);
 
 	// Gizmo
 	std::string gizmoVertexShaderCode = R"GLSL(
@@ -935,13 +1052,27 @@ void Renderer::paintGL() {
 		if (!m_camera.useOrthographicProjection) {
 			gl.glDepthFunc(GL_LESS);
 
-			gl.glUseProgram(m_gridProgram);
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "view"), 1, false, m_camera.viewMatrix.data());
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
-			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gridProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
-			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
-			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
-			gl.glUniform1f(gl.glGetUniformLocation(m_gridProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
+			gl.glUseProgram(m_grid3DProgram);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid3DProgram, "view"), 1, false, m_camera.viewMatrix.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid3DProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid3DProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
+
+			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		else {
+			gl.glDepthFunc(GL_LESS);
+
+			gl.glUseProgram(m_grid2DProgram);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid2DProgram, "view"), 1, false, m_camera.viewMatrix.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid2DProgram, "projection"), 1, false, m_camera.projectionMatrix.data());
+			gl.glUniform3fv(gl.glGetUniformLocation(m_grid2DProgram, "axis"), 1, m_camera.orthographicDirection.data());
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid2DProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
 
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
@@ -1583,7 +1714,18 @@ void Renderer::updateCamera() {
 			m_camera.orthographicHalfExtent = std::max(m_camera.orthographicHalfExtent, 0.01f);
 		}
 
-		m_camera.viewMatrix = nml::lookAtRH(m_camera.position, m_camera.position + m_camera.orthographicDirection, m_camera.orthographicUp);
+		nml::vec3 orthographicPosition = m_camera.position;
+		if (m_camera.orthographicDirection.x != 0.0f) {
+			orthographicPosition.x = -m_camera.orthographicDirection.x;
+		}
+		else if (m_camera.orthographicDirection.y != 0.0f) {
+			orthographicPosition.y = -m_camera.orthographicDirection.y;
+		}
+		else if (m_camera.orthographicDirection.z != 0.0f) {
+			orthographicPosition.z = -m_camera.orthographicDirection.z;
+		}
+
+		m_camera.viewMatrix = nml::lookAtRH(orthographicPosition, orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
 		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
