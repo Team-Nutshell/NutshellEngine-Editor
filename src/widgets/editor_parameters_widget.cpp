@@ -184,11 +184,17 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	cameraSensitivityWidget->layout()->setAlignment(cameraSensitivityWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(cameraSensitivityWidget, 2, 1);
 
-	gridScaleWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_grid_scale"));
-	gridScaleWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridScale, 'g', 7));
-	gridScaleWidget->layout()->setAlignment(gridScaleWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
-	gridScaleWidget->layout()->setAlignment(gridScaleWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
-	rendererCameraGridLayout->addWidget(gridScaleWidget, 0, 2);
+	gridCellSizeWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_grid_cell_size"));
+	gridCellSizeWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridCellSize, 'g', 7));
+	gridCellSizeWidget->layout()->setAlignment(gridCellSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	gridCellSizeWidget->layout()->setAlignment(gridCellSizeWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(gridCellSizeWidget, 0, 2);
+
+	gridSubcellSizeWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_grid_subcell_size"));
+	gridSubcellSizeWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.gridSubcellSize, 'g', 7));
+	gridSubcellSizeWidget->layout()->setAlignment(gridSubcellSizeWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	gridSubcellSizeWidget->layout()->setAlignment(gridSubcellSizeWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(gridSubcellSizeWidget, 1, 2);
 
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
@@ -297,7 +303,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(perspectiveCameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(orthographicCameraSpeedWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
-	connect(gridScaleWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(gridCellSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(gridSubcellSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(maintainGizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
 	connect(gizmoSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gizmoTranslationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
@@ -611,8 +618,11 @@ void EditorParametersWidget::onScalarChanged(float value) {
 	else if (senderWidget == cameraSensitivityWidget) {
 		m_globalInfo.editorParameters.renderer.cameraSensitivity = value;
 	}
-	else if (senderWidget == gridScaleWidget) {
-		m_globalInfo.editorParameters.renderer.gridScale = value;
+	else if (senderWidget == gridCellSizeWidget) {
+		m_globalInfo.editorParameters.renderer.gridCellSize = value;
+	}
+	else if (senderWidget == gridSubcellSizeWidget) {
+		m_globalInfo.editorParameters.renderer.gridSubcellSize = value;
 	}
 	else if (senderWidget == gizmoSizeWidget) {
 		m_globalInfo.editorParameters.renderer.gizmoSize = value;

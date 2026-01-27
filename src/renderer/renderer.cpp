@@ -365,45 +365,72 @@ void Renderer::initializeGL() {
 	uniform mat4 viewProj;
 	uniform float near;
 	uniform float far;
-	uniform float gridScale;
+	uniform float gridCellSize;
+	uniform float gridSubcellSize;
 
 	out vec4 outColor;
 
-	vec4 grid(vec3 p, float scale) {
-		vec3 coord = p * scale;
-		vec3 derivative = fwidth(coord);
-		vec3 g = abs(fract(coord - vec3(0.5)) - vec3(0.5)) / derivative;
-		float line = min(g.x, min(g.y, g.z));
-		float minX = min(derivative.x, 1.0);
-		float minY = min(derivative.y, 1.0);
-		float minZ = min(derivative.z, 1.0);
-		vec4 color = vec4(0.2, 0.2, 0.2, 0.5 - min(line, 0.5));
+	vec4 grid(vec3 p) {
+		float cellLineThickness = 0.01;
+		float subcellLineThickness = 0.001;
+		
+		vec3 cellCoords = mod(p + vec3(gridCellSize / 2.0), vec3(gridCellSize));
+		vec3 subcellCoords = mod(p + vec3(gridSubcellSize / 2.0), vec3(gridSubcellSize));
 
+		vec3 distanceToCell = abs(cellCoords - vec3(gridCellSize / 2.0));
+		vec3 distanceToSubcell = abs(subcellCoords - vec3(gridSubcellSize / 2.0));
+
+		vec3 d = fwidth(p);
+		vec3 adjustedCellLineThickness = (cellLineThickness + d) / 2.0;
+		vec3 adjustedSubcellLineThickness = (subcellLineThickness + d) / 2.0;
+
+		vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 		if (fragAxis.x != 0.0) {
-			if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
-				color.g = 1.0;
+			if ((distanceToSubcell.y < adjustedSubcellLineThickness.y) ||
+				(distanceToSubcell.z < adjustedSubcellLineThickness.z)) {
+				color = vec4(0.2, 0.2, 0.2, 0.25);
 			}
-
-			if ((p.y > (-0.1 * minY)) && (p.y < (0.1 * minY))) {
-				color.b = 1.0;
+			if ((distanceToCell.y < adjustedCellLineThickness.y) ||
+				(distanceToCell.z < adjustedCellLineThickness.z)) {
+				color = vec4(0.2, 0.2, 0.2, 0.5);
+				if ((p.y >= -adjustedCellLineThickness.y) && (p.y <= adjustedCellLineThickness.y)) {
+					color.b = 1.0;
+				}
+				if ((p.z >= -adjustedCellLineThickness.z) && (p.z <= adjustedCellLineThickness.z)) {
+					color.g = 1.0;
+				}
 			}
 		}
 		else if (fragAxis.y != 0.0) {
-			if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
-				color.r = 1.0;
+			if ((distanceToSubcell.x < adjustedSubcellLineThickness.x) ||
+				(distanceToSubcell.z < adjustedSubcellLineThickness.z)) {
+				color = vec4(0.2, 0.2, 0.2, 0.25);
 			}
-
-			if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
-				color.b = 1.0;
+			if ((distanceToCell.x < adjustedCellLineThickness.x) ||
+				(distanceToCell.z < adjustedCellLineThickness.z)) {
+				color = vec4(0.2, 0.2, 0.2, 0.5);
+				if ((p.x >= -adjustedCellLineThickness.x) && (p.x <= adjustedCellLineThickness.x)) {
+					color.b = 1.0;
+				}
+				if ((p.z >= -adjustedCellLineThickness.z) && (p.z <= adjustedCellLineThickness.z)) {
+					color.r = 1.0;
+				}
 			}
 		}
 		else if (fragAxis.z != 0.0) {
-			if ((p.y > (-0.1 * minY)) && (p.y < (0.1 * minY))) {
-				color.r = 1.0;
+			if ((distanceToSubcell.x < adjustedSubcellLineThickness.x) ||
+				(distanceToSubcell.y < adjustedSubcellLineThickness.y)) {
+				color = vec4(0.2, 0.2, 0.2, 0.25);
 			}
-
-			if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
-				color.g = 1.0;
+			if ((distanceToCell.x < adjustedCellLineThickness.x) ||
+				(distanceToCell.y < adjustedCellLineThickness.y)) {
+				color = vec4(0.2, 0.2, 0.2, 0.5);
+				if ((p.x >= -adjustedCellLineThickness.x) && (p.x <= adjustedCellLineThickness.x)) {
+					color.g = 1.0;
+				}
+				if ((p.y >= -adjustedCellLineThickness.y) && (p.y <= adjustedCellLineThickness.y)) {
+					color.r = 1.0;
+				}
 			}
 		}
 
@@ -413,7 +440,7 @@ void Renderer::initializeGL() {
 	void main() {
 		gl_FragDepth = 0.0;
 
-		outColor = grid(fragPos, gridScale);
+		outColor = grid(fragPos);
 	}
 	)GLSL";
 	GLuint grid2DFragmentShader = compileShader(GL_FRAGMENT_SHADER, grid2DFragmentShaderCode);
@@ -465,25 +492,41 @@ void Renderer::initializeGL() {
 	uniform mat4 viewProj;
 	uniform float near;
 	uniform float far;
-	uniform float gridScale;
+	uniform float gridCellSize;
+	uniform float gridSubcellSize;
 
 	out vec4 outColor;
 
-	vec4 grid(vec3 p, float scale) {
-		vec2 coord = p.xz * scale;
-		vec2 derivative = fwidth(coord);
-		vec2 g = abs(fract(coord - vec2(0.5)) - vec2(0.5)) / derivative;
-		float line = min(g.x, g.y);
-		float minX = min(derivative.x, 1.0);
-		float minZ = min(derivative.y, 1.0);
-		vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
+	vec4 grid(vec3 p) {
+		vec2 coords = p.xz;
+		
+		float cellLineThickness = 0.01;
+		float subcellLineThickness = 0.001;
+		
+		vec2 cellCoords = mod(coords + vec2(gridCellSize / 2.0), vec2(gridCellSize));
+		vec2 subcellCoords = mod(coords + vec2(gridSubcellSize / 2.0), vec2(gridSubcellSize));
 
-		if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
-			color.r = 1.0;
+		vec2 distanceToCell = abs(cellCoords - vec2(gridCellSize / 2.0));
+		vec2 distanceToSubcell = abs(subcellCoords - vec2(gridSubcellSize / 2.0));
+
+		vec2 d = fwidth(coords);
+		vec2 adjustedCellLineThickness = (cellLineThickness + d) / 2.0;
+		vec2 adjustedSubcellLineThickness = (subcellLineThickness + d) / 2.0;
+
+		vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+		if ((distanceToSubcell.x < adjustedSubcellLineThickness.x) ||
+			(distanceToSubcell.y < adjustedSubcellLineThickness.y)) {
+			color = vec4(0.2, 0.2, 0.2, 0.25);
 		}
-
-		if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
-			color.b = 1.0;
+		if ((distanceToCell.x < adjustedCellLineThickness.x) ||
+			(distanceToCell.y < adjustedCellLineThickness.y)) {
+			color = vec4(0.2, 0.2, 0.2, 0.5);
+			if ((coords.x >= -adjustedCellLineThickness.x) && (coords.x <= adjustedCellLineThickness.x)) {
+				color.b = 1.0;
+			}
+			if ((coords.y >= -adjustedCellLineThickness.y) && (coords.y <= adjustedCellLineThickness.y)) {
+				color.r = 1.0;
+			}
 		}
 
 		return color;
@@ -507,7 +550,7 @@ void Renderer::initializeGL() {
 		gl_FragDepth = (gl_DepthRange.diff * depth(fragPos) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
 		float fading = max(0.5 - linearizeDepth(gl_FragDepth), 0.0);
 
-		outColor = grid(fragPos, gridScale) * float(t > 0.0);
+		outColor = grid(fragPos) * float(t > 0.0);
 		outColor.a *= fading;
 	}
 	)GLSL";
@@ -1042,7 +1085,8 @@ void Renderer::paintGL() {
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid3DProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
 			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
-			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "gridCellSize"), m_globalInfo.editorParameters.renderer.gridCellSize);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid3DProgram, "gridSubcellSize"), m_globalInfo.editorParameters.renderer.gridSubcellSize);
 
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
@@ -1056,7 +1100,8 @@ void Renderer::paintGL() {
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid2DProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "near"), m_globalInfo.editorParameters.renderer.cameraNearPlane);
 			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "far"), m_globalInfo.editorParameters.renderer.cameraFarPlane);
-			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "gridScale"), m_globalInfo.editorParameters.renderer.gridScale);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "gridCellSize"), m_globalInfo.editorParameters.renderer.gridCellSize);
+			gl.glUniform1f(gl.glGetUniformLocation(m_grid2DProgram, "gridSubcellSize"), m_globalInfo.editorParameters.renderer.gridSubcellSize);
 
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}

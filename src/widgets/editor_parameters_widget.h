@@ -67,7 +67,8 @@ public:
 	ScalarWidget* perspectiveCameraSpeedWidget;
 	ScalarWidget* orthographicCameraSpeedWidget;
 	ScalarWidget* cameraSensitivityWidget;
-	ScalarWidget* gridScaleWidget;
+	ScalarWidget* gridCellSizeWidget;
+	ScalarWidget* gridSubcellSizeWidget;
 	BooleanWidget* maintainGizmoSizeWidget;
 	ScalarWidget* gizmoSizeWidget;
 	Vector3Widget* gizmoTranslationStepWidget;

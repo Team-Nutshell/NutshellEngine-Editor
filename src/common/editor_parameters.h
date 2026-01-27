@@ -36,7 +36,8 @@ struct RendererParameters {
 	float orthographicCameraSpeed = 2.0f;
 	float cameraSensitivity = 0.5f;
 
-	float gridScale = 10.0f;
+	float gridCellSize = 1.0f;
+	float gridSubcellSize = 0.25f;
 
 	bool maintainGizmoSize = true;
 	float gizmoSize = 1.0f;

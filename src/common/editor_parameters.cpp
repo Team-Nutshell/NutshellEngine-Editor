@@ -182,8 +182,11 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.cameraSensitivity = j["renderer"]["cameraSensitivity"];
 		}
 
-		if (j["renderer"].contains("gridScale")) {
-			renderer.gridScale = j["renderer"]["gridScale"];
+		if (j["renderer"].contains("gridCellSize")) {
+			renderer.gridCellSize = j["renderer"]["gridCellSize"];
+		}
+		if (j["renderer"].contains("gridSubcellSize")) {
+			renderer.gridSubcellSize = j["renderer"]["gridSubcellSize"];
 		}
 
 		if (j["renderer"].contains("maintainGizmoSize")) {
@@ -281,7 +284,8 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["perspectiveCameraSpeed"] = renderer.perspectiveCameraSpeed;
 	j["renderer"]["orthographicCameraSpeed"] = renderer.orthographicCameraSpeed;
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
-	j["renderer"]["gridScale"] = renderer.gridScale;
+	j["renderer"]["gridCellSize"] = renderer.gridCellSize;
+	j["renderer"]["gridSubcellSize"] = renderer.gridSubcellSize;
 	j["renderer"]["maintainGizmoSize"] = renderer.maintainGizmoSize;
 	j["renderer"]["gizmoSize"] = renderer.gizmoSize;
 	j["renderer"]["gizmoTranslationStep"] = { renderer.gizmoTranslationStep.x, renderer.gizmoTranslationStep.y, renderer.gizmoTranslationStep.z };
