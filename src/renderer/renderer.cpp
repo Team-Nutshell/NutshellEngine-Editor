@@ -284,7 +284,7 @@ void Renderer::initializeGL() {
 
 		outColor += vec4(emissiveTextureSample * emissiveFactor, 0.0);
 
-		outColor.rgb /= outColor.rgb + vec3(1.0);
+		outColor.rgb /= (outColor.rgb + vec3(1.0));
 	}
 	)GLSL";
 	GLuint entityFragmentShader = compileShader(GL_FRAGMENT_SHADER, entityFragmentShaderCode);
@@ -342,7 +342,7 @@ void Renderer::initializeGL() {
 	vec3 unprojectPoint(vec3 p) {
 		vec4 unprojected = inverse(view) * inverse(projection) * vec4(p, 1.0);
 
-		return unprojected.xyz / unprojected.w;
+		return (unprojected.xyz / unprojected.w);
 	}
 
 	void main() {
@@ -380,50 +380,34 @@ void Renderer::initializeGL() {
 		vec4 color = vec4(0.2, 0.2, 0.2, 0.5 - min(line, 0.5));
 
 		if (fragAxis.x != 0.0) {
-			if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
+			if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
 				color.g = 1.0;
 			}
 
-			if ((p.y > -0.1 * minY) && (p.y < 0.1 * minY)) {
+			if ((p.y > (-0.1 * minY)) && (p.y < (0.1 * minY))) {
 				color.b = 1.0;
 			}
 		}
 		else if (fragAxis.y != 0.0) {
-			if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
+			if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
 				color.r = 1.0;
 			}
 
-			if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
+			if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
 				color.b = 1.0;
 			}
 		}
 		else if (fragAxis.z != 0.0) {
-			if ((p.y > -0.1 * minY) && (p.y < 0.1 * minY)) {
+			if ((p.y > (-0.1 * minY)) && (p.y < (0.1 * minY))) {
 				color.r = 1.0;
 			}
 
-			if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
+			if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
 				color.g = 1.0;
 			}
 		}
 
-		/*((p.x > -0.1 * minX) && (p.x < 0.1 * minX))
-		((p.y > -0.1 * minY) && (p.y < 0.1 * minY))
-		((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ))*/
-
 		return color;
-	}
-
-	float depth(vec3 p) {
-		vec4 clipSpace = viewProj * vec4(p, 1.0);
-
-		return clipSpace.z / clipSpace.w;
-	}
-
-	float linearizeDepth(float depth) {
-		float linearDepth = (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (far - near));
-
-		return linearDepth / far;
 	}
 
 	void main() {
@@ -458,7 +442,7 @@ void Renderer::initializeGL() {
 	vec3 unprojectPoint(vec3 p) {
 		vec4 unprojected = inverse(view) * inverse(projection) * vec4(p, 1.0);
 
-		return unprojected.xyz / unprojected.w;
+		return (unprojected.xyz / unprojected.w);
 	}
 
 	void main() {
@@ -494,11 +478,11 @@ void Renderer::initializeGL() {
 		float minZ = min(derivative.y, 1.0);
 		vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
 
-		if ((p.z > -0.1 * minZ) && (p.z < 0.1 * minZ)) {
+		if ((p.z > (-0.1 * minZ)) && (p.z < (0.1 * minZ))) {
 			color.r = 1.0;
 		}
 
-		if ((p.x > -0.1 * minX) && (p.x < 0.1 * minX)) {
+		if ((p.x > (-0.1 * minX)) && (p.x < (0.1 * minX))) {
 			color.b = 1.0;
 		}
 
@@ -508,13 +492,13 @@ void Renderer::initializeGL() {
 	float depth(vec3 p) {
 		vec4 clipSpace = viewProj * vec4(p, 1.0);
 
-		return clipSpace.z / clipSpace.w;
+		return (clipSpace.z / clipSpace.w);
 	}
 
 	float linearizeDepth(float depth) {
 		float linearDepth = (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (far - near));
 
-		return linearDepth / far;
+		return (linearDepth / far);
 	}
 
 	void main() {
