@@ -22,6 +22,8 @@ public:
 	void duplicateAsset(const std::string& path);
 	void reloadAsset(const std::string& assetPath, const std::string& assetName);
 
+	void resizeFont(int delta);
+
 private:
 	void enterDirectory(const std::string& directory);
 	void actionOnFile(const std::string& file);

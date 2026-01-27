@@ -130,6 +130,14 @@ void ScriptList::duplicateScript(const std::string& scriptName) {
 	renameScriptClass(scriptName, duplicatedScriptName);
 }
 
+void ScriptList::resizeFont(int delta) {
+	QFont newFont = font();
+	if ((newFont.pointSize() + delta) > 0) {
+		newFont.setPointSize(newFont.pointSize() + delta);
+		setFont(newFont);
+	}
+}
+
 void ScriptList::updateScriptList() {
 	{
 		const QSignalBlocker signalBlocker(this);
@@ -262,12 +270,11 @@ void ScriptList::keyPressEvent(QKeyEvent* event) {
 
 void ScriptList::wheelEvent(QWheelEvent* event) {
 	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-		QFont newFont = font();
-		int newSize = event->angleDelta().y() / 120;
-		if ((newFont.pointSize() + newSize) > 0) {
-			newFont.setPointSize(newFont.pointSize() + newSize);
-			setFont(newFont);
-		}
+		int delta = event->angleDelta().y() / 120;
+		resizeFont(delta);
+		m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->resizeFont(delta);
+		m_globalInfo.mainWindow->entityPanel->entityList->resizeFont(delta);
+
 	}
 	else {
 		QListWidget::wheelEvent(event);

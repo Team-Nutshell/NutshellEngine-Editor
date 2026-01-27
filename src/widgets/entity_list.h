@@ -19,6 +19,8 @@ public:
 
 	void updateSelection();
 
+	void resizeFont(int delta);
+
 private slots:
 	void onEntityCreated(EntityID entityID);
 	void onEntityDestroyed(EntityID entityID);

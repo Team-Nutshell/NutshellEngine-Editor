@@ -18,6 +18,8 @@ public:
 	void deleteScript(const std::string& scriptName);
 	void duplicateScript(const std::string& scriptName);
 
+	void resizeFont(int delta);
+
 private:
 	void updateScriptList();
 

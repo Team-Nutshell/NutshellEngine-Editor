@@ -82,6 +82,14 @@ void EntityList::updateSelection() {
 	blockSelectionSignal = false;
 }
 
+void EntityList::resizeFont(int delta) {
+	QFont newFont = font();
+	if ((newFont.pointSize() + delta) > 0) {
+		newFont.setPointSize(newFont.pointSize() + delta);
+		setFont(newFont);
+	}
+}
+
 void EntityList::onEntityCreated(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
 
@@ -301,12 +309,10 @@ void EntityList::keyReleaseEvent(QKeyEvent* event) {
 
 void EntityList::wheelEvent(QWheelEvent* event) {
 	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-		QFont newFont = font();
-		int newSize = event->angleDelta().y() / 120;
-		if ((newFont.pointSize() + newSize) > 0) {
-			newFont.setPointSize(newFont.pointSize() + newSize);
-			setFont(newFont);
-		}
+		int delta = event->angleDelta().y() / 120;
+		resizeFont(delta);
+		m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->resizeFont(delta);
+		m_globalInfo.mainWindow->resourceSplitter->scriptPanel->scriptList->resizeFont(delta);
 	}
 	else {
 		QListWidget::wheelEvent(event);

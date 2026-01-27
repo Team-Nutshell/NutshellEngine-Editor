@@ -132,6 +132,16 @@ void AssetList::reloadAsset(const std::string& assetPath, const std::string& ass
 	}
 }
 
+void AssetList::resizeFont(int delta) {
+	QFont newFont = font();
+	if ((newFont.pointSize() + delta) > 0) {
+		m_iconSize += delta;
+		setIconSize(QSize(m_iconSize, m_iconSize));
+		newFont.setPointSize(newFont.pointSize() + delta);
+		setFont(newFont);
+	}
+}
+
 void AssetList::enterDirectory(const std::string& directory) {
 	m_currentDirectory = directory;
 	if (!m_directoryWatcher.directories().empty()) {
@@ -418,14 +428,10 @@ void AssetList::keyPressEvent(QKeyEvent* event) {
 
 void AssetList::wheelEvent(QWheelEvent* event) {
 	if (QGuiApplication::keyboardModifiers() == Qt::ControlModifier) {
-		QFont newFont = font();
-		int newSize = event->angleDelta().y() / 120;
-		if ((newFont.pointSize() + newSize) > 0) {
-			m_iconSize += newSize;
-			setIconSize(QSize(m_iconSize, m_iconSize));
-			newFont.setPointSize(newFont.pointSize() + newSize);
-			setFont(newFont);
-		}
+		int delta = event->angleDelta().y() / 120;
+		resizeFont(delta);
+		m_globalInfo.mainWindow->entityPanel->entityList->resizeFont(delta);
+		m_globalInfo.mainWindow->resourceSplitter->scriptPanel->scriptList->resizeFont(delta);
 	}
 	else {
 		QListWidget::wheelEvent(event);
