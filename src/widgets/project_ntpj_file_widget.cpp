@@ -7,7 +7,7 @@
 ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
-	layout()->setContentsMargins(5, 5, 5, 5);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	projectNameWidget = new StringWidget(m_globalInfo, m_globalInfo.localization.getString("project_settings_project_name"));
 	projectNameWidget->setText(m_globalInfo.projectName);
 	layout()->addWidget(projectNameWidget);
