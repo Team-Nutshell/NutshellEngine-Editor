@@ -11,6 +11,13 @@ void AssetInfoNameWidget::onAssetSelected(const std::string& path) {
 		return;
 	}
 
+	if (path == m_globalInfo.projectDirectory + "/project.ntpj") {
+		hide();
+	}
+	else {
+		show();
+	}
+
 	std::string filename = path;
 	if (filename.back() == '/') {
 		filename.pop_back();

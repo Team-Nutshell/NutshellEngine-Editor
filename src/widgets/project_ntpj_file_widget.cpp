@@ -5,11 +5,6 @@
 #include <fstream>
 
 ProjectNtpjFileWidget::ProjectNtpjFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
-	resize(640, 360);
-	setWindowTitle("NutshellEngine - " + QString::fromStdString(m_globalInfo.localization.getString("project_settings")));
-	setWindowIcon(QIcon("assets/icon.png"));
-	setAttribute(Qt::WA_DeleteOnClose);
-
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(5, 5, 5, 5);

@@ -1,6 +1,6 @@
 #include "project_menu.h"
 #include "main_window.h"
-#include "project_ntpj_file_widget.h"
+#include "../undo_commands/select_asset_entities_command.h"
 #include <fstream>
 
 ProjectMenu::ProjectMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_project"))), m_globalInfo(globalInfo) {
@@ -40,8 +40,7 @@ void ProjectMenu::launchBuild() {
 }
 
 void ProjectMenu::openProjectSettings() {
-	ProjectNtpjFileWidget* projectNtpjFileWidget = new ProjectNtpjFileWidget(m_globalInfo);
-	projectNtpjFileWidget->show();
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_globalInfo.projectDirectory + "/project.ntpj", NO_ENTITY, {}));
 }
 
 void ProjectMenu::importGlobalResources() {

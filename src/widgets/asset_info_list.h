@@ -6,6 +6,7 @@
 #include "sampler_ntsp_file_widget.h"
 #include "image_file_widget.h"
 #include "text_file_widget.h"
+#include "project_ntpj_file_widget.h"
 #include <QTreeView>
 #include <QWidget>
 #include <string>
@@ -29,6 +30,7 @@ public:
 	ImageFileWidget* imageFileWidget;
 	QTreeView* jsonFileWidget;
 	TextFileWidget* textFileWidget;
+	ProjectNtpjFileWidget* projectNtpjFileWidget;
 
 	std::string currentAssetPath = "";
 };

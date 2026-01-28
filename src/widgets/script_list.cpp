@@ -274,7 +274,6 @@ void ScriptList::wheelEvent(QWheelEvent* event) {
 		resizeFont(delta);
 		m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->resizeFont(delta);
 		m_globalInfo.mainWindow->entityPanel->entityList->resizeFont(delta);
-
 	}
 	else {
 		QListWidget::wheelEvent(event);

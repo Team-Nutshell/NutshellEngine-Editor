@@ -28,6 +28,9 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	textFileWidget = new TextFileWidget(m_globalInfo);
 	textFileWidget->hide();
 	layout()->addWidget(textFileWidget);
+	projectNtpjFileWidget = new ProjectNtpjFileWidget(m_globalInfo);
+	projectNtpjFileWidget->hide();
+	layout()->addWidget(projectNtpjFileWidget);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectAssetSignal, this, &AssetInfoList::onAssetSelected);
 }
@@ -54,6 +57,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			imageFileWidget->hide();
 			jsonFileWidget->hide();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 		else if ((fileType == AssetHelper::FileType::Model) && (extension == "ntmd")) {
 			materialNtmlFileWidget->hide();
@@ -64,6 +68,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			imageFileWidget->hide();
 			jsonFileWidget->hide();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Options) {
 			materialNtmlFileWidget->hide();
@@ -84,6 +89,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			imageFileWidget->hide();
 			jsonFileWidget->hide();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 		else if ((fileType == AssetHelper::FileType::Image) ||
 			(fileType == AssetHelper::FileType::Icon)) {
@@ -95,6 +101,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			imageFileWidget->show();
 			jsonFileWidget->hide();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Json) {
 			materialNtmlFileWidget->hide();
@@ -107,6 +114,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			jsonFileWidget->model()->setHeaderData(1, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_value")));
 			jsonFileWidget->show();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Text) {
 			materialNtmlFileWidget->hide();
@@ -117,6 +125,17 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			jsonFileWidget->hide();
 			textFileWidget->setPath(path);
 			textFileWidget->show();
+			projectNtpjFileWidget->hide();
+		}
+		else if (extension == "ntpj") {
+			materialNtmlFileWidget->hide();
+			modelNtmdFileWidget->hide();
+			optionsNtopFileWidget->hide();
+			samplerNtspFileWidget->hide();
+			imageFileWidget->hide();
+			jsonFileWidget->hide();
+			textFileWidget->hide();
+			projectNtpjFileWidget->show();
 		}
 		else {
 			materialNtmlFileWidget->hide();
@@ -126,6 +145,7 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 			imageFileWidget->hide();
 			jsonFileWidget->hide();
 			textFileWidget->hide();
+			projectNtpjFileWidget->hide();
 		}
 	}
 	else {
@@ -136,5 +156,6 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 		imageFileWidget->hide();
 		jsonFileWidget->hide();
 		textFileWidget->hide();
+		projectNtpjFileWidget->hide();
 	}
 }
