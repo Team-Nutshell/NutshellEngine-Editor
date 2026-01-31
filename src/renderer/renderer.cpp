@@ -1303,7 +1303,7 @@ void Renderer::paintGL() {
 								newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
 							}
 						}
-						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+						m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
 					}
 				}
 				else {
