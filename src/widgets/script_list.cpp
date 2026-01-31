@@ -98,8 +98,8 @@ void ScriptList::renameScriptClass(const std::string& oldScriptName, const std::
 	// Write a temporary string instead of the old script name
 	std::string scriptTmp = "${SCRIPT_TMP_STRING}";
 
-	size_t scriptNamePos;
-	while ((scriptNamePos = scriptString.find(oldScriptName)) != std::string::npos) {
+	size_t scriptNamePos = 0;
+	while ((scriptNamePos = scriptString.find(oldScriptName, scriptNamePos + scriptTmp.length())) != std::string::npos) {
 		scriptString.replace(scriptNamePos, oldScriptName.length(), scriptTmp);
 	}
 
