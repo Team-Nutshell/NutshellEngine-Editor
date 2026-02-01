@@ -50,6 +50,7 @@ ProjectWindow::ProjectWindow(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 
 void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirectory, const std::string& projectName) {
 	std::filesystem::create_directory(projectDirectory);
+	std::filesystem::create_directory(projectDirectory + "/assets/");
 	std::filesystem::copy("assets/base_project", projectDirectory, std::filesystem::copy_options::recursive);
 
 	nlohmann::json jOptions;
