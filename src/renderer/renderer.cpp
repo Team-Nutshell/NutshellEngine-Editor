@@ -2506,10 +2506,7 @@ void Renderer::onCameraGoToEntity(EntityID entityID) {
 		m_camera.position = m_globalInfo.entities[entityID].transform.position;
 	}
 	else {
-		m_camera.position = m_globalInfo.entities[entityID].transform.position + nml::vec3(0.0f, 3.0f, -3.0f);
-		m_camera.perspectiveDirection = nml::normalize(nml::vec3(0.0f, -1.0f, 1.0f));
-		m_camera.perspectiveYaw = nml::toDeg(std::atan2(m_camera.perspectiveDirection[2], m_camera.perspectiveDirection[0]));
-		m_camera.perspectivePitch = nml::toDeg(-std::asin(m_camera.perspectiveDirection[1]));
+		m_camera.position = m_globalInfo.entities[entityID].transform.position - (m_camera.perspectiveDirection * 5.0f);
 	}
 }
 
