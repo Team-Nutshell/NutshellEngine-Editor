@@ -396,7 +396,7 @@ void Renderer::initializeGL() {
 				intensity = 1.0 - intensity;
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * intensity;
 
-				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample);
+				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample);
 
 				lightIndex++;
 			}
