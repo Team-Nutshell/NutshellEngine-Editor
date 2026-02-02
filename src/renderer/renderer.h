@@ -6,6 +6,10 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions_4_5_Core>
+#if defined(NTSHENGN_DEBUG)
+#include <QOpenGLDebugLogger>
+#endif
 #include <QTimer>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -30,6 +34,8 @@ private:
 	GLuint compileShader(GLenum shaderType, const std::string& shaderCode);
 	GLuint compileProgram(GLuint vertexShader, GLuint fragmentShader);
 
+	void createSceneImages();
+	void destroySceneImages();
 	void createPickingImages();
 	void destroyPickingImages();
 	void createOutlineSoloImages();
@@ -51,9 +57,6 @@ private:
 	nml::vec2 project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix);
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
-	nml::mat4 perspectiveRHOpenGL(float fovY, float aspectRatio, float near, float far);
-	nml::mat4 orthographicRHOpenGL(float left, float right, float bottom, float top, float near, float far);
-
 private slots:
 	void onEntityDestroyed(EntityID entityID);
 	void onEntitySelected();
@@ -61,6 +64,10 @@ private slots:
 	void onCameraReset();
 	void onOrthographicCameraToAxisChanged(const nml::vec3& axis);
 	void onCameraGoToEntity(EntityID entityID);
+
+#if defined(NTSHENGN_DEBUG)
+	void onMessageLogged(const QOpenGLDebugMessage& debugMessage);
+#endif
 
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
@@ -151,16 +158,25 @@ private:
 	GLuint m_outlineProgram;
 	GLuint m_colliderProgram;
 
+	GLuint m_sceneFramebuffer;
+	GLuint m_sceneColorImage;
+	GLuint m_sceneDepthImage;
+
 	GLuint m_pickingFramebuffer;
-	GLuint m_pickingImage;
+	GLuint m_pickingColorImage;
 	GLuint m_pickingDepthImage;
 
 	GLuint m_outlineSoloFramebuffer;
-	GLuint m_outlineSoloImage;
+	GLuint m_outlineSoloColorImage;
 	GLuint m_outlineSoloDepthImage;
 
 	GLuint m_lightBuffer;
 
 	QOpenGLFunctions gl;
 	QOpenGLExtraFunctions glex;
+	QOpenGLFunctions_4_5_Core gl45;
+
+#if defined(NTSHENGN_DEBUG)
+	QOpenGLDebugLogger* m_openGLDebugLogger;
+#endif
 };

@@ -36,6 +36,10 @@ struct RendererCamera {
 	nml::mat4 invViewMatrix;
 	nml::mat4 invProjMatrix;
 
+	nml::mat4 projectionNonReversedMatrix;
+	nml::mat4 viewProjNonReversedMatrix;
+	nml::mat4 invProjNonReversedMatrix;
+
 	nml::vec3 basePerspectiveDirection;
 
 	nml::vec3 baseOrthographicDirection;

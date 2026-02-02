@@ -38,10 +38,9 @@ Renderer::~Renderer() {
 		}
 	}
 
-	gl.glDeleteTextures(1, &m_pickingImage);
-	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
-	gl.glDeleteTextures(1, &m_outlineSoloImage);
-	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
+	destroySceneImages();
+	destroyPickingImages();
+	destroyOutlineSoloImages();
 
 	for (const auto& texture : m_globalInfo.rendererResourceManager.textures) {
 		gl.glDeleteTextures(1, &texture.second);
@@ -59,8 +58,18 @@ Renderer::~Renderer() {
 }
 
 void Renderer::initializeGL() {
+#if defined(NTSHENGN_DEBUG)
+	m_openGLDebugLogger = new QOpenGLDebugLogger(this);
+	m_openGLDebugLogger->initialize();
+
+	connect(m_openGLDebugLogger, &QOpenGLDebugLogger::messageLogged, this, &Renderer::onMessageLogged);
+
+	m_openGLDebugLogger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+#endif
+
 	gl.initializeOpenGLFunctions();
 	glex.initializeOpenGLFunctions();
+	gl45.initializeOpenGLFunctions();
 
 	std::string fullscreenVertexShaderCode = R"GLSL(
 	#version 460
@@ -421,6 +430,9 @@ void Renderer::initializeGL() {
 
 	m_entityProgram = compileProgram(entityVertexShader, entityFragmentShader);
 
+	gl.glGenFramebuffers(1, &m_sceneFramebuffer);
+	createSceneImages();
+
 	// Camera frustum
 	std::string cameraFrustumVertexShaderCode = R"GLSL(
 	#version 460
@@ -568,7 +580,7 @@ void Renderer::initializeGL() {
 	}
 
 	void main() {
-		gl_FragDepth = 0.0;
+		gl_FragDepth = 1.0;
 
 		outColor = grid(fragPos);
 	}
@@ -605,8 +617,8 @@ void Renderer::initializeGL() {
 	void main() {
 		vec2 p = plane[gl_VertexID];
 
-		nearPoint = unprojectPoint(vec3(p, 0.0));
-		farPoint = unprojectPoint(vec3(p, 1.0));
+		nearPoint = unprojectPoint(vec3(p, 1.0));
+		farPoint = unprojectPoint(vec3(p, 0.0));
 
 		gl_Position = vec4(p, 0.0, 1.0);
 	}
@@ -669,7 +681,7 @@ void Renderer::initializeGL() {
 	}
 
 	float linearizeDepth(float depth) {
-		float linearDepth = (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (far - near));
+		float linearDepth = (2.0 * near * far) / (far + near - (depth * 2.0 - 1.0) * (near - far));
 
 		return (linearDepth / far);
 	}
@@ -677,7 +689,8 @@ void Renderer::initializeGL() {
 	void main() {
 		float t = -nearPoint.y / (farPoint.y - nearPoint.y);
 		vec3 fragPos = nearPoint + t * (farPoint - nearPoint);
-		gl_FragDepth = (gl_DepthRange.diff * depth(fragPos) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+		vec4 clipSpacePos = viewProj * vec4(fragPos, 1.0);
+		gl_FragDepth = (clipSpacePos.z / clipSpacePos.w);
 		float fading = max(0.5 - linearizeDepth(gl_FragDepth), 0.0);
 
 		outColor = grid(fragPos) * float(t > 0.0);
@@ -984,6 +997,8 @@ void Renderer::initializeGL() {
 
 void Renderer::paintGL() {
 	if (m_gotResized) {
+		destroySceneImages();
+		createSceneImages();
 		destroyPickingImages();
 		createPickingImages();
 		destroyOutlineSoloImages();
@@ -1000,6 +1015,8 @@ void Renderer::paintGL() {
 		updateLights();
 	}
 
+	gl45.glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
 	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
 		gl.glEnable(GL_CULL_FACE);
 	}
@@ -1007,11 +1024,12 @@ void Renderer::paintGL() {
 		gl.glDisable(GL_CULL_FACE);
 	}
 
-	gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
 	gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	gl.glClearDepthf(0.0f);
 	gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl.glEnable(GL_DEPTH_TEST);
-	gl.glDepthFunc(GL_LESS);
+	gl.glDepthFunc(GL_GREATER);
 	gl.glDepthMask(GL_TRUE);
 	gl.glEnable(GL_BLEND);
 	gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1267,7 +1285,7 @@ void Renderer::paintGL() {
 
 	// Entities Colliders
 	if (m_globalInfo.editorParameters.renderer.showColliders) {
-		gl.glDepthFunc(GL_LEQUAL);
+		gl.glDepthFunc(GL_GEQUAL);
 
 		gl.glUseProgram(m_colliderProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
@@ -1306,7 +1324,7 @@ void Renderer::paintGL() {
 	// Grid
 	if (m_globalInfo.editorParameters.renderer.showGrid) {
 		if (!m_camera.useOrthographicProjection) {
-			gl.glDepthFunc(GL_LESS);
+			gl.glDepthFunc(GL_GREATER);
 
 			gl.glUseProgram(m_grid3DProgram);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid3DProgram, "view"), 1, false, m_camera.viewMatrix.data());
@@ -1320,7 +1338,7 @@ void Renderer::paintGL() {
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 		else {
-			gl.glDepthFunc(GL_LESS);
+			gl.glDepthFunc(GL_GREATER);
 
 			gl.glUseProgram(m_grid2DProgram);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_grid2DProgram, "view"), 1, false, m_camera.viewMatrix.data());
@@ -1352,9 +1370,10 @@ void Renderer::paintGL() {
 		glex.glDrawBuffers(1, &bufferEnum);
 		GLuint maxUint = NO_ENTITY;
 		glex.glClearBufferuiv(GL_COLOR, 0, &maxUint);
+		gl.glClearDepthf(0.0f);
 		gl.glClear(GL_DEPTH_BUFFER_BIT);
 		gl.glEnable(GL_DEPTH_TEST);
-		gl.glDepthFunc(GL_LESS);
+		gl.glDepthFunc(GL_GREATER);
 		gl.glDepthMask(GL_TRUE);
 		gl.glDisable(GL_BLEND);
 
@@ -1433,6 +1452,7 @@ void Renderer::paintGL() {
 			}
 			if (m_gizmoMode != GizmoMode::None) {
 				if (m_globalInfo.rendererResourceManager.rendererModels.find(gizmoModelName) != m_globalInfo.rendererResourceManager.rendererModels.end()) {
+					gl.glClearDepthf(0.0f);
 					gl.glClear(GL_DEPTH_BUFFER_BIT);
 					gl.glEnable(GL_CULL_FACE);
 
@@ -1513,7 +1533,7 @@ void Renderer::paintGL() {
 			}
 		}
 		else {
-			if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			if (!m_multiSelectionKeyPressed && (m_globalInfo.currentEntityID != NO_ENTITY)) {
 				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", NO_ENTITY, {}));
 			}
 		}
@@ -1579,9 +1599,10 @@ void Renderer::paintGL() {
 			// Outline Solo
 			gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
 			gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			gl.glClearDepthf(0.0f);
 			gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			gl.glEnable(GL_DEPTH_TEST);
-			gl.glDepthFunc(GL_LESS);
+			gl.glDepthFunc(GL_GREATER);
 			gl.glDepthMask(GL_TRUE);
 			gl.glDisable(GL_BLEND);
 
@@ -1674,13 +1695,13 @@ void Renderer::paintGL() {
 			}
 
 			// Outline
-			gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+			gl.glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
 			gl.glEnable(GL_DEPTH_TEST);
 			gl.glDepthFunc(GL_ALWAYS);
 
 			gl.glUseProgram(m_outlineProgram);
 			gl.glActiveTexture(GL_TEXTURE0);
-			gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloImage);
+			gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloColorImage);
 			gl.glUniform1i(gl.glGetUniformLocation(m_outlineProgram, "outlineSoloTexture"), 0);
 			if (entity.entityID == m_globalInfo.currentEntityID) {
 				gl.glUniform3f(gl.glGetUniformLocation(m_outlineProgram, "outlineColor"), m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.x, m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.y, m_globalInfo.editorParameters.renderer.currentEntityOutlineColor.z);
@@ -1726,10 +1747,11 @@ void Renderer::paintGL() {
 				gl.glUseProgram(m_gizmoProgram);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_gizmoProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-				gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+				gl.glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
+				gl.glClearDepthf(0.0f);
 				gl.glClear(GL_DEPTH_BUFFER_BIT);
 				gl.glEnable(GL_DEPTH_TEST);
-				gl.glDepthFunc(GL_LESS);
+				gl.glDepthFunc(GL_GREATER);
 				gl.glDepthMask(GL_TRUE);
 				gl.glEnable(GL_CULL_FACE);
 
@@ -1787,6 +1809,12 @@ void Renderer::paintGL() {
 		}
 	}
 
+	// Copy scene to framebuffer
+	gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, m_sceneFramebuffer);
+	gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultFramebufferObject());
+	glex.glBlitFramebuffer(0, 0, static_cast<GLsizei>(width()* m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height()* m_globalInfo.devicePixelRatio), 0, 0, static_cast<GLsizei>(width()* m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height()* m_globalInfo.devicePixelRatio), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	gl.glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+
 	gl.glDisable(GL_CULL_FACE);
 
 	m_dragDropResourceType = DragDropResourceType::None;
@@ -1838,49 +1866,72 @@ GLuint Renderer::compileProgram(GLuint vertexShader, GLuint fragmentShader) {
 	return program;
 }
 
+void Renderer::createSceneImages() {
+	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
+
+	gl.glGenTextures(1, &m_sceneColorImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_sceneColorImage);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_sceneColorImage, 0);
+
+	gl.glGenRenderbuffers(1, &m_sceneDepthImage);
+	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthImage);
+	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
+	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_sceneDepthImage);
+}
+
+void Renderer::destroySceneImages() {
+	gl.glDeleteTextures(1, &m_sceneColorImage);
+	gl.glDeleteRenderbuffers(1, &m_sceneDepthImage);
+}
+
 void Renderer::createPickingImages() {
 	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_pickingFramebuffer);
 
-	gl.glGenTextures(1, &m_pickingImage);
-	gl.glBindTexture(GL_TEXTURE_2D, m_pickingImage);
+	gl.glGenTextures(1, &m_pickingColorImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_pickingColorImage);
 	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, NULL);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingImage, 0);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingColorImage, 0);
 
 	gl.glGenRenderbuffers(1, &m_pickingDepthImage);
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_pickingDepthImage);
-	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
+	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_pickingDepthImage);
 }
 
 void Renderer::destroyPickingImages() {
-	gl.glDeleteTextures(1, &m_pickingImage);
+	gl.glDeleteTextures(1, &m_pickingColorImage);
 	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
 }
 
 void Renderer::createOutlineSoloImages() {
 	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_outlineSoloFramebuffer);
 
-	gl.glGenTextures(1, &m_outlineSoloImage);
-	gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloImage);
+	gl.glGenTextures(1, &m_outlineSoloColorImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloColorImage);
 	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_RED, GL_FLOAT, NULL);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outlineSoloImage, 0);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outlineSoloColorImage, 0);
 
 	gl.glGenRenderbuffers(1, &m_outlineSoloDepthImage);
 	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_outlineSoloDepthImage);
-	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
+	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_outlineSoloDepthImage);
 }
 
 void Renderer::destroyOutlineSoloImages() {
-	gl.glDeleteTextures(1, &m_outlineSoloImage);
+	gl.glDeleteTextures(1, &m_outlineSoloColorImage);
 	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
 }
 
@@ -1937,7 +1988,8 @@ void Renderer::updateCamera() {
 		}
 
 		m_camera.viewMatrix = nml::lookAtRH(m_camera.position, m_camera.position + m_camera.perspectiveDirection, m_camera.perspectiveUp);
-		m_camera.projectionMatrix = perspectiveRHOpenGL(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = nml::perspectiveRH(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraNearPlane);
+		m_camera.projectionNonReversedMatrix = nml::perspectiveRH(nml::toRad(45.0f), static_cast<float>(width()) / static_cast<float>(height()), m_globalInfo.editorParameters.renderer.cameraNearPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 	else {
 		nml::vec3 t;
@@ -1985,12 +2037,16 @@ void Renderer::updateCamera() {
 
 		m_camera.viewMatrix = nml::lookAtRH(orthographicPosition, orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = orthographicRHOpenGL(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraFarPlane , -m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionNonReversedMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
 	m_camera.invViewMatrix = nml::inverse(m_camera.viewMatrix);
 	m_camera.invProjMatrix = nml::inverse(m_camera.projectionMatrix);
+
+	m_camera.viewProjNonReversedMatrix = m_camera.projectionNonReversedMatrix * m_camera.viewMatrix;
+	m_camera.invProjNonReversedMatrix = nml::inverse(m_camera.projectionNonReversedMatrix);
 
 	m_mouseCursorDifference = nml::vec2(0.0f, 0.0f);
 
@@ -2192,8 +2248,8 @@ void Renderer::calculateTranslation(const std::set<EntityID> entityIDs, const nm
 
 	nml::vec3 cameraEntityDifference = m_selectionMeanPosition - m_camera.position;
 	float cameraEntityDifferenceLength = (nml::dot(cameraEntityDifference, cameraEntityDifference) != 0.0f) ? cameraEntityDifference.length() : 0.0f;
-	nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-	nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
+	nml::vec3 worldSpaceCursorCurrentPosition = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjNonReversedMatrix);
+	nml::vec3 worldSpaceCursorPreviousPosition = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjNonReversedMatrix);
 	nml::vec3 worldSpaceCursorDifference = worldSpaceCursorCurrentPosition - worldSpaceCursorPreviousPosition;
 	if ((m_gizmoMode == GizmoMode::Translate) && !m_translateEntityMode) {
 		worldSpaceCursorDifference = nml::vec3(worldSpaceCursorDifference.x * translationAxis.x, worldSpaceCursorDifference.y * translationAxis.y, worldSpaceCursorDifference.z * translationAxis.z);
@@ -2310,9 +2366,9 @@ void Renderer::calculateScale(const std::set<EntityID> entityIDs, const nml::vec
 		}
 	}
 	nml::vec2 previousToCurrentMousePosition = mouseCursorCurrentPosition - m_mouseCursorPreviousPosition;
-	nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-	nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjMatrix);
-	nml::vec2 objectPositionProjected = project(m_selectionMeanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjMatrix);
+	nml::vec3 worldSpacePreviousMouse = unproject(m_mouseCursorPreviousPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjNonReversedMatrix);
+	nml::vec3 worldSpaceCurrentMouse = unproject(mouseCursorCurrentPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.invViewMatrix, m_camera.invProjNonReversedMatrix);
+	nml::vec2 objectPositionProjected = project(m_selectionMeanPosition, static_cast<float>(width()), static_cast<float>(height()), m_camera.viewProjNonReversedMatrix);
 	nml::vec2 objectToCurrentMousePosition = mouseCursorCurrentPosition - objectPositionProjected;
 	nml::vec3 previousToCurrentPosition3D = worldSpaceCurrentMouse - worldSpacePreviousMouse;
 	float previousToCurrentPosition3DLength = (nml::dot(previousToCurrentPosition3D, previousToCurrentPosition3D) != 0.0f) ? previousToCurrentPosition3D.length() : 0.0f;
@@ -2402,29 +2458,6 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	return nml::vec3(worldSpace) / worldSpace.w;
 }
 
-nml::mat4 Renderer::perspectiveRHOpenGL(float fovY, float aspectRatio, float near, float far) {
-	const float tanHalfFovY = std::tan(fovY / 2.0f);
-	const float farMinusNear = far - near;
-		
-	return nml::mat4(1.0f / (aspectRatio * tanHalfFovY), 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f / tanHalfFovY, 0.0f, 0.0f,
-		0.0f, 0.0f, -(far + near) / (farMinusNear), -1.0f,
-		0.0f, 0.0f, -(2.0f * far * near) / (farMinusNear), 0.0f);
-}
-
-nml::mat4 Renderer::orthographicRHOpenGL(float left, float right, float bottom, float top, float near, float far) {
-	const float rightPlusLeft = right + left;
-	const float rightMinusLeft = right - left;
-	const float topPlusBottom = top + bottom;
-	const float topMinusBottom = top - bottom;
-	const float farMinusNear = far - near;
-
-	return nml::mat4(2.0f / rightMinusLeft, 0.0f, 0.0f, 0.0f,
-		0.0f, 2.0f / topMinusBottom, 0.0f, 0.0f,
-		0.0f, 0.0f, -1.0f / farMinusNear, 0.0f,
-		-(rightPlusLeft / rightMinusLeft), -(topPlusBottom / topMinusBottom), -(far + near) / farMinusNear, 1.0f);
-}
-
 void Renderer::onEntityDestroyed(EntityID entityID) {
 	(void)entityID;
 	cancelTransform();
@@ -2479,6 +2512,14 @@ void Renderer::onCameraGoToEntity(EntityID entityID) {
 		m_camera.perspectivePitch = nml::toDeg(-std::asin(m_camera.perspectiveDirection[1]));
 	}
 }
+
+#if defined(NTSHENGN_DEBUG)
+void Renderer::onMessageLogged(const QOpenGLDebugMessage& debugMessage) {
+	if (debugMessage.severity() == QOpenGLDebugMessage::Severity::HighSeverity) {
+		std::cout << debugMessage.message().toStdString() << std::endl;
+	}
+}
+#endif
 
 void Renderer::keyPressEvent(QKeyEvent* event) {
 	if (event->isAutoRepeat()) {
