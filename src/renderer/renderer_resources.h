@@ -36,7 +36,7 @@ struct RendererSampler {
 	GLint mipmapFilter = GL_NEAREST;
 	GLint wrapS = GL_CLAMP_TO_EDGE;
 	GLint wrapT = GL_CLAMP_TO_EDGE;
-	GLfloat anisotropyLevel = 0.0f;
+	GLfloat anisotropyLevel = 1.0f;
 };
 
 struct RendererMesh {
