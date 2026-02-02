@@ -1557,7 +1557,7 @@ void Renderer::paintGL() {
 						Renderable newRenderable = pickedEntity.renderable.value();
 						newRenderable.materialPath = m_dragDropResourcePath;
 						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
-						m_globalInfo.selectionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+						m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
 					}
 				}
 			}
