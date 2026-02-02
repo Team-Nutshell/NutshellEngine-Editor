@@ -28,6 +28,7 @@ struct RendererSampler {
 		}
 		gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
 		gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+		gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropyLevel);
 	}
 
 	GLint magFilter = GL_NEAREST;
@@ -35,6 +36,7 @@ struct RendererSampler {
 	GLint mipmapFilter = GL_NEAREST;
 	GLint wrapS = GL_CLAMP_TO_EDGE;
 	GLint wrapT = GL_CLAMP_TO_EDGE;
+	GLfloat anisotropyLevel = 0.0f;
 };
 
 struct RendererMesh {
@@ -46,6 +48,14 @@ struct RendererMesh {
 struct RendererMaterial {
 	std::string diffuseTextureName = "defaultDiffuseTexture";
 	std::string diffuseTextureSamplerName = "defaultSampler";
+	std::string normalTextureName = "defaultNormalTexture";
+	std::string normalTextureSamplerName = "defaultSampler";
+	std::string metalnessTextureName = "defaultORMTexture";
+	std::string metalnessTextureSamplerName = "defaultSampler";
+	std::string roughnessTextureName = "defaultORMTexture";
+	std::string roughnessTextureSamplerName = "defaultSampler";
+	std::string occlusionTextureName = "defaultORMTexture";
+	std::string occlusionTextureSamplerName = "defaultSampler";
 	std::string emissiveTextureName = "defaultEmissiveTexture";
 	std::string emissiveTextureSamplerName = "defaultSampler";
 	float emissiveFactor = 1.0f;

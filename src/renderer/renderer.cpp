@@ -29,16 +29,9 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 }
 
 Renderer::~Renderer() {
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh.vertexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh.indexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
-	gl.glDeleteBuffers(1, &m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 	gl.glDeleteBuffers(1, &m_lightBuffer);
 
 	for (const auto& model : m_globalInfo.rendererResourceManager.rendererModels) {
-		if ((model.first == "defaultCube") || (model.first == "cameraFrustumCube")) {
-			continue;
-		}
 		for (const auto& primitive : model.second.primitives) {
 			gl.glDeleteBuffers(1, &primitive.mesh.vertexBuffer);
 			gl.glDeleteBuffers(1, &primitive.mesh.indexBuffer);
@@ -49,14 +42,8 @@ Renderer::~Renderer() {
 	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
 	gl.glDeleteTextures(1, &m_outlineSoloImage);
 	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
-	gl.glDeleteTextures(1, &m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"]);
-	gl.glDeleteTextures(1, &m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"]);
 
 	for (const auto& texture : m_globalInfo.rendererResourceManager.textures) {
-		if ((texture.first == "defaultDiffuseTexture") || (texture.first == "defaultEmissiveTexture")) {
-			continue;
-		}
-
 		gl.glDeleteTextures(1, &texture.second);
 	}
 
@@ -94,18 +81,26 @@ void Renderer::initializeGL() {
 	in vec3 position;
 	in vec3 normal;
 	in vec2 uv;
+	in vec4 tangent;
 
 	uniform mat4 viewProj;
 	uniform mat4 model;
 
 	out vec3 fragPosition;
-	out vec3 fragNormal;
 	out vec2 fragUV;
+	out mat3 fragTBN;
 
 	void main() {
 		fragPosition = vec3(model * vec4(position, 1.0));
-		fragNormal = normalize((model * vec4(normal, 0.0)).xyz);
 		fragUV = uv;
+		
+		mat4 transposeInverseModel = transpose(inverse(model));
+		vec3 bitangent = cross(normal, tangent.xyz) * tangent.w;
+		vec3 T = vec3(transposeInverseModel * vec4(tangent.xyz, 0.0));
+		vec3 B = vec3(transposeInverseModel * vec4(bitangent, 0.0));
+		vec3 N = vec3(transposeInverseModel * vec4(normal, 0.0));
+		fragTBN = mat3(T, B, N);
+
 		gl_Position = viewProj * vec4(fragPosition, 1.0);
 	}
 	)GLSL";
@@ -113,6 +108,8 @@ void Renderer::initializeGL() {
 
 	std::string entityFragmentShaderCode = R"GLSL(
 	#version 460
+
+	#define M_PI 3.1415926535897932384626433832795
 
 	struct TriplanarUV {
 		vec2 x;
@@ -137,10 +134,14 @@ void Renderer::initializeGL() {
 	};
 
 	in vec3 fragPosition;
-	in vec3 fragNormal;
 	in vec2 fragUV;
+	in mat3 fragTBN;
 
 	uniform sampler2D diffuseTextureSampler;
+	uniform sampler2D normalTextureSampler;
+	uniform sampler2D metalnessTextureSampler;
+	uniform sampler2D roughnessTextureSampler;
+	uniform sampler2D occlusionTextureSampler;
 	uniform sampler2D emissiveTextureSampler;
 	uniform float emissiveFactor;
 	uniform float alphaCutoff;
@@ -148,6 +149,7 @@ void Renderer::initializeGL() {
 	uniform vec2 scaleUV;
 	uniform vec2 offsetUV;
 	uniform bool enableShading;
+	uniform vec3 cameraPosition;
 	restrict readonly buffer LightBuffer {
 		uvec4 count;
 		Light info[];
@@ -155,30 +157,117 @@ void Renderer::initializeGL() {
 
 	out vec4 outColor;
 
+	// BRDF
+	float distribution(float NdotH, float roughness) {
+		const float a = roughness * roughness;
+		const float aSquare = a * a;
+		const float NdotHSquare = NdotH * NdotH;
+		const float denom = NdotHSquare * (aSquare - 1.0) + 1.0;
+
+		return aSquare / (M_PI * denom * denom);
+	}
+
+	vec3 fresnel(float cosTheta, vec3 f0) {
+		return f0 + (1.0 - f0) * pow(1.0 - cosTheta, 5.0);
+	}
+
+	float g(float NdotV, float roughness) {
+		const float r = roughness + 1.0;
+		const float k = (r * r) / 8.0;
+		const float denom = NdotV * (1.0 - k) + k;
+
+		return NdotV / denom;
+	}
+
+	float smith(float LdotN, float VdotN, float roughness) {
+		const float gv = g(VdotN, roughness);
+		const float gl = g(LdotN, roughness);
+
+		return gv * gl;
+	}
+
+	vec3 diffuseFresnelCorrection(vec3 ior) {
+		const vec3 iorSquare = ior * ior;
+		const bvec3 TIR = lessThan(ior, vec3(1.0));
+		const vec3 invDenum = mix(vec3(1.0), vec3(1.0) / (iorSquare * iorSquare * (vec3(554.33) * 380.7 * ior)), TIR);
+		vec3 num = ior * mix(vec3(0.1921156102251088), ior * 298.25 - 261.38 * iorSquare + 138.43, TIR);
+		num += mix(vec3(0.8078843897748912), vec3(-1.07), TIR);
+
+		return num * invDenum;
+	}
+
+	vec3 brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN, vec3 diffuse, float metalness, float roughness) {
+		const float d = distribution(NdotH, roughness);
+		const vec3 f = fresnel(LdotH, mix(vec3(0.04), diffuse, metalness));
+		const vec3 fT = fresnel(LdotN, mix(vec3(0.04), diffuse, metalness));
+		const vec3 fTIR = fresnel(VdotN, mix(vec3(0.04), diffuse, metalness));
+		const float g = smith(LdotN, VdotN, roughness);
+		const vec3 dfc = diffuseFresnelCorrection(vec3(1.05));
+
+		const vec3 lambertian = diffuse / M_PI;
+
+		return (d * f * g) / max(4.0 * LdotN * VdotN, 0.001) + ((vec3(1.0) - fT) * (vec3(1.0 - fTIR)) * lambertian) * dfc;
+	}
+
+	vec3 shade(vec3 n, vec3 v, vec3 l, vec3 lc, vec3 diffuse, float metalness, float roughness) {
+		const vec3 h = normalize(v + l);
+
+		const float LdotH = max(dot(l, h), 0.0);
+		const float NdotH = max(dot(n, h), 0.0);
+		const float VdotH = max(dot(v, h), 0.0);
+		const float LdotN = max(dot(l, n), 0.0);
+		const float VdotN = max(dot(v, n), 0.0);
+
+		const vec3 brdf = brdf(LdotH, NdotH, VdotH, LdotN, VdotN, diffuse, metalness, roughness);
+	
+		return lc * brdf * LdotN;
+	}
+
+	vec3 sRGBToLinear(vec3 rgb) {
+		return mix(pow((rgb + 0.055) * (1.0 / 1.055), vec3(2.4)), rgb * (1.0 / 12.92), lessThanEqual(rgb, vec3(0.04045)));
+	}
+
+	vec3 linearToSRGB(vec3 rgb) {
+		return mix(1.055 * pow(rgb, vec3(1.0 / 2.4)) - 0.055, rgb * 12.92, lessThanEqual(rgb, vec3(0.0031308)));
+	}
+
 	void main() {
-		vec4 diffuseTextureSample = vec4(0.0, 0.0, 0.0, 0.0);
-		vec3 emissiveTextureSample = vec3(0.0, 0.0, 0.0);
+		vec4 diffuseTextureSample;
+		float metalnessTextureSample;
+		float roughnessTextureSample;
+		float occlusionTextureSample;
+		vec3 emissiveTextureSample;
+
+		vec3 n;
 
 		if (!useTriplanarMapping) {
 			vec2 scaleOffsetUV = (fragUV * scaleUV) + offsetUV;
 
 			diffuseTextureSample = texture(diffuseTextureSampler, scaleOffsetUV);
+			const vec3 normalTextureSample = texture(normalTextureSampler, scaleOffsetUV).xyz;
+			metalnessTextureSample = texture(metalnessTextureSampler, scaleOffsetUV).b;
+			roughnessTextureSample = texture(roughnessTextureSampler, scaleOffsetUV).g;
+			occlusionTextureSample = texture(occlusionTextureSampler, scaleOffsetUV).r;
 			emissiveTextureSample = texture(emissiveTextureSampler, scaleOffsetUV).rgb;
+
+			n = normalize(fragTBN * ((normalTextureSample * 2.0) - 1.0));
 		}
 		else {
+			vec3 normal = normalize(fragTBN[2]);
+
 			TriplanarUV triplanarUV;
 			triplanarUV.x = fragPosition.zy;
 			triplanarUV.x.y = -triplanarUV.x.y;
-			if (fragNormal.x >= 0.0) {
+			if (normal.x >= 0.0) {
 				triplanarUV.x.x = -triplanarUV.x.x;
 			}
 			triplanarUV.y = fragPosition.xz;
-			if (fragNormal.y < 0.0) {
+			if (normal.y < 0.0) {
 				triplanarUV.y.y = -triplanarUV.y.y;
 			}
 			triplanarUV.z = fragPosition.xy;
 			triplanarUV.z.y = -triplanarUV.z.y;
-			if (fragNormal.z < 0.0) {
+			if (normal.z < 0.0) {
 				triplanarUV.z.x = -triplanarUV.z.x;
 			}
 
@@ -186,16 +275,54 @@ void Renderer::initializeGL() {
 			triplanarUV.y = (triplanarUV.y * scaleUV) + offsetUV;
 			triplanarUV.z = (triplanarUV.z * scaleUV) + offsetUV;
 
-			vec3 triplanarWeights = abs(fragNormal);
+			vec3 triplanarWeights = abs(normal);
 			triplanarWeights /= (triplanarWeights.x + triplanarWeights.y + triplanarWeights.z);
 
 			diffuseTextureSample = (texture(diffuseTextureSampler, triplanarUV.x) * triplanarWeights.x) +
 				(texture(diffuseTextureSampler, triplanarUV.y) * triplanarWeights.y) +
 				(texture(diffuseTextureSampler, triplanarUV.z) * triplanarWeights.z);
+
+			vec3 tangentNormalX = (texture(normalTextureSampler, triplanarUV.x).xyz * 2.0) - 1.0;
+			vec3 tangentNormalY = (texture(normalTextureSampler, triplanarUV.y).xyz * 2.0) - 1.0;
+			vec3 tangentNormalZ = (texture(normalTextureSampler, triplanarUV.z).xyz * 2.0) - 1.0;
+
+			if (normal.x < 0.0) {
+				tangentNormalX.z = -tangentNormalX.z;
+			}
+			if (normal.y < 0.0) {
+				tangentNormalY.z = -tangentNormalY.z;
+			}
+			if (normal.z < 0.0) {
+				tangentNormalZ.z = -tangentNormalZ.z;
+			}
+
+			vec3 worldNormalX = vec3(tangentNormalX.xy + normal.zy, abs(tangentNormalX.z) * normal.x).zyx;
+			vec3 worldNormalY = vec3(tangentNormalY.xy + normal.xz, abs(tangentNormalY.z) * normal.y).xzy;
+			vec3 worldNormalZ = vec3(tangentNormalZ.xy + normal.xy, abs(tangentNormalZ.z) * normal.z).xyz;
+
+			n = normalize((worldNormalX * triplanarWeights.x) + 
+				(worldNormalY * triplanarWeights.y) +
+				(worldNormalZ * triplanarWeights.z));
+
+			metalnessTextureSample = (texture(metalnessTextureSampler, triplanarUV.x).b * triplanarWeights.x) +
+				(texture(metalnessTextureSampler, triplanarUV.y).b * triplanarWeights.y) +
+				(texture(metalnessTextureSampler, triplanarUV.z).b * triplanarWeights.z);
+
+			roughnessTextureSample = (texture(roughnessTextureSampler, triplanarUV.x).g * triplanarWeights.x) +
+				(texture(roughnessTextureSampler, triplanarUV.y).g * triplanarWeights.y) +
+				(texture(roughnessTextureSampler, triplanarUV.z).g * triplanarWeights.z);
+
+			occlusionTextureSample = (texture(occlusionTextureSampler, triplanarUV.x).r * triplanarWeights.x) +
+				(texture(occlusionTextureSampler, triplanarUV.y).r * triplanarWeights.y) +
+				(texture(occlusionTextureSampler, triplanarUV.z).r * triplanarWeights.z);
+
 			emissiveTextureSample = (texture(emissiveTextureSampler, triplanarUV.x).rgb * triplanarWeights.x) +
 				(texture(emissiveTextureSampler, triplanarUV.y).rgb * triplanarWeights.y) +
 				(texture(emissiveTextureSampler, triplanarUV.z).rgb * triplanarWeights.z);
 		}
+
+		diffuseTextureSample.rgb = sRGBToLinear(diffuseTextureSample.rgb);
+		emissiveTextureSample = sRGBToLinear(emissiveTextureSample);
 
 		if ((diffuseTextureSample.a < alphaCutoff) || (diffuseTextureSample.a < ditheringThreshold[int(mod(gl_FragCoord.x, 4.0))][int(mod(gl_FragCoord.y, 4.0))])) {
 			discard;
@@ -203,19 +330,22 @@ void Renderer::initializeGL() {
 		outColor = vec4(0.0, 0.0, 0.0, 1.0);
 
 		if (enableShading) {
+			const vec3 d = diffuseTextureSample.rgb;
+			const vec3 v = normalize(cameraPosition - fragPosition);
+			
 			uint lightIndex = 0;
 
 			// Directional Lights
 			for (uint i = 0; i < lights.count.x; i++) {
 				vec3 l = -lights.info[lightIndex].direction;
 
-				float LdotN = dot(l, fragNormal);
+				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
 					continue;
 				}
 
-				outColor += vec4(diffuseTextureSample.rgb * (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * LdotN, 0.0);
+				outColor.rgb += shade(n, v, l, lights.info[lightIndex].color * lights.info[lightIndex].intensity, d, metalnessTextureSample, roughnessTextureSample);
 
 				lightIndex++;
 			}
@@ -224,7 +354,7 @@ void Renderer::initializeGL() {
 			for (uint i = 0; i < lights.count.y; i++) {
 				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
 
-				float LdotN = dot(l, fragNormal);
+				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
 					continue;
@@ -239,7 +369,7 @@ void Renderer::initializeGL() {
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * attenuation;
 
-				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
+				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample);
 
 				lightIndex++;
 			}
@@ -248,7 +378,7 @@ void Renderer::initializeGL() {
 			for (uint i = 0; i < lights.count.z; i++) {
 				vec3 l = normalize(lights.info[lightIndex].position - fragPosition);
 
-				float LdotN = dot(l, fragNormal);
+				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
 					continue;
@@ -266,7 +396,7 @@ void Renderer::initializeGL() {
 				intensity = 1.0 - intensity;
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * intensity;
 
-				outColor += vec4(diffuseTextureSample.rgb * radiance * LdotN, 0.0);
+				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample);
 
 				lightIndex++;
 			}
@@ -284,7 +414,7 @@ void Renderer::initializeGL() {
 
 		outColor += vec4(emissiveTextureSample * emissiveFactor, 0.0);
 
-		outColor.rgb /= (outColor.rgb + vec3(1.0));
+		outColor.rgb = linearToSRGB(outColor.rgb);
 	}
 	)GLSL";
 	GLuint entityFragmentShader = compileShader(GL_FRAGMENT_SHADER, entityFragmentShaderCode);
@@ -759,11 +889,28 @@ void Renderer::initializeGL() {
 	gl.glGenerateMipmap(GL_TEXTURE_2D);
 	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
 
+	GLuint defaultNormalTexture;
+	gl.glGenTextures(1, &defaultNormalTexture);
+	std::vector<uint8_t> normalTextureData = { 127, 127, 255, 255 };
+	gl.glBindTexture(GL_TEXTURE_2D, defaultNormalTexture);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, normalTextureData.data());
+	gl.glGenerateMipmap(GL_TEXTURE_2D);
+	m_globalInfo.rendererResourceManager.textures["defaultNormalTexture"] = defaultNormalTexture;
+
+	GLuint defaultORMTexture;
+	gl.glGenTextures(1, &defaultORMTexture);
+	std::vector<uint8_t> ormTextureData = { 255, 0, 0, 255 };
+	gl.glBindTexture(GL_TEXTURE_2D, defaultORMTexture);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, ormTextureData.data());
+	gl.glGenerateMipmap(GL_TEXTURE_2D);
+	m_globalInfo.rendererResourceManager.textures["defaultORMTexture"] = defaultORMTexture;
+
 	GLuint defaultEmissiveTexture;
 	gl.glGenTextures(1, &defaultEmissiveTexture);
 	std::vector<uint8_t> emissiveTextureData = { 0, 0, 0, 255 };
 	gl.glBindTexture(GL_TEXTURE_2D, defaultEmissiveTexture);
 	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveTextureData.data());
+	gl.glGenerateMipmap(GL_TEXTURE_2D);
 	m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"] = defaultEmissiveTexture;
 
 	RendererSampler defaultSampler;
@@ -900,12 +1047,15 @@ void Renderer::paintGL() {
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
 				GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
+				GLint tangentPos = gl.glGetAttribLocation(m_entityProgram, "tangent");
 				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 				gl.glEnableVertexAttribArray(normalPos);
-				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 32, (void*)12);
+				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 48, (void*)12);
 				gl.glEnableVertexAttribArray(uvPos);
-				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
+				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 48, (void*)24);
+				gl.glEnableVertexAttribArray(tangentPos);
+				gl.glVertexAttribPointer(tangentPos, 4, GL_FLOAT, false, 48, (void*)32);
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
 
 				indexCount = entityMesh.indexCount;
@@ -919,12 +1069,15 @@ void Renderer::paintGL() {
 				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
 				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
 				GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
+				GLint tangentPos = gl.glGetAttribLocation(m_entityProgram, "tangent");
 				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 				gl.glEnableVertexAttribArray(normalPos);
-				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 32, (void*)12);
+				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 48, (void*)12);
 				gl.glEnableVertexAttribArray(uvPos);
-				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 32, (void*)24);
+				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 48, (void*)24);
+				gl.glEnableVertexAttribArray(tangentPos);
+				gl.glVertexAttribPointer(tangentPos, 4, GL_FLOAT, false, 48, (void*)32);
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 				indexCount = defaultMesh.indexCount;
@@ -935,6 +1088,7 @@ void Renderer::paintGL() {
 				// Entity has a material
 				const RendererMaterial& material = !entity.second.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath] : primitiveMaterial;
 
+				// Diffuse texture
 				gl.glActiveTexture(GL_TEXTURE0);
 				if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
@@ -945,7 +1099,52 @@ void Renderer::paintGL() {
 				m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
+				// Normal texture
 				gl.glActiveTexture(GL_TEXTURE1);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.normalTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.normalTextureName]);
+				}
+				else if (std::filesystem::path(material.normalTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.normalTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
+
+				// Metalness texture
+				gl.glActiveTexture(GL_TEXTURE2);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.metalnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.metalnessTextureName]);
+				}
+				else if (std::filesystem::path(material.metalnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureName"), 2);
+
+				// Roughness texture
+				gl.glActiveTexture(GL_TEXTURE3);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.roughnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.roughnessTextureName]);
+				}
+				else if (std::filesystem::path(material.roughnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureName"), 3);
+
+				// Occlusion texture
+				gl.glActiveTexture(GL_TEXTURE4);
+				if (m_globalInfo.rendererResourceManager.textures.find(material.occlusionTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.occlusionTextureName]);
+				}
+				else if (std::filesystem::path(material.occlusionTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
+				}
+				m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureName"), 4);
+
+				// Emissive texture
+				gl.glActiveTexture(GL_TEXTURE5);
 				if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
 				}
@@ -953,7 +1152,7 @@ void Renderer::paintGL() {
 					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
 				}
 				m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
 
 				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
 
@@ -966,21 +1165,49 @@ void Renderer::paintGL() {
 				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
+
+				gl.glUniform3f(gl.glGetUniformLocation(m_entityProgram, "cameraPosition"), m_camera.position.x, m_camera.position.y, m_camera.position.z);
 			}
 			else {
 				// Entity has no material or no mesh, default material
 				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
 				RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
 
+				// Diffuse texture
 				gl.glActiveTexture(GL_TEXTURE0);
 				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.diffuseTextureName]);
 				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.diffuseTextureSamplerName].bind(gl);
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
 
+				// Normal texture
 				gl.glActiveTexture(GL_TEXTURE1);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.normalTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.normalTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
+
+				// Metalness texture
+				gl.glActiveTexture(GL_TEXTURE2);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.metalnessTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.metalnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureSampler"), 2);
+
+				// Roughness texture
+				gl.glActiveTexture(GL_TEXTURE3);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.roughnessTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.roughnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureSampler"), 3);
+
+				// Occlusion texture
+				gl.glActiveTexture(GL_TEXTURE4);
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.occlusionTextureName]);
+				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.occlusionTextureSamplerName].bind(gl);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureSampler"), 4);
+
+				// Emissive texture
+				gl.glActiveTexture(GL_TEXTURE5);
 				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.emissiveTextureName]);
 				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 1);
+				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
 
 				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), defaultMaterial.emissiveFactor);
 
@@ -993,6 +1220,8 @@ void Renderer::paintGL() {
 				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), defaultMaterial.offsetUV.x, defaultMaterial.offsetUV.y);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
+
+				gl.glUniform3f(gl.glGetUniformLocation(m_entityProgram, "cameraPosition"), m_camera.position.x, m_camera.position.y, m_camera.position.z);
 			}
 
 			gl.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, NULL);
@@ -1009,7 +1238,7 @@ void Renderer::paintGL() {
 		gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
 		GLint positionPos = gl.glGetAttribLocation(m_cameraFrustumProgram, "position");
 		gl.glEnableVertexAttribArray(positionPos);
-		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 
 		for (const auto& entity : m_globalInfo.entities) {
@@ -1065,7 +1294,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_colliderProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
 
 					gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1149,7 +1378,7 @@ void Renderer::paintGL() {
 						gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
 
 						gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1159,7 +1388,7 @@ void Renderer::paintGL() {
 						gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 						gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1170,7 +1399,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1228,7 +1457,7 @@ void Renderer::paintGL() {
 						gl.glBindBuffer(GL_ARRAY_BUFFER, gizmoPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gizmoPrimitive.mesh.indexBuffer);
 
 						gl.glDrawElements(GL_TRIANGLES, gizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1373,7 +1602,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
 
 					gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1383,7 +1612,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1394,7 +1623,7 @@ void Renderer::paintGL() {
 				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
 				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
 
 				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1419,7 +1648,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
 
 					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1436,7 +1665,7 @@ void Renderer::paintGL() {
 						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
 						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
 						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
 
 						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1549,7 +1778,7 @@ void Renderer::paintGL() {
 					gl.glBindBuffer(GL_ARRAY_BUFFER, gizmoPrimitive.mesh.vertexBuffer);
 					GLint positionPos = gl.glGetAttribLocation(m_gizmoProgram, "position");
 					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 32, (void*)0);
+					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
 					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gizmoPrimitive.mesh.indexBuffer);
 
 					gl.glDrawElements(GL_TRIANGLES, gizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
@@ -1937,6 +2166,8 @@ void Renderer::loadResourcesToGPU() {
 		else {
 			sampler.wrapT = GL_MIRRORED_REPEAT;
 		}
+
+		sampler.anisotropyLevel = samplerToGPU.second.anisotropyLevel;
 
 		m_globalInfo.rendererResourceManager.samplers[samplerToGPU.first] = sampler;
 	}

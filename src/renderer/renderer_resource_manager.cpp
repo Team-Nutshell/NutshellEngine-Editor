@@ -362,6 +362,10 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 
 	nlohmann::json j = nlohmann::json::parse(meshFile);
 
+	bool hasNormals = false;
+	bool hasUvs = false;
+	bool hasTangents = false;
+
 	if (j.contains("vertices")) {
 		mesh.vertices.resize(j["vertices"].size());
 		for (size_t i = 0; i < j["vertices"].size(); i++) {
@@ -375,11 +379,21 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 				mesh.vertices[i].normal.x = j["vertices"][i]["normal"][0];
 				mesh.vertices[i].normal.y = j["vertices"][i]["normal"][1];
 				mesh.vertices[i].normal.z = j["vertices"][i]["normal"][2];
+				hasNormals = true;
 			}
 
 			if (j["vertices"][i].contains("uv")) {
 				mesh.vertices[i].uv.x = j["vertices"][i]["uv"][0];
 				mesh.vertices[i].uv.y = j["vertices"][i]["uv"][1];
+				hasUvs = true;
+			}
+
+			if (j["vertices"][i].contains("tangent")) {
+				mesh.vertices[i].tangent.x = j["vertices"][i]["tangent"][0];
+				mesh.vertices[i].tangent.y = j["vertices"][i]["tangent"][1];
+				mesh.vertices[i].tangent.z = j["vertices"][i]["tangent"][2];
+				mesh.vertices[i].tangent.w = j["vertices"][i]["tangent"][3];
+				hasTangents = true;
 			}
 		}
 	}
@@ -393,6 +407,11 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 		// Calculate indices
 		mesh.indices.resize(mesh.vertices.size());
 		std::iota(mesh.indices.begin(), mesh.indices.end(), 0);
+	}
+
+	// Calculate tangents
+	if ((!hasTangents) && (hasNormals && hasUvs)) {
+		calculateTangents(mesh);
 	}
 
 	return mesh;
@@ -445,6 +464,122 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 
 			material.diffuseTextureName = mapKey;
+		}
+	}
+
+	if (j.contains("normal")) {
+		if (j["normal"].contains("texture")) {
+			if (j["normal"]["texture"].contains("imagePath")) {
+				material.normalTextureName = j["normal"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["normal"]["texture"]["imagePath"]), material.normalTextureName);
+			}
+
+			if (j["normal"]["texture"].contains("imageSamplerPath")) {
+				material.normalTextureSamplerName = j["normal"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["normal"]["texture"]["imageSamplerPath"]), material.normalTextureSamplerName);
+			}
+		}
+	}
+
+	if (j.contains("metalness")) {
+		if (j["metalness"].contains("texture")) {
+			if (j["metalness"]["texture"].contains("imagePath")) {
+				material.metalnessTextureName = j["metalness"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["metalness"]["texture"]["imagePath"]), material.metalnessTextureName);
+			}
+
+			if (j["metalness"]["texture"].contains("imageSamplerPath")) {
+				material.metalnessTextureSamplerName = j["metalness"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["metalness"]["texture"]["imageSamplerPath"]), material.metalnessTextureSamplerName);
+			}
+		}
+		else if (j["metalness"].contains("value")) {
+			float metalnessValueFloat = j["metalness"]["value"];
+			uint8_t metalnessValue = static_cast<uint8_t>(round(255.0f * metalnessValueFloat));
+			std::string mapKey = "linear " + std::to_string(metalnessValueFloat) + " " + std::to_string(metalnessValueFloat) + " " + std::to_string(metalnessValueFloat) + " " + std::to_string(metalnessValueFloat);
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { metalnessValue,
+					metalnessValue,
+					metalnessValue,
+					metalnessValue
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			material.metalnessTextureName = mapKey;
+		}
+	}
+
+	if (j.contains("roughness")) {
+		if (j["roughness"].contains("texture")) {
+			if (j["roughness"]["texture"].contains("imagePath")) {
+				material.roughnessTextureName = j["roughness"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["roughness"]["texture"]["imagePath"]), material.roughnessTextureName);
+			}
+
+			if (j["roughness"]["texture"].contains("imageSamplerPath")) {
+				material.roughnessTextureSamplerName = j["roughness"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["roughness"]["texture"]["imageSamplerPath"]), material.roughnessTextureSamplerName);
+			}
+		}
+		else if (j["roughness"].contains("value")) {
+			float roughnessValueFloat = j["roughness"]["value"];
+			uint8_t roughnessValue = static_cast<uint8_t>(round(255.0f * roughnessValueFloat));
+			std::string mapKey = "linear " + std::to_string(roughnessValueFloat) + " " + std::to_string(roughnessValueFloat) + " " + std::to_string(roughnessValueFloat) + " " + std::to_string(roughnessValueFloat);
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { roughnessValue,
+					roughnessValue,
+					roughnessValue,
+					roughnessValue
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			material.roughnessTextureName = mapKey;
+		}
+	}
+
+	if (j.contains("occlusion")) {
+		if (j["occlusion"].contains("texture")) {
+			if (j["occlusion"]["texture"].contains("imagePath")) {
+				material.occlusionTextureName = j["occlusion"]["texture"]["imagePath"];
+				loadImage(projectDirectory + "/" + std::string(j["occlusion"]["texture"]["imagePath"]), material.occlusionTextureName);
+			}
+
+			if (j["occlusion"]["texture"].contains("imageSamplerPath")) {
+				material.occlusionTextureSamplerName = j["occlusion"]["texture"]["imageSamplerPath"];
+				loadSampler(projectDirectory + "/" + std::string(j["occlusion"]["texture"]["imageSamplerPath"]), material.occlusionTextureSamplerName);
+			}
+		}
+		else if (j["occlusion"].contains("value")) {
+			float occlusionValueFloat = j["occlusion"]["value"];
+			uint8_t occlusionValue = static_cast<uint8_t>(round(255.0f * occlusionValueFloat));
+			std::string mapKey = "linear " + std::to_string(occlusionValueFloat) + " " + std::to_string(occlusionValueFloat) + " " + std::to_string(occlusionValueFloat) + " " + std::to_string(occlusionValueFloat);
+
+			if (textures.find(mapKey) == textures.end()) {
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.data = { occlusionValue,
+					occlusionValue,
+					occlusionValue,
+					occlusionValue
+				};
+
+				imagesToGPU[mapKey] = image;
+			}
+
+			material.occlusionTextureName = mapKey;
 		}
 	}
 	
@@ -560,21 +695,27 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 		else if (jsmplr["minFilter"] == "Linear") {
 			sampler.minFilter = SamplerToGPU::Filter::Linear;
 		}
+	}
 
+	if (jsmplr.contains("magFilter")) {
 		if (jsmplr["magFilter"] == "Nearest") {
 			sampler.magFilter = SamplerToGPU::Filter::Nearest;
 		}
 		else if (jsmplr["magFilter"] == "Linear") {
 			sampler.magFilter = SamplerToGPU::Filter::Linear;
 		}
+	}
 
+	if (jsmplr.contains("mipmapFilter")) {
 		if (jsmplr["mipmapFilter"] == "Nearest") {
 			sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
 		}
 		else if (jsmplr["mipmapFilter"] == "Linear") {
 			sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
 		}
+	}
 
+	if (jsmplr.contains("addressModeU")) {
 		if (jsmplr["addressModeU"] == "Repeat") {
 			sampler.wrapS = SamplerToGPU::Wrap::Repeat;
 		}
@@ -584,7 +725,9 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 		else if (jsmplr["addressModeU"] == "ClampToEdge") {
 			sampler.wrapS = SamplerToGPU::Wrap::ClampToEdge;
 		}
+	}
 
+	if (jsmplr.contains("addressModeV")) {
 		if (jsmplr["addressModeV"] == "Repeat") {
 			sampler.wrapT = SamplerToGPU::Wrap::Repeat;
 		}
@@ -594,6 +737,10 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 		else if (jsmplr["addressModeV"] == "ClampToEdge") {
 			sampler.wrapT = SamplerToGPU::Wrap::ClampToEdge;
 		}
+	}
+
+	if (jsmplr.contains("anisotropyLevel")) {
+		sampler.anisotropyLevel = jsmplr["anisotropyLevel"];
 	}
 }
 
@@ -648,14 +795,17 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 			float* position = nullptr;
 			float* normal = nullptr;
 			float* uv = nullptr;
+			float* tangent = nullptr;
 
 			size_t positionCount = 0;
 			size_t normalCount = 0;
 			size_t uvCount = 0;
+			size_t tangentCount = 0;
 
 			size_t positionStride = 0;
 			size_t normalStride = 0;
 			size_t uvStride = 0;
+			size_t tangentStride = 0;
 
 			for (size_t j = 0; j < nodeMeshPrimitive.attributes_count; j++) {
 				cgltf_attribute attribute = nodeMeshPrimitive.attributes[j];
@@ -680,6 +830,11 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					uvCount = attribute.data->count;
 					uvStride = std::max(bufferView->stride, 2 * sizeof(float));
 				}
+				else if (attributeName == "TANGENT") {
+					tangent = reinterpret_cast<float*>(bufferOffset);
+					tangentCount = attribute.data->count;
+					tangentStride = std::max(bufferView->stride, 4 * sizeof(float));
+				}
 			}
 			size_t vertexCount = positionCount;
 			primitive.mesh.vertices.resize(vertexCount);
@@ -687,6 +842,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 			size_t positionCursor = 0;
 			size_t normalCursor = 0;
 			size_t uvCursor = 0;
+			size_t tangentCursor = 0;
 
 			for (size_t j = 0; j < vertexCount; j++) {
 				nml::vec3 vertexPosition = nml::vec3(position + positionCursor);
@@ -709,6 +865,17 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				}
 				else {
 					primitive.mesh.vertices[j].uv = nml::vec2(0.0f, 0.0f);
+				}
+
+				if (tangentCount != 0) {
+					primitive.mesh.vertices[j].tangent.x = *(tangent + tangentCursor);
+					primitive.mesh.vertices[j].tangent.y = *(tangent + tangentCursor + 1);
+					primitive.mesh.vertices[j].tangent.z = *(tangent + tangentCursor + 2);
+					primitive.mesh.vertices[j].tangent.w = *(tangent + tangentCursor + 3);
+					tangentCursor += (tangentStride / sizeof(float));
+				}
+				else {
+					primitive.mesh.vertices[j].tangent = nml::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 				}
 			}
 
@@ -780,6 +947,16 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				// Calculate indices
 				primitive.mesh.indices.resize(primitive.mesh.vertices.size());
 				std::iota(primitive.mesh.indices.begin(), primitive.mesh.indices.end(), 0);
+			}
+
+			// Tangents
+			if ((tangentCount == 0) && (uvCount != 0) && (normalCount != 0) && (primitive.mesh.indices.size() != 0)) {
+				calculateTangents(primitive.mesh);
+
+				// Invert tangent handedness
+				for (Mesh::Vertex& vertex : primitive.mesh.vertices) {
+					vertex.tangent.w *= -1.0f;
+				}
 			}
 
 			// Material
@@ -878,6 +1055,8 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								else if (baseColorTexture->sampler->wrap_t == 33648) {
 									sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 								}
+
+								sampler.anisotropyLevel = 16.0f;
 							}
 							samplersToGPU[sampler.toString()] = sampler;
 
@@ -901,6 +1080,226 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						primitive.material.diffuseTextureName = mapKey;
+					}
+
+					// Metallic Roughness texture
+					cgltf_texture_view metallicRoughnessTextureView = pbrMetallicRoughness.metallic_roughness_texture;
+					cgltf_texture* metallicRoughnessTexture = metallicRoughnessTextureView.texture;
+					cgltf_float metallicFactor = pbrMetallicRoughness.metallic_factor;
+					cgltf_float roughnessFactor = pbrMetallicRoughness.roughness_factor;
+					if (metallicRoughnessTexture != NULL) {
+						cgltf_image* metallicRoughnessImage = metallicRoughnessTexture->image;
+						bool hasImage = false;
+						if (metallicRoughnessImage->uri) {
+							std::string imageURI = metallicRoughnessImage->uri;
+
+							size_t base64Pos = imageURI.find(";base64,");
+							if (base64Pos != std::string::npos) {
+								cgltf_options options = {};
+
+								const std::string uriBase64 = imageURI.substr(base64Pos + 8);
+								const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
+								std::vector<uint8_t> decodedData(decodedDataSize);
+								cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
+								if (result == cgltf_result_success) {
+									loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+								}
+								else {
+									logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, localization->getString("log_gltf_base_color_texture", {}) }));
+								}
+							}
+							else {
+								std::string modelDirectory = modelPath;
+								size_t lastSlashPos = modelDirectory.rfind("/");
+								if (lastSlashPos != std::string::npos) {
+									modelDirectory = modelDirectory.substr(0, lastSlashPos);
+								}
+								loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
+								imageURI = modelDirectory + "/" + imageURI;
+							}
+
+							primitive.material.metalnessTextureName = imageURI;
+							primitive.material.roughnessTextureName = imageURI;
+
+							hasImage = true;
+						}
+						else if (metallicRoughnessImage->buffer_view) {
+							cgltf_buffer_view* bufferView = metallicRoughnessImage->buffer_view;
+							std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data) + bufferView->offset;
+							std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":metallicRoughness";
+							if (bufferView->name) {
+								imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + std::string(bufferView->name) + ":metallicRoughness";
+							}
+							loadImageFromMemory(buffer, bufferView->size, imageName);
+
+							primitive.material.metalnessTextureName = imageName;
+							primitive.material.roughnessTextureName = imageName;
+
+							hasImage = true;
+						}
+
+						if (hasImage) {
+							SamplerToGPU sampler;
+							if (metallicRoughnessTexture->sampler != NULL) {
+								if ((metallicRoughnessTexture->sampler->min_filter == 9728) || (metallicRoughnessTexture->sampler->min_filter == 9984) || (metallicRoughnessTexture->sampler->min_filter == 9986)) {
+									sampler.minFilter = SamplerToGPU::Filter::Nearest;
+								}
+								else {
+									sampler.minFilter = SamplerToGPU::Filter::Linear;
+								}
+
+								if ((metallicRoughnessTexture->sampler->mag_filter == 9728) || (metallicRoughnessTexture->sampler->mag_filter == 9984) || (metallicRoughnessTexture->sampler->mag_filter == 9986)) {
+									sampler.magFilter = SamplerToGPU::Filter::Nearest;
+								}
+								else {
+									sampler.magFilter = SamplerToGPU::Filter::Linear;
+								}
+
+								if ((metallicRoughnessTexture->sampler->min_filter == 9984) || (metallicRoughnessTexture->sampler->min_filter == 9985)) {
+									sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
+								}
+								else {
+									sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
+								}
+
+								if (metallicRoughnessTexture->sampler->wrap_s == 10497) {
+									sampler.wrapS = SamplerToGPU::Wrap::Repeat;
+								}
+								else if (metallicRoughnessTexture->sampler->wrap_s == 33648) {
+									sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
+								}
+
+								if (metallicRoughnessTexture->sampler->wrap_t == 10497) {
+									sampler.wrapT = SamplerToGPU::Wrap::Repeat;
+								}
+								else if (metallicRoughnessTexture->sampler->wrap_t == 33648) {
+									sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
+								}
+
+								sampler.anisotropyLevel = 16.0f;
+							}
+							samplersToGPU[sampler.toString()] = sampler;
+
+							primitive.material.metalnessTextureSamplerName = sampler.toString();
+							primitive.material.roughnessTextureSamplerName = sampler.toString();
+						}
+					}
+					else {
+						std::string mapKey = "linear " + std::to_string(0.0f) + " " + std::to_string(roughnessFactor) + " " + std::to_string(metallicFactor) + " " + std::to_string(0.0f);
+
+						if (textures.find(mapKey) == textures.end()) {
+							ImageToGPU image;
+							image.width = 1;
+							image.height = 1;
+							image.data = { 0,
+								static_cast<uint8_t>(round(255.0f * roughnessFactor)),
+								static_cast<uint8_t>(round(255.0f * metallicFactor)),
+								0
+							};
+
+							imagesToGPU[mapKey] = image;
+						}
+
+						primitive.material.metalnessTextureName = mapKey;
+						primitive.material.roughnessTextureName = mapKey;
+					}
+				}
+
+				// Normal texture
+				cgltf_texture_view normalTextureView = primitiveMaterial->normal_texture;
+				cgltf_texture* normalTexture = normalTextureView.texture;
+				if (normalTexture != NULL) {
+					cgltf_image* normalImage = normalTexture->image;
+					bool hasImage = false;
+					if (normalImage->uri) {
+						std::string imageURI = normalImage->uri;
+
+						size_t base64Pos = imageURI.find(";base64,");
+						if (base64Pos != std::string::npos) {
+							cgltf_options options = {};
+
+							const std::string uriBase64 = imageURI.substr(base64Pos + 8);
+							const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
+							std::vector<uint8_t> decodedData(decodedDataSize);
+							cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
+							if (result == cgltf_result_success) {
+								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+							}
+							else {
+								logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, localization->getString("log_gltf_base_color_texture", {}) }));
+							}
+						}
+						else {
+							std::string modelDirectory = modelPath;
+							size_t lastSlashPos = modelDirectory.rfind("/");
+							if (lastSlashPos != std::string::npos) {
+								modelDirectory = modelDirectory.substr(0, lastSlashPos);
+							}
+							loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
+							imageURI = modelDirectory + "/" + imageURI;
+						}
+
+						primitive.material.normalTextureName = imageURI;
+
+						hasImage = true;
+					}
+					else if (normalImage->buffer_view) {
+						cgltf_buffer_view* bufferView = normalImage->buffer_view;
+						std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data) + bufferView->offset;
+						std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":normal";
+						if (bufferView->name) {
+							imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + std::string(bufferView->name) + ":normal";
+						}
+						loadImageFromMemory(buffer, bufferView->size, imageName);
+
+						primitive.material.normalTextureName = imageName;
+
+						hasImage = true;
+					}
+
+					if (hasImage) {
+						SamplerToGPU sampler;
+						if (normalTexture->sampler != NULL) {
+							if ((normalTexture->sampler->min_filter == 9728) || (normalTexture->sampler->min_filter == 9984) || (normalTexture->sampler->min_filter == 9986)) {
+								sampler.minFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.minFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if ((normalTexture->sampler->mag_filter == 9728) || (normalTexture->sampler->mag_filter == 9984) || (normalTexture->sampler->mag_filter == 9986)) {
+								sampler.magFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.magFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if ((normalTexture->sampler->min_filter == 9984) || (normalTexture->sampler->min_filter == 9985)) {
+								sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if (normalTexture->sampler->wrap_s == 10497) {
+								sampler.wrapS = SamplerToGPU::Wrap::Repeat;
+							}
+							else if (normalTexture->sampler->wrap_s == 33648) {
+								sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
+							}
+
+							if (normalTexture->sampler->wrap_t == 10497) {
+								sampler.wrapT = SamplerToGPU::Wrap::Repeat;
+							}
+							else if (normalTexture->sampler->wrap_t == 33648) {
+								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
+							}
+
+							sampler.anisotropyLevel = 16.0f;
+						}
+						samplersToGPU[sampler.toString()] = sampler;
+
+						primitive.material.normalTextureSamplerName = sampler.toString();
 					}
 				}
 
@@ -994,6 +1393,8 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							else if (emissiveTexture->sampler->wrap_t == 33648) {
 								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 							}
+
+							sampler.anisotropyLevel = 16.0f;
 						}
 						samplersToGPU[sampler.toString()] = sampler;
 
@@ -1017,6 +1418,104 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 
 					primitive.material.emissiveTextureName = mapKey;
+				}
+
+				// Occlusion texture
+				cgltf_texture_view occlusionTextureView = primitiveMaterial->occlusion_texture;
+				cgltf_texture* occlusionTexture = occlusionTextureView.texture;
+				if (occlusionTexture != NULL) {
+					cgltf_image* occlusionImage = occlusionTexture->image;
+					bool hasImage = false;
+					if (occlusionImage->uri) {
+						std::string imageURI = occlusionImage->uri;
+
+						size_t base64Pos = imageURI.find(";base64,");
+						if (base64Pos != std::string::npos) {
+							cgltf_options options = {};
+
+							const std::string uriBase64 = imageURI.substr(base64Pos + 8);
+							const size_t decodedDataSize = ((3 * uriBase64.size()) / 4) - std::count(uriBase64.begin(), uriBase64.end(), '=');
+							std::vector<uint8_t> decodedData(decodedDataSize);
+							cgltf_result result = cgltf_load_buffer_base64(&options, decodedDataSize, uriBase64.c_str(), reinterpret_cast<void**>(decodedData.data()));
+							if (result == cgltf_result_success) {
+								loadImageFromMemory(decodedData.data(), decodedDataSize, imageURI);
+							}
+							else {
+								logger->addLog(LogLevel::Warning, localization->getString("log_gltf_invalid_base64_texture", { modelPath, localization->getString("log_gltf_emissive_texture", {}) }));
+							}
+						}
+						else {
+							std::string modelDirectory = modelPath;
+							size_t lastSlashPos = modelDirectory.rfind("/");
+							if (lastSlashPos != std::string::npos) {
+								modelDirectory = modelDirectory.substr(0, lastSlashPos);
+							}
+							loadImage(modelDirectory + "/" + imageURI, modelDirectory + "/" + imageURI);
+							imageURI = modelDirectory + "/" + imageURI;
+						}
+
+						hasImage = true;
+
+						primitive.material.occlusionTextureName = imageURI;
+					}
+					else if (occlusionImage->buffer_view) {
+						cgltf_buffer_view* bufferView = occlusionImage->buffer_view;
+						std::byte* buffer = static_cast<std::byte*>(bufferView->buffer->data) + bufferView->offset;
+						std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":occlusion";
+						if (bufferView->name) {
+							imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + std::string(bufferView->name) + ":occlusion";
+						}
+						loadImageFromMemory(buffer, bufferView->size, imageName);
+
+						primitive.material.occlusionTextureName = imageName;
+
+						hasImage = true;
+					}
+
+					if (hasImage) {
+						SamplerToGPU sampler;
+						if (occlusionTexture->sampler != NULL) {
+							if ((occlusionTexture->sampler->min_filter == 9728) || (occlusionTexture->sampler->min_filter == 9984) || (occlusionTexture->sampler->min_filter == 9986)) {
+								sampler.minFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.minFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if ((occlusionTexture->sampler->mag_filter == 9728) || (occlusionTexture->sampler->mag_filter == 9984) || (occlusionTexture->sampler->mag_filter == 9986)) {
+								sampler.magFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.magFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if ((occlusionTexture->sampler->min_filter == 9984) || (occlusionTexture->sampler->min_filter == 9985)) {
+								sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
+							}
+							else {
+								sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
+							}
+
+							if (occlusionTexture->sampler->wrap_s == 10497) {
+								sampler.wrapS = SamplerToGPU::Wrap::Repeat;
+							}
+							else if (occlusionTexture->sampler->wrap_s == 33648) {
+								sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
+							}
+
+							if (occlusionTexture->sampler->wrap_t == 10497) {
+								sampler.wrapT = SamplerToGPU::Wrap::Repeat;
+							}
+							else if (occlusionTexture->sampler->wrap_t == 33648) {
+								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
+							}
+
+							sampler.anisotropyLevel = 16.0f;
+						}
+						samplersToGPU[sampler.toString()] = sampler;
+
+						primitive.material.occlusionTextureSamplerName = sampler.toString();
+					}
 				}
 
 				// Emissive factor
@@ -1106,6 +1605,9 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 	std::string modelDirectory = modelPath.substr(0, modelPath.rfind('/'));
 	std::unordered_map<std::string, RendererMaterial> mtlMaterials;
 
+	bool hasNormals = false;
+	bool hasUvs = false;
+
 	std::string line;
 	while (std::getline(file, line)) {
 		// Ignore comment
@@ -1149,9 +1651,14 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 		// Object
 		else if (tokens[0] == "o") {
 			if (!currentPrimitive->mesh.indices.empty()) {
+				if (hasNormals && hasUvs) {
+					calculateTangents(currentPrimitive->mesh);
+				}
 				model.primitives.push_back(ModelPrimitive());
 				currentPrimitive = &model.primitives.back();
 				uniqueVertices.clear();
+				hasNormals = false;
+				hasUvs = false;
 			}
 			if (tokens.size() > 1) {
 				currentPrimitive->name = tokens[1];
@@ -1164,9 +1671,14 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 		}
 		else if (tokens[0] == "usemtl") {
 			if (!currentPrimitive->mesh.indices.empty()) {
+				if (hasNormals && hasUvs) {
+					calculateTangents(currentPrimitive->mesh);
+				}
 				model.primitives.push_back(ModelPrimitive());
 				currentPrimitive = &model.primitives.back();
 				uniqueVertices.clear();
+				hasNormals = false;
+				hasUvs = false;
 			}
 			if ((tokens.size() > 1) && currentPrimitive->name.empty()) {
 				currentPrimitive->name = tokens[1];
@@ -1200,13 +1712,20 @@ void RendererResourceManager::loadObj(const std::string& modelPath, Model& model
 						// UV index
 						else if (j == 1) {
 							vertex.uv = uvs[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1];
+							hasUvs = true;
 						}
 						// Normal index
 						else if (j == 2) {
 							vertex.normal = normals[static_cast<size_t>(std::atoi(valueIndices[j].c_str())) - 1];
+							hasNormals = true;
 						}
 					}
 				}
+
+				if (!hasUvs) {
+					vertex.uv = nml::vec2(0.5f, 0.5f);
+				}
+				vertex.tangent = nml::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 				if (uniqueVertices.count(tokens[i]) == 0) {
 					uniqueVertices[tokens[i]] = static_cast<uint32_t>(currentPrimitive->mesh.vertices.size());
@@ -1339,4 +1858,43 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 	file.close();
 
 	return mtlMaterials;
+}
+
+void RendererResourceManager::calculateTangents(Mesh& mesh) {
+	std::vector<nml::vec3> tan1(mesh.vertices.size());
+	std::vector<nml::vec3> tan2(mesh.vertices.size());
+	for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+		const Mesh::Vertex& vertex0 = mesh.vertices[mesh.indices[i]];
+		const Mesh::Vertex& vertex1 = mesh.vertices[mesh.indices[i + 1]];
+		const Mesh::Vertex& vertex2 = mesh.vertices[mesh.indices[i + 2]];
+
+		const nml::vec3 dPos1 = vertex1.position - vertex0.position;
+		const nml::vec3 dPos2 = vertex2.position - vertex0.position;
+
+		const nml::vec2 dUV1 = vertex1.uv - vertex0.uv;
+		const nml::vec2 dUV2 = vertex2.uv - vertex0.uv;
+
+		const float r = 1.0f / (dUV1.x * dUV2.y - dUV1.y * dUV2.x);
+
+		const nml::vec3 uDir = (dPos1 * dUV2.y - dPos2 * dUV1.y) * r;
+		const nml::vec3 vDir = (dPos2 * dUV1.x - dPos1 * dUV2.x) * r;
+
+		tan1[mesh.indices[i]] += uDir;
+		tan1[mesh.indices[i + 1]] += uDir;
+		tan1[mesh.indices[i + 2]] += uDir;
+
+		tan2[mesh.indices[i]] += vDir;
+		tan2[mesh.indices[i + 1]] += vDir;
+		tan2[mesh.indices[i + 2]] += vDir;
+	}
+
+	for (size_t i = 0; i < mesh.vertices.size(); i++) {
+		const nml::vec3 n = mesh.vertices[i].normal;
+		const nml::vec3 t = tan1[i];
+
+		const nml::vec3 tangent = nml::normalize(t - n * nml::dot(n, t));
+		const float tangentHandedness = (nml::dot(nml::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
+
+		mesh.vertices[i].tangent = { tangent.x, tangent.y, tangent.z, tangentHandedness };
+	}
 }

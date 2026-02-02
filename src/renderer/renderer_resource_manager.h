@@ -27,6 +27,7 @@ public:
 			nml::vec3 position;
 			nml::vec3 normal;
 			nml::vec2 uv;
+			nml::vec4 tangent;
 		};
 
 		std::vector<Vertex> vertices;
@@ -79,7 +80,8 @@ public:
 				"/min:" + SamplerToGPU::filterToString(minFilter) +
 				"/mip:" + SamplerToGPU::filterToString(mipmapFilter) +
 				"/wS:" + SamplerToGPU::wrapToString(wrapS) +
-				"/wT:" + SamplerToGPU::wrapToString(wrapT);
+				"/wT:" + SamplerToGPU::wrapToString(wrapT) +
+				"aL:" + std::to_string(anisotropyLevel);
 		}
 
 		Filter magFilter = Filter::Nearest;
@@ -87,6 +89,7 @@ public:
 		Filter mipmapFilter = Filter::Nearest;
 		Wrap wrapS = Wrap::ClampToEdge;
 		Wrap wrapT = Wrap::ClampToEdge;
+		float anisotropyLevel = 0.0f;
 	};
 
 	struct ModelPrimitive {
@@ -130,6 +133,8 @@ private:
 	void loadImageFromMemory(void* data, size_t size, const std::string& name);
 	void loadObj(const std::string& modelPath, Model& model);
 	std::unordered_map<std::string, RendererMaterial> loadMtl(const std::string& materialPath);
+
+	void calculateTangents(Mesh& mesh);
 
 public:
 	std::unordered_map<std::string, RendererModel> rendererModels;
