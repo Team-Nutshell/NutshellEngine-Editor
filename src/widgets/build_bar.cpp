@@ -111,6 +111,7 @@ BuildBar::BuildBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(buildAndRunButton, &QPushButton::clicked, this, &BuildBar::launchBuild);
 	connect(exportButton, &QPushButton::clicked, this, &BuildBar::launchExport);
 	connect(stopRunButton, &QPushButton::clicked, this, &BuildBar::stopRun);
+	connect(this, &BuildBar::runStarted, this, &BuildBar::onRunStarted);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startBuildAndRunSignal, this, &BuildBar::onBuildRunExportStarted);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::endBuildAndRunSignal, this, &BuildBar::onBuildRunExportEnded);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::startExportSignal, this, &BuildBar::onBuildRunExportStarted);
@@ -507,7 +508,8 @@ void BuildBar::run() {
 		CloseHandle(pipeWrite);
 
 		m_process = processInformation.hProcess;
-		stopRunButton->setEnabled(true);
+
+		emit runStarted();
 
 		// Reset current path
 		std::filesystem::current_path(previousCurrentPath);
@@ -1054,4 +1056,8 @@ void BuildBar::onBuildRunExportEnded() {
 	exportButton->setEnabled(true);
 	stopRunButton->setEnabled(false);
 	m_process = 0;
+}
+
+void BuildBar::onRunStarted() {
+	stopRunButton->setEnabled(true);
 }

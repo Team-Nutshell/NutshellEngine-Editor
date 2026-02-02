@@ -39,6 +39,10 @@ private:
 private slots:
 	void onBuildRunExportStarted();
 	void onBuildRunExportEnded();
+	void onRunStarted();
+
+signals:
+	void runStarted();
 
 private:
 	GlobalInfo& m_globalInfo;
