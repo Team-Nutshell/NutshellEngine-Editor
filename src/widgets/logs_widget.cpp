@@ -1,6 +1,7 @@
 #include "logs_widget.h"
 #include <QVBoxLayout>
 #include <QScrollBar>
+#include <QHeaderView>
 
 LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	resize(1310, 720);
@@ -16,9 +17,10 @@ LogsWidget::LogsWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	logsTable->setColumnCount(3);
 	logsTable->setColumnWidth(0, 150);
 	logsTable->setColumnWidth(1, 75);
-	logsTable->setColumnWidth(2, 1055);
+	logsTable->setColumnWidth(2, 150);
 	QStringList headerLabels = { QString::fromStdString(m_globalInfo.localization.getString("logs_header_time")), QString::fromStdString(m_globalInfo.localization.getString("logs_header_level")), QString::fromStdString(m_globalInfo.localization.getString("logs_header_log")) };
 	logsTable->setHorizontalHeaderLabels(headerLabels);
+	logsTable->horizontalHeader()->setStretchLastSection(true);
 	layout()->addWidget(logsTable);
 
 	connect(clearLogsButton, &QPushButton::clicked, this, &LogsWidget::onClearLogsButtonClicked);
