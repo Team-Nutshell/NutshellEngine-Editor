@@ -11,6 +11,8 @@ class AssetListMenu : public QMenu {
 public:
 	AssetListMenu(GlobalInfo& globalInfo);
 
+	void setIcons();
+
 private slots:
 	void renameAsset();
 	void deleteAsset();

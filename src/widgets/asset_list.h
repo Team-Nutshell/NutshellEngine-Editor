@@ -63,24 +63,25 @@ private:
 
 	std::string m_openScenePath;
 
-	QIcon m_directoryIcon;
-	QIcon m_imageIcon;
-	QIcon m_iconIcon;
-	QIcon m_fontIcon;
-	QIcon m_meshIcon;
-	QIcon m_imageSamplerIcon;
-	QIcon m_materialIcon;
-	QIcon m_modelIcon;
-	QIcon m_soundIcon;
-	QIcon m_optionsIcon;
-	QIcon m_sceneIcon;
-	QIcon m_jsonIcon;
-	QIcon m_textIcon;
-	QIcon m_unknownIcon;
 	int m_iconSize = 16;
 
 public:
 	AssetListMenu* menu;
 
 	std::string currentlyEditedItemName = "";
+	
+	QIcon directoryIcon;
+	QIcon imageIcon;
+	QIcon iconIcon;
+	QIcon fontIcon;
+	QIcon meshIcon;
+	QIcon imageSamplerIcon;
+	QIcon materialIcon;
+	QIcon modelIcon;
+	QIcon soundIcon;
+	QIcon optionsIcon;
+	QIcon sceneIcon;
+	QIcon jsonIcon;
+	QIcon textIcon;
+	QIcon unknownIcon;
 };

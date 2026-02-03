@@ -39,6 +39,7 @@ AssetList::AssetList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setItemDelegate(new AssetListItemDelegate());
 
 	loadIcons();
+	menu->setIcons();
 
 	updateAssetList();
 
@@ -200,48 +201,48 @@ void AssetList::updateAssetList() {
 	std::sort(fileNames.begin(), fileNames.end());
 
 	for (const std::string& directoryName : directoryNames) {
-		QListWidgetItem* newItem = new QListWidgetItem(m_directoryIcon, QString::fromStdString(directoryName));
+		QListWidgetItem* newItem = new QListWidgetItem(directoryIcon, QString::fromStdString(directoryName));
 		addItem(newItem);
 	}
 	for (const std::string& fileName : fileNames) {
-		QListWidgetItem* newItem = new QListWidgetItem(m_unknownIcon, QString::fromStdString(fileName));
+		QListWidgetItem* newItem = new QListWidgetItem(unknownIcon, QString::fromStdString(fileName));
 
 		AssetHelper::FileType fileType = AssetHelper::fileType(fileName);
 		if (fileType == AssetHelper::FileType::Image) {
-			newItem->setIcon(m_imageIcon);
+			newItem->setIcon(imageIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Icon) {
-			newItem->setIcon(m_iconIcon);
+			newItem->setIcon(iconIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Font) {
-			newItem->setIcon(m_fontIcon);
+			newItem->setIcon(fontIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Mesh) {
-			newItem->setIcon(m_meshIcon);
+			newItem->setIcon(meshIcon);
 		}
 		else if (fileType == AssetHelper::FileType::ImageSampler) {
-			newItem->setIcon(m_imageSamplerIcon);
+			newItem->setIcon(imageSamplerIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Material) {
-			newItem->setIcon(m_materialIcon);
+			newItem->setIcon(materialIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Model) {
-			newItem->setIcon(m_modelIcon);
+			newItem->setIcon(modelIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Sound) {
-			newItem->setIcon(m_soundIcon);
+			newItem->setIcon(soundIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Options) {
-			newItem->setIcon(m_optionsIcon);
+			newItem->setIcon(optionsIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Scene) {
-			newItem->setIcon(m_sceneIcon);
+			newItem->setIcon(sceneIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Json) {
-			newItem->setIcon(m_jsonIcon);
+			newItem->setIcon(jsonIcon);
 		}
 		else if (fileType == AssetHelper::FileType::Text) {
-			newItem->setIcon(m_textIcon);
+			newItem->setIcon(textIcon);
 		}
 
 		addItem(newItem);
@@ -259,20 +260,20 @@ void AssetList::updateAssetList() {
 }
 
 void AssetList::loadIcons() {
-	m_directoryIcon = QIcon("assets/icons/directory.png");
-	m_imageIcon = QIcon("assets/icons/image.png");
-	m_iconIcon = QIcon("assets/icons/icon.png");
-	m_fontIcon = QIcon("assets/icons/font.png");
-	m_meshIcon = QIcon("assets/icons/mesh.png");
-	m_imageSamplerIcon = QIcon("assets/icons/image_sampler.png");
-	m_materialIcon = QIcon("assets/icons/material.png");
-	m_modelIcon = QIcon("assets/icons/model.png");
-	m_soundIcon = QIcon("assets/icons/sound.png");
-	m_optionsIcon = QIcon("assets/icons/options.png");
-	m_sceneIcon = QIcon("assets/icons/scene.png");
-	m_jsonIcon = QIcon("assets/icons/json.png");
-	m_textIcon = QIcon("assets/icons/text.png");
-	m_unknownIcon = QIcon("assets/icons/unknown.png");
+	directoryIcon = QIcon("assets/icons/directory.png");
+	imageIcon = QIcon("assets/icons/image.png");
+	iconIcon = QIcon("assets/icons/icon.png");
+	fontIcon = QIcon("assets/icons/font.png");
+	meshIcon = QIcon("assets/icons/mesh.png");
+	imageSamplerIcon = QIcon("assets/icons/image_sampler.png");
+	materialIcon = QIcon("assets/icons/material.png");
+	modelIcon = QIcon("assets/icons/model.png");
+	soundIcon = QIcon("assets/icons/sound.png");
+	optionsIcon = QIcon("assets/icons/options.png");
+	sceneIcon = QIcon("assets/icons/scene.png");
+	jsonIcon = QIcon("assets/icons/json.png");
+	textIcon = QIcon("assets/icons/text.png");
+	unknownIcon = QIcon("assets/icons/unknown.png");
 }
 
 void AssetList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {

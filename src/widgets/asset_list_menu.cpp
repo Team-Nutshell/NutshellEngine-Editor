@@ -33,11 +33,20 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	copyPathAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("assets_copy_path")), this, &AssetListMenu::copyPath);
 }
 
+void AssetListMenu::setIcons() {
+	newDirectoryAction->setIcon(assetList->directoryIcon);
+	newModelAction->setIcon(assetList->modelIcon);
+	newImageSamplerAction->setIcon(assetList->imageSamplerIcon);
+	newMaterialAction->setIcon(assetList->materialIcon);
+	newSceneAction->setIcon(assetList->sceneIcon);
+	newTextFileAction->setIcon(assetList->textIcon);
+}
+
 void AssetListMenu::renameAsset() {
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = filename;
-	QListWidgetItem* item = m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->selectedItems()[0];
+	assetList->currentlyEditedItemName = filename;
+	QListWidgetItem* item = assetList->selectedItems()[0];
 	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->editItem(item);
+	assetList->editItem(item);
 }
 
 void AssetListMenu::deleteAsset() {
@@ -64,7 +73,7 @@ void AssetListMenu::newDirectory() {
 	}
 	std::filesystem::create_directory(directory + "/" + newDirectoryName);
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newDirectoryName;
+	assetList->currentlyEditedItemName = newDirectoryName;
 }
 
 void AssetListMenu::newModel() {
@@ -83,7 +92,7 @@ void AssetListMenu::newModel() {
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newModelName + modelExtension, NO_ENTITY, {}));
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newModelName + modelExtension;
+	assetList->currentlyEditedItemName = newModelName + modelExtension;
 }
 
 void AssetListMenu::newImageSampler() {
@@ -110,7 +119,7 @@ void AssetListMenu::newImageSampler() {
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newImageSamplerName + imageSamplerExtension, NO_ENTITY, {}));
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newImageSamplerName + imageSamplerExtension;
+	assetList->currentlyEditedItemName = newImageSamplerName + imageSamplerExtension;
 }
 
 void AssetListMenu::newMaterial() {
@@ -165,7 +174,7 @@ void AssetListMenu::newMaterial() {
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, {}));
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newMaterialName + materialExtension;
+	assetList->currentlyEditedItemName = newMaterialName + materialExtension;
 }
 
 void AssetListMenu::newScene() {
@@ -184,7 +193,7 @@ void AssetListMenu::newScene() {
 
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newSceneName + sceneExtension, NO_ENTITY, {}));
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newSceneName + sceneExtension;
+	assetList->currentlyEditedItemName = newSceneName + sceneExtension;
 }
 
 void AssetListMenu::newTextFile() {
@@ -200,7 +209,7 @@ void AssetListMenu::newTextFile() {
 	newTextFileFile.close();
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newTextFileName + textFileExtension, NO_ENTITY, {}));
 
-	m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->currentlyEditedItemName = newTextFileName + textFileExtension;
+	assetList->currentlyEditedItemName = newTextFileName + textFileExtension;
 }
 
 void AssetListMenu::copyPath() {
