@@ -51,7 +51,7 @@ namespace NtshEngn {
 		virtual bool isSoundSourceLooping(SoundSourceID soundSourceID) = 0;
 
 		// Sets the master gain
-		virtual void setMasterGain(float gain) = 0;
+		virtual void setMasterGain(float newGain) = 0;
 		// Returns the master gain
 		virtual float getMasterGain() = 0;
 	};

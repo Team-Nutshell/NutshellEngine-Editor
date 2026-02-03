@@ -276,6 +276,7 @@ namespace NtshEngn {
 		FontType type = FontType::Unknown;
 		Image* image = nullptr;
 		ImageSamplerFilter imageSamplerFilter = ImageSamplerFilter::Unknown;
+		float height = 0.0f;
 		std::unordered_map<wchar_t, FontGlyph> glyphs;
 	};
 
@@ -308,6 +309,27 @@ namespace NtshEngn {
 
 		// Range of rotation per particle
 		std::array<float, 2> rotationRange = { 0.0f, 0.0f };
+	};
+
+	// Coordinate type
+	enum class CoordinateType {
+		Pixel,
+		Normalized,
+		Unknown
+	};
+
+	// Anchor point
+	enum class AnchorPoint {
+		Center,
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight,
+		TopCenter,
+		BottomCenter,
+		LeftCenter,
+		RightCenter,
+		Unknown
 	};
 
 }

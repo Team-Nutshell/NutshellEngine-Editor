@@ -945,12 +945,12 @@ namespace NtshEngn {
 			return audioModule->isSoundSourceLooping(soundSourceID);
 		}
 
-		void setMasterGain(float gain) {
+		void setMasterGain(float newGain) {
 			if (!audioModule) {
 				return;
 			}
 
-			audioModule->setMasterGain(gain);
+			audioModule->setMasterGain(newGain);
 		}
 
 		float getMasterGain() {
@@ -1003,46 +1003,46 @@ namespace NtshEngn {
 		}
 
 		// UI
-		void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::wstring& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUIText(fontID, text, position, scale, color);
+			graphicsModule->drawUIText(fontID, text, anchorPoint, coordinateType, position, scale, color);
 		}
 
-		void drawUIText(FontID fontID, const std::string& text, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::string& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
 			std::wstring wideString(text.begin(), text.end());
 
-			graphicsModule->drawUIText(fontID, wideString, position, scale, color);
+			graphicsModule->drawUIText(fontID, wideString, anchorPoint, coordinateType, position, scale, color);
 		}
 
-		void drawUILine(const Math::vec2& start, const Math::vec2& end, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
+		void drawUILine(CoordinateType coordinateType, const Math::vec2& start, const Math::vec2& end, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUILine(start, end, color);
+			graphicsModule->drawUILine(coordinateType, start, end, color);
 		}
 
-		void drawUIRectangle(const Math::vec2& position, const Math::vec2& size, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
+		void drawUIRectangle(CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& size, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUIRectangle(position, size, color);
+			graphicsModule->drawUIRectangle(coordinateType, position, size, color);
 		}
 
-		void drawUIImage(ImageID imageID, ImageSamplerFilter imageSamplerFilter, const Math::vec2& position, float rotation = 0.0f, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
+		void drawUIImage(ImageID imageID, ImageSamplerFilter imageSamplerFilter, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, float rotation = 0.0f, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUIImage(imageID, imageSamplerFilter, position, rotation, scale, color);
+			graphicsModule->drawUIImage(imageID, imageSamplerFilter, anchorPoint, coordinateType, position, rotation, scale, color);
 		}
 
 		// Platform

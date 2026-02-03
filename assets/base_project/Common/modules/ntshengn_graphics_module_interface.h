@@ -38,13 +38,13 @@ namespace NtshEngn {
 		virtual void destroyParticles() = 0;
 
 		// Draws a text on the UI with the font in the fontID parameter using the position on screen, scale and color
-		virtual void drawUIText(FontID fontID, const std::wstring& text, const Math::vec2& position, const Math::vec2& scale, const Math::vec4& color) = 0;
+		virtual void drawUIText(FontID fontID, const std::wstring& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& scale, const Math::vec4& color) = 0;
 		// Draws a line on the UI according to its start and end points and its color
-		virtual void drawUILine(const Math::vec2& start, const Math::vec2& end, const Math::vec4& color) = 0;
+		virtual void drawUILine(CoordinateType coordinateType, const Math::vec2& start, const Math::vec2& end, const Math::vec4& color) = 0;
 		// Draws a rectangle on the UI according to its position, its size (width and height) and its color
-		virtual void drawUIRectangle(const Math::vec2& position, const Math::vec2& size, const Math::vec4& color) = 0;
+		virtual void drawUIRectangle(CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& size, const Math::vec4& color) = 0;
 		// Draws an image on the UI according to its sampler filter, position, rotation, scale and color to multiply the image with
-		virtual void drawUIImage(ImageID imageID, ImageSamplerFilter imageSamplerFilter, const Math::vec2& position, float rotation, const Math::vec2& scale, const Math::vec4& color) = 0;
+		virtual void drawUIImage(ImageID imageID, ImageSamplerFilter imageSamplerFilter, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, float rotation, const Math::vec2& scale, const Math::vec4& color) = 0;
 	}; 
 
 }
