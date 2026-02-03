@@ -1,4 +1,5 @@
 #include "select_asset_entities_command.h"
+#include "../common/asset_helper.h"
 #include "../widgets/main_window.h"
 #include <filesystem>
 
@@ -16,10 +17,22 @@ SelectAssetEntitiesCommand::SelectAssetEntitiesCommand(GlobalInfo& globalInfo, S
 
 	if (m_newType == SelectionType::Asset) {
 		m_newSelectedAssetPath = newSelectedAssetPath;
+
+		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_select_asset", { AssetHelper::absoluteToRelative(m_newSelectedAssetPath, m_globalInfo.projectDirectory) })));
 	}
 	else if (m_newType == SelectionType::Entities) {
 		m_newCurrentEntityID = newCurrentEntityID;
 		m_newOtherSelectedEntityIDs = newOtherSelectedEntityIDs;
+
+		if (m_newCurrentEntityID == NO_ENTITY) {
+			setText(QString::fromStdString(m_globalInfo.localization.getString("undo_select_no_entity")));
+		}
+		else if (m_newOtherSelectedEntityIDs.empty()) {
+			setText(QString::fromStdString(m_globalInfo.localization.getString("undo_select_entity", { m_globalInfo.entities[m_newCurrentEntityID].name })));
+		}
+		else {
+			setText(QString::fromStdString(m_globalInfo.localization.getString("undo_select_entities")));
+		}
 	}
 }
 
