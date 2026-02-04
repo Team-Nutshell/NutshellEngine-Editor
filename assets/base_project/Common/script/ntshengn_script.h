@@ -1003,22 +1003,22 @@ namespace NtshEngn {
 		}
 
 		// UI
-		void drawUIText(FontID fontID, const std::wstring& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::wstring& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, float rotation = 0.0f, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->drawUIText(fontID, text, anchorPoint, coordinateType, position, scale, color);
+			graphicsModule->drawUIText(fontID, text, anchorPoint, coordinateType, position, rotation, scale, color);
 		}
 
-		void drawUIText(FontID fontID, const std::string& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+		void drawUIText(FontID fontID, const std::string& text, AnchorPoint anchorPoint, CoordinateType coordinateType, const Math::vec2& position, float rotation = 0.0f, const Math::vec2& scale = Math::vec2(1.0f, 1.0f), const Math::vec4& color = Math::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 			if (!graphicsModule) {
 				return;
 			}
 
 			std::wstring wideString(text.begin(), text.end());
 
-			graphicsModule->drawUIText(fontID, wideString, anchorPoint, coordinateType, position, scale, color);
+			graphicsModule->drawUIText(fontID, wideString, anchorPoint, coordinateType, position, rotation, scale, color);
 		}
 
 		void drawUILine(CoordinateType coordinateType, const Math::vec2& start, const Math::vec2& end, const Math::vec4& color = Math::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {
