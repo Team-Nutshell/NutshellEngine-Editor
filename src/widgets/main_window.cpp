@@ -1,6 +1,7 @@
 #include "main_window.h"
 #include "separator_line.h"
 #include "close_scene_widget.h"
+#include "../common/asset_helper.h"
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QApplication>
@@ -38,7 +39,7 @@ void MainWindow::updateTitle() {
 	}
 	title += "NutshellEngine - " + m_globalInfo.projectName;
 	if (!m_globalInfo.currentScenePath.empty()) {
-		title += " - " + m_globalInfo.currentScenePath;
+		title += " - " + AssetHelper::absoluteToRelative(m_globalInfo.currentScenePath, m_globalInfo.projectDirectory);
 	}
 	setWindowTitle(QString::fromStdString(title));
 }
