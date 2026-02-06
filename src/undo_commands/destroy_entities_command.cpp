@@ -40,12 +40,12 @@ void DestroyEntitiesCommand::redo() {
 	std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 	bool clearAllSelection = false;
 	for (const auto& destroyEntity : m_destroyedEntities) {
-		m_globalInfo.entities.erase(destroyEntity.first.entityID);
-		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyEntity.first.entityID);
-		m_globalInfo.otherSelectedEntityIDs.erase(destroyEntity.first.entityID);
 		if (destroyEntity.first.entityID == m_globalInfo.currentEntityID) {
 			clearAllSelection = true;
 		}
+		m_globalInfo.entities.erase(destroyEntity.first.entityID);
+		emit m_globalInfo.signalEmitter.destroyEntitySignal(destroyEntity.first.entityID);
+		m_globalInfo.otherSelectedEntityIDs.erase(destroyEntity.first.entityID);
 	}
 
 	if (clearAllSelection) {
