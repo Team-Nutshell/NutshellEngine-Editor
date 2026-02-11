@@ -32,7 +32,6 @@ void ImageFileWidget::setPath(const std::string& path) {
 	else if (extension == "ntim") {
 		int width = 1;
 		int height = 1;
-		std::vector<uint8_t> pixelData;
 
 		std::fstream imageFile(path);
 		if (imageFile.is_open()) {
@@ -60,10 +59,10 @@ void ImageFileWidget::setPath(const std::string& path) {
 
 		if (j.contains("data")) {
 			for (size_t i = 0; i < j["data"].size(); i++) {
-				pixelData.push_back(static_cast<uint8_t>(j["data"][i]));
+				m_pixelData.push_back(static_cast<uint8_t>(j["data"][i]));
 			}
 		}
-		image = QImage(pixelData.data(), width, height, QImage::Format_RGBA8888);
+		image = QImage(m_pixelData.data(), width, height, QImage::Format_RGBA8888);
 	}
 
 	m_pixmap = QPixmap();

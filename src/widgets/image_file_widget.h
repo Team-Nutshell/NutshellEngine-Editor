@@ -22,6 +22,8 @@ private:
 
 	QPixmap m_pixmap;
 
+	std::vector<uint8_t> m_pixelData;
+
 public:
 	QLabel* imageLabel;
 	InfoLabelWidget* widthLabel;
