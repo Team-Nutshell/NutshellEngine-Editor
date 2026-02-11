@@ -438,12 +438,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["diffuse"].contains("texture")) {
 			if (j["diffuse"]["texture"].contains("imagePath")) {
 				material.diffuseTextureName = j["diffuse"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["diffuse"]["texture"]["imagePath"]), material.diffuseTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.diffuseTextureName, projectDirectory), material.diffuseTextureName);
 			}
 
 			if (j["diffuse"]["texture"].contains("imageSamplerPath")) {
 				material.diffuseTextureSamplerName = j["diffuse"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["diffuse"]["texture"]["imageSamplerPath"]), material.diffuseTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.diffuseTextureSamplerName, projectDirectory), material.diffuseTextureSamplerName);
 			}
 		}
 		else if (j["diffuse"].contains("color")) {
@@ -471,12 +471,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["normal"].contains("texture")) {
 			if (j["normal"]["texture"].contains("imagePath")) {
 				material.normalTextureName = j["normal"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["normal"]["texture"]["imagePath"]), material.normalTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.normalTextureName, projectDirectory), material.normalTextureName);
 			}
 
 			if (j["normal"]["texture"].contains("imageSamplerPath")) {
 				material.normalTextureSamplerName = j["normal"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["normal"]["texture"]["imageSamplerPath"]), material.normalTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.normalTextureSamplerName, projectDirectory), material.normalTextureSamplerName);
 			}
 		}
 	}
@@ -485,12 +485,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["metalness"].contains("texture")) {
 			if (j["metalness"]["texture"].contains("imagePath")) {
 				material.metalnessTextureName = j["metalness"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["metalness"]["texture"]["imagePath"]), material.metalnessTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.metalnessTextureName, projectDirectory), material.metalnessTextureName);
 			}
 
 			if (j["metalness"]["texture"].contains("imageSamplerPath")) {
 				material.metalnessTextureSamplerName = j["metalness"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["metalness"]["texture"]["imageSamplerPath"]), material.metalnessTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.metalnessTextureSamplerName, projectDirectory), material.metalnessTextureSamplerName);
 			}
 		}
 		else if (j["metalness"].contains("value")) {
@@ -519,12 +519,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["roughness"].contains("texture")) {
 			if (j["roughness"]["texture"].contains("imagePath")) {
 				material.roughnessTextureName = j["roughness"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["roughness"]["texture"]["imagePath"]), material.roughnessTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.roughnessTextureName, projectDirectory), material.roughnessTextureName);
 			}
 
 			if (j["roughness"]["texture"].contains("imageSamplerPath")) {
 				material.roughnessTextureSamplerName = j["roughness"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["roughness"]["texture"]["imageSamplerPath"]), material.roughnessTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.roughnessTextureSamplerName, projectDirectory), material.roughnessTextureSamplerName);
 			}
 		}
 		else if (j["roughness"].contains("value")) {
@@ -553,12 +553,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["occlusion"].contains("texture")) {
 			if (j["occlusion"]["texture"].contains("imagePath")) {
 				material.occlusionTextureName = j["occlusion"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["occlusion"]["texture"]["imagePath"]), material.occlusionTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.occlusionTextureName, projectDirectory), material.occlusionTextureName);
 			}
 
 			if (j["occlusion"]["texture"].contains("imageSamplerPath")) {
 				material.occlusionTextureSamplerName = j["occlusion"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["occlusion"]["texture"]["imageSamplerPath"]), material.occlusionTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.occlusionTextureSamplerName, projectDirectory), material.occlusionTextureSamplerName);
 			}
 		}
 		else if (j["occlusion"].contains("value")) {
@@ -587,12 +587,12 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		if (j["emissive"].contains("texture")) {
 			if (j["emissive"]["texture"].contains("imagePath")) {
 				material.emissiveTextureName = j["emissive"]["texture"]["imagePath"];
-				loadImage(projectDirectory + "/" + std::string(j["emissive"]["texture"]["imagePath"]), material.emissiveTextureName);
+				loadImage(AssetHelper::relativeToAbsolute(material.emissiveTextureName, projectDirectory), material.emissiveTextureName);
 			}
 
 			if (j["emissive"]["texture"].contains("imageSamplerPath")) {
 				material.emissiveTextureSamplerName = j["emissive"]["texture"]["imageSamplerPath"];
-				loadSampler(projectDirectory + "/" + std::string(j["emissive"]["texture"]["imageSamplerPath"]), material.emissiveTextureSamplerName);
+				loadSampler(AssetHelper::relativeToAbsolute(material.emissiveTextureSamplerName, projectDirectory), material.emissiveTextureSamplerName);
 			}
 		}
 		else if (j["emissive"].contains("color")) {
