@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/destroy_entities_command.h"
+#include "../undo_commands/add_entity_component_command.h"
 #include "../undo_commands/change_entities_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
 #include "../undo_commands/select_asset_entities_command.h"
@@ -1543,17 +1544,19 @@ void Renderer::paintGL() {
 				m_globalInfo.rendererResourceManager.loadModel(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
 				if (pickedEntityID < (NO_ENTITY - 3)) {
 					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
-					if (pickedEntity.renderable) {
-						Renderable newRenderable = pickedEntity.renderable.value();
-						newRenderable.modelPath = m_dragDropResourcePath;
-						newRenderable.primitiveIndex = 0;
-						if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
-							if (m_globalInfo.rendererResourceManager.models[m_dragDropResourcePath].primitives.empty()) {
-								newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
-							}
-						}
-						m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					if (!pickedEntity.renderable) {
+						m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
 					}
+
+					Renderable newRenderable = pickedEntity.renderable.value();
+					newRenderable.modelPath = m_dragDropResourcePath;
+					newRenderable.primitiveIndex = 0;
+					if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
+						if (m_globalInfo.rendererResourceManager.models[m_dragDropResourcePath].primitives.empty()) {
+							newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
+						}
+					}
+					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
 				}
 				else {
 					if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
@@ -1573,12 +1576,14 @@ void Renderer::paintGL() {
 			else if (m_dragDropResourceType == DragDropResourceType::Material) {
 				if (pickedEntityID < (NO_ENTITY - 3)) {
 					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
-					if (pickedEntity.renderable) {
-						Renderable newRenderable = pickedEntity.renderable.value();
-						newRenderable.materialPath = m_dragDropResourcePath;
-						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
-						m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					if (!pickedEntity.renderable) {
+						m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
 					}
+
+					Renderable newRenderable = pickedEntity.renderable.value();
+					newRenderable.materialPath = m_dragDropResourcePath;
+					m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
+					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
 				}
 			}
 		}
