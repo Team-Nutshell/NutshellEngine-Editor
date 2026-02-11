@@ -32,6 +32,7 @@ void ImageFileWidget::setPath(const std::string& path) {
 	else if (extension == "ntim") {
 		int width = 1;
 		int height = 1;
+		m_pixelData.clear();
 
 		std::fstream imageFile(path);
 		if (imageFile.is_open()) {
