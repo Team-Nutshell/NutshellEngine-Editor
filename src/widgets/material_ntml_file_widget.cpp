@@ -12,6 +12,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_material_file"))));
+	layout()->addWidget(new SeparatorLine());
 	diffuseTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(diffuseTextureImageWidget);
 	diffuseTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");

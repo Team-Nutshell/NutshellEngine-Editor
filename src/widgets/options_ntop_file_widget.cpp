@@ -1,4 +1,5 @@
 #include "options_ntop_file_widget.h"
+#include "separator_line.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
@@ -14,6 +15,7 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_options_file"))));
+	layout()->addWidget(new SeparatorLine());
 	windowTitleWidget = new StringWidget(globalInfo, m_globalInfo.localization.getString("assets_options_window_title"));
 	layout()->addWidget(windowTitleWidget);
 	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_window_icon"), m_globalInfo.localization.getString("assets_options_no_window_icon_selected"), m_globalInfo.projectDirectory + "/assets");

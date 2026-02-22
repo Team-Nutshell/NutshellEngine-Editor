@@ -1,4 +1,5 @@
 #include "sampler_ntsp_file_widget.h"
+#include "separator_line.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
@@ -12,6 +13,7 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(2, 0, 2, 0);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_image_sampler_file"))));
+	layout()->addWidget(new SeparatorLine());
 	std::vector<std::string> filterElements = { m_globalInfo.localization.getString("assets_image_sampler_filter_linear"), m_globalInfo.localization.getString("assets_image_sampler_filter_nearest"), m_globalInfo.localization.getString("assets_image_sampler_filter_unknown") };
 	magFilterWidget = new ComboBoxWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_mag_filter"), filterElements);
 	layout()->addWidget(magFilterWidget);

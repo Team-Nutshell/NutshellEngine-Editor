@@ -1,4 +1,5 @@
 #include "text_file_widget.h"
+#include "separator_line.h"
 #include "main_window.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
@@ -9,6 +10,8 @@ TextFileWidget::TextFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(2, 0, 2, 0);
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_text_file"))));
+	layout()->addWidget(new SeparatorLine());
 	textEditWidget = new TextWidget();
 	layout()->addWidget(textEditWidget);
 

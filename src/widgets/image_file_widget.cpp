@@ -1,4 +1,5 @@
 #include "image_file_widget.h"
+#include "separator_line.h"
 #include "main_window.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QVBoxLayout>
@@ -11,6 +12,7 @@ ImageFileWidget::ImageFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(0, 0, 0, 0);
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_image_file"))));
+	layout()->addWidget(new SeparatorLine());
 	imageLabel = new QLabel();
 	layout()->addWidget(imageLabel);
 	widthLabel = new InfoLabelWidget(globalInfo, m_globalInfo.localization.getString("assets_image_width"));

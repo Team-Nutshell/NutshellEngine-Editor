@@ -1,5 +1,6 @@
 #include "model_ntmd_file_widget.h"
 #include "model_ntmd_primitive_widget.h"
+#include "separator_line.h"
 #include "../../external/nlohmann/json.hpp"
 #include <QLabel>
 #include <QScrollArea>
@@ -10,6 +11,8 @@ ModelNtmdFileWidget::ModelNtmdFileWidget(GlobalInfo& globalInfo) : m_globalInfo(
 	setLayout(new QVBoxLayout());
 	layout()->setAlignment(Qt::AlignmentFlag::AlignTop);
 	layout()->setContentsMargins(2, 0, 2, 0);
+	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_model_file"))));
+	layout()->addWidget(new SeparatorLine());
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_model_primitives"))));
 	primitivesWidget = new QWidget();
 	primitivesWidget->setLayout(new QVBoxLayout());
