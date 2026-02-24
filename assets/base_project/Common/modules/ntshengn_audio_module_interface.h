@@ -14,10 +14,10 @@ namespace NtshEngn {
 		// Loads the sound described in the sound parameter in the internal format and returns a unique identifier
 		virtual SoundID load(const Sound& sound) = 0;
 
-		// Plays the sound with identifier soundID at a certain gain and pitch, looping or not, and returns a unique identifier
-		virtual SoundSourceID playSound(SoundID soundID, float gain, float pitch, bool looping) = 0;
-		// Plays the sound with identifier soundID at a specific position and at a certain gain and pitch, looping or not, and returns a unique identifier
-		virtual SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain, float pitch, bool looping) = 0;
+		// Plays the sound with identifier soundID at a certain gain and pitch, looping or not, at a start time, and returns a unique identifier
+		virtual SoundSourceID playSound(SoundID soundID, float gain, float pitch, bool looping, float startTime) = 0;
+		// Plays the sound with identifier soundID at a specific position and at a certain gain and pitch, looping or not, at a start time, and returns a unique identifier
+		virtual SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain, float pitch, bool looping, float startTime) = 0;
 		// Pauses the sound with identifier soundSourceID
 		virtual void resumeSoundSource(SoundSourceID soundSourceID) = 0;
 		// Pauses the sound with identifier soundSourceID
@@ -29,6 +29,14 @@ namespace NtshEngn {
 		virtual SoundSourceState getSoundSourceState(SoundSourceID soundSourceID) = 0;
 		// Returns true if the sound with identifier soundID has any sound source currently playing, else, returns false
 		virtual bool isSoundPlaying(SoundID soundID) = 0;
+
+		// Returns the length of the sound with identifier soundID, in seconds
+		virtual float getSoundLength(SoundID soundID) = 0;
+
+		// Sets the current time of a sound source, in seconds
+		virtual void setSoundSourceTime(SoundSourceID soundSourceID, float newTime) = 0;
+		// Returns the current time of a sound source, in seconds
+		virtual float getSoundSourceTime(SoundSourceID soundSourceID) = 0;
 
 		// Sets the position of the sound source with identifieer soundSourceID
 		virtual void setSoundSourcePosition(SoundSourceID soundSourceID, const Math::vec3& newPosition) = 0;

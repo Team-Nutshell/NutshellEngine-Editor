@@ -825,20 +825,20 @@ namespace NtshEngn {
 		}
 
 		// Audio
-		SoundSourceID playSound(SoundID soundID, float gain = 1.0f, float pitch = 1.0f, bool looping = false) {
+		SoundSourceID playSound(SoundID soundID, float gain = 1.0f, float pitch = 1.0f, bool looping = false, float startTime = 0.0f) {
 			if (!audioModule) {
 				return NTSHENGN_SOUND_SOURCE_UNKNOWN;
 			}
 
-			return audioModule->playSound(soundID, gain, pitch, looping);
+			return audioModule->playSound(soundID, gain, pitch, looping, startTime);
 		}
 
-		SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain = 1.0f, float pitch = 1.0f, bool looping = false) {
+		SoundSourceID playSoundAtPosition(SoundID soundID, const Math::vec3& position, float gain = 1.0f, float pitch = 1.0f, bool looping = false, float startTime = 0.0f) {
 			if (!audioModule) {
 				return NTSHENGN_SOUND_SOURCE_UNKNOWN;
 			}
 
-			return audioModule->playSoundAtPosition(soundID, position, gain, pitch, looping);
+			return audioModule->playSoundAtPosition(soundID, position, gain, pitch, looping, startTime);
 		}
 
 		void resumeSoundSource(SoundSourceID soundSourceID) {
@@ -880,6 +880,31 @@ namespace NtshEngn {
 
 			return audioModule->isSoundPlaying(soundID);
 		}
+
+		float getSoundLength(SoundID soundID) {
+			if (!audioModule) {
+				return false;
+			}
+
+			return audioModule->getSoundLength(soundID);
+		}
+
+		void setSoundSourceTime(SoundSourceID soundSourceID, float newTime) {
+			if (!audioModule) {
+				return;
+			}
+
+			audioModule->setSoundSourceTime(soundSourceID, newTime);
+		}
+		
+		float getSoundSourceTime(SoundSourceID soundSourceID) {
+			if (!audioModule) {
+				return false;
+			}
+
+			return audioModule->getSoundSourceTime(soundSourceID);
+		}
+
 
 		void setSoundSourcePosition(SoundSourceID soundSourceID, const Math::vec3& newPosition) {
 			if (!audioModule) {
