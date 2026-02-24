@@ -19,10 +19,8 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	layout()->addWidget(diffuseTextureImageSamplerWidget);
 	diffuseColorWidget = new ColorPickerWidget(globalInfo, m_globalInfo.localization.getString("assets_material_diffuse_color"), nml::vec3(0.5f, 0.5f, 0.5f));
 	layout()->addWidget(diffuseColorWidget);
-	opacityValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_opacity_value"));
+	opacityValueWidget = new ScalarSliderWidget(globalInfo, m_globalInfo.localization.getString("assets_material_opacity_value"), 0.0f, 1.0f);
 	opacityValueWidget->setValue(1.0f);
-	opacityValueWidget->setMin(0.0f);
-	opacityValueWidget->setMax(1.0f);
 	layout()->addWidget(opacityValueWidget);
 	layout()->addWidget(new SeparatorLine());
 	normalTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_normal_image"), m_globalInfo.localization.getString("no_image_selected"), "");
@@ -34,30 +32,24 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	layout()->addWidget(metalnessTextureImageWidget);
 	metalnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(metalnessTextureImageSamplerWidget);
-	metalnessValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_value"));
+	metalnessValueWidget = new ScalarSliderWidget(globalInfo, m_globalInfo.localization.getString("assets_material_metalness_value"), 0.0f, 1.0f);
 	metalnessValueWidget->setValue(0.5f);
-	metalnessValueWidget->setMin(0.0f);
-	metalnessValueWidget->setMax(1.0f);
 	layout()->addWidget(metalnessValueWidget);
 	layout()->addWidget(new SeparatorLine());
 	roughnessTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(roughnessTextureImageWidget);
 	roughnessTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(roughnessTextureImageSamplerWidget);
-	roughnessValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_value"));
+	roughnessValueWidget = new ScalarSliderWidget(globalInfo, m_globalInfo.localization.getString("assets_material_roughness_value"), 0.0f, 1.0f);
 	roughnessValueWidget->setValue(0.5f);
-	roughnessValueWidget->setMin(0.0f);
-	roughnessValueWidget->setMax(1.0f);
 	layout()->addWidget(roughnessValueWidget);
 	layout()->addWidget(new SeparatorLine());
 	occlusionTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image"), m_globalInfo.localization.getString("no_image_selected"), "");
 	layout()->addWidget(occlusionTextureImageWidget);
 	occlusionTextureImageSamplerWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_image_sampler"), m_globalInfo.localization.getString("no_image_sampler_selected"), "");
 	layout()->addWidget(occlusionTextureImageSamplerWidget);
-	occlusionValueWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_value"));
+	occlusionValueWidget = new ScalarSliderWidget(globalInfo, m_globalInfo.localization.getString("assets_material_occlusion_value"), 0.0f, 1.0f);
 	occlusionValueWidget->setValue(1.0f);
-	occlusionValueWidget->setMin(0.0f);
-	occlusionValueWidget->setMax(1.0f);
 	layout()->addWidget(occlusionValueWidget);
 	layout()->addWidget(new SeparatorLine());
 	emissiveTextureImageWidget = new FileSelectorWidget(globalInfo, m_globalInfo.localization.getString("assets_material_emissive_image"), m_globalInfo.localization.getString("no_image_selected"), "");
@@ -70,9 +62,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	emissiveFactorWidget->setValue(1.0f);
 	layout()->addWidget(emissiveFactorWidget);
 	layout()->addWidget(new SeparatorLine());
-	alphaCutoffWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_alpha_cutoff"));
-	alphaCutoffWidget->setMin(0.0f);
-	alphaCutoffWidget->setMax(1.0f);
+	alphaCutoffWidget = new ScalarSliderWidget(globalInfo, m_globalInfo.localization.getString("assets_material_alpha_cutoff"), 0.0f, 1.0f);
 	layout()->addWidget(alphaCutoffWidget);
 	indexOfRefractionWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_index_of_refraction"));
 	layout()->addWidget(indexOfRefractionWidget);
@@ -88,23 +78,29 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	connect(diffuseTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(diffuseTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(diffuseColorWidget, &ColorPickerWidget::colorChanged, this, &MaterialNtmlFileWidget::onValueChanged);
-	connect(opacityValueWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(diffuseColorWidget, &ColorPickerWidget::temporaryColorChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
+	connect(opacityValueWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(opacityValueWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(normalTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(normalTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(metalnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(metalnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
-	connect(metalnessValueWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(metalnessValueWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(metalnessValueWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(roughnessTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(roughnessTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
-	connect(roughnessValueWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(roughnessValueWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(roughnessValueWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(occlusionTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(occlusionTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
-	connect(occlusionValueWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(occlusionValueWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(occlusionValueWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(emissiveTextureImageWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(emissiveTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(emissiveFactorWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(emissiveColorWidget, &ColorPickerWidget::colorChanged, this, &MaterialNtmlFileWidget::onValueChanged);
-	connect(alphaCutoffWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(alphaCutoffWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(alphaCutoffWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(useTriplanarMappingWidget, &BooleanWidget::stateChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(scaleUVWidget, &Vector2Widget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
@@ -419,6 +415,46 @@ void MaterialNtmlFileWidget::onValueChanged() {
 
 	if (newMaterialNtml != materialNtml) {
 		m_globalInfo.actionUndoStack->push(new ChangeMaterialNtmlFile(m_globalInfo, newMaterialNtml, m_materialFilePath));
+	}
+	else {
+		// Reset colors
+		std::string materialPath = AssetHelper::absoluteToRelative(m_materialFilePath, m_globalInfo.projectDirectory);
+
+		if (m_globalInfo.rendererResourceManager.materials.find(materialPath) != m_globalInfo.rendererResourceManager.materials.end()) {
+			RendererMaterial& rendererMaterial = m_globalInfo.rendererResourceManager.materials[materialPath];
+			rendererMaterial.diffuseColor = nml::vec4(diffuseColorWidget->getColor(), rendererMaterial.diffuseColor.w);
+			rendererMaterial.emissiveColor = emissiveColorWidget->getColor();
+		}
+		m_globalInfo.rendererResourceManager.loadMaterial(m_materialFilePath, materialPath);
+	}
+}
+
+void MaterialNtmlFileWidget::onTemporaryValueChanged() {
+	QObject* senderWidget = sender();
+
+	std::string materialPath = AssetHelper::absoluteToRelative(m_materialFilePath, m_globalInfo.projectDirectory);
+	RendererMaterial& rendererMaterial = m_globalInfo.rendererResourceManager.materials[materialPath];
+
+	if (senderWidget == diffuseColorWidget) {
+		rendererMaterial.diffuseColor = nml::vec4(diffuseColorWidget->getTemporaryColor(), rendererMaterial.diffuseColor.w);
+	}
+	else if (senderWidget == opacityValueWidget) {
+		rendererMaterial.diffuseColor.w = opacityValueWidget->getTemporaryValue();
+	}
+	else if (senderWidget == metalnessValueWidget) {
+		rendererMaterial.metalnessValue = metalnessValueWidget->getTemporaryValue();
+	}
+	else if (senderWidget == roughnessValueWidget) {
+		rendererMaterial.roughnessValue = roughnessValueWidget->getTemporaryValue();
+	}
+	else if (senderWidget == occlusionValueWidget) {
+		rendererMaterial.occlusionValue = occlusionValueWidget->getTemporaryValue();
+	}
+	else if (senderWidget == emissiveColorWidget) {
+		rendererMaterial.emissiveColor = emissiveColorWidget->getTemporaryColor();
+	}
+	else if (senderWidget == alphaCutoffWidget) {
+		rendererMaterial.alphaCutoff = alphaCutoffWidget->getTemporaryValue();
 	}
 }
 

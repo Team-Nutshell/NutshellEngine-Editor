@@ -28,6 +28,7 @@ private slots:
 	void onStringChanged(const std::string& text);
 	void onVector3Changed(const nml::vec3& value);
 	void onColorChanged(const nml::vec3& color);
+	void onTemporaryColorChanged(const nml::vec3& color);
 	void closeEvent(QCloseEvent* event);
 
 signals:

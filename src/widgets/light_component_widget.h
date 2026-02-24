@@ -26,6 +26,7 @@ private slots:
 	void onEntityLightChanged(EntityID entityID, const Light& light);
 	void onElementChanged(const std::string& element);
 	void onColorChanged(const nml::vec3& color);
+	void onTemporaryColorChanged(const nml::vec3& color);
 	void onScalarChanged(float value);
 	void onVec3Changed(const nml::vec3& value);
 	void onVec2Changed(const nml::vec2& value);
@@ -40,4 +41,7 @@ public:
 	Vector3Widget* directionWidget;
 	Vector2Widget* cutoffWidget;
 	ScalarWidget* distanceWidget;
+
+	bool useTemporaryColor = false;
+	nml::vec3 temporaryColor;
 };

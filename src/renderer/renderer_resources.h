@@ -46,20 +46,38 @@ struct RendererMesh {
 };
 
 struct RendererMaterial {
+	bool hasDiffuseTexture = true;
 	std::string diffuseTextureName = "defaultDiffuseTexture";
 	std::string diffuseTextureSamplerName = "defaultSampler";
-	std::string normalTextureName = "defaultNormalTexture";
+	nml::vec4 diffuseColor = nml::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+	bool hasNormalTexture = false;
+	std::string normalTextureName = "";
 	std::string normalTextureSamplerName = "defaultSampler";
-	std::string metalnessTextureName = "defaultORMTexture";
+
+	bool hasMetalnessTexture = false;
+	std::string metalnessTextureName = "";
 	std::string metalnessTextureSamplerName = "defaultSampler";
-	std::string roughnessTextureName = "defaultORMTexture";
+	float metalnessValue = 0.5f;
+
+	bool hasRoughnessTexture = false;
+	std::string roughnessTextureName = "";
 	std::string roughnessTextureSamplerName = "defaultSampler";
-	std::string occlusionTextureName = "defaultORMTexture";
+	float roughnessValue = 0.5f;
+
+	bool hasOcclusionTexture = false;
+	std::string occlusionTextureName = "";
 	std::string occlusionTextureSamplerName = "defaultSampler";
-	std::string emissiveTextureName = "defaultEmissiveTexture";
+	float occlusionValue = 1.0f;
+
+	bool hasEmissiveTexture = false;
+	std::string emissiveTextureName = "";
 	std::string emissiveTextureSamplerName = "defaultSampler";
+	nml::vec3 emissiveColor = nml::vec3(0.0f, 0.0f, 0.0f);
 	float emissiveFactor = 1.0f;
+
 	float alphaCutoff = 0.0f;
+
 	bool useTriplanarMapping = false;
 	nml::vec2 scaleUV = nml::vec2(1.0f, 1.0f);
 	nml::vec2 offsetUV = nml::vec2(0.0f, 0.0f);

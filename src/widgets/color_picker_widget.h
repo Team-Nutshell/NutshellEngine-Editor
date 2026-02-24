@@ -12,16 +12,22 @@ public:
 	void setColor(const nml::vec3& color);
 	const nml::vec3& getColor();
 
+	void setTemporaryColor(const nml::vec3& color);
+	const nml::vec3& getTemporaryColor();
+
 signals:
 	void colorChanged(const nml::vec3&);
+	void temporaryColorChanged(const nml::vec3&);
 
 private slots:
 	void onColorButtonClicked();
+	void onCurrentColorChanged(const QColor& color);
 
 private:
 	GlobalInfo& m_globalInfo;
 
 	nml::vec3 m_color;
+	nml::vec3 m_temporaryColor;
 
 public:
 	QLabel* nameLabel;

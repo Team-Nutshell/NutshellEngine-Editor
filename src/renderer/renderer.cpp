@@ -147,19 +147,40 @@ void Renderer::initializeGL() {
 	in vec2 fragUV;
 	in mat3 fragTBN;
 
+	uniform bool hasDiffuseTexture;
 	uniform sampler2D diffuseTextureSampler;
+	uniform vec4 diffuseColor;
+
+	uniform bool hasNormalTexture;
 	uniform sampler2D normalTextureSampler;
+
+	uniform bool hasMetalnessTexture;
 	uniform sampler2D metalnessTextureSampler;
+	uniform float metalnessValue;
+
+	uniform bool hasRoughnessTexture;
 	uniform sampler2D roughnessTextureSampler;
+	uniform float roughnessValue;
+
+	uniform bool hasOcclusionTexture;
 	uniform sampler2D occlusionTextureSampler;
+	uniform float occlusionValue;
+
+	uniform bool hasEmissiveTexture;
 	uniform sampler2D emissiveTextureSampler;
+	uniform vec3 emissiveColor;
 	uniform float emissiveFactor;
+
 	uniform float alphaCutoff;
+
 	uniform bool useTriplanarMapping;
 	uniform vec2 scaleUV;
 	uniform vec2 offsetUV;
+
 	uniform bool enableShading;
+
 	uniform vec3 cameraPosition;
+
 	restrict readonly buffer LightBuffer {
 		uvec4 count;
 		Light info[];
@@ -242,23 +263,41 @@ void Renderer::initializeGL() {
 	}
 
 	void main() {
-		vec4 diffuseTextureSample;
-		float metalnessTextureSample;
-		float roughnessTextureSample;
-		float occlusionTextureSample;
-		vec3 emissiveTextureSample;
+		vec4 diffuseTextureSample = diffuseColor;
+		vec3 normalTextureSample = vec3(0.5, 0.5, 1.0);
+		float metalnessTextureSample = metalnessValue;
+		float roughnessTextureSample = roughnessValue;
+		float occlusionTextureSample = occlusionValue;
+		vec3 emissiveTextureSample = emissiveColor;
 
 		vec3 n;
 
 		if (!useTriplanarMapping) {
 			vec2 scaleOffsetUV = (fragUV * scaleUV) + offsetUV;
 
-			diffuseTextureSample = texture(diffuseTextureSampler, scaleOffsetUV);
-			const vec3 normalTextureSample = texture(normalTextureSampler, scaleOffsetUV).xyz;
-			metalnessTextureSample = texture(metalnessTextureSampler, scaleOffsetUV).b;
-			roughnessTextureSample = texture(roughnessTextureSampler, scaleOffsetUV).g;
-			occlusionTextureSample = texture(occlusionTextureSampler, scaleOffsetUV).r;
-			emissiveTextureSample = texture(emissiveTextureSampler, scaleOffsetUV).rgb;
+			if (hasDiffuseTexture) {
+				diffuseTextureSample = texture(diffuseTextureSampler, scaleOffsetUV);
+			}
+
+			if (hasNormalTexture) {
+				normalTextureSample = texture(normalTextureSampler, scaleOffsetUV).xyz;
+			}
+
+			if (hasMetalnessTexture) {
+				metalnessTextureSample = texture(metalnessTextureSampler, scaleOffsetUV).b;
+			}
+
+			if (hasRoughnessTexture) {
+				roughnessTextureSample = texture(roughnessTextureSampler, scaleOffsetUV).g;
+			}
+
+			if (hasOcclusionTexture) {
+				occlusionTextureSample = texture(occlusionTextureSampler, scaleOffsetUV).r;
+			}
+
+			if (hasEmissiveTexture) {
+				emissiveTextureSample = texture(emissiveTextureSampler, scaleOffsetUV).rgb;
+			}
 
 			n = normalize(fragTBN * ((normalTextureSample * 2.0) - 1.0));
 		}
@@ -288,13 +327,20 @@ void Renderer::initializeGL() {
 			vec3 triplanarWeights = abs(normal);
 			triplanarWeights /= (triplanarWeights.x + triplanarWeights.y + triplanarWeights.z);
 
-			diffuseTextureSample = (texture(diffuseTextureSampler, triplanarUV.x) * triplanarWeights.x) +
-				(texture(diffuseTextureSampler, triplanarUV.y) * triplanarWeights.y) +
-				(texture(diffuseTextureSampler, triplanarUV.z) * triplanarWeights.z);
+			if (hasDiffuseTexture) {
+				diffuseTextureSample = (texture(diffuseTextureSampler, triplanarUV.x) * triplanarWeights.x) +
+					(texture(diffuseTextureSampler, triplanarUV.y) * triplanarWeights.y) +
+					(texture(diffuseTextureSampler, triplanarUV.z) * triplanarWeights.z);
+			}
 
-			vec3 tangentNormalX = (texture(normalTextureSampler, triplanarUV.x).xyz * 2.0) - 1.0;
-			vec3 tangentNormalY = (texture(normalTextureSampler, triplanarUV.y).xyz * 2.0) - 1.0;
-			vec3 tangentNormalZ = (texture(normalTextureSampler, triplanarUV.z).xyz * 2.0) - 1.0;
+			vec3 tangentNormalX = (normalTextureSample * 2.0) - 1.0;
+			vec3 tangentNormalY = tangentNormalX;
+			vec3 tangentNormalZ = tangentNormalX;
+			if (hasNormalTexture) {
+				tangentNormalX = (texture(normalTextureSampler, triplanarUV.x).xyz * 2.0) - 1.0;
+				tangentNormalY = (texture(normalTextureSampler, triplanarUV.y).xyz * 2.0) - 1.0;
+				tangentNormalZ = (texture(normalTextureSampler, triplanarUV.z).xyz * 2.0) - 1.0;
+			}
 
 			if (normal.x < 0.0) {
 				tangentNormalX.z = -tangentNormalX.z;
@@ -314,21 +360,29 @@ void Renderer::initializeGL() {
 				(worldNormalY * triplanarWeights.y) +
 				(worldNormalZ * triplanarWeights.z));
 
-			metalnessTextureSample = (texture(metalnessTextureSampler, triplanarUV.x).b * triplanarWeights.x) +
-				(texture(metalnessTextureSampler, triplanarUV.y).b * triplanarWeights.y) +
-				(texture(metalnessTextureSampler, triplanarUV.z).b * triplanarWeights.z);
+			if (hasMetalnessTexture) {
+				metalnessTextureSample = (texture(metalnessTextureSampler, triplanarUV.x).b * triplanarWeights.x) +
+					(texture(metalnessTextureSampler, triplanarUV.y).b * triplanarWeights.y) +
+					(texture(metalnessTextureSampler, triplanarUV.z).b * triplanarWeights.z);
+			}
 
-			roughnessTextureSample = (texture(roughnessTextureSampler, triplanarUV.x).g * triplanarWeights.x) +
-				(texture(roughnessTextureSampler, triplanarUV.y).g * triplanarWeights.y) +
-				(texture(roughnessTextureSampler, triplanarUV.z).g * triplanarWeights.z);
+			if (hasRoughnessTexture) {
+				roughnessTextureSample = (texture(roughnessTextureSampler, triplanarUV.x).g * triplanarWeights.x) +
+					(texture(roughnessTextureSampler, triplanarUV.y).g * triplanarWeights.y) +
+					(texture(roughnessTextureSampler, triplanarUV.z).g * triplanarWeights.z);
+			}
 
-			occlusionTextureSample = (texture(occlusionTextureSampler, triplanarUV.x).r * triplanarWeights.x) +
-				(texture(occlusionTextureSampler, triplanarUV.y).r * triplanarWeights.y) +
-				(texture(occlusionTextureSampler, triplanarUV.z).r * triplanarWeights.z);
+			if (hasOcclusionTexture) {
+				occlusionTextureSample = (texture(occlusionTextureSampler, triplanarUV.x).r * triplanarWeights.x) +
+					(texture(occlusionTextureSampler, triplanarUV.y).r * triplanarWeights.y) +
+					(texture(occlusionTextureSampler, triplanarUV.z).r * triplanarWeights.z);
+			}
 
-			emissiveTextureSample = (texture(emissiveTextureSampler, triplanarUV.x).rgb * triplanarWeights.x) +
-				(texture(emissiveTextureSampler, triplanarUV.y).rgb * triplanarWeights.y) +
-				(texture(emissiveTextureSampler, triplanarUV.z).rgb * triplanarWeights.z);
+			if (hasEmissiveTexture) {
+				emissiveTextureSample = (texture(emissiveTextureSampler, triplanarUV.x).rgb * triplanarWeights.x) +
+					(texture(emissiveTextureSampler, triplanarUV.y).rgb * triplanarWeights.y) +
+					(texture(emissiveTextureSampler, triplanarUV.z).rgb * triplanarWeights.z);
+			}
 		}
 
 		diffuseTextureSample.rgb = sRGBToLinear(diffuseTextureSample.rgb);
@@ -422,7 +476,8 @@ void Renderer::initializeGL() {
 			outColor = vec4(diffuseTextureSample.rgb, 1.0);
 		}
 
-		outColor += vec4(emissiveTextureSample * emissiveFactor, 0.0);
+		outColor.rgb *= occlusionTextureSample;
+		outColor.rgb += emissiveTextureSample * emissiveFactor;
 
 		outColor.rgb = linearToSRGB(outColor.rgb);
 	}
@@ -903,30 +958,6 @@ void Renderer::initializeGL() {
 	gl.glGenerateMipmap(GL_TEXTURE_2D);
 	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
 
-	GLuint defaultNormalTexture;
-	gl.glGenTextures(1, &defaultNormalTexture);
-	std::vector<uint8_t> normalTextureData = { 127, 127, 255, 255 };
-	gl.glBindTexture(GL_TEXTURE_2D, defaultNormalTexture);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, normalTextureData.data());
-	gl.glGenerateMipmap(GL_TEXTURE_2D);
-	m_globalInfo.rendererResourceManager.textures["defaultNormalTexture"] = defaultNormalTexture;
-
-	GLuint defaultORMTexture;
-	gl.glGenTextures(1, &defaultORMTexture);
-	std::vector<uint8_t> ormTextureData = { 255, 0, 0, 255 };
-	gl.glBindTexture(GL_TEXTURE_2D, defaultORMTexture);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, ormTextureData.data());
-	gl.glGenerateMipmap(GL_TEXTURE_2D);
-	m_globalInfo.rendererResourceManager.textures["defaultORMTexture"] = defaultORMTexture;
-
-	GLuint defaultEmissiveTexture;
-	gl.glGenTextures(1, &defaultEmissiveTexture);
-	std::vector<uint8_t> emissiveTextureData = { 0, 0, 0, 255 };
-	gl.glBindTexture(GL_TEXTURE_2D, defaultEmissiveTexture);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveTextureData.data());
-	gl.glGenerateMipmap(GL_TEXTURE_2D);
-	m_globalInfo.rendererResourceManager.textures["defaultEmissiveTexture"] = defaultEmissiveTexture;
-
 	RendererSampler defaultSampler;
 	defaultSampler.minFilter = GL_NEAREST;
 	defaultSampler.magFilter = GL_NEAREST;
@@ -1106,82 +1137,7 @@ void Renderer::paintGL() {
 				entity.second.renderable) {
 				// Entity has a material
 				const RendererMaterial& material = !entity.second.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath] : primitiveMaterial;
-
-				// Diffuse texture
-				gl.glActiveTexture(GL_TEXTURE0);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
-				}
-				else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
-
-				// Normal texture
-				gl.glActiveTexture(GL_TEXTURE1);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.normalTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.normalTextureName]);
-				}
-				else if (std::filesystem::path(material.normalTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.normalTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
-
-				// Metalness texture
-				gl.glActiveTexture(GL_TEXTURE2);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.metalnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.metalnessTextureName]);
-				}
-				else if (std::filesystem::path(material.metalnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureName"), 2);
-
-				// Roughness texture
-				gl.glActiveTexture(GL_TEXTURE3);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.roughnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.roughnessTextureName]);
-				}
-				else if (std::filesystem::path(material.roughnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureName"), 3);
-
-				// Occlusion texture
-				gl.glActiveTexture(GL_TEXTURE4);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.occlusionTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.occlusionTextureName]);
-				}
-				else if (std::filesystem::path(material.occlusionTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureName"), 4);
-
-				// Emissive texture
-				gl.glActiveTexture(GL_TEXTURE5);
-				if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
-				}
-				else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-					gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
-				}
-				m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
-
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
-
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
-
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
-
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
-
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
+				bindMaterial(material);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
 
@@ -1190,53 +1146,7 @@ void Renderer::paintGL() {
 			else {
 				// Entity has no material or no mesh, default material
 				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-				RendererMaterial& defaultMaterial = defaultModelPrimitive.material;
-
-				// Diffuse texture
-				gl.glActiveTexture(GL_TEXTURE0);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.diffuseTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.diffuseTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
-
-				// Normal texture
-				gl.glActiveTexture(GL_TEXTURE1);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.normalTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.normalTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
-
-				// Metalness texture
-				gl.glActiveTexture(GL_TEXTURE2);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.metalnessTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.metalnessTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureSampler"), 2);
-
-				// Roughness texture
-				gl.glActiveTexture(GL_TEXTURE3);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.roughnessTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.roughnessTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureSampler"), 3);
-
-				// Occlusion texture
-				gl.glActiveTexture(GL_TEXTURE4);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.occlusionTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.occlusionTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureSampler"), 4);
-
-				// Emissive texture
-				gl.glActiveTexture(GL_TEXTURE5);
-				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[defaultMaterial.emissiveTextureName]);
-				m_globalInfo.rendererResourceManager.samplers[defaultMaterial.emissiveTextureSamplerName].bind(gl);
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
-
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), defaultMaterial.emissiveFactor);
-
-				gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), defaultMaterial.alphaCutoff);
-
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), defaultMaterial.useTriplanarMapping);
-
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), defaultMaterial.scaleUV.x, defaultMaterial.scaleUV.y);
-
-				gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), defaultMaterial.offsetUV.x, defaultMaterial.offsetUV.y);
+				bindMaterial(defaultModelPrimitive.material);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
@@ -2074,6 +1984,13 @@ void Renderer::updateLights() {
 			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 			const Light& light = entity.second.light.value();
 
+			nml::vec3 lightColor = light.color;
+			if ((m_globalInfo.currentEntityID == entity.first) || (m_globalInfo.otherSelectedEntityIDs.count(entity.first) != 0)) {
+				if (m_globalInfo.mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->lightWidget->useTemporaryColor) {
+					lightColor = m_globalInfo.mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->lightWidget->temporaryColor;
+				}
+			}
+
 			if (light.type == "Directional") {
 				lightsCount[0]++;
 
@@ -2088,7 +2005,7 @@ void Renderer::updateLights() {
 
 				directionalLightsInfos.push_back(nml::vec4());
 				directionalLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
-				directionalLightsInfos.push_back(nml::vec4(light.color, light.intensity));
+				directionalLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				directionalLightsInfos.push_back(nml::vec4());
 			}
 			else if (light.type == "Point") {
@@ -2096,7 +2013,7 @@ void Renderer::updateLights() {
 
 				pointLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				pointLightsInfos.push_back(nml::vec4());
-				pointLightsInfos.push_back(nml::vec4(light.color, light.intensity));
+				pointLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				pointLightsInfos.push_back(nml::vec4(0.0f, 0.0f, light.distance, 0.0f));
 			}
 			else if (light.type == "Spot") {
@@ -2113,7 +2030,7 @@ void Renderer::updateLights() {
 
 				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
-				spotLightsInfos.push_back(nml::vec4(light.color, light.intensity));
+				spotLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), light.distance, 0.0f));
 			}
 			else if (light.type == "Ambient") {
@@ -2121,7 +2038,7 @@ void Renderer::updateLights() {
 
 				ambientLightsInfos.push_back(nml::vec4());
 				ambientLightsInfos.push_back(nml::vec4());
-				ambientLightsInfos.push_back(nml::vec4(light.color, light.intensity));
+				ambientLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				ambientLightsInfos.push_back(nml::vec4());
 			}
 		}
@@ -2461,6 +2378,117 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	nml::vec4 worldSpace = invViewMatrix * viewSpace;
 
 	return nml::vec3(worldSpace) / worldSpace.w;
+}
+
+void Renderer::bindMaterial(const RendererMaterial& material) {
+	// Diffuse texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasDiffuseTexture"), material.hasDiffuseTexture);
+	if (material.hasDiffuseTexture) {
+		gl.glActiveTexture(GL_TEXTURE0);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+		}
+		else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+	}
+	else {
+		gl.glUniform4f(gl.glGetUniformLocation(m_entityProgram, "diffuseColor"), material.diffuseColor.x, material.diffuseColor.y, material.diffuseColor.z, material.diffuseColor.w);
+	}
+
+	// Normal texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasNormalTexture"), material.hasNormalTexture);
+	if (material.hasNormalTexture) {
+		gl.glActiveTexture(GL_TEXTURE1);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.normalTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.normalTextureName]);
+		}
+		else if (std::filesystem::path(material.normalTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.normalTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
+	}
+
+	// Metalness texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasMetalnessTexture"), material.hasMetalnessTexture);
+	if (material.hasMetalnessTexture) {
+		gl.glActiveTexture(GL_TEXTURE2);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.metalnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.metalnessTextureName]);
+		}
+		else if (std::filesystem::path(material.metalnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureName"), 2);
+	}
+	else {
+		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "metalnessValue"), material.metalnessValue);
+	}
+
+	// Roughness texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasRoughnessTexture"), material.hasRoughnessTexture);
+	if (material.hasRoughnessTexture) {
+		gl.glActiveTexture(GL_TEXTURE3);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.roughnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.roughnessTextureName]);
+		}
+		else if (std::filesystem::path(material.roughnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureName"), 3);
+	}
+	else {
+		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "roughnessValue"), material.roughnessValue);
+	}
+
+	// Occlusion texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasOcclusionTexture"), material.hasOcclusionTexture);
+	if (material.hasOcclusionTexture) {
+		gl.glActiveTexture(GL_TEXTURE4);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.occlusionTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.occlusionTextureName]);
+		}
+		else if (std::filesystem::path(material.occlusionTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureName"), 4);
+	}
+	else {
+		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "occlusionValue"), material.occlusionValue);
+	}
+
+	// Emissive texture
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasEmissiveTexture"), material.hasEmissiveTexture);
+	if (material.hasEmissiveTexture) {
+		gl.glActiveTexture(GL_TEXTURE5);
+		if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+		}
+		else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
+		}
+		m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
+	}
+	else {
+		gl.glUniform3f(gl.glGetUniformLocation(m_entityProgram, "emissiveColor"), material.emissiveColor.x, material.emissiveColor.y, material.emissiveColor.z);
+	}
+
+	gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
+
+	gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
+
+	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
+
+	gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
+
+	gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
 }
 
 void Renderer::onEntityDestroyed(EntityID entityID) {

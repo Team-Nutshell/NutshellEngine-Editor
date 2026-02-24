@@ -31,6 +31,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 
 	connect(typeWidget, &ComboBoxWidget::elementSelected, this, &LightComponentWidget::onElementChanged);
 	connect(colorWidget, &ColorPickerWidget::colorChanged, this, &LightComponentWidget::onColorChanged);
+	connect(colorWidget, &ColorPickerWidget::temporaryColorChanged, this, &LightComponentWidget::onTemporaryColorChanged);
 	connect(intensityWidget, &ScalarWidget::valueChanged, this, &LightComponentWidget::onScalarChanged);
 	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
 	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
@@ -198,6 +199,14 @@ void LightComponentWidget::onColorChanged(const nml::vec3& color) {
 	}
 
 	updateComponents(entityIDs, newLights);
+
+	useTemporaryColor = false;
+}
+
+void LightComponentWidget::onTemporaryColorChanged(const nml::vec3& color) {
+	temporaryColor = color;
+
+	useTemporaryColor = true;
 }
 
 void LightComponentWidget::onScalarChanged(float value) {

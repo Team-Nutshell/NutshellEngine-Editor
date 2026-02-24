@@ -178,6 +178,7 @@ set(WIDGET_SOURCES
 	src/widgets/resource_splitter.cpp
 	src/widgets/rigidbody_component_widget.cpp
 	src/widgets/sampler_ntsp_file_widget.cpp
+	src/widgets/scalar_slider_widget.cpp
 	src/widgets/scalar_widget.cpp
 	src/widgets/script_list.cpp
 	src/widgets/script_list_menu.cpp
@@ -266,6 +267,7 @@ set(WIDGET_HEADERS
 	src/widgets/resource_splitter.h
 	src/widgets/rigidbody_component_widget.h
 	src/widgets/sampler_ntsp_file_widget.h
+	src/widgets/scalar_slider_widget.h
 	src/widgets/scalar_widget.h
 	src/widgets/script_list.h
 	src/widgets/script_list_menu.h

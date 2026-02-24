@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/global_info.h"
 #include "file_selector_widget.h"
+#include "scalar_slider_widget.h"
 #include "scalar_widget.h"
 #include "color_picker_widget.h"
 #include "boolean_widget.h"
@@ -77,6 +78,7 @@ public:
 
 private slots:
 	void onValueChanged();
+	void onTemporaryValueChanged();
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -89,23 +91,23 @@ public:
 	FileSelectorWidget* diffuseTextureImageWidget;
 	FileSelectorWidget* diffuseTextureImageSamplerWidget;
 	ColorPickerWidget* diffuseColorWidget;
-	ScalarWidget* opacityValueWidget;
+	ScalarSliderWidget* opacityValueWidget;
 	FileSelectorWidget* normalTextureImageWidget;
 	FileSelectorWidget* normalTextureImageSamplerWidget;
 	FileSelectorWidget* metalnessTextureImageWidget;
 	FileSelectorWidget* metalnessTextureImageSamplerWidget;
-	ScalarWidget* metalnessValueWidget;
+	ScalarSliderWidget* metalnessValueWidget;
 	FileSelectorWidget* roughnessTextureImageWidget;
 	FileSelectorWidget* roughnessTextureImageSamplerWidget;
-	ScalarWidget* roughnessValueWidget;
+	ScalarSliderWidget* roughnessValueWidget;
 	FileSelectorWidget* occlusionTextureImageWidget;
 	FileSelectorWidget* occlusionTextureImageSamplerWidget;
-	ScalarWidget* occlusionValueWidget;
+	ScalarSliderWidget* occlusionValueWidget;
 	FileSelectorWidget* emissiveTextureImageWidget;
 	FileSelectorWidget* emissiveTextureImageSamplerWidget;
 	ColorPickerWidget* emissiveColorWidget;
 	ScalarWidget* emissiveFactorWidget;
-	ScalarWidget* alphaCutoffWidget;
+	ScalarSliderWidget* alphaCutoffWidget;
 	ScalarWidget* indexOfRefractionWidget;
 	BooleanWidget* useTriplanarMappingWidget;
 	Vector2Widget* scaleUVWidget;

@@ -312,6 +312,8 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(gizmoScaleStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
 	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
 	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::colorChanged, this, &EditorParametersWidget::onColorChanged);
+	connect(currentEntityOutlineColorWidget, &ColorPickerWidget::temporaryColorChanged, this, &EditorParametersWidget::onTemporaryColorChanged);
+	connect(otherEntitiesOutlineColorWidget, &ColorPickerWidget::temporaryColorChanged, this, &EditorParametersWidget::onTemporaryColorChanged);
 	connect(cMakePathWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
 	connect(codeEditorCommandWidget, &StringWidget::valueChanged, this, &EditorParametersWidget::onStringChanged);
 }
@@ -683,6 +685,16 @@ void EditorParametersWidget::onColorChanged(const nml::vec3& color) {
 	}
 
 	save();
+}
+
+void EditorParametersWidget::onTemporaryColorChanged(const nml::vec3& color) {
+	QObject* senderWidget = sender();
+	if (senderWidget == currentEntityOutlineColorWidget) {
+		m_globalInfo.editorParameters.renderer.currentEntityOutlineColor = color;
+	}
+	else if (senderWidget == otherEntitiesOutlineColorWidget) {
+		m_globalInfo.editorParameters.renderer.otherEntitiesOutlineColor = color;
+	}
 }
 
 void EditorParametersWidget::closeEvent(QCloseEvent* event) {
