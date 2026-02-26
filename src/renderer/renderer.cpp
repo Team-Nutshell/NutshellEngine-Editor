@@ -1207,7 +1207,11 @@ void Renderer::paintGL() {
 					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
 					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
-					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+					nml::vec3 scale = transform.scale;
+					if (entity.second.collidable->type == "Sphere") {
+						scale = nml::vec3(std::max(std::abs(transform.scale.x), std::max(std::abs(transform.scale.y), std::abs(transform.scale.z))));
+					}
+					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(scale);
 
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
 
