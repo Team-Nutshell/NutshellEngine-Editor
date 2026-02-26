@@ -1453,20 +1453,48 @@ void Renderer::paintGL() {
 			if (m_dragDropResourceType == DragDropResourceType::Model) {
 				m_globalInfo.rendererResourceManager.loadModel(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
 				if (pickedEntityID < (NO_ENTITY - 3)) {
-					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
-					if (!pickedEntity.renderable) {
-						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
+					std::set<EntityID> entityIDsToChange;
+					if ((m_globalInfo.currentEntityID == pickedEntityID) ||
+						(m_globalInfo.otherSelectedEntityIDs.find(pickedEntityID) != m_globalInfo.otherSelectedEntityIDs.end())) {
+						entityIDsToChange = m_globalInfo.otherSelectedEntityIDs;
+						entityIDsToChange.insert(m_globalInfo.currentEntityID);
+					}
+					else {
+						entityIDsToChange = { pickedEntityID };
 					}
 
-					Renderable newRenderable = pickedEntity.renderable.value();
-					newRenderable.modelPath = m_dragDropResourcePath;
-					newRenderable.primitiveIndex = 0;
-					if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
-						if (m_globalInfo.rendererResourceManager.models[m_dragDropResourcePath].primitives.empty()) {
-							newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
+					std::vector<EntityID> entityIDsAddRenderable;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						if (!entityToChange.renderable) {
+							entityIDsAddRenderable.push_back(entityIDToChange);
 						}
 					}
-					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					if (!entityIDsAddRenderable.empty()) {
+						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDsAddRenderable, "Renderable"));
+					}
+
+					std::vector<EntityID> changeEntityIDs;
+					std::vector<Renderable> newRenderables;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						Renderable newRenderable = entityToChange.renderable.value();
+						newRenderable.modelPath = m_dragDropResourcePath;
+						newRenderable.primitiveIndex = 0;
+						if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
+							if (m_globalInfo.rendererResourceManager.models[m_dragDropResourcePath].primitives.empty()) {
+								newRenderable.primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
+							}
+						}
+
+						changeEntityIDs.push_back(entityIDToChange);
+						newRenderables.push_back(newRenderable);
+					}
+					std::vector<Component*> componentPointers;
+					for (Renderable& newRenderable : newRenderables) {
+						componentPointers.push_back(&newRenderable);
+					}
+					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changeEntityIDs, "Renderable", componentPointers));
 				}
 				else {
 					if (m_globalInfo.rendererResourceManager.models.find(m_dragDropResourcePath) != m_globalInfo.rendererResourceManager.models.end()) {
@@ -1485,15 +1513,43 @@ void Renderer::paintGL() {
 			}
 			else if (m_dragDropResourceType == DragDropResourceType::Material) {
 				if (pickedEntityID < (NO_ENTITY - 3)) {
-					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
-					if (!pickedEntity.renderable) {
-						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
+					std::set<EntityID> entityIDsToChange;
+					if ((m_globalInfo.currentEntityID == pickedEntityID) ||
+						(m_globalInfo.otherSelectedEntityIDs.find(pickedEntityID) != m_globalInfo.otherSelectedEntityIDs.end())) {
+						entityIDsToChange = m_globalInfo.otherSelectedEntityIDs;
+						entityIDsToChange.insert(m_globalInfo.currentEntityID);
+					}
+					else {
+						entityIDsToChange = { pickedEntityID };
 					}
 
-					Renderable newRenderable = pickedEntity.renderable.value();
-					newRenderable.materialPath = m_dragDropResourcePath;
-					m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
-					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable", { &newRenderable }));
+					std::vector<EntityID> entityIDsAddRenderable;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						if (!entityToChange.renderable) {
+							entityIDsAddRenderable.push_back(entityIDToChange);
+						}
+					}
+					if (!entityIDsAddRenderable.empty()) {
+						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDsAddRenderable, "Renderable"));
+					}
+
+					std::vector<EntityID> changeEntityIDs;
+					std::vector<Renderable> newRenderables;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						Renderable newRenderable = entityToChange.renderable.value();
+						newRenderable.materialPath = m_dragDropResourcePath;
+						m_globalInfo.rendererResourceManager.loadMaterial(AssetHelper::relativeToAbsolute(m_dragDropResourcePath, m_globalInfo.projectDirectory), m_dragDropResourcePath);
+
+						changeEntityIDs.push_back(entityIDToChange);
+						newRenderables.push_back(newRenderable);
+					}
+					std::vector<Component*> componentPointers;
+					for (Renderable& newRenderable : newRenderables) {
+						componentPointers.push_back(&newRenderable);
+					}
+					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changeEntityIDs, "Renderable", componentPointers));
 				}
 			}
 		}
