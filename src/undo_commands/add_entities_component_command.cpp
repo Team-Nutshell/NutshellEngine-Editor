@@ -1,6 +1,6 @@
-#include "add_entity_component_command.h"
+#include "add_entities_component_command.h"
 
-AddEntityComponentCommand::AddEntityComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName) : m_globalInfo(globalInfo) {
+AddEntitiesComponentCommand::AddEntitiesComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName) : m_globalInfo(globalInfo) {
 	if (entityIDs.size() == 1) {
 		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_add_component_entity", { componentName, m_globalInfo.entities[entityIDs[0]].name })));
 	}
@@ -11,7 +11,7 @@ AddEntityComponentCommand::AddEntityComponentCommand(GlobalInfo& globalInfo, con
 	m_componentName = componentName;
 }
 
-void AddEntityComponentCommand::undo() {
+void AddEntitiesComponentCommand::undo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		if (m_componentName == "Camera") {
 			m_globalInfo.entities[m_entityIDs[i]].camera.reset();
@@ -44,7 +44,7 @@ void AddEntityComponentCommand::undo() {
 	}
 }
 
-void AddEntityComponentCommand::redo() {
+void AddEntitiesComponentCommand::redo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		if (m_componentName == "Camera") {
 			m_globalInfo.entities[m_entityIDs[i]].camera = Camera();

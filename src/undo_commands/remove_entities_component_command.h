@@ -4,9 +4,9 @@
 #include <string>
 #include <unordered_map>
 
-class RemoveEntityComponentCommand : public QUndoCommand {
+class RemoveEntitiesComponentCommand : public QUndoCommand {
 public:
-	RemoveEntityComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName);
+	RemoveEntitiesComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName);
 
 	void undo();
 	void redo();

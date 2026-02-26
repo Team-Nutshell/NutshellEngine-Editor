@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-class AddEntityComponentCommand : public QUndoCommand {
+class AddEntitiesComponentCommand : public QUndoCommand {
 public:
-	AddEntityComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName);
+	AddEntitiesComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName);
 
 	void undo();
 	void redo();

@@ -1,6 +1,6 @@
-#include "remove_entity_component_command.h"
+#include "remove_entities_component_command.h"
 
-RemoveEntityComponentCommand::RemoveEntityComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName) : m_globalInfo(globalInfo) {
+RemoveEntitiesComponentCommand::RemoveEntitiesComponentCommand(GlobalInfo& globalInfo, const std::vector<EntityID>& entityIDs, const std::string& componentName) : m_globalInfo(globalInfo) {
 	if (entityIDs.size() == 1) {
 		setText(QString::fromStdString(m_globalInfo.localization.getString("undo_remove_component_entity", { componentName, m_globalInfo.entities[entityIDs[0]].name })));
 	}
@@ -34,7 +34,7 @@ RemoveEntityComponentCommand::RemoveEntityComponentCommand(GlobalInfo& globalInf
 	}
 }
 
-void RemoveEntityComponentCommand::undo() {
+void RemoveEntitiesComponentCommand::undo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		if (m_componentName == "Camera") {
 			m_globalInfo.entities[m_entityIDs[i]].camera = m_cameras[m_entityIDs[i]];
@@ -67,7 +67,7 @@ void RemoveEntityComponentCommand::undo() {
 	}
 }
 
-void RemoveEntityComponentCommand::redo() {
+void RemoveEntitiesComponentCommand::redo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		if (m_componentName == "Camera") {
 			m_globalInfo.entities[m_entityIDs[i]].camera.reset();

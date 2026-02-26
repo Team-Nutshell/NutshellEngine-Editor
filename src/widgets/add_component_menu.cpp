@@ -1,5 +1,5 @@
 #include "add_component_menu.h"
-#include "../undo_commands/add_entity_component_command.h"
+#include "../undo_commands/add_entities_component_command.h"
 
 AddComponentMenu::AddComponentMenu(GlobalInfo& globalInfo) : QMenu("&File"), m_globalInfo(globalInfo) {
 	addCameraComponentAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("entity_add_component_camera")), this, &AddComponentMenu::addCameraComponent);
@@ -22,7 +22,7 @@ void AddComponentMenu::addCameraComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Camera"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Camera"));
 }
 
 void AddComponentMenu::addLightComponent() {
@@ -36,7 +36,7 @@ void AddComponentMenu::addLightComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Light"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Light"));
 }
 
 void AddComponentMenu::addRenderableComponent() {
@@ -50,7 +50,7 @@ void AddComponentMenu::addRenderableComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Renderable"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Renderable"));
 }
 
 void AddComponentMenu::addRigidbodyComponent() {
@@ -64,7 +64,7 @@ void AddComponentMenu::addRigidbodyComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Rigidbody"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Rigidbody"));
 }
 
 void AddComponentMenu::addCollidableComponent() {
@@ -78,7 +78,7 @@ void AddComponentMenu::addCollidableComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Collidable"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Collidable"));
 }
 
 void AddComponentMenu::addSoundListenerComponent() {
@@ -92,7 +92,7 @@ void AddComponentMenu::addSoundListenerComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "SoundListener"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "SoundListener"));
 }
 
 void AddComponentMenu::addScriptableComponent() {
@@ -106,5 +106,5 @@ void AddComponentMenu::addScriptableComponent() {
 		}
 	}
 
-	m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, entityIDs, "Scriptable"));
+	m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDs, "Scriptable"));
 }

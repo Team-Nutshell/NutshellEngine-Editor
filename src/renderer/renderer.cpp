@@ -1,7 +1,7 @@
 #include "renderer.h"
 #include "../common/asset_helper.h"
 #include "../undo_commands/destroy_entities_command.h"
-#include "../undo_commands/add_entity_component_command.h"
+#include "../undo_commands/add_entities_component_command.h"
 #include "../undo_commands/change_entities_component_command.h"
 #include "../undo_commands/create_entities_from_model_command.h"
 #include "../undo_commands/select_asset_entities_command.h"
@@ -1455,7 +1455,7 @@ void Renderer::paintGL() {
 				if (pickedEntityID < (NO_ENTITY - 3)) {
 					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
 					if (!pickedEntity.renderable) {
-						m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
+						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
 					}
 
 					Renderable newRenderable = pickedEntity.renderable.value();
@@ -1487,7 +1487,7 @@ void Renderer::paintGL() {
 				if (pickedEntityID < (NO_ENTITY - 3)) {
 					Entity& pickedEntity = m_globalInfo.entities[pickedEntityID];
 					if (!pickedEntity.renderable) {
-						m_globalInfo.actionUndoStack->push(new AddEntityComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
+						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, { pickedEntityID }, "Renderable"));
 					}
 
 					Renderable newRenderable = pickedEntity.renderable.value();
