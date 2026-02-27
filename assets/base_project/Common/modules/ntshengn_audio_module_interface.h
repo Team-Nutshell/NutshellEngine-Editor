@@ -30,9 +30,6 @@ namespace NtshEngn {
 		// Returns true if the sound with identifier soundID has any sound source currently playing, else, returns false
 		virtual bool isSoundPlaying(SoundID soundID) = 0;
 
-		// Returns the length of the sound with identifier soundID, in seconds
-		virtual float getSoundLength(SoundID soundID) = 0;
-
 		// Sets the current time of a sound source, in seconds
 		virtual void setSoundSourceTime(SoundSourceID soundSourceID, float newTime) = 0;
 		// Returns the current time of a sound source, in seconds

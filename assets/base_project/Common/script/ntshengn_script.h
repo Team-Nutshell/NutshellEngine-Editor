@@ -881,14 +881,6 @@ namespace NtshEngn {
 			return audioModule->isSoundPlaying(soundID);
 		}
 
-		float getSoundLength(SoundID soundID) {
-			if (!audioModule) {
-				return false;
-			}
-
-			return audioModule->getSoundLength(soundID);
-		}
-
 		void setSoundSourceTime(SoundSourceID soundSourceID, float newTime) {
 			if (!audioModule) {
 				return;
