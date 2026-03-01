@@ -2483,7 +2483,7 @@ void Renderer::bindMaterial(const RendererMaterial& material) {
 			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
 		}
 		m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureName"), 2);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureSampler"), 2);
 	}
 	else {
 		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "metalnessValue"), material.metalnessValue);
@@ -2500,7 +2500,7 @@ void Renderer::bindMaterial(const RendererMaterial& material) {
 			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
 		}
 		m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureName"), 3);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureSampler"), 3);
 	}
 	else {
 		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "roughnessValue"), material.roughnessValue);
@@ -2517,7 +2517,7 @@ void Renderer::bindMaterial(const RendererMaterial& material) {
 			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
 		}
 		m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureName"), 4);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureSampler"), 4);
 	}
 	else {
 		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "occlusionValue"), material.occlusionValue);
