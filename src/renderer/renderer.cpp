@@ -47,6 +47,7 @@ Renderer::~Renderer() {
 		gl.glDeleteTextures(1, &texture.second);
 	}
 
+	gl.glDeleteFramebuffers(1, &m_sceneFramebuffer);
 	gl.glDeleteFramebuffers(1, &m_pickingFramebuffer);
 	gl.glDeleteFramebuffers(1, &m_outlineSoloFramebuffer);
 
