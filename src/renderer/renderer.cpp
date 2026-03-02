@@ -1854,15 +1854,15 @@ void Renderer::createSceneImages() {
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_sceneColorImage, 0);
 
-	gl.glGenRenderbuffers(1, &m_sceneDepthImage);
-	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthImage);
-	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
-	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_sceneDepthImage);
+	gl.glGenTextures(1, &m_sceneDepthImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_sceneDepthImage);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_sceneDepthImage, 0);
 }
 
 void Renderer::destroySceneImages() {
 	gl.glDeleteTextures(1, &m_sceneColorImage);
-	gl.glDeleteRenderbuffers(1, &m_sceneDepthImage);
+	gl.glDeleteTextures(1, &m_sceneDepthImage);
 }
 
 void Renderer::createPickingImages() {
@@ -1877,15 +1877,15 @@ void Renderer::createPickingImages() {
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingColorImage, 0);
 
-	gl.glGenRenderbuffers(1, &m_pickingDepthImage);
-	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_pickingDepthImage);
-	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
-	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_pickingDepthImage);
+	gl.glGenTextures(1, &m_pickingDepthImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_pickingDepthImage);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_pickingDepthImage, 0);
 }
 
 void Renderer::destroyPickingImages() {
 	gl.glDeleteTextures(1, &m_pickingColorImage);
-	gl.glDeleteRenderbuffers(1, &m_pickingDepthImage);
+	gl.glDeleteTextures(1, &m_pickingDepthImage);
 }
 
 void Renderer::createOutlineSoloImages() {
@@ -1900,15 +1900,15 @@ void Renderer::createOutlineSoloImages() {
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outlineSoloColorImage, 0);
 
-	gl.glGenRenderbuffers(1, &m_outlineSoloDepthImage);
-	gl.glBindRenderbuffer(GL_RENDERBUFFER, m_outlineSoloDepthImage);
-	gl.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
-	gl.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_outlineSoloDepthImage);
+	gl.glGenTextures(1, &m_outlineSoloDepthImage);
+	gl.glBindTexture(GL_TEXTURE_2D, m_outlineSoloDepthImage);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_outlineSoloDepthImage, 0);
 }
 
 void Renderer::destroyOutlineSoloImages() {
 	gl.glDeleteTextures(1, &m_outlineSoloColorImage);
-	gl.glDeleteRenderbuffers(1, &m_outlineSoloDepthImage);
+	gl.glDeleteTextures(1, &m_outlineSoloDepthImage);
 }
 
 void Renderer::createLightBuffer() {
