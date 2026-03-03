@@ -960,9 +960,9 @@ void Renderer::initializeGL() {
 	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
 
 	RendererSampler defaultSampler;
-	defaultSampler.minFilter = GL_NEAREST;
-	defaultSampler.magFilter = GL_NEAREST;
-	defaultSampler.mipmapFilter = GL_NEAREST;
+	defaultSampler.minFilter = GL_LINEAR;
+	defaultSampler.magFilter = GL_LINEAR;
+	defaultSampler.mipmapFilter = GL_LINEAR;
 	defaultSampler.wrapS = GL_CLAMP_TO_EDGE;
 	defaultSampler.wrapT = GL_CLAMP_TO_EDGE;
 	m_globalInfo.rendererResourceManager.samplers["defaultSampler"] = defaultSampler;
