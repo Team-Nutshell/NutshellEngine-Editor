@@ -73,6 +73,10 @@ void FileSelectorWidget::mousePressEvent(QMouseEvent* event) {
 	else if (event->buttons() & Qt::MiddleButton) {
 		if (!m_path.empty() && !std::filesystem::path(m_path).is_absolute() && std::filesystem::exists(AssetHelper::relativeToAbsolute(m_path, m_globalInfo.projectDirectory))) {
 			m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->openPath(m_path);
+			QList<QListWidgetItem*> selectedItems = m_globalInfo.mainWindow->resourceSplitter->assetPanel->assetList->findItems(QString::fromStdString(m_path.substr(m_path.rfind('/') + 1)), Qt::MatchFlag::MatchExactly);
+			if (!selectedItems.empty()) {
+				selectedItems[0]->setSelected(true);
+			}
 		}
 	}
 	event->accept();
