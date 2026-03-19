@@ -202,6 +202,8 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
 					currentEntityID = entityListItem->entityID;
 				}
+
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 		}
 		else if (event->key() == Qt::Key_Up) {
@@ -216,6 +218,8 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex - 1));
 					currentEntityID = entityListItem->entityID;
 				}
+
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 			else {
 				std::vector<int> entityIndexes = { currentSelectionIndex };
@@ -256,6 +260,8 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 					EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex + 1));
 					currentEntityID = entityListItem->entityID;
 				}
+
+				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 			else {
 				std::vector<int> entityIndexes = { currentSelectionIndex };
@@ -292,7 +298,6 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			entityListItem->setFlags(entityListItem->flags() | Qt::ItemFlag::ItemIsEditable);
 			editItem(entityListItem);
 		}
-		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 	}
 }
 
