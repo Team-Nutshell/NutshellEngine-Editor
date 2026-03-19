@@ -39,6 +39,8 @@ struct RendererParameters {
 	float gridCellSize = 1.0f;
 	float gridSubcellSize = 0.25f;
 
+	uint32_t shadowMapResolution = 2048;
+
 	bool maintainGizmoSize = true;
 	float gizmoSize = 1.0f;
 	nml::vec3 gizmoTranslationStep = nml::vec3(0.25f, 0.25f, 0.25f);

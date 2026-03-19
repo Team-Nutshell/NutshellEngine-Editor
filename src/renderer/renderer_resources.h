@@ -43,6 +43,9 @@ struct RendererMesh {
 	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
 	GLuint indexCount = 0;
+
+	nml::vec3 aabbMin = nml::vec3(std::numeric_limits<float>::max());
+	nml::vec3 aabbMax = nml::vec3(std::numeric_limits<float>::lowest());
 };
 
 struct RendererMaterial {
@@ -90,4 +93,9 @@ struct RendererPrimitive {
 
 struct RendererModel {
 	std::vector<RendererPrimitive> primitives;
+};
+
+struct Shadow {
+	nml::mat4 viewProj;
+	nml::vec4 splitDepth;
 };

@@ -31,11 +31,19 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 Renderer::~Renderer() {
 	gl.glDeleteBuffers(1, &m_lightBuffer);
+	gl.glDeleteBuffers(1, &m_shadowMapBuffer);
 
 	for (const auto& model : m_globalInfo.rendererResourceManager.rendererModels) {
 		for (const auto& primitive : model.second.primitives) {
 			gl.glDeleteBuffers(1, &primitive.mesh.vertexBuffer);
 			gl.glDeleteBuffers(1, &primitive.mesh.indexBuffer);
+		}
+	}
+
+	if (m_shadowMapImage != 0xFFFFFFFF) {
+		gl.glDeleteTextures(1, &m_shadowMapImage);
+		for (size_t i = 0; i < m_shadowMapFramebuffers.size(); i++) {
+			gl.glDeleteFramebuffers(1, &m_shadowMapFramebuffers[i]);
 		}
 	}
 
@@ -52,6 +60,7 @@ Renderer::~Renderer() {
 	gl.glDeleteFramebuffers(1, &m_outlineSoloFramebuffer);
 
 	gl.glDeleteProgram(m_entityProgram);
+	gl.glDeleteProgram(m_shadowProgram);
 	gl.glDeleteProgram(m_cameraFrustumProgram);
 	gl.glDeleteProgram(m_grid3DProgram);
 	gl.glDeleteProgram(m_pickingProgram);
@@ -121,6 +130,10 @@ void Renderer::initializeGL() {
 	#version 460
 
 	#define M_PI 3.1415926535897932384626433832795
+	
+	#define SHADOW_MAPPING_CASCADE_COUNT )GLSL";
+	entityFragmentShaderCode += std::to_string(SHADOW_MAPPING_CASCADE_COUNT);
+	entityFragmentShaderCode += R"GLSL(
 
 	struct TriplanarUV {
 		vec2 x;
@@ -135,6 +148,13 @@ void Renderer::initializeGL() {
 		11.0 / 17.0, 7.0 / 17.0, 10.0 / 17.0, 6.0 / 17.0
 	);
 
+	const mat4 shadowOffset = mat4(
+		0.5, 0.0, 0.0, 0.0,
+		0.0, 0.5, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.5, 0.5, 0.0, 1.0
+	);
+
 	struct Light {
 		vec3 position;
 		vec3 direction;
@@ -142,6 +162,11 @@ void Renderer::initializeGL() {
 		float intensity;
 		vec2 cutoff;
 		float distance;
+	};
+
+	struct Shadow {
+		mat4 viewProj;
+		float splitDepth;
 	};
 
 	in vec3 fragPosition;
@@ -181,11 +206,18 @@ void Renderer::initializeGL() {
 	uniform bool enableShading;
 
 	uniform vec3 cameraPosition;
+	uniform mat4 view;
 
-	restrict readonly buffer LightBuffer {
+	uniform sampler2DArray shadowMapSampler;
+
+	layout(binding = 0) restrict readonly buffer LightBuffer {
 		uvec4 count;
 		Light info[];
 	} lights;
+
+	layout(binding = 1) restrict readonly buffer ShadowMapBuffer {
+		Shadow info[];
+	} shadows;
 
 	out vec4 outColor;
 
@@ -253,6 +285,58 @@ void Renderer::initializeGL() {
 		const vec3 brdf = brdf(LdotH, NdotH, VdotH, LdotN, VdotN, diffuse, metalness, roughness);
 	
 		return lc * brdf * LdotN;
+	}
+
+	vec2 sampleCube(vec3 direction, out uint faceIndex) {
+		vec3 directionAbs = abs(direction);
+		float offset = 0.0f;
+		vec2 uv;
+		if ((directionAbs.z >= directionAbs.x) && (directionAbs.z >= directionAbs.y)) {
+			faceIndex = (direction.z < 0.0) ? 5 : 4;
+			offset = 0.5 / directionAbs.z;
+			uv = vec2((direction.z < 0.0) ? -direction.x : direction.x, -direction.y);
+		}
+		else if (directionAbs.y >= directionAbs.x) {
+			faceIndex = (direction.y < 0.0) ? 3 : 2;
+			offset = 0.5 / directionAbs.y;
+			uv = vec2(direction.x, (direction.y < 0.0) ? -direction.z : direction.z);
+		}
+		else {
+			faceIndex = (direction.x < 0.0) ? 1 : 0;
+			offset = 0.5 / directionAbs.x;
+			uv = vec2((direction.x < 0.0) ? direction.z : -direction.z, -direction.y);
+		}
+
+		return (uv * offset) + 0.5;
+	}
+
+	// Shadow maps
+	float shadowValue(uint shadowLayer, vec4 shadowCoord, float bias) {
+		float shadow = 0.0;
+		if ((shadowCoord.z < -1.0) || (shadowCoord.z > 1.0)) {
+			return 1.0;
+		}
+
+		const vec2 texelSize = 0.75 * (1.0 / vec2(textureSize(shadowMapSampler, 0).xy));
+		for (int x = -1; x <= 1; x++) {
+			for (int y = -1; y <= 1; y++) {
+				const float depth = texture(shadowMapSampler, vec3(shadowCoord.xy + (vec2(x, y) * texelSize), float(shadowLayer))).r;
+				if (depth >= (shadowCoord.z - bias)) {
+					shadow += 1.0;
+				}
+			}
+		}
+
+		return shadow / 9.0;
+	}
+
+	float shadowCubeValue(uint shadowLayer, uint faceIndex, vec2 uv, float currentDepth, float bias) {
+		const float depth = texture(shadowMapSampler, vec3(uv, float(shadowLayer + faceIndex))).r;
+		if (depth >= (currentDepth - bias)) {
+			return 1.0;
+		}
+
+		return 0.0;
 	}
 
 	vec3 sRGBToLinear(vec3 rgb) {
@@ -397,8 +481,10 @@ void Renderer::initializeGL() {
 		if (enableShading) {
 			const vec3 d = diffuseTextureSample.rgb;
 			const vec3 v = normalize(cameraPosition - fragPosition);
+			const vec3 viewPosition = vec3(view * vec4(fragPosition, 1.0));
 			
 			uint lightIndex = 0;
+			uint shadowLayer = 0;
 
 			// Directional Lights
 			for (uint i = 0; i < lights.count.x; i++) {
@@ -407,12 +493,23 @@ void Renderer::initializeGL() {
 				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
+					shadowLayer += SHADOW_MAPPING_CASCADE_COUNT;
 					continue;
 				}
 
-				outColor.rgb += shade(n, v, l, lights.info[lightIndex].color * lights.info[lightIndex].intensity, d, metalnessTextureSample, roughnessTextureSample);
+				uint cascadeIndex = 0;
+				for (uint j = 0; j < SHADOW_MAPPING_CASCADE_COUNT - 1; j++) {
+					if (viewPosition.z < shadows.info[shadowLayer + j].splitDepth) {
+						cascadeIndex = j + 1;
+					}
+				}
+
+				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + cascadeIndex].viewProj) * vec4(fragPosition, 1.0);
+
+				outColor.rgb += shade(n, v, l, lights.info[lightIndex].color * lights.info[lightIndex].intensity, d, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer + cascadeIndex, shadowCoord / shadowCoord.w, 0.0025);
 
 				lightIndex++;
+				shadowLayer += SHADOW_MAPPING_CASCADE_COUNT;
 			}
 
 			// Point Lights
@@ -422,21 +519,31 @@ void Renderer::initializeGL() {
 				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
+					shadowLayer += 6;
 					continue;
 				}
 
 				float distance = length(lights.info[lightIndex].position - fragPosition);
 				if (distance > lights.info[lightIndex].distance) {
 					lightIndex++;
+					shadowLayer += 6;
 					continue;
 				}
 
 				float attenuation = 1.0 / (distance * distance);
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * attenuation;
 
-				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample);
+				vec3 lightDirection = fragPosition - lights.info[lightIndex].position;
+
+				uint faceIndex;
+				vec2 cubeUV = sampleCube(lightDirection, faceIndex);
+
+				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + faceIndex].viewProj) * vec4(fragPosition, 1.0);
+
+				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample) * shadowCubeValue(shadowLayer, faceIndex, cubeUV, shadowCoord.z / shadowCoord.w, 0.0005);
 
 				lightIndex++;
+				shadowLayer += 6;
 			}
 
 			// Spot Lights
@@ -446,12 +553,14 @@ void Renderer::initializeGL() {
 				float LdotN = dot(l, n);
 				if (LdotN < 0.0f) {
 					lightIndex++;
+					shadowLayer += 1;
 					continue;
 				}
 
 				float distance = length(lights.info[lightIndex].position - fragPosition);
 				if (distance > lights.info[lightIndex].distance) {
 					lightIndex++;
+					shadowLayer += 1;
 					continue;
 				}
 
@@ -461,9 +570,12 @@ void Renderer::initializeGL() {
 				intensity = 1.0 - intensity;
 				vec3 radiance = (lights.info[lightIndex].color * lights.info[lightIndex].intensity) * intensity;
 
-				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample);
+				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer].viewProj) * vec4(fragPosition, 1.0);
+
+				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.0025);
 
 				lightIndex++;
+				shadowLayer += 1;
 			}
 
 			// Ambient Lights
@@ -487,8 +599,112 @@ void Renderer::initializeGL() {
 
 	m_entityProgram = compileProgram(entityVertexShader, entityFragmentShader);
 
-	gl.glGenFramebuffers(1, &m_sceneFramebuffer);
-	createSceneImages();
+	// Shadow
+	std::string shadowVertexShaderCode = R"GLSL(
+	#version 460
+
+	in vec3 position;
+	in vec3 normal;
+	in vec2 uv;
+
+	uniform mat4 viewProj;
+	uniform mat4 model;
+
+	out vec3 fragPosition;
+	out vec3 fragNormal;
+	out vec2 fragUV;
+
+	void main() {
+		fragPosition = vec3(model * vec4(position, 1.0));
+		fragUV = uv;
+		
+		mat4 transposeInverseModel = transpose(inverse(model));
+		fragNormal = vec3(normalize(transposeInverseModel * vec4(normal, 0.0)));
+
+		gl_Position = viewProj * vec4(fragPosition, 1.0);
+	}
+	)GLSL";
+	GLuint shadowVertexShader = compileShader(GL_VERTEX_SHADER, shadowVertexShaderCode);
+
+	std::string shadowFragmentShaderCode = R"GLSL(
+	#version 460
+
+	struct TriplanarUV {
+		vec2 x;
+		vec2 y;
+		vec2 z;
+	};
+
+	const mat4 ditheringThreshold = mat4(
+		1.0 / 17.0, 13.0 / 17.0, 4.0 / 17.0, 16.0 / 17.0,
+		9.0 / 17.0, 5.0 / 17.0, 12.0 / 17.0, 8.0 / 17.0,
+		3.0 / 17.0, 15.0 / 17.0, 2.0 / 17.0, 14.0 / 17.0,
+		11.0 / 17.0, 7.0 / 17.0, 10.0 / 17.0, 6.0 / 17.0
+	);
+
+	in vec3 fragPosition;
+	in vec3 fragNormal;
+	in vec2 fragUV;
+
+	uniform bool hasDiffuseTexture;
+	uniform sampler2D diffuseTextureSampler;
+	uniform vec4 diffuseColor;
+
+	uniform float alphaCutoff;
+
+	uniform bool useTriplanarMapping;
+	uniform vec2 scaleUV;
+	uniform vec2 offsetUV;
+
+	void main() {
+		vec4 diffuseTextureSample = diffuseColor;
+	
+		if (!useTriplanarMapping) {
+			vec2 scaleOffsetUV = (fragUV * scaleUV) + offsetUV;
+
+			if (hasDiffuseTexture) {
+				diffuseTextureSample = texture(diffuseTextureSampler, scaleOffsetUV);
+			}
+		}
+		else {
+			TriplanarUV triplanarUV;
+			triplanarUV.x = fragPosition.zy;
+			triplanarUV.x.y = -triplanarUV.x.y;
+			if (fragNormal.x >= 0.0) {
+				triplanarUV.x.x = -triplanarUV.x.x;
+			}
+			triplanarUV.y = fragPosition.xz;
+			if (fragNormal.y < 0.0) {
+				triplanarUV.y.y = -triplanarUV.y.y;
+			}
+			triplanarUV.z = fragPosition.xy;
+			triplanarUV.z.y = -triplanarUV.z.y;
+			if (fragNormal.z < 0.0) {
+				triplanarUV.z.x = -triplanarUV.z.x;
+			}
+
+			triplanarUV.x = (triplanarUV.x * scaleUV) + offsetUV;
+			triplanarUV.y = (triplanarUV.y * scaleUV) + offsetUV;
+			triplanarUV.z = (triplanarUV.z * scaleUV) + offsetUV;
+
+			vec3 triplanarWeights = abs(fragNormal);
+			triplanarWeights /= (triplanarWeights.x + triplanarWeights.y + triplanarWeights.z);
+
+			if (hasDiffuseTexture) {
+				diffuseTextureSample = (texture(diffuseTextureSampler, triplanarUV.x) * triplanarWeights.x) +
+					(texture(diffuseTextureSampler, triplanarUV.y) * triplanarWeights.y) +
+					(texture(diffuseTextureSampler, triplanarUV.z) * triplanarWeights.z);
+			}
+		}
+
+		if ((diffuseTextureSample.a < alphaCutoff) || (diffuseTextureSample.a < ditheringThreshold[int(mod(gl_FragCoord.x, 4.0))][int(mod(gl_FragCoord.y, 4.0))])) {
+			discard;
+		}
+	}
+	)GLSL";
+	GLuint shadowFragmentShader = compileShader(GL_FRAGMENT_SHADER, shadowFragmentShaderCode);
+
+	m_shadowProgram = compileProgram(shadowVertexShader, shadowFragmentShader);
 
 	// Camera frustum
 	std::string cameraFrustumVertexShaderCode = R"GLSL(
@@ -921,6 +1137,9 @@ void Renderer::initializeGL() {
 
 	m_colliderProgram = compileProgram(colliderVertexShader, colliderFragmentShader);
 
+	gl.glGenFramebuffers(1, &m_sceneFramebuffer);
+	createSceneImages();
+
 	// Cube indices
 	GLuint cubeTriangleIndexBuffer;
 	gl.glGenBuffers(1, &cubeTriangleIndexBuffer);
@@ -945,6 +1164,8 @@ void Renderer::initializeGL() {
 	defaultCubePrimitive.mesh.vertexBuffer = defaultCubeVertexBuffer;
 	defaultCubePrimitive.mesh.indexBuffer = cubeTriangleIndexBuffer;
 	defaultCubePrimitive.mesh.indexCount = static_cast<GLuint>(cubeTriangleIndices.size());
+	defaultCubePrimitive.mesh.aabbMin = nml::vec3(-0.05f, -0.05f, -0.05f);
+	defaultCubePrimitive.mesh.aabbMax = nml::vec3(0.05f, 0.05f, 0.05f);
 
 	RendererModel defaultCubeModel;
 	defaultCubeModel.primitives.push_back(defaultCubePrimitive);
@@ -1023,6 +1244,18 @@ void Renderer::initializeGL() {
 	// Light
 	createLightBuffer();
 
+	// Shadow maps
+	gl.glGenTextures(1, &m_shadowMapDummyImage);
+	gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapDummyImage);
+	float shadowDummy = 1.0f;
+	gl45.glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, 1, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &shadowDummy);
+	gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	gl.glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY, 1.0f);
+	createShadowMapBuffer();
+
 	// Start render
 	m_waitTimer.setInterval(16);
 	m_waitTimer.start();
@@ -1044,14 +1277,62 @@ void Renderer::paintGL() {
 
 	updateCamera();
 
+	gl45.glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
 	if (m_globalInfo.editorParameters.renderer.enableLighting) {
 		updateLights();
+
+		// Shadow maps
+		gl.glDisable(GL_CULL_FACE);
+		gl.glViewport(0, 0, static_cast<GLsizei>(m_shadowMapResolution), static_cast<GLsizei>(m_shadowMapResolution));
+		for (size_t i = 0; i < m_shadowInfo.size(); i++) {
+			gl.glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFramebuffers[i]);
+			gl.glClearDepthf(1.0f);
+			gl.glClear(GL_DEPTH_BUFFER_BIT);
+			gl.glEnable(GL_DEPTH_TEST);
+			gl.glDepthFunc(GL_LESS);
+			gl.glDepthMask(GL_TRUE);
+			gl.glEnable(GL_DEPTH_CLAMP);
+
+			gl.glUseProgram(m_shadowProgram);
+			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_shadowProgram, "viewProj"), 1, false, m_shadowInfo[i].viewProj.data());
+
+			std::vector<Entity> lightEntities = frustumCulling(m_shadowInfo[i].viewProj, false, true);
+
+			for (const Entity& entity : lightEntities) {
+				if (entity.renderable &&
+					(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+					(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+					(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
+					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
+					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
+					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_shadowProgram, "model"), 1, false, modelMatrix.data());
+
+					const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
+					const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
+					const RendererMesh& entityMesh = entityPrimitive.mesh;
+
+					bindMesh(entityMesh, m_shadowProgram);
+
+					const RendererMaterial& material = !entity.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.renderable->materialPath] : entityPrimitive.material;
+
+					bindMaterial(material, m_shadowProgram, 0);
+
+					gl.glDrawElements(GL_TRIANGLES, entityMesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
+			}
+		}
 	}
 
-	gl45.glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+	// Scene
+	gl.glViewport(0, 0, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 
 	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
 		gl.glEnable(GL_CULL_FACE);
+		gl.glCullFace(GL_BACK);
 	}
 	else {
 		gl.glDisable(GL_CULL_FACE);
@@ -1064,17 +1345,32 @@ void Renderer::paintGL() {
 	gl.glEnable(GL_DEPTH_TEST);
 	gl.glDepthFunc(GL_GREATER);
 	gl.glDepthMask(GL_TRUE);
+	gl.glDisable(GL_DEPTH_CLAMP);
 	gl.glEnable(GL_BLEND);
 	gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Entities
 	gl.glUseProgram(m_entityProgram);
 	gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+	gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_entityProgram, "view"), 1, false, m_camera.viewMatrix.data());
 
-	for (const auto& entity : m_globalInfo.entities) {
-		if (entity.second.isVisible) {
-			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
-			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
+	if (m_shadowMapImage != 0xFFFFFFFF) {
+		gl.glActiveTexture(GL_TEXTURE6);
+		gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapImage);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "shadowMapSampler"), 6);
+	}
+	else {
+		gl.glActiveTexture(GL_TEXTURE6);
+		gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapDummyImage);
+		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "shadowMapSampler"), 6);
+	}
+
+	std::vector<Entity> cameraEntities = frustumCulling(m_camera.viewProjNonReversedMatrix, true, false);
+
+	for (const Entity& entity : cameraEntities) {
+		if (entity.isVisible) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
 			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
@@ -1084,30 +1380,17 @@ void Renderer::paintGL() {
 
 			bool hasMesh = false;
 			RendererMaterial primitiveMaterial;
-			if (entity.second.renderable &&
-				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
-				(entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
-				(entity.second.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath].primitives.size())) {
+			if (entity.renderable &&
+				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+				(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+				(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
 				// Entity has a mesh
-				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath];
-				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.second.renderable->primitiveIndex];
+				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
+				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
 				const RendererMesh& entityMesh = entityPrimitive.mesh;
 				primitiveMaterial = entityPrimitive.material;
 
-				gl.glBindBuffer(GL_ARRAY_BUFFER, entityMesh.vertexBuffer);
-				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
-				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
-				GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
-				GLint tangentPos = gl.glGetAttribLocation(m_entityProgram, "tangent");
-				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-				gl.glEnableVertexAttribArray(normalPos);
-				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 48, (void*)12);
-				gl.glEnableVertexAttribArray(uvPos);
-				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 48, (void*)24);
-				gl.glEnableVertexAttribArray(tangentPos);
-				gl.glVertexAttribPointer(tangentPos, 4, GL_FLOAT, false, 48, (void*)32);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityMesh.indexBuffer);
+				bindMesh(entityMesh, m_entityProgram);
 
 				indexCount = entityMesh.indexCount;
 				hasMesh = true;
@@ -1116,29 +1399,17 @@ void Renderer::paintGL() {
 				// Entity does not have a mesh, default cube
 				const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
 				const RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
-				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-				GLint positionPos = gl.glGetAttribLocation(m_entityProgram, "position");
-				GLint normalPos = gl.glGetAttribLocation(m_entityProgram, "normal");
-				GLint uvPos = gl.glGetAttribLocation(m_entityProgram, "uv");
-				GLint tangentPos = gl.glGetAttribLocation(m_entityProgram, "tangent");
-				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-				gl.glEnableVertexAttribArray(normalPos);
-				gl.glVertexAttribPointer(normalPos, 3, GL_FLOAT, false, 48, (void*)12);
-				gl.glEnableVertexAttribArray(uvPos);
-				gl.glVertexAttribPointer(uvPos, 2, GL_FLOAT, false, 48, (void*)24);
-				gl.glEnableVertexAttribArray(tangentPos);
-				gl.glVertexAttribPointer(tangentPos, 4, GL_FLOAT, false, 48, (void*)32);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+				
+				bindMesh(defaultMesh, m_entityProgram);
 
 				indexCount = defaultMesh.indexCount;
 			}
 
 			if (hasMesh &&
-				entity.second.renderable) {
+				entity.renderable) {
 				// Entity has a material
-				const RendererMaterial& material = !entity.second.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.second.renderable->materialPath] : primitiveMaterial;
-				bindMaterial(material);
+				const RendererMaterial& material = !entity.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.renderable->materialPath] : primitiveMaterial;
+				bindMaterial(material, m_entityProgram, 0);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), m_globalInfo.editorParameters.renderer.enableLighting);
 
@@ -1146,8 +1417,8 @@ void Renderer::paintGL() {
 			}
 			else {
 				// Entity has no material or no mesh, default material
-				RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-				bindMaterial(defaultModelPrimitive.material);
+				const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
+				bindMaterial(defaultModelPrimitive.material, m_entityProgram, 0);
 
 				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
 
@@ -1165,11 +1436,7 @@ void Renderer::paintGL() {
 		gl.glUseProgram(m_cameraFrustumProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-		gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
-		GLint positionPos = gl.glGetAttribLocation(m_cameraFrustumProgram, "position");
-		gl.glEnableVertexAttribArray(positionPos);
-		gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-		gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
+		bindMesh(m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh, m_cameraFrustumProgram);
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
@@ -1225,11 +1492,8 @@ void Renderer::paintGL() {
 
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.first)];
 					const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
-					gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_colliderProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
+
+					bindMesh(colliderPrimitive.mesh, m_colliderProgram);
 
 					gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1296,46 +1560,37 @@ void Renderer::paintGL() {
 		gl.glUseProgram(m_pickingProgram);
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-		for (const auto& entity : m_globalInfo.entities) {
-			if (entity.second.isVisible) {
-				bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
-				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
+		for (const Entity& entity : cameraEntities) {
+			if (entity.isVisible) {
+				bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
+				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
 				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 				nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
-				glex.glUniform1ui(gl.glGetUniformLocation(m_pickingProgram, "entityID"), entity.second.entityID);
+				glex.glUniform1ui(gl.glGetUniformLocation(m_pickingProgram, "entityID"), entity.entityID);
 
-				if (entity.second.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
-					const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath];
-					if ((entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.second.renderable->primitiveIndex < entityModel.primitives.size())) {
-						const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.second.renderable->primitiveIndex];
-						gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
-						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
-						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
+				if (entity.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+					const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
+					if ((entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.renderable->primitiveIndex < entityModel.primitives.size())) {
+						const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
+
+						bindMesh(entityPrimitive.mesh, m_pickingProgram);
 
 						gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 					else {
 						RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
-						gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
-						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+
+						bindMesh(defaultMesh, m_pickingProgram);
 
 						gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 				}
 				else {
 					RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
-					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+
+					bindMesh(defaultMesh, m_pickingProgram);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1390,11 +1645,8 @@ void Renderer::paintGL() {
 						glex.glUniform1ui(gl.glGetUniformLocation(m_pickingProgram, "entityID"), NO_ENTITY - (3 - static_cast<GLuint>(i)));
 
 						const RendererPrimitive& gizmoPrimitive = gizmoModel.primitives[i];
-						gl.glBindBuffer(GL_ARRAY_BUFFER, gizmoPrimitive.mesh.vertexBuffer);
-						GLint positionPos = gl.glGetAttribLocation(m_pickingProgram, "position");
-						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gizmoPrimitive.mesh.indexBuffer);
+
+						bindMesh(gizmoPrimitive.mesh, m_pickingProgram);
 
 						gl.glDrawElements(GL_TRIANGLES, gizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
@@ -1596,32 +1848,23 @@ void Renderer::paintGL() {
 				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
 				if ((entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.renderable->primitiveIndex < entityModel.primitives.size())) {
 					const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
-					gl.glBindBuffer(GL_ARRAY_BUFFER, entityPrimitive.mesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entityPrimitive.mesh.indexBuffer);
+
+					bindMesh(entityPrimitive.mesh, m_outlineSoloProgram);
 
 					gl.glDrawElements(GL_TRIANGLES, entityPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 				else {
 					RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
-					gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+
+					bindMesh(defaultMesh, m_outlineSoloProgram);
 
 					gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 			}
 			else {
 				RendererMesh& defaultMesh = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
-				gl.glBindBuffer(GL_ARRAY_BUFFER, defaultMesh.vertexBuffer);
-				GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-				gl.glEnableVertexAttribArray(positionPos);
-				gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-				gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, defaultMesh.indexBuffer);
+
+				bindMesh(defaultMesh, m_outlineSoloProgram);
 
 				gl.glDrawElements(GL_TRIANGLES, defaultMesh.indexCount, GL_UNSIGNED_INT, NULL);
 			}
@@ -1642,11 +1885,7 @@ void Renderer::paintGL() {
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
 
-					gl.glBindBuffer(GL_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexBuffer);
+					bindMesh(m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh, m_outlineSoloProgram);
 
 					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1659,11 +1898,8 @@ void Renderer::paintGL() {
 						const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.entityID)];
 						gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 						const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
-						gl.glBindBuffer(GL_ARRAY_BUFFER, colliderPrimitive.mesh.vertexBuffer);
-						GLint positionPos = gl.glGetAttribLocation(m_outlineSoloProgram, "position");
-						gl.glEnableVertexAttribArray(positionPos);
-						gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-						gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, colliderPrimitive.mesh.indexBuffer);
+
+						bindMesh(colliderPrimitive.mesh, m_outlineSoloProgram);
 
 						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
@@ -1773,11 +2009,8 @@ void Renderer::paintGL() {
 						}
 					}
 					gl.glUniform3f(gl.glGetUniformLocation(m_gizmoProgram, "axisColor"), gizmoAxisColor.x, gizmoAxisColor.y, gizmoAxisColor.z);
-					gl.glBindBuffer(GL_ARRAY_BUFFER, gizmoPrimitive.mesh.vertexBuffer);
-					GLint positionPos = gl.glGetAttribLocation(m_gizmoProgram, "position");
-					gl.glEnableVertexAttribArray(positionPos);
-					gl.glVertexAttribPointer(positionPos, 3, GL_FLOAT, false, 48, (void*)0);
-					gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gizmoPrimitive.mesh.indexBuffer);
+
+					bindMesh(gizmoPrimitive.mesh, m_gizmoProgram);
 
 					gl.glDrawElements(GL_TRIANGLES, gizmoPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1917,6 +2150,12 @@ void Renderer::createLightBuffer() {
 	gl.glBufferData(GL_SHADER_STORAGE_BUFFER, 32768, NULL, GL_DYNAMIC_DRAW);
 }
 
+void Renderer::createShadowMapBuffer() {
+	gl.glGenBuffers(1, &m_shadowMapBuffer);
+	gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shadowMapBuffer);
+	gl.glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(nml::mat4) * 1000, NULL, GL_DYNAMIC_DRAW);
+}
+
 bool Renderer::anyEntityTransformMode() {
 	return m_translateEntityMode || m_rotateEntityMode || m_scaleEntityMode;
 }
@@ -2039,6 +2278,10 @@ void Renderer::updateLights() {
 	std::vector<nml::vec4> spotLightsInfos;
 	std::vector<nml::vec4> ambientLightsInfos;
 
+	std::vector<Entity> directionalLightEntities;
+	std::vector<Entity> pointLightEntities;
+	std::vector<Entity> spotLightEntities;
+
 	for (const auto& entity : m_globalInfo.entities) {
 		if (entity.second.light) {
 			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
@@ -2068,6 +2311,8 @@ void Renderer::updateLights() {
 				directionalLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
 				directionalLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				directionalLightsInfos.push_back(nml::vec4());
+
+				directionalLightEntities.push_back(entity.second);
 			}
 			else if (light.type == "Point") {
 				lightsCount[1]++;
@@ -2076,6 +2321,8 @@ void Renderer::updateLights() {
 				pointLightsInfos.push_back(nml::vec4());
 				pointLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				pointLightsInfos.push_back(nml::vec4(0.0f, 0.0f, light.distance, 0.0f));
+
+				pointLightEntities.push_back(entity.second);
 			}
 			else if (light.type == "Spot") {
 				lightsCount[2]++;
@@ -2093,6 +2340,8 @@ void Renderer::updateLights() {
 				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(lightColor, light.intensity));
 				spotLightsInfos.push_back(nml::vec4(nml::toRad(light.cutoff.x), nml::toRad(light.cutoff.y), light.distance, 0.0f));
+
+				spotLightEntities.push_back(entity.second);
 			}
 			else if (light.type == "Ambient") {
 				lightsCount[3]++;
@@ -2110,6 +2359,306 @@ void Renderer::updateLights() {
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.size() * sizeof(nml::vec4), pointLightsInfos.data());
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4) + pointLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.size() * sizeof(nml::vec4), spotLightsInfos.data());
 	gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(uint32_t) + directionalLightsInfos.size() * sizeof(nml::vec4) + pointLightsInfos.size() * sizeof(nml::vec4) + spotLightsInfos.size() * sizeof(nml::vec4), ambientLightsInfos.size() * sizeof(nml::vec4), ambientLightsInfos.data());
+
+	// Shadow maps
+	m_shadowInfo.clear();
+
+	std::array<float, SHADOW_MAPPING_CASCADE_COUNT> cascadeSplits;
+
+	const float clipRange = m_globalInfo.editorParameters.renderer.cameraFarPlane - m_globalInfo.editorParameters.renderer.cameraNearPlane;
+	const float clipRatio = m_globalInfo.editorParameters.renderer.cameraFarPlane / m_globalInfo.editorParameters.renderer.cameraNearPlane;
+
+	for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAPPING_CASCADE_COUNT; cascadeIndex++) {
+		const float p = (cascadeIndex + 1) / static_cast<float>(SHADOW_MAPPING_CASCADE_COUNT);
+		const float log = m_globalInfo.editorParameters.renderer.cameraNearPlane * std::pow(clipRatio, p);
+		const float uniform = m_globalInfo.editorParameters.renderer.cameraNearPlane + (clipRange * p);
+		const float d = SHADOW_MAPPING_CASCADE_SPLIT_LAMBDA * (log - uniform) + uniform;
+		cascadeSplits[cascadeIndex] = (d - m_globalInfo.editorParameters.renderer.cameraNearPlane) / clipRange;
+	}
+
+	std::array<nml::vec3, 8> frustumCorners = { nml::vec3(-1.0f, 1.0f, 0.0f),
+		nml::vec3(1.0f, 1.0f, 0.0f),
+		nml::vec3(1.0f, -1.0f, 0.0f),
+		nml::vec3(-1.0f, -1.0f, 0.0f),
+		nml::vec3(-1.0f, 1.0f, 1.0f),
+		nml::vec3(1.0f, 1.0f, 1.0f),
+		nml::vec3(1.0f, -1.0f, 1.0f),
+		nml::vec3(-1.0f, -1.0f, 1.0f)
+	};
+
+	const nml::mat4 inverseViewProj = nml::inverse(m_camera.viewProjNonReversedMatrix);
+	for (uint8_t i = 0; i < 8; i++) {
+		const nml::vec4 inverseFrustumCorner = inverseViewProj * nml::vec4(frustumCorners[i], 1.0f);
+		frustumCorners[i] = inverseFrustumCorner / inverseFrustumCorner.w;
+	}
+
+	float lastSplitDistance = 0.0f;
+	for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAPPING_CASCADE_COUNT; cascadeIndex++) {
+		const float splitDistance = cascadeSplits[cascadeIndex];
+
+		std::array<nml::vec3, 8> cascadeFrustumCorners = frustumCorners;
+
+		for (uint8_t i = 0; i < 4; i++) {
+			const nml::vec3 distance = cascadeFrustumCorners[i + 4] - cascadeFrustumCorners[i];
+			cascadeFrustumCorners[i + 4] = cascadeFrustumCorners[i] + (distance * splitDistance);
+			cascadeFrustumCorners[i] = cascadeFrustumCorners[i] + (distance * lastSplitDistance);
+		}
+
+		nml::vec3 cascadeFrustumCenter = { 0.0f, 0.0f, 0.0f };
+		for (uint8_t i = 0; i < 8; i++) {
+			cascadeFrustumCenter += cascadeFrustumCorners[i];
+		}
+		cascadeFrustumCenter /= 8.0f;
+
+		float radius = 0.0f;
+		for (uint8_t i = 0; i < 8; i++) {
+			const float distanceToCenter = (cascadeFrustumCorners[i] - cascadeFrustumCenter).length();
+			radius = std::max(radius, distanceToCenter);
+		}
+		radius = std::ceil(radius * 16.0f) / 16.0f;
+		const float texelsPerUnit = static_cast<float>(m_globalInfo.editorParameters.renderer.shadowMapResolution) / (radius * 2.0f);
+		const nml::mat4 scale = nml::scale(nml::vec3(texelsPerUnit, texelsPerUnit, texelsPerUnit));
+
+		for (const Entity& directionalLightEntity : directionalLightEntities) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(directionalLightEntity.entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[directionalLightEntity.entityID] : directionalLightEntity.transform;
+
+			const nml::vec3 baseLightDirection = nml::normalize(directionalLightEntity.light->direction);
+			const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
+			const float baseDirectionPitch = -std::asin(baseLightDirection.y);
+			const nml::vec3 lightDirection = nml::normalize(nml::vec3(
+				std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
+				-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
+				std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
+			));
+			const nml::vec3 upVector = (std::abs(nml::dot(lightDirection, nml::vec3(0.0f, 1.0f, 0.0f))) == 1.0f) ? nml::vec3(1.0f, 0.0f, 0.0f) : nml::vec3(0.0f, 1.0f, 0.0f);
+
+			const nml::mat4 scaledLightView = scale * nml::lookAtRH(nml::vec3(0.0f, 0.0f, 0.0f), -lightDirection, upVector);
+			nml::vec3 fixedCenter = nml::vec3(scaledLightView * nml::vec4(cascadeFrustumCenter, 0.0f));
+			fixedCenter.x = static_cast<float>(std::floor(fixedCenter.x));
+			fixedCenter.y = static_cast<float>(std::floor(fixedCenter.y));
+			fixedCenter = nml::vec3(nml::inverse(scaledLightView) * nml::vec4(fixedCenter, 0.0f));
+			const nml::vec3 eye = fixedCenter - (lightDirection * radius * 2.0f);
+			const nml::mat4 lightView = nml::lookAtRH(eye, fixedCenter, upVector);
+
+			const nml::mat4 lightProj = nml::orthoRH(-radius, radius, -radius, radius, 0.0f, radius * 6.0f);
+			m_shadowInfo.push_back({ lightProj * lightView, nml::vec4(-(m_globalInfo.editorParameters.renderer.cameraNearPlane + (splitDistance * clipRange)), 0.0f, 0.0f, 0.0f) });
+		}
+	}
+
+	const std::array<nml::vec3, 6> lightCubeDirections = { nml::vec3(1.0f, 0.0f, 0.0f),
+		nml::vec3(-1.0f, 0.0f, 0.0f),
+		nml::vec3(0.0f, 1.0f, 0.0f),
+		nml::vec3(0.0f, -1.0f, 0.0f),
+		nml::vec3(0.0f, 0.0f, 1.0f),
+		nml::vec3(0.0f, 0.0f, -1.0f)
+	};
+
+	const std::array<nml::vec3, 6> lightCubeUps = { nml::vec3(0.0f, -1.0f, 0.0f),
+		nml::vec3(0.0f, -1.0f, 0.0f),
+		nml::vec3(0.0f, 0.0f, 1.0f),
+		nml::vec3(0.0f, 0.0f, -1.0f),
+		nml::vec3(0.0f, -1.0f, 0.0f),
+		nml::vec3(0.0f, -1.0f, 0.0f)
+	};
+
+	for (const Entity& pointLightEntity : pointLightEntities) {
+		bool hasEntityMoveTransform = m_entityMoveTransforms.find(pointLightEntity.entityID) != m_entityMoveTransforms.end();
+		const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[pointLightEntity.entityID] : pointLightEntity.transform;
+
+		nml::mat4 lightProj = nml::perspectiveRH(nml::toRad(90.0f), 1.0f, 0.05f, pointLightEntity.light->distance);
+
+		for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++) {
+			const nml::mat4 lightView = nml::lookAtRH(transform.position, transform.position + lightCubeDirections[faceIndex], lightCubeUps[faceIndex]);
+
+			m_shadowInfo.push_back({ lightProj * lightView, nml::vec4(0.0f) });
+		}
+	}
+
+	for (const Entity& spotLightEntity : spotLightEntities) {
+		bool hasEntityMoveTransform = m_entityMoveTransforms.find(spotLightEntity.entityID) != m_entityMoveTransforms.end();
+		const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[spotLightEntity.entityID] : spotLightEntity.transform;
+
+		const nml::vec3 baseLightDirection = nml::normalize(spotLightEntity.light->direction);
+		const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
+		const float baseDirectionPitch = -std::asin(baseLightDirection.y);
+		const nml::vec3 lightDirection = nml::normalize(nml::vec3(
+			std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
+			-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
+			std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
+		));
+
+		const nml::vec3 upVector = (std::abs(nml::dot(lightDirection, nml::vec3(0.0f, 1.0f, 0.0f))) == 1.0f) ? nml::vec3(1.0f, 0.0f, 0.0f) : nml::vec3(0.0f, 1.0f, 0.0f);
+		const nml::mat4 lightView = nml::lookAtRH(transform.position, transform.position + lightDirection, upVector);
+		nml::mat4 lightProj = nml::perspectiveRH(nml::toRad(spotLightEntity.light->cutoff.y) * 2.0f, 1.0f, 0.05f, spotLightEntity.light->distance);
+		m_shadowInfo.push_back({ lightProj * lightView, nml::vec4(0.0f) });
+	}
+
+	if (!m_shadowInfo.empty() && ((m_shadowMapFramebuffers.size() < m_shadowInfo.size()) || (m_shadowMapResolution != m_globalInfo.editorParameters.renderer.shadowMapResolution))) {
+		m_shadowMapResolution = m_globalInfo.editorParameters.renderer.shadowMapResolution;
+
+		if (m_shadowMapImage != 0xFFFFFFFF) {
+			gl.glDeleteTextures(1, &m_shadowMapImage);
+		}
+
+		gl.glGenTextures(1, &m_shadowMapImage);
+		gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapImage);
+		gl45.glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(m_shadowMapResolution), static_cast<GLsizei>(m_shadowMapResolution), static_cast<GLsizei>(m_shadowInfo.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		gl.glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY, 1.0f);
+		
+		if (!m_shadowMapFramebuffers.empty()) {
+			gl.glDeleteFramebuffers(static_cast<GLsizei>(m_shadowMapFramebuffers.size()), &m_shadowMapFramebuffers[0]);
+		}
+		m_shadowMapFramebuffers.clear();
+
+		for (size_t i = 0; i < m_shadowInfo.size(); i++) {
+			GLuint newShadowMapFramebuffer;
+			gl.glGenFramebuffers(1, &newShadowMapFramebuffer);
+
+			gl.glBindFramebuffer(GL_FRAMEBUFFER, newShadowMapFramebuffer);
+
+			gl45.glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_shadowMapImage, 0, static_cast<GLint>(i));
+
+			m_shadowMapFramebuffers.push_back(newShadowMapFramebuffer);
+		}
+	}
+
+	if (!m_shadowInfo.empty()) {
+		gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shadowMapBuffer);
+		glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, glex.glGetProgramResourceIndex(m_entityProgram, GL_SHADER_STORAGE_BLOCK, "ShadowMapBuffer"), m_shadowMapBuffer);
+		gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_shadowInfo.size() * sizeof(Shadow), m_shadowInfo.data());
+	}
+}
+
+std::vector<Entity> Renderer::frustumCulling(const nml::mat4& viewProj, bool noMesh, bool addNotVisible) {
+	std::array<nml::vec4, 6> frustum;
+	frustum[0].x = viewProj[0][3] + viewProj[0][0];
+	frustum[0].y = viewProj[1][3] + viewProj[1][0];
+	frustum[0].z = viewProj[2][3] + viewProj[2][0];
+	frustum[0].w = viewProj[3][3] + viewProj[3][0];
+
+	frustum[1].x = viewProj[0][3] - viewProj[0][0];
+	frustum[1].y = viewProj[1][3] - viewProj[1][0];
+	frustum[1].z = viewProj[2][3] - viewProj[2][0];
+	frustum[1].w = viewProj[3][3] - viewProj[3][0];
+
+	frustum[2].x = viewProj[0][3] + viewProj[0][1];
+	frustum[2].y = viewProj[1][3] + viewProj[1][1];
+	frustum[2].z = viewProj[2][3] + viewProj[2][1];
+	frustum[2].w = viewProj[3][3] + viewProj[3][1];
+
+	frustum[3].x = viewProj[0][3] - viewProj[0][1];
+	frustum[3].y = viewProj[1][3] - viewProj[1][1];
+	frustum[3].z = viewProj[2][3] - viewProj[2][1];
+	frustum[3].w = viewProj[3][3] - viewProj[3][1];
+
+	frustum[4].x = viewProj[0][3] + viewProj[0][2];
+	frustum[4].y = viewProj[1][3] + viewProj[1][2];
+	frustum[4].z = viewProj[2][3] + viewProj[2][2];
+	frustum[4].w = viewProj[3][3] + viewProj[3][2];
+
+	frustum[5].x = viewProj[0][3] - viewProj[0][2];
+	frustum[5].y = viewProj[1][3] - viewProj[1][2];
+	frustum[5].z = viewProj[2][3] - viewProj[2][2];
+	frustum[5].w = viewProj[3][3] - viewProj[3][2];
+
+	for (uint8_t i = 0; i < 6; i++) {
+		const float magnitude = nml::vec3(frustum[i]).length();
+		frustum[i].x /= magnitude;
+		frustum[i].y /= magnitude;
+		frustum[i].z /= magnitude;
+		frustum[i].w /= magnitude;
+	}
+
+	std::vector<Entity> inFrustumEntities;
+
+	for (const auto& entity : m_globalInfo.entities) {
+		if (addNotVisible || entity.second.isVisible) {
+			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
+			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+
+			if (!noMesh) {
+				if (!(entity.second.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) && (entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.second.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath].primitives.size()))) {
+					continue;
+				}
+			}
+
+			RendererMesh& mesh = (entity.second.renderable && (m_globalInfo.rendererResourceManager.rendererModels.find(entity.second.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) && (entity.second.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) && (entity.second.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath].primitives.size())) ? m_globalInfo.rendererResourceManager.rendererModels[entity.second.renderable->modelPath].primitives[entity.second.renderable->primitiveIndex].mesh : m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0].mesh;
+
+			nml::vec3 aabbMin = std::numeric_limits<float>::max();
+			nml::vec3 aabbMax = std::numeric_limits<float>::lowest();
+
+			std::array<nml::vec3, 8> corners = { nml::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				nml::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				nml::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				nml::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				nml::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				nml::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				nml::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+				nml::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z),
+			};
+
+			for (const nml::vec3& corner : corners) {
+				nml::vec3 transformedCorner = nml::vec3(modelMatrix * nml::vec4(corner, 1.0f));
+
+				if (transformedCorner.x < aabbMin.x) {
+					aabbMin.x = transformedCorner.x;
+				}
+				if (transformedCorner.y < aabbMin.y) {
+					aabbMin.y = transformedCorner.y;
+				}
+				if (transformedCorner.z < aabbMin.z) {
+					aabbMin.z = transformedCorner.z;
+				}
+
+				if (transformedCorner.x > aabbMax.x) {
+					aabbMax.x = transformedCorner.x;
+				}
+				if (transformedCorner.y > aabbMax.y) {
+					aabbMax.y = transformedCorner.y;
+				}
+				if (transformedCorner.z > aabbMax.z) {
+					aabbMax.z = transformedCorner.z;
+				}
+			}
+
+			const nml::vec3 mmm = nml::vec3(aabbMin.x, aabbMin.y, aabbMin.z);
+			const nml::vec3 Mmm = nml::vec3(aabbMax.x, aabbMin.y, aabbMin.z);
+			const nml::vec3 mMm = nml::vec3(aabbMin.x, aabbMax.y, aabbMin.z);
+			const nml::vec3 MMm = nml::vec3(aabbMax.x, aabbMax.y, aabbMin.z);
+			const nml::vec3 mmM = nml::vec3(aabbMin.x, aabbMin.y, aabbMax.z);
+			const nml::vec3 MmM = nml::vec3(aabbMax.x, aabbMin.y, aabbMax.z);
+			const nml::vec3 mMM = nml::vec3(aabbMin.x, aabbMax.y, aabbMax.z);
+			const nml::vec3 MMM = nml::vec3(aabbMax.x, aabbMax.y, aabbMax.z);
+			bool intersect = true;
+			for (uint i = 0; i < 6; i++) {
+				if (((dot(nml::vec3(frustum[i]), mmm) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), Mmm) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), mMm) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), MMm) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), mmM) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), MmM) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), mMM) + frustum[i].w) <= 0.0f)
+					&& ((dot(nml::vec3(frustum[i]), MMM) + frustum[i].w) <= 0.0f)) {
+					intersect = false;
+					break;
+				}
+			}
+
+			if (intersect) {
+				inFrustumEntities.push_back(entity.second);
+			}
+		}
+	}
+
+	return inFrustumEntities;
 }
 
 void Renderer::loadResourcesToGPU() {
@@ -2138,6 +2687,9 @@ void Renderer::loadResourcesToGPU() {
 			gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(uint32_t), mesh.indices.data(), GL_STATIC_DRAW);
 
 			newRendererPrimitive.mesh.indexCount = static_cast<uint32_t>(mesh.indices.size());
+
+			newRendererPrimitive.mesh.aabbMin = modelPrimitive.mesh.aabbMin;
+			newRendererPrimitive.mesh.aabbMax = modelPrimitive.mesh.aabbMax;
 
 			newRendererPrimitive.material = material;
 
@@ -2441,115 +2993,213 @@ nml::vec3 Renderer::unproject(const nml::vec2& p, float width, float height, con
 	return nml::vec3(worldSpace) / worldSpace.w;
 }
 
-void Renderer::bindMaterial(const RendererMaterial& material) {
-	// Diffuse texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasDiffuseTexture"), material.hasDiffuseTexture);
-	if (material.hasDiffuseTexture) {
-		gl.glActiveTexture(GL_TEXTURE0);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
-		}
-		else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
-		}
-		m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "diffuseTextureSampler"), 0);
+void Renderer::bindMesh(const RendererMesh& mesh, GLuint program) {
+	gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBuffer);
+
+	GLint positionLocation = gl.glGetAttribLocation(program, "position");
+	if (positionLocation != -1) {
+		gl.glEnableVertexAttribArray(positionLocation);
+		gl.glVertexAttribPointer(positionLocation, 3, GL_FLOAT, false, 48, (void*)0);
 	}
-	else {
-		gl.glUniform4f(gl.glGetUniformLocation(m_entityProgram, "diffuseColor"), material.diffuseColor.x, material.diffuseColor.y, material.diffuseColor.z, material.diffuseColor.w);
+
+	GLint normalLocation = gl.glGetAttribLocation(program, "normal");
+	if (normalLocation != -1) {
+		gl.glEnableVertexAttribArray(normalLocation);
+		gl.glVertexAttribPointer(normalLocation, 3, GL_FLOAT, false, 48, (void*)12);
+	}
+
+	GLint uvLocation = gl.glGetAttribLocation(program, "uv");
+	if (uvLocation != -1) {
+		gl.glEnableVertexAttribArray(uvLocation);
+		gl.glVertexAttribPointer(uvLocation, 2, GL_FLOAT, false, 48, (void*)24);
+	}
+
+	GLint tangentLocation = gl.glGetAttribLocation(program, "tangent");
+	if (tangentLocation != -1) {
+		gl.glEnableVertexAttribArray(tangentLocation);
+		gl.glVertexAttribPointer(tangentLocation, 4, GL_FLOAT, false, 48, (void*)32);
+	}
+
+	gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+}
+
+int Renderer::bindMaterial(const RendererMaterial& material, GLuint program, GLint activeTexture) {
+	// Diffuse texture
+	GLint hasDiffuseTextureLocation = gl.glGetUniformLocation(program, "hasDiffuseTexture");
+	if (hasDiffuseTextureLocation != -1) {
+		gl.glUniform1i(hasDiffuseTextureLocation, material.hasDiffuseTexture);
+		if (material.hasDiffuseTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.diffuseTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.diffuseTextureName]);
+			}
+			else if (std::filesystem::path(material.diffuseTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.diffuseTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint diffuseTextureSamplerLocation = gl.glGetUniformLocation(program, "diffuseTextureSampler");
+			if (diffuseTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.diffuseTextureSamplerName].bind(gl);
+				gl.glUniform1i(diffuseTextureSamplerLocation, activeTexture - 1);
+			}
+		}
+		else {
+			GLint diffuseColorLocation = gl.glGetUniformLocation(program, "diffuseColor");
+			if (diffuseColorLocation != -1) {
+				gl.glUniform4f(diffuseColorLocation, material.diffuseColor.x, material.diffuseColor.y, material.diffuseColor.z, material.diffuseColor.w);
+			}
+		}
 	}
 
 	// Normal texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasNormalTexture"), material.hasNormalTexture);
-	if (material.hasNormalTexture) {
-		gl.glActiveTexture(GL_TEXTURE1);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.normalTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.normalTextureName]);
+	GLint hasNormalTextureLocation = gl.glGetUniformLocation(program, "hasNormalTexture");
+	if (hasNormalTextureLocation != -1) {
+		gl.glUniform1i(hasNormalTextureLocation, material.hasNormalTexture);
+		if (material.hasNormalTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.normalTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.normalTextureName]);
+			}
+			else if (std::filesystem::path(material.normalTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint normalTextureSamplerLocation = gl.glGetUniformLocation(program, "normalTextureSampler");
+			if (normalTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.normalTextureSamplerName].bind(gl);
+				gl.glUniform1i(normalTextureSamplerLocation, activeTexture - 1);
+			}
 		}
-		else if (std::filesystem::path(material.normalTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.normalTextureName, m_globalInfo.projectDirectory)]);
-		}
-		m_globalInfo.rendererResourceManager.samplers[material.normalTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "normalTextureSampler"), 1);
 	}
 
 	// Metalness texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasMetalnessTexture"), material.hasMetalnessTexture);
-	if (material.hasMetalnessTexture) {
-		gl.glActiveTexture(GL_TEXTURE2);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.metalnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.metalnessTextureName]);
+	GLint hasMetalnessTextureLocation = gl.glGetUniformLocation(program, "hasMetalnessTexture");
+	if (hasMetalnessTextureLocation != -1) {
+		gl.glUniform1i(hasMetalnessTextureLocation, material.hasMetalnessTexture);
+		if (material.hasMetalnessTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.metalnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.metalnessTextureName]);
+			}
+			else if (std::filesystem::path(material.metalnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint metalnessTextureSamplerLocation = gl.glGetUniformLocation(program, "metalnessTextureSampler");
+			if (metalnessTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(metalnessTextureSamplerLocation, activeTexture - 1);
+			}
 		}
-		else if (std::filesystem::path(material.metalnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.metalnessTextureName, m_globalInfo.projectDirectory)]);
+		else {
+			GLint metalnessValueLocation = gl.glGetUniformLocation(program, "metalnessValue");
+			if (metalnessValueLocation != -1) {
+				gl.glUniform1f(metalnessValueLocation, material.metalnessValue);
+			}
 		}
-		m_globalInfo.rendererResourceManager.samplers[material.metalnessTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "metalnessTextureSampler"), 2);
-	}
-	else {
-		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "metalnessValue"), material.metalnessValue);
 	}
 
 	// Roughness texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasRoughnessTexture"), material.hasRoughnessTexture);
-	if (material.hasRoughnessTexture) {
-		gl.glActiveTexture(GL_TEXTURE3);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.roughnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.roughnessTextureName]);
+	GLint hasRoughnessTextureLocation = gl.glGetUniformLocation(program, "hasRoughnessTexture");
+	if (hasRoughnessTextureLocation != -1) {
+		gl.glUniform1i(hasRoughnessTextureLocation, material.hasRoughnessTexture);
+		if (material.hasRoughnessTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.roughnessTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.roughnessTextureName]);
+			}
+			else if (std::filesystem::path(material.roughnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint roughnessTextureSamplerLocation = gl.glGetUniformLocation(program, "roughnessTextureSampler");
+			if (roughnessTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
+				gl.glUniform1i(roughnessTextureSamplerLocation, activeTexture - 1);
+			}
 		}
-		else if (std::filesystem::path(material.roughnessTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.roughnessTextureName, m_globalInfo.projectDirectory)]);
+		else {
+			GLint roughnessValueLocation = gl.glGetUniformLocation(program, "roughnessValue");
+			if (roughnessValueLocation != -1) {
+				gl.glUniform1f(roughnessValueLocation, material.roughnessValue);
+			}
 		}
-		m_globalInfo.rendererResourceManager.samplers[material.roughnessTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "roughnessTextureSampler"), 3);
-	}
-	else {
-		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "roughnessValue"), material.roughnessValue);
 	}
 
 	// Occlusion texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasOcclusionTexture"), material.hasOcclusionTexture);
-	if (material.hasOcclusionTexture) {
-		gl.glActiveTexture(GL_TEXTURE4);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.occlusionTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.occlusionTextureName]);
+	GLint hasOcclusionTextureLocation = gl.glGetUniformLocation(program, "hasOcclusionTexture");
+	if (hasOcclusionTextureLocation != -1) {
+		gl.glUniform1i(hasOcclusionTextureLocation, material.hasOcclusionTexture);
+		if (material.hasOcclusionTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.occlusionTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.occlusionTextureName]);
+			}
+			else if (std::filesystem::path(material.occlusionTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint occlusionTextureSamplerLocation = gl.glGetUniformLocation(program, "occlusionTextureSampler");
+			if (occlusionTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
+				gl.glUniform1i(occlusionTextureSamplerLocation, activeTexture - 1);
+			}
 		}
-		else if (std::filesystem::path(material.occlusionTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.occlusionTextureName, m_globalInfo.projectDirectory)]);
+		else {
+			GLint occlusionValueLocation = gl.glGetUniformLocation(program, "occlusionValue");
+			if (occlusionValueLocation != -1) {
+				gl.glUniform1f(occlusionValueLocation, material.occlusionValue);
+			}
 		}
-		m_globalInfo.rendererResourceManager.samplers[material.occlusionTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "occlusionTextureSampler"), 4);
-	}
-	else {
-		gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "occlusionValue"), material.occlusionValue);
 	}
 
 	// Emissive texture
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "hasEmissiveTexture"), material.hasEmissiveTexture);
-	if (material.hasEmissiveTexture) {
-		gl.glActiveTexture(GL_TEXTURE5);
-		if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+	GLint hasEmissiveTextureLocation = gl.glGetUniformLocation(program, "hasEmissiveTexture");
+	if (hasEmissiveTextureLocation != -1) {
+		gl.glUniform1i(hasEmissiveTextureLocation, material.hasEmissiveTexture);
+		if (material.hasEmissiveTexture) {
+			gl.glActiveTexture(GL_TEXTURE0 + activeTexture++);
+			if (m_globalInfo.rendererResourceManager.textures.find(material.emissiveTextureName) != m_globalInfo.rendererResourceManager.textures.end()) {
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[material.emissiveTextureName]);
+			}
+			else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
+				gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
+			}
+			GLint emissiveTextureSamplerLocation = gl.glGetUniformLocation(program, "emissiveTextureSampler");
+			if (emissiveTextureSamplerLocation != -1) {
+				m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
+				gl.glUniform1i(emissiveTextureSamplerLocation, activeTexture - 1);
+			}
 		}
-		else if (std::filesystem::path(material.emissiveTextureName).is_relative() && (m_globalInfo.rendererResourceManager.textures.find(AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)) != m_globalInfo.rendererResourceManager.textures.end())) { // Texture may have been registered under another name, its full path
-			gl.glBindTexture(GL_TEXTURE_2D, m_globalInfo.rendererResourceManager.textures[AssetHelper::relativeToAbsolute(material.emissiveTextureName, m_globalInfo.projectDirectory)]);
+		else {
+			GLint emissiveColorLocation = gl.glGetUniformLocation(program, "emissiveColor");
+			if (emissiveColorLocation != -1) {
+				gl.glUniform3f(emissiveColorLocation, material.emissiveColor.x, material.emissiveColor.y, material.emissiveColor.z);
+			}
 		}
-		m_globalInfo.rendererResourceManager.samplers[material.emissiveTextureSamplerName].bind(gl);
-		gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "emissiveTextureSampler"), 5);
-	}
-	else {
-		gl.glUniform3f(gl.glGetUniformLocation(m_entityProgram, "emissiveColor"), material.emissiveColor.x, material.emissiveColor.y, material.emissiveColor.z);
 	}
 
-	gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "emissiveFactor"), material.emissiveFactor);
+	GLint emissiveFactorLocation = gl.glGetUniformLocation(program, "emissiveFactor");
+	if (emissiveFactorLocation != -1) {
+		gl.glUniform1f(emissiveFactorLocation, material.emissiveFactor);
+	}
 
-	gl.glUniform1f(gl.glGetUniformLocation(m_entityProgram, "alphaCutoff"), material.alphaCutoff);
+	GLint alphaCutoffLocation = gl.glGetUniformLocation(program, "alphaCutoff");
+	if (alphaCutoffLocation != -1) {
+		gl.glUniform1f(alphaCutoffLocation, material.alphaCutoff);
+	}
 
-	gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "useTriplanarMapping"), material.useTriplanarMapping);
+	GLint useTriplanarMappingLocation = gl.glGetUniformLocation(program, "useTriplanarMapping");
+	if (useTriplanarMappingLocation != -1) {
+		gl.glUniform1i(useTriplanarMappingLocation, material.useTriplanarMapping);
+	}
 
-	gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "scaleUV"), material.scaleUV.x, material.scaleUV.y);
+	GLint scaleUVLocation = gl.glGetUniformLocation(program, "scaleUV");
+	if (scaleUVLocation != -1) {
+		gl.glUniform2f(scaleUVLocation, material.scaleUV.x, material.scaleUV.y);
+	}
 
-	gl.glUniform2f(gl.glGetUniformLocation(m_entityProgram, "offsetUV"), material.offsetUV.x, material.offsetUV.y);
+	GLint offsetUVLocation = gl.glGetUniformLocation(program, "offsetUV");
+	if (offsetUVLocation != -1) {
+		gl.glUniform2f(offsetUVLocation, material.offsetUV.x, material.offsetUV.y);
+	}
+
+	return activeTexture;
 }
 
 void Renderer::onEntityDestroyed(EntityID entityID) {

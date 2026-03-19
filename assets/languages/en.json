@@ -283,6 +283,7 @@
 	"editor_parameters_camera_sensitivity": "Camera Sensitivity",
 	"editor_parameters_grid_cell_size": "Grid Cell Size",
 	"editor_parameters_grid_subcell_size": "Grid Subcell Size",
+	"editor_parameters_shadow_map_resolution": "Shadow Map Resolution",
 	"editor_parameters_maintain_gizmo_size": "Maintain Gizmo Size",
 	"editor_parameters_gizmo_size": "Gizmo Size",
 	"editor_parameters_gizmo_translation_step": "Gizmo Translation Step",

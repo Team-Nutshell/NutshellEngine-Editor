@@ -21,6 +21,9 @@
 #include <QDropEvent>
 #include <optional>
 
+#define SHADOW_MAPPING_CASCADE_COUNT 3
+#define SHADOW_MAPPING_CASCADE_SPLIT_LAMBDA 0.95f
+
 class Renderer : public QOpenGLWidget {
 	Q_OBJECT
 public:
@@ -41,10 +44,13 @@ private:
 	void createOutlineSoloImages();
 	void destroyOutlineSoloImages();
 	void createLightBuffer();
+	void createShadowMapBuffer();
 
 	bool anyEntityTransformMode();
 	void updateCamera();
 	void updateLights();
+
+	std::vector<Entity> frustumCulling(const nml::mat4& viewProj, bool noMesh, bool addNotVisible);
 
 	void loadResourcesToGPU();
 
@@ -57,7 +63,8 @@ private:
 	nml::vec2 project(const nml::vec3& p, float width, float height, const nml::mat4& viewProjMatrix);
 	nml::vec3 unproject(const nml::vec2& p, float width, float height, const nml::mat4& invViewMatrix, const nml::mat4& invProjMatrix);
 
-	void bindMaterial(const RendererMaterial& material);
+	void bindMesh(const RendererMesh& mesh, GLuint program);
+	int bindMaterial(const RendererMaterial& material, GLuint program, GLint activeTexture);
 
 private slots:
 	void onEntityDestroyed(EntityID entityID);
@@ -151,6 +158,7 @@ private:
 	std::unordered_map<EntityID, Transform> m_entityMoveTransforms;
 
 	GLuint m_entityProgram;
+	GLuint m_shadowProgram;
 	GLuint m_cameraFrustumProgram;
 	GLuint m_grid2DProgram;
 	GLuint m_grid3DProgram;
@@ -173,6 +181,13 @@ private:
 	GLuint m_outlineSoloDepthImage;
 
 	GLuint m_lightBuffer;
+
+	GLuint m_shadowMapImage = 0xFFFFFFFF;
+	GLuint m_shadowMapDummyImage;
+	std::vector<GLuint> m_shadowMapFramebuffers;
+	std::vector<Shadow> m_shadowInfo;
+	GLuint m_shadowMapBuffer;
+	uint32_t m_shadowMapResolution = 2048;
 
 	QOpenGLFunctions gl;
 	QOpenGLExtraFunctions glex;

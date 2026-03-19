@@ -63,6 +63,49 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 	}
 
+	// Calculate AABB
+	for (ModelPrimitive& primitive : model.primitives) {
+		for (const Mesh::Vertex& vertex : primitive.mesh.vertices) {
+			if (vertex.position[0] < primitive.mesh.aabbMin.x) {
+				primitive.mesh.aabbMin.x = vertex.position[0];
+			}
+			if (vertex.position[0] > primitive.mesh.aabbMax.x) {
+				primitive.mesh.aabbMax.x = vertex.position[0];
+			}
+
+			if (vertex.position[1] < primitive.mesh.aabbMin.y) {
+				primitive.mesh.aabbMin.y = vertex.position[1];
+			}
+			if (vertex.position[1] > primitive.mesh.aabbMax.y) {
+				primitive.mesh.aabbMax.y = vertex.position[1];
+			}
+
+			if (vertex.position[2] < primitive.mesh.aabbMin.z) {
+				primitive.mesh.aabbMin.z = vertex.position[2];
+			}
+			if (vertex.position[2] > primitive.mesh.aabbMax.z) {
+				primitive.mesh.aabbMax.z = vertex.position[2];
+			}
+		}
+
+		const float epsilon = 0.0001f;
+
+		if (primitive.mesh.aabbMin.x == primitive.mesh.aabbMax.x) {
+			primitive.mesh.aabbMin.x -= epsilon;
+			primitive.mesh.aabbMax.x += epsilon;
+		}
+
+		if (primitive.mesh.aabbMin.y == primitive.mesh.aabbMax.y) {
+			primitive.mesh.aabbMin.y -= epsilon;
+			primitive.mesh.aabbMax.y += epsilon;
+		}
+
+		if (primitive.mesh.aabbMin.z == primitive.mesh.aabbMax.z) {
+			primitive.mesh.aabbMin.z -= epsilon;
+			primitive.mesh.aabbMax.z += epsilon;
+		}
+	}
+
 	modelLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
 
 	if (!model.primitives.empty()) {

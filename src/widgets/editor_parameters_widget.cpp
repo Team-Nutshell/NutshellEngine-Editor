@@ -196,6 +196,13 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	gridSubcellSizeWidget->layout()->setAlignment(gridSubcellSizeWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
 	rendererCameraGridLayout->addWidget(gridSubcellSizeWidget, 1, 2);
 
+	shadowMapResolutionWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_shadow_map_resolution"));
+	shadowMapResolutionWidget->setMin(1);
+	shadowMapResolutionWidget->valueLineEdit->setText(QString::number(m_globalInfo.editorParameters.renderer.shadowMapResolution));
+	shadowMapResolutionWidget->layout()->setAlignment(shadowMapResolutionWidget->nameLabel, Qt::AlignmentFlag::AlignRight);
+	shadowMapResolutionWidget->layout()->setAlignment(shadowMapResolutionWidget->valueLineEdit, Qt::AlignmentFlag::AlignLeft);
+	rendererCameraGridLayout->addWidget(shadowMapResolutionWidget, 0, 3);
+
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
 	QWidget* rendererGizmoLayoutWidget = new QWidget();
@@ -305,6 +312,7 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(cameraSensitivityWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gridCellSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gridSubcellSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
+	connect(shadowMapResolutionWidget, &IntegerWidget::valueChanged, this, &EditorParametersWidget::onIntegerChanged);
 	connect(maintainGizmoSizeWidget, &BooleanWidget::stateChanged, this, &EditorParametersWidget::onBooleanChanged);
 	connect(gizmoSizeWidget, &ScalarWidget::valueChanged, this, &EditorParametersWidget::onScalarChanged);
 	connect(gizmoTranslationStepWidget, &Vector3Widget::valueChanged, this, &EditorParametersWidget::onVector3Changed);
@@ -598,6 +606,15 @@ void EditorParametersWidget::onBooleanChanged(bool value) {
 	QObject* senderWidget = sender();
 	if (senderWidget == maintainGizmoSizeWidget) {
 		m_globalInfo.editorParameters.renderer.maintainGizmoSize = value;
+	}
+
+	save();
+}
+
+void EditorParametersWidget::onIntegerChanged(int value) {
+	QObject* senderWidget = sender();
+	if (senderWidget == shadowMapResolutionWidget) {
+		m_globalInfo.editorParameters.renderer.shadowMapResolution = value;
 	}
 
 	save();

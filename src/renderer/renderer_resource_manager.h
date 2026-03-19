@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <filesystem>
+#include <limits>
 #include <cstdint>
 
 class Localization;
@@ -37,6 +38,9 @@ public:
 		OBB obb;
 		Sphere sphere;
 		Capsule capsule;
+
+		nml::vec3 aabbMin = nml::vec3(std::numeric_limits<float>::max());
+		nml::vec3 aabbMax = nml::vec3(std::numeric_limits<float>::lowest());
 	};
 
 	struct SamplerToGPU {

@@ -189,6 +189,10 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			renderer.gridSubcellSize = j["renderer"]["gridSubcellSize"];
 		}
 
+		if (j["renderer"].contains("shadowMapResolution")) {
+			renderer.shadowMapResolution = j["renderer"]["shadowMapResolution"];
+		}
+
 		if (j["renderer"].contains("maintainGizmoSize")) {
 			renderer.maintainGizmoSize = j["renderer"]["maintainGizmoSize"];
 		}
@@ -286,6 +290,7 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["cameraSensitivity"] = renderer.cameraSensitivity;
 	j["renderer"]["gridCellSize"] = renderer.gridCellSize;
 	j["renderer"]["gridSubcellSize"] = renderer.gridSubcellSize;
+	j["renderer"]["shadowMapResolution"] = renderer.shadowMapResolution;
 	j["renderer"]["maintainGizmoSize"] = renderer.maintainGizmoSize;
 	j["renderer"]["gizmoSize"] = renderer.gizmoSize;
 	j["renderer"]["gizmoTranslationStep"] = { renderer.gizmoTranslationStep.x, renderer.gizmoTranslationStep.y, renderer.gizmoTranslationStep.z };

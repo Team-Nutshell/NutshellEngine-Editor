@@ -5,6 +5,7 @@
 #include "key_select_widget.h"
 #include "boolean_widget.h"
 #include "color_picker_widget.h"
+#include "integer_widget.h"
 #include "scalar_widget.h"
 #include "vector3_widget.h"
 #include <QTabWidget>
@@ -24,6 +25,7 @@ private:
 private slots:
 	void onKeyChanged(const std::string& key);
 	void onBooleanChanged(bool value);
+	void onIntegerChanged(int value);
 	void onScalarChanged(float value);
 	void onStringChanged(const std::string& text);
 	void onVector3Changed(const nml::vec3& value);
@@ -70,6 +72,7 @@ public:
 	ScalarWidget* cameraSensitivityWidget;
 	ScalarWidget* gridCellSizeWidget;
 	ScalarWidget* gridSubcellSizeWidget;
+	IntegerWidget* shadowMapResolutionWidget;
 	BooleanWidget* maintainGizmoSizeWidget;
 	ScalarWidget* gizmoSizeWidget;
 	Vector3Widget* gizmoTranslationStepWidget;
