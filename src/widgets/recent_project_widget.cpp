@@ -45,8 +45,9 @@ const std::string& RecentProjectWidget::getProjectDirectory() {
 }
 
 void RecentProjectWidget::mousePressEvent(QMouseEvent* event) {
-	(void)event;
-	emit openProject(m_projectDirectory);
+	if (event->button() == Qt::MouseButton::LeftButton) {
+		emit openProject(m_projectDirectory);
+	}
 }
 
 void RecentProjectWidget::enterEvent(QEnterEvent* event) {
