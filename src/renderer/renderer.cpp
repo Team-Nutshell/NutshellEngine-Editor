@@ -506,7 +506,7 @@ void Renderer::initializeGL() {
 
 				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + cascadeIndex].viewProj) * vec4(fragPosition, 1.0);
 
-				outColor.rgb += shade(n, v, l, lights.info[lightIndex].color * lights.info[lightIndex].intensity, d, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer + cascadeIndex, shadowCoord / shadowCoord.w, 0.0025);
+				outColor.rgb += shade(n, v, l, lights.info[lightIndex].color * lights.info[lightIndex].intensity, d, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer + cascadeIndex, shadowCoord / shadowCoord.w, 0.00005);
 
 				lightIndex++;
 				shadowLayer += SHADOW_MAPPING_CASCADE_COUNT;
@@ -540,7 +540,7 @@ void Renderer::initializeGL() {
 
 				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + faceIndex].viewProj) * vec4(fragPosition, 1.0);
 
-				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample) * shadowCubeValue(shadowLayer, faceIndex, cubeUV, shadowCoord.z / shadowCoord.w, 0.0005);
+				outColor.rgb += shade(n, v, l, radiance, d, metalnessTextureSample, roughnessTextureSample) * shadowCubeValue(shadowLayer, faceIndex, cubeUV, shadowCoord.z / shadowCoord.w, 0.00005);
 
 				lightIndex++;
 				shadowLayer += 6;
@@ -572,7 +572,7 @@ void Renderer::initializeGL() {
 
 				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer].viewProj) * vec4(fragPosition, 1.0);
 
-				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.0005);
+				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.00005);
 
 				lightIndex++;
 				shadowLayer += 1;
