@@ -572,7 +572,7 @@ void Renderer::initializeGL() {
 
 				const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer].viewProj) * vec4(fragPosition, 1.0);
 
-				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.0025);
+				outColor.rgb += shade(n, v, l, radiance, d * intensity, metalnessTextureSample, roughnessTextureSample) * shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.0005);
 
 				lightIndex++;
 				shadowLayer += 1;
@@ -2504,8 +2504,8 @@ void Renderer::updateLights() {
 		gl.glGenTextures(1, &m_shadowMapImage);
 		gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapImage);
 		gl45.glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, static_cast<GLsizei>(m_shadowMapResolution), static_cast<GLsizei>(m_shadowMapResolution), static_cast<GLsizei>(m_shadowInfo.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
