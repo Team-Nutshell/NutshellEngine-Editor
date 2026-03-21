@@ -32,7 +32,7 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo) : m_globalI
 	borderColorWidget = new ComboBoxWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_border_color"), borderColorElements);
 	layout()->addWidget(borderColorWidget);
 	anisotropyLevelWidget = new IntegerWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_anisotropy_level"));
-	anisotropyLevelWidget->setMin(0);
+	anisotropyLevelWidget->setMin(1);
 	layout()->addWidget(anisotropyLevelWidget);
 
 	connect(magFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
