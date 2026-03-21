@@ -2270,7 +2270,7 @@ void Renderer::updateCamera() {
 
 void Renderer::updateLights() {
 	gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_lightBuffer);
-	glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, glex.glGetProgramResourceIndex(m_entityProgram, GL_SHADER_STORAGE_BLOCK, "LightBuffer"), m_lightBuffer);
+	glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_lightBuffer);
 
 	std::array<uint32_t, 4> lightsCount = { 0, 0, 0, 0 };
 	std::vector<nml::vec4> directionalLightsInfos;
@@ -2530,7 +2530,7 @@ void Renderer::updateLights() {
 
 	if (!m_shadowInfo.empty()) {
 		gl.glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_shadowMapBuffer);
-		glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, glex.glGetProgramResourceIndex(m_entityProgram, GL_SHADER_STORAGE_BLOCK, "ShadowMapBuffer"), m_shadowMapBuffer);
+		glex.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_shadowMapBuffer);
 		gl.glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_shadowInfo.size() * sizeof(Shadow), m_shadowInfo.data());
 	}
 }
