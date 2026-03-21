@@ -2240,20 +2240,29 @@ void Renderer::updateCamera() {
 		}
 
 		nml::vec3 orthographicPosition = m_camera.position;
-		if (m_camera.orthographicDirection.x != 0.0f) {
-			orthographicPosition.x = -m_camera.orthographicDirection.x;
+		if (m_camera.orthographicDirection.x < 0.0f) {
+			orthographicPosition.x = 100.0f;
 		}
-		else if (m_camera.orthographicDirection.y != 0.0f) {
-			orthographicPosition.y = -m_camera.orthographicDirection.y;
+		else if (m_camera.orthographicDirection.x > 0.0f) {
+			orthographicPosition.x = -100.0f;
 		}
-		else if (m_camera.orthographicDirection.z != 0.0f) {
-			orthographicPosition.z = -m_camera.orthographicDirection.z;
+		else if (m_camera.orthographicDirection.y < 0.0f) {
+			orthographicPosition.y = 100.0f;
+		}
+		else if (m_camera.orthographicDirection.y > 0.0f) {
+			orthographicPosition.y = -100.0f;
+		}
+		else if (m_camera.orthographicDirection.z < 0.0f) {
+			orthographicPosition.z = 100.0f;
+		}
+		else if (m_camera.orthographicDirection.z > 0.0f) {
+			orthographicPosition.z = -100.0f;
 		}
 
 		m_camera.viewMatrix = nml::lookAtRH(orthographicPosition, orthographicPosition + m_camera.orthographicDirection, m_camera.orthographicUp);
 		float orthographicHalfExtentWidth = m_camera.orthographicHalfExtent * static_cast<float>(width()) / static_cast<float>(height());
-		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, m_globalInfo.editorParameters.renderer.cameraFarPlane , -m_globalInfo.editorParameters.renderer.cameraFarPlane);
-		m_camera.projectionNonReversedMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, -m_globalInfo.editorParameters.renderer.cameraFarPlane, m_globalInfo.editorParameters.renderer.cameraFarPlane);
+		m_camera.projectionMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, 3000.0f, 0.01f);
+		m_camera.projectionNonReversedMatrix = nml::orthoRH(-orthographicHalfExtentWidth, orthographicHalfExtentWidth, -m_camera.orthographicHalfExtent, m_camera.orthographicHalfExtent, 0.01f, 3000.0f);
 	}
 
 	m_camera.viewProjMatrix = m_camera.projectionMatrix * m_camera.viewMatrix;
@@ -2365,15 +2374,22 @@ void Renderer::updateLights() {
 
 	std::array<float, SHADOW_MAPPING_CASCADE_COUNT> cascadeSplits;
 
-	const float clipRange = m_globalInfo.editorParameters.renderer.cameraFarPlane - m_globalInfo.editorParameters.renderer.cameraNearPlane;
-	const float clipRatio = m_globalInfo.editorParameters.renderer.cameraFarPlane / m_globalInfo.editorParameters.renderer.cameraNearPlane;
+	float nearPlane = m_globalInfo.editorParameters.renderer.cameraNearPlane;
+	float farPlane = m_globalInfo.editorParameters.renderer.cameraFarPlane;
+	if (m_camera.useOrthographicProjection) {
+		nearPlane = 0.01f;
+		farPlane = 3000.0f;
+	}
+
+	const float clipRange = farPlane - nearPlane;
+	const float clipRatio = farPlane / nearPlane;
 
 	for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAPPING_CASCADE_COUNT; cascadeIndex++) {
 		const float p = (cascadeIndex + 1) / static_cast<float>(SHADOW_MAPPING_CASCADE_COUNT);
-		const float log = m_globalInfo.editorParameters.renderer.cameraNearPlane * std::pow(clipRatio, p);
-		const float uniform = m_globalInfo.editorParameters.renderer.cameraNearPlane + (clipRange * p);
+		const float log = nearPlane * std::pow(clipRatio, p);
+		const float uniform = nearPlane + (clipRange * p);
 		const float d = SHADOW_MAPPING_CASCADE_SPLIT_LAMBDA * (log - uniform) + uniform;
-		cascadeSplits[cascadeIndex] = (d - m_globalInfo.editorParameters.renderer.cameraNearPlane) / clipRange;
+		cascadeSplits[cascadeIndex] = (d - nearPlane) / clipRange;
 	}
 
 	std::array<nml::vec3, 8> frustumCorners = { nml::vec3(-1.0f, 1.0f, 0.0f),
@@ -2442,7 +2458,7 @@ void Renderer::updateLights() {
 			const nml::mat4 lightView = nml::lookAtRH(eye, fixedCenter, upVector);
 
 			const nml::mat4 lightProj = nml::orthoRH(-radius, radius, -radius, radius, 0.0f, radius * 6.0f);
-			m_shadowInfo.push_back({ lightProj * lightView, nml::vec4(-(m_globalInfo.editorParameters.renderer.cameraNearPlane + (splitDistance * clipRange)), 0.0f, 0.0f, 0.0f) });
+			m_shadowInfo.push_back({ lightProj * lightView, nml::vec4(-(nearPlane + (splitDistance * clipRange)), 0.0f, 0.0f, 0.0f) });
 		}
 	}
 
