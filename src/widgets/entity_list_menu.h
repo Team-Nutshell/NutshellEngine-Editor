@@ -3,21 +3,27 @@
 #include <QMenu>
 #include <QAction>
 
+class EntityList;
+
 class EntityListMenu : public QMenu {
 	Q_OBJECT
 public:
 	EntityListMenu(GlobalInfo& globalInfo);
 
 private slots:
-	void renameEntity();
-	void newEntity();
-	void deleteEntity();
+	void renameEntities();
+	void newEntities();
+	void deleteEntities();
+	void duplicateEntities();
 
 private:
 	GlobalInfo& m_globalInfo;
 
 public:
-	QAction* renameEntityAction;
+	EntityList* entityList = nullptr;
+
+	QAction* renameAction;
 	QAction* newEntityAction;
-	QAction* deleteEntityAction;
+	QAction* deleteAction;
+	QAction* duplicateAction;
 };

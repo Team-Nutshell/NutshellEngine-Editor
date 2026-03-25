@@ -3284,7 +3284,10 @@ void Renderer::keyPressEvent(QKeyEvent* event) {
 		return;
 	}
 
-	if (event->key() == m_globalInfo.editorParameters.renderer.cameraForwardKey) {
+	if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_D)) {
+		m_globalInfo.mainWindow->entityPanel->entityList->duplicateEntities();
+	}
+	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraForwardKey) {
 		m_cameraForwardKeyPressed = true;
 	}
 	else if (event->key() == m_globalInfo.editorParameters.renderer.cameraBackwardKey) {

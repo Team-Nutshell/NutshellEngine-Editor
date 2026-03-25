@@ -4,6 +4,7 @@
 #include "../undo_commands/destroy_entities_command.h"
 #include "../undo_commands/change_entities_name_command.h"
 #include "../undo_commands/select_asset_entities_command.h"
+#include "../undo_commands/copy_entities_command.h"
 #include <QSizePolicy>
 #include <QLabel>
 #include <QFont>
@@ -19,6 +20,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	sizePolicy.setVerticalPolicy(QSizePolicy::Policy::Expanding);
 	setSizePolicy(sizePolicy);
 	menu = new EntityListMenu(m_globalInfo);
+	menu->entityList = this;
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 	setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 	setDragEnabled(true);
@@ -90,6 +92,18 @@ void EntityList::resizeFont(int delta) {
 	}
 }
 
+void EntityList::duplicateEntities() {
+	std::vector<EntityID> entityIDsToDuplicate = getRowSortedSelectedEntityIDs();
+	std::vector<Entity> entitiesToDuplicate(entityIDsToDuplicate.size());
+	for (size_t i = 0; i < entityIDsToDuplicate.size(); i++) {
+		entitiesToDuplicate[i] = m_globalInfo.entities[entityIDsToDuplicate[i]];
+	}
+
+	if (!entitiesToDuplicate.empty()) {
+		m_globalInfo.actionUndoStack->push(new CopyEntitiesCommand(m_globalInfo, entitiesToDuplicate));
+	}
+}
+
 void EntityList::onEntityCreated(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
 
@@ -135,14 +149,27 @@ void EntityList::onEntityVisibilityToggled(EntityID entityID, bool isVisible) {
 
 void EntityList::showMenu(const QPoint& pos) {
 	if (!itemAt(pos)) {
-		menu->renameEntityAction->setEnabled(false);
-		menu->deleteEntityAction->setEnabled(false);
+		menu->renameAction->setEnabled(false);
+		menu->deleteAction->setEnabled(false);
+		menu->duplicateAction->setEnabled(false);
+		menu->renameAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_rename")));
+		menu->deleteAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_delete")));
+		menu->duplicateAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_duplicate")));
 	}
 	else {
-		EntityListItem* entityListItem = static_cast<EntityListItem*>(itemAt(pos));
-		m_globalInfo.currentEntityID = entityListItem->entityID;
-		menu->renameEntityAction->setEnabled(true);
-		menu->deleteEntityAction->setEnabled(true);
+		menu->renameAction->setEnabled(true);
+		menu->deleteAction->setEnabled(true);
+		menu->duplicateAction->setEnabled(true);
+		if (m_globalInfo.otherSelectedEntityIDs.empty()) {
+			menu->renameAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_rename")));
+			menu->deleteAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_delete")));
+			menu->duplicateAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entity_duplicate")));
+		}
+		else {
+			menu->renameAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entities_rename")));
+			menu->deleteAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entities_delete")));
+			menu->duplicateAction->setText(QString::fromStdString(m_globalInfo.localization.getString("entities_duplicate")));
+		}
 	}
 	menu->popup(QCursor::pos());
 }
@@ -297,6 +324,9 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 			EntityListItem* entityListItem = static_cast<EntityListItem*>(item(currentSelectionIndex));
 			entityListItem->setFlags(entityListItem->flags() | Qt::ItemFlag::ItemIsEditable);
 			editItem(entityListItem);
+		}
+		else if ((QGuiApplication::keyboardModifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_D)) {
+			duplicateEntities();
 		}
 	}
 }

@@ -21,6 +21,8 @@ public:
 
 	void resizeFont(int delta);
 
+	void duplicateEntities();
+
 private slots:
 	void onEntityCreated(EntityID entityID);
 	void onEntityDestroyed(EntityID entityID);
