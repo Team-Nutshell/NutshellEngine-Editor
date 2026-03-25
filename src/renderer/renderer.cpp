@@ -348,12 +348,12 @@ void Renderer::initializeGL() {
 	}
 
 	void main() {
-		vec4 diffuseTextureSample = diffuseColor;
+		vec4 diffuseTextureSample = vec4(sRGBToLinear(diffuseColor.rgb), diffuseColor.a);
 		vec3 normalTextureSample = vec3(0.5, 0.5, 1.0);
 		float metalnessTextureSample = metalnessValue;
 		float roughnessTextureSample = roughnessValue;
 		float occlusionTextureSample = occlusionValue;
-		vec3 emissiveTextureSample = emissiveColor;
+		vec3 emissiveTextureSample = sRGBToLinear(emissiveColor);
 
 		vec3 n;
 
@@ -469,9 +469,6 @@ void Renderer::initializeGL() {
 					(texture(emissiveTextureSampler, triplanarUV.z).rgb * triplanarWeights.z);
 			}
 		}
-
-		diffuseTextureSample.rgb = sRGBToLinear(diffuseTextureSample.rgb);
-		emissiveTextureSample = sRGBToLinear(emissiveTextureSample);
 
 		if ((diffuseTextureSample.a < alphaCutoff) || (diffuseTextureSample.a < ditheringThreshold[int(mod(gl_FragCoord.x, 4.0))][int(mod(gl_FragCoord.y, 4.0))])) {
 			discard;
@@ -1176,7 +1173,7 @@ void Renderer::initializeGL() {
 	gl.glGenTextures(1, &defaultDiffuseTexture);
 	std::vector<uint8_t> diffuseTextureData = { 145, 99, 65, 255, 208, 194, 175, 255, 208, 194, 175, 255, 145, 99, 65, 255 };
 	gl.glBindTexture(GL_TEXTURE_2D, defaultDiffuseTexture);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, diffuseTextureData.data());
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, diffuseTextureData.data());
 	gl.glGenerateMipmap(GL_TEXTURE_2D);
 	m_globalInfo.rendererResourceManager.textures["defaultDiffuseTexture"] = defaultDiffuseTexture;
 
@@ -2726,7 +2723,11 @@ void Renderer::loadResourcesToGPU() {
 		uint32_t* texture = &m_globalInfo.rendererResourceManager.textures[imageToGPU.first];
 		gl.glGenTextures(1, texture);
 		gl.glBindTexture(GL_TEXTURE_2D, *texture);
-		gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
+		GLint internalFormat = GL_RGBA8;
+		if (imageToGPU.second.colorSpace == RendererResourceManager::ImageToGPU::ColorSpace::SRGB) {
+			internalFormat = GL_SRGB8_ALPHA8;
+		}
+		gl.glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
 		gl.glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	m_globalInfo.rendererResourceManager.imagesToGPU.clear();

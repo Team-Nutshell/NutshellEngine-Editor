@@ -108,8 +108,14 @@ public:
 	};
 
 	struct ImageToGPU {
+		enum class ColorSpace {
+			Linear,
+			SRGB
+		};
+
 		uint32_t width = 0;
 		uint32_t height = 0;
+		ColorSpace colorSpace = ColorSpace::Linear;
 
 		std::vector<uint8_t> data;
 	};

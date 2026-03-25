@@ -484,6 +484,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasDiffuseTexture = true;
 				material.diffuseTextureName = j["diffuse"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.diffuseTextureName, projectDirectory), material.diffuseTextureName);
+				if (imagesToGPU.find(material.diffuseTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.diffuseTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+				}
 			}
 
 			if (j["diffuse"]["texture"].contains("imageSamplerPath")) {
@@ -503,6 +506,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasNormalTexture = true;
 				material.normalTextureName = j["normal"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.normalTextureName, projectDirectory), material.normalTextureName);
+				if (imagesToGPU.find(material.normalTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.normalTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+				}
 			}
 
 			if (j["normal"]["texture"].contains("imageSamplerPath")) {
@@ -519,6 +525,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasMetalnessTexture = true;
 				material.metalnessTextureName = j["metalness"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.metalnessTextureName, projectDirectory), material.metalnessTextureName);
+				if (imagesToGPU.find(material.metalnessTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.metalnessTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+				}
 			}
 
 			if (j["metalness"]["texture"].contains("imageSamplerPath")) {
@@ -538,6 +547,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasRoughnessTexture = true;
 				material.roughnessTextureName = j["roughness"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.roughnessTextureName, projectDirectory), material.roughnessTextureName);
+				if (imagesToGPU.find(material.roughnessTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.roughnessTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+				}
 			}
 
 			if (j["roughness"]["texture"].contains("imageSamplerPath")) {
@@ -557,6 +569,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasOcclusionTexture = true;
 				material.occlusionTextureName = j["occlusion"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.occlusionTextureName, projectDirectory), material.occlusionTextureName);
+				if (imagesToGPU.find(material.occlusionTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.occlusionTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+				}
 			}
 
 			if (j["occlusion"]["texture"].contains("imageSamplerPath")) {
@@ -576,6 +591,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 				material.hasEmissiveTexture = true;
 				material.emissiveTextureName = j["emissive"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.emissiveTextureName, projectDirectory), material.emissiveTextureName);
+				if (imagesToGPU.find(material.emissiveTextureName) != imagesToGPU.end()) {
+					imagesToGPU[material.emissiveTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+				}
 			}
 
 			if (j["emissive"]["texture"].contains("imageSamplerPath")) {
@@ -993,6 +1011,10 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						if (hasImage) {
+							if (imagesToGPU.find(primitive.material.diffuseTextureName) != imagesToGPU.end()) {
+								imagesToGPU[primitive.material.diffuseTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+							}
+
 							SamplerToGPU sampler;
 							if (baseColorTexture->sampler != NULL) {
 								if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
@@ -1105,6 +1127,10 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						if (hasImage) {
+							if (imagesToGPU.find(primitive.material.metalnessTextureName) != imagesToGPU.end()) {
+								imagesToGPU[primitive.material.metalnessTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+							}
+
 							SamplerToGPU sampler;
 							if (metallicRoughnessTexture->sampler != NULL) {
 								if ((metallicRoughnessTexture->sampler->min_filter == 9728) || (metallicRoughnessTexture->sampler->min_filter == 9984) || (metallicRoughnessTexture->sampler->min_filter == 9986)) {
@@ -1214,6 +1240,10 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 
 					if (hasImage) {
+						if (imagesToGPU.find(primitive.material.normalTextureName) != imagesToGPU.end()) {
+							imagesToGPU[primitive.material.normalTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+						}
+
 						SamplerToGPU sampler;
 						if (normalTexture->sampler != NULL) {
 							if ((normalTexture->sampler->min_filter == 9728) || (normalTexture->sampler->min_filter == 9984) || (normalTexture->sampler->min_filter == 9986)) {
@@ -1318,6 +1348,10 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 
 					if (hasImage) {
+						if (imagesToGPU.find(primitive.material.emissiveTextureName) != imagesToGPU.end()) {
+							imagesToGPU[primitive.material.emissiveTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+						}
+
 						SamplerToGPU sampler;
 						if (emissiveTexture->sampler != NULL) {
 							if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
@@ -1422,6 +1456,10 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 
 					if (hasImage) {
+						if (imagesToGPU.find(primitive.material.occlusionTextureName) != imagesToGPU.end()) {
+							imagesToGPU[primitive.material.occlusionTextureName].colorSpace = ImageToGPU::ColorSpace::Linear;
+						}
+
 						SamplerToGPU sampler;
 						if (occlusionTexture->sampler != NULL) {
 							if ((occlusionTexture->sampler->min_filter == 9728) || (occlusionTexture->sampler->min_filter == 9984) || (occlusionTexture->sampler->min_filter == 9986)) {
@@ -1764,6 +1802,9 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 			if (currentMaterial) {
 				currentMaterial->hasDiffuseTexture = true;
 				currentMaterial->diffuseTextureName = materialDirectory + "/" + tokens[1];
+				if (imagesToGPU.find(currentMaterial->diffuseTextureName) != imagesToGPU.end()) {
+					imagesToGPU[currentMaterial->diffuseTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+				}
 			}
 		}
 		else if (tokens[0] == "Ke") {
@@ -1777,6 +1818,9 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 			if (currentMaterial) {
 				currentMaterial->hasEmissiveTexture = true;
 				currentMaterial->emissiveTextureName = materialDirectory + "/" + tokens[1];
+				if (imagesToGPU.find(currentMaterial->emissiveTextureName) != imagesToGPU.end()) {
+					imagesToGPU[currentMaterial->emissiveTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
+				}
 			}
 		}
 	}
