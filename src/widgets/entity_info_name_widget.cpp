@@ -23,6 +23,7 @@ void EntityInfoNameWidget::onEditingFinished() {
 			m_globalInfo.actionUndoStack->push(new ChangeEntitiesNameCommand(m_globalInfo, entityIDsToRename, text().toStdString()));
 		}
 	}
+	clearFocus();
 }
 
 void EntityInfoNameWidget::onEntityNameChanged(EntityID entityID, const std::string& name) {
