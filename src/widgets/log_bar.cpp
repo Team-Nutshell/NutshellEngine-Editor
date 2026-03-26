@@ -9,7 +9,11 @@ LogBar::LogBar(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	menu = new LogBarMenu(m_globalInfo);
 	setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 
+	m_clearTimer.setInterval(10000);
+	m_clearTimer.setSingleShot(true);
+
 	connect(this, &LogBar::customContextMenuRequested, this, &LogBar::showMenu);
+	connect(&m_clearTimer, &QTimer::timeout, this, &LogBar::onClearTimerEnd);
 	connect(&m_globalInfo.logger, &Logger::addLogSignal, this, &LogBar::onLogAdded);
 	connect(&m_globalInfo.logger, &Logger::clearLogsSignal, this, &LogBar::onLogsCleared);
 }
@@ -24,6 +28,8 @@ void LogBar::onLogAdded() {
 
 	std::string fullLog = time + " - " + logString;
 	setText(QString::fromStdString(fullLog));
+
+	m_clearTimer.start();
 }
 
 void LogBar::onLogsCleared() {
@@ -52,6 +58,10 @@ void LogBar::mousePressEvent(QMouseEvent* event) {
 
 void LogBar::onLogsWidgetClose() {
 	m_logsWidget = nullptr;
+}
+
+void LogBar::onClearTimerEnd() {
+	clear();
 }
 
 void LogBar::paintEvent(QPaintEvent* event) {

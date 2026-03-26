@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QPaintEvent>
 #include <QMouseEvent>
+#include <QTimer>
 #include <string>
 
 class LogBar : public QLabel {
@@ -19,6 +20,7 @@ private slots:
 	void mousePressEvent(QMouseEvent* event);
 
 	void onLogsWidgetClose();
+	void onClearTimerEnd();
 
 protected:
 	void paintEvent(QPaintEvent* event);
@@ -27,6 +29,8 @@ private:
 	GlobalInfo& m_globalInfo;
 
 	LogsWidget* m_logsWidget = nullptr;
+
+	QTimer m_clearTimer;
 
 public:
 	LogBarMenu* menu;
