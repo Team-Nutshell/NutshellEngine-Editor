@@ -6,6 +6,7 @@ namespace NtshEngn {
 	struct Renderable {
 		Mesh* mesh = nullptr;
 		Material material;
+		std::string fragmentShader;
 	};
 
 }

@@ -73,6 +73,10 @@ void OptionsNtopFileWidget::setPath(const std::string& path) {
 	updateWidgets();
 }
 
+std::string OptionsNtopFileWidget::getPath() {
+	return m_optionsFilePath;
+}
+
 void OptionsNtopFileWidget::updateWidgets() {
 	windowTitleWidget->setText(optionsNtop.windowTitle);
 	windowIconImageWidget->setPath(optionsNtop.windowIconImagePath);
@@ -141,7 +145,9 @@ ChangeOptionsNtopFile::ChangeOptionsNtopFile(GlobalInfo& globalInfo, OptionsNtop
 }
 
 void ChangeOptionsNtopFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_optionsNtopFileWidget->isVisible() || (m_optionsNtopFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_optionsNtopFileWidget->optionsNtop = m_oldOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();
@@ -150,7 +156,9 @@ void ChangeOptionsNtopFile::undo() {
 }
 
 void ChangeOptionsNtopFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_optionsNtopFileWidget->isVisible() || (m_optionsNtopFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_optionsNtopFileWidget->optionsNtop = m_newOptionsNtop;
 	m_optionsNtopFileWidget->updateWidgets();

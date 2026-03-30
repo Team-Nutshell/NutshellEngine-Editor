@@ -58,12 +58,12 @@ void CopyEntitiesCommand::undo() {
 	std::set<EntityID> otherSelectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
 	bool clearAllSelection = false;
 	for (EntityID pastedEntityID : m_pastedEntityIDs) {
-		m_globalInfo.entities.erase(pastedEntityID);
-		emit m_globalInfo.signalEmitter.destroyEntitySignal(pastedEntityID);
-		otherSelectedEntityIDs.erase(pastedEntityID);
 		if (pastedEntityID == m_globalInfo.currentEntityID) {
 			clearAllSelection = true;
 		}
+		m_globalInfo.entities.erase(pastedEntityID);
+		emit m_globalInfo.signalEmitter.destroyEntitySignal(pastedEntityID);
+		otherSelectedEntityIDs.erase(pastedEntityID);
 	}
 
 	if (clearAllSelection) {

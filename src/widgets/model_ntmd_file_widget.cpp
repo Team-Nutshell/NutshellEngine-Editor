@@ -67,6 +67,10 @@ void ModelNtmdFileWidget::setPath(const std::string& path) {
 	}
 }
 
+std::string ModelNtmdFileWidget::getPath() {
+	return m_modelFilePath;
+}
+
 void ModelNtmdFileWidget::save() {
 	nlohmann::json j;
 	for (int i = 0; i < primitivesWidget->layout()->count(); i++) {

@@ -1,7 +1,7 @@
 #pragma once
 #include "../common/bounding_volumes.h"
-#include <qopengl.h>
-#include <qopenglfunctions.h>
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_5_Core>
 #include <vector>
 #include <utility>
 #include <string>
@@ -49,34 +49,23 @@ struct RendererMesh {
 };
 
 struct RendererMaterial {
-	bool hasDiffuseTexture = true;
 	std::string diffuseTextureName = "defaultDiffuseTexture";
 	std::string diffuseTextureSamplerName = "defaultSampler";
-	nml::vec4 diffuseColor = nml::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
-	bool hasNormalTexture = false;
-	std::string normalTextureName = "";
+	std::string normalTextureName = "defaultNormalTexture";
 	std::string normalTextureSamplerName = "defaultSampler";
 
-	bool hasMetalnessTexture = false;
-	std::string metalnessTextureName = "";
+	std::string metalnessTextureName = "defaultORMTexture";
 	std::string metalnessTextureSamplerName = "defaultSampler";
-	float metalnessValue = 0.5f;
 
-	bool hasRoughnessTexture = false;
-	std::string roughnessTextureName = "";
+	std::string roughnessTextureName = "defaultORMTexture";
 	std::string roughnessTextureSamplerName = "defaultSampler";
-	float roughnessValue = 0.5f;
 
-	bool hasOcclusionTexture = false;
-	std::string occlusionTextureName = "";
+	std::string occlusionTextureName = "defaultORMTexture";
 	std::string occlusionTextureSamplerName = "defaultSampler";
-	float occlusionValue = 1.0f;
 
-	bool hasEmissiveTexture = false;
-	std::string emissiveTextureName = "";
+	std::string emissiveTextureName = "defaultEmissiveTexture";
 	std::string emissiveTextureSamplerName = "defaultSampler";
-	nml::vec3 emissiveColor = nml::vec3(0.0f, 0.0f, 0.0f);
 	float emissiveFactor = 1.0f;
 
 	float alphaCutoff = 0.0f;

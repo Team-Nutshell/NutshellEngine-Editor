@@ -24,11 +24,14 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(primitiveIndexWidget);
 	materialPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_material"), m_globalInfo.localization.getString("component_renderable_no_material_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(materialPathWidget);
+	fragmentShaderPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_fragment_shader"), m_globalInfo.localization.getString("component_renderable_no_fragment_shader_selected"), m_globalInfo.projectDirectory + "/assets");
+	layout()->addWidget(fragmentShaderPathWidget);
 	layout()->addWidget(new SeparatorLine());
 
 	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
 	connect(materialPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
+	connect(fragmentShaderPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableRemoved);
@@ -82,6 +85,14 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	}
 	else {
 		materialPathWidget->setPath("");
+	}
+
+	if (!renderable.fragmentShaderPath.empty()) {
+		std::string fragmentShaderPath = AssetHelper::absoluteToRelative(renderable.fragmentShaderPath, m_globalInfo.projectDirectory);
+		fragmentShaderPathWidget->setPath(fragmentShaderPath);
+	}
+	else {
+		fragmentShaderPathWidget->setPath("");
 	}
 }
 
@@ -163,6 +174,13 @@ void RenderableComponentWidget::onPathChanged(const std::string& path) {
 				newRenderable.materialPath = AssetHelper::absoluteToRelative(fullMaterialPath, m_globalInfo.projectDirectory);
 				if (!fullMaterialPath.empty()) {
 					m_globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newRenderable.materialPath);
+				}
+			}
+			else if (senderWidget == fragmentShaderPathWidget) {
+				std::string fullFragmentShaderPath = path;
+				newRenderable.fragmentShaderPath = AssetHelper::absoluteToRelative(fullFragmentShaderPath, m_globalInfo.projectDirectory);
+				if (!fullFragmentShaderPath.empty()) {
+					m_globalInfo.rendererResourceManager.loadFragmentShader(fullFragmentShaderPath, newRenderable.fragmentShaderPath);
 				}
 			}
 

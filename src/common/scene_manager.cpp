@@ -62,6 +62,20 @@ void SceneManager::openScene(GlobalInfo& globalInfo, const std::string& sceneFil
 						globalInfo.rendererResourceManager.loadMaterial(fullMaterialPath, newEntity.renderable->materialPath);
 					}
 				}
+
+				if (!newEntity.renderable->fragmentShaderPath.empty()) {
+					std::string fullFragmentShaderPath = newEntity.renderable->fragmentShaderPath;
+					std::filesystem::path path(fullFragmentShaderPath);
+					if (!path.is_absolute()) {
+						if (std::filesystem::exists(globalInfo.projectDirectory + "/" + fullFragmentShaderPath)) {
+							fullFragmentShaderPath = std::filesystem::canonical(globalInfo.projectDirectory + "/" + fullFragmentShaderPath).string();
+						}
+					}
+					std::replace(fullFragmentShaderPath.begin(), fullFragmentShaderPath.end(), '\\', '/');
+					if (std::filesystem::exists(fullFragmentShaderPath)) {
+						globalInfo.rendererResourceManager.loadFragmentShader(fullFragmentShaderPath, newEntity.renderable->fragmentShaderPath);
+					}
+				}
 			}
 		}
 	}

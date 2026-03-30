@@ -1,13 +1,14 @@
 #pragma once
-#include "text_widget.h"
+#include "code_editor_widget.h"
 #include "../common/global_info.h"
 #include <QWidget>
+#include <QPushButton>
 #include <string>
 
-class TextFileWidget : public QWidget {
+class ShaderFileWidget : public QWidget {
 	Q_OBJECT
 public:
-	TextFileWidget(GlobalInfo& globalInfo);
+	ShaderFileWidget(GlobalInfo& globalInfo);
 
 	void setPath(const std::string& path);
 	std::string getPath();
@@ -17,21 +18,23 @@ public:
 
 private slots:
 	void onValueChanged();
+	void onCompileButtonClicked();
 
 private:
 	GlobalInfo& m_globalInfo;
 
-	std::string m_textFilePath;
+	std::string m_shaderFilePath;
 
 public:
 	std::string text;
 
-	TextWidget* textEditWidget;
+	CodeEditorWidget* codeEditorWidget;
+	QPushButton* compileButton;
 };
 
-class ChangeTextFile : public QUndoCommand {
+class ChangeShaderFile : public QUndoCommand {
 public:
-	ChangeTextFile(GlobalInfo& globalInfo, std::string newText, const std::string& filePath);
+	ChangeShaderFile(GlobalInfo& globalInfo, std::string newText, const std::string& filePath);
 
 	void undo();
 	void redo();
@@ -39,7 +42,7 @@ public:
 private:
 	GlobalInfo& m_globalInfo;
 
-	TextFileWidget* m_textFileWidget;
+	ShaderFileWidget* m_shaderFileWidget;
 
 	std::string m_filePath;
 	std::string m_oldText;

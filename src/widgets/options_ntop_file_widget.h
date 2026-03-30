@@ -32,6 +32,7 @@ public:
 	OptionsNtopFileWidget(GlobalInfo& globalInfo);
 
 	void setPath(const std::string& path);
+	std::string getPath();
 
 	void updateWidgets();
 	void save();

@@ -66,9 +66,9 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	layout()->addWidget(alphaCutoffWidget);
 	indexOfRefractionWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_material_index_of_refraction"));
 	layout()->addWidget(indexOfRefractionWidget);
+	layout()->addWidget(new SeparatorLine());
 	useTriplanarMappingWidget = new BooleanWidget(globalInfo, m_globalInfo.localization.getString("assets_material_use_triplanar_mapping"));
 	useTriplanarMappingWidget->setValue(false);
-	layout()->addWidget(new SeparatorLine());
 	layout()->addWidget(useTriplanarMappingWidget);
 	scaleUVWidget = new Vector2Widget(globalInfo, m_globalInfo.localization.getString("assets_material_scale_uv"));
 	layout()->addWidget(scaleUVWidget);
@@ -99,6 +99,7 @@ MaterialNtmlFileWidget::MaterialNtmlFileWidget(GlobalInfo& globalInfo) : m_globa
 	connect(emissiveTextureImageSamplerWidget, &FileSelectorWidget::fileSelected, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(emissiveFactorWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(emissiveColorWidget, &ColorPickerWidget::colorChanged, this, &MaterialNtmlFileWidget::onValueChanged);
+	connect(emissiveColorWidget, &ColorPickerWidget::temporaryColorChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(alphaCutoffWidget, &ScalarSliderWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
 	connect(alphaCutoffWidget, &ScalarSliderWidget::temporaryValueChanged, this, &MaterialNtmlFileWidget::onTemporaryValueChanged);
 	connect(indexOfRefractionWidget, &ScalarWidget::valueChanged, this, &MaterialNtmlFileWidget::onValueChanged);
@@ -230,6 +231,10 @@ void MaterialNtmlFileWidget::setPath(const std::string& path) {
 	}
 
 	updateWidgets();
+}
+
+std::string MaterialNtmlFileWidget::getPath() {
+	return m_materialFilePath;
 }
 
 void MaterialNtmlFileWidget::updateWidgets() {
@@ -422,8 +427,31 @@ void MaterialNtmlFileWidget::onValueChanged() {
 
 		if (m_globalInfo.rendererResourceManager.materials.find(materialPath) != m_globalInfo.rendererResourceManager.materials.end()) {
 			RendererMaterial& rendererMaterial = m_globalInfo.rendererResourceManager.materials[materialPath];
-			rendererMaterial.diffuseColor = nml::vec4(diffuseColorWidget->getColor(), rendererMaterial.diffuseColor.w);
-			rendererMaterial.emissiveColor = emissiveColorWidget->getColor();
+			if (rendererMaterial.diffuseTextureName == materialPath + "_diffuseTexture") {
+				RendererResourceManager::ImageToGPU diffuseImage;
+				diffuseImage.width = 1;
+				diffuseImage.height = 1;
+				diffuseImage.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+				diffuseImage.data = { static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().x)),
+					static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().y)),
+					static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().z)),
+					static_cast<uint8_t>(round(255.0f * opacityValueWidget->getValue()))
+				};
+				m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_diffuseTexture"] = diffuseImage;
+			}
+
+			if (rendererMaterial.emissiveTextureName == materialPath + "_emissiveTexture") {
+				RendererResourceManager::ImageToGPU emissiveImage;
+				emissiveImage.width = 1;
+				emissiveImage.height = 1;
+				emissiveImage.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+				emissiveImage.data = { static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getColor().x)),
+					static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getColor().y)),
+					static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getColor().z)),
+					255
+				};
+				m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_emissiveTexture"] = emissiveImage;
+			}
 		}
 		m_globalInfo.rendererResourceManager.loadMaterial(m_materialFilePath, materialPath);
 	}
@@ -436,22 +464,89 @@ void MaterialNtmlFileWidget::onTemporaryValueChanged() {
 	RendererMaterial& rendererMaterial = m_globalInfo.rendererResourceManager.materials[materialPath];
 
 	if (senderWidget == diffuseColorWidget) {
-		rendererMaterial.diffuseColor = nml::vec4(diffuseColorWidget->getTemporaryColor(), rendererMaterial.diffuseColor.w);
+		if (rendererMaterial.diffuseTextureName == materialPath + "_diffuseTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getTemporaryColor().x)),
+				static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getTemporaryColor().y)),
+				static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getTemporaryColor().z)),
+				static_cast<uint8_t>(round(255.0f * opacityValueWidget->getValue()))
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_diffuseTexture"] = image;
+		}
 	}
 	else if (senderWidget == opacityValueWidget) {
-		rendererMaterial.diffuseColor.w = opacityValueWidget->getTemporaryValue();
+		if (rendererMaterial.diffuseTextureName == materialPath + "_diffuseTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().x)),
+				static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().y)),
+				static_cast<uint8_t>(round(255.0f * diffuseColorWidget->getColor().z)),
+				static_cast<uint8_t>(round(255.0f * opacityValueWidget->getTemporaryValue()))
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_diffuseTexture"] = image;
+		}
 	}
 	else if (senderWidget == metalnessValueWidget) {
-		rendererMaterial.metalnessValue = metalnessValueWidget->getTemporaryValue();
+		if (rendererMaterial.metalnessTextureName == materialPath + "_metalnessTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue()))
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_metalnessTexture"] = image;
+		}
 	}
 	else if (senderWidget == roughnessValueWidget) {
-		rendererMaterial.roughnessValue = roughnessValueWidget->getTemporaryValue();
+		if (rendererMaterial.roughnessTextureName == materialPath + "_roughnessTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue()))
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_roughnessTexture"] = image;
+		}
 	}
 	else if (senderWidget == occlusionValueWidget) {
-		rendererMaterial.occlusionValue = occlusionValueWidget->getTemporaryValue();
+		if (rendererMaterial.occlusionTextureName == materialPath + "_occlusionTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
+				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue()))
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_occlusionTexture"] = image;
+			rendererMaterial.occlusionTextureName = materialPath + "_occlusionTexture";
+		}
 	}
 	else if (senderWidget == emissiveColorWidget) {
-		rendererMaterial.emissiveColor = emissiveColorWidget->getTemporaryColor();
+		if (rendererMaterial.emissiveTextureName == materialPath + "_emissiveTexture") {
+			RendererResourceManager::ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getTemporaryColor().x)),
+				static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getTemporaryColor().y)),
+				static_cast<uint8_t>(round(255.0f * emissiveColorWidget->getTemporaryColor().z)),
+				255
+			};
+			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_emissiveTexture"] = image;
+		}
 	}
 	else if (senderWidget == alphaCutoffWidget) {
 		rendererMaterial.alphaCutoff = alphaCutoffWidget->getTemporaryValue();
@@ -468,7 +563,9 @@ ChangeMaterialNtmlFile::ChangeMaterialNtmlFile(GlobalInfo& globalInfo, MaterialN
 }
 
 void ChangeMaterialNtmlFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_materialNtmlFileWidget->isVisible() || (m_materialNtmlFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_materialNtmlFileWidget->materialNtml = m_oldMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();
@@ -477,7 +574,9 @@ void ChangeMaterialNtmlFile::undo() {
 }
 
 void ChangeMaterialNtmlFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_materialNtmlFileWidget->isVisible() || (m_materialNtmlFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_materialNtmlFileWidget->materialNtml = m_newMaterialNtml;
 	m_materialNtmlFileWidget->updateWidgets();

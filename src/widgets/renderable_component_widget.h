@@ -28,4 +28,5 @@ public:
 	FileSelectorWidget* modelPathWidget;
 	ComboBoxWidget* primitiveIndexWidget;
 	FileSelectorWidget* materialPathWidget;
+	FileSelectorWidget* fragmentShaderPathWidget;
 };

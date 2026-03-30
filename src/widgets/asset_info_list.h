@@ -6,6 +6,7 @@
 #include "sampler_ntsp_file_widget.h"
 #include "image_file_widget.h"
 #include "text_file_widget.h"
+#include "shader_file_widget.h"
 #include "project_ntpj_file_widget.h"
 #include <QTreeView>
 #include <QWidget>
@@ -15,6 +16,9 @@ class AssetInfoList : public QWidget {
 	Q_OBJECT
 public:
 	AssetInfoList(GlobalInfo& globalInfo);
+
+private:
+	void hideAllWidgets();
 
 private slots:
 	void onAssetSelected(const std::string&);
@@ -30,6 +34,7 @@ public:
 	ImageFileWidget* imageFileWidget;
 	QTreeView* jsonFileWidget;
 	TextFileWidget* textFileWidget;
+	ShaderFileWidget* shaderFileWidget;
 	ProjectNtpjFileWidget* projectNtpjFileWidget;
 
 	std::string currentAssetPath = "";

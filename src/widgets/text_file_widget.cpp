@@ -4,6 +4,7 @@
 #include "../common/asset_helper.h"
 #include "../undo_commands/select_asset_entities_command.h"
 #include <QVBoxLayout>
+#include <QScrollBar>
 #include <fstream>
 
 TextFileWidget::TextFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
@@ -13,6 +14,7 @@ TextFileWidget::TextFileWidget(GlobalInfo& globalInfo) : m_globalInfo(globalInfo
 	layout()->addWidget(new QLabel(QString::fromStdString(m_globalInfo.localization.getString("assets_text_file"))));
 	layout()->addWidget(new SeparatorLine());
 	textEditWidget = new TextWidget();
+	textEditWidget->setTabStopDistance(QFontMetricsF(font()).horizontalAdvance(' ') * 4.0f);
 	layout()->addWidget(textEditWidget);
 
 	connect(textEditWidget, &TextWidget::valueChanged, this, &TextFileWidget::onValueChanged);
@@ -27,8 +29,16 @@ void TextFileWidget::setPath(const std::string& path) {
 	updateWidgets();
 }
 
+std::string TextFileWidget::getPath() {
+	return m_textFilePath;
+}
+
 void TextFileWidget::updateWidgets() {
-	textEditWidget->setText(QString::fromStdString(text));
+	if (textEditWidget->toPlainText().toStdString() != text) {
+		int previousScrollBarPosition = textEditWidget->verticalScrollBar()->sliderPosition();
+		textEditWidget->setText(QString::fromStdString(text));
+		textEditWidget->verticalScrollBar()->setSliderPosition(previousScrollBarPosition);
+	}
 }
 
 void TextFileWidget::save() {
@@ -50,7 +60,9 @@ ChangeTextFile::ChangeTextFile(GlobalInfo& globalInfo, std::string newText, cons
 }
 
 void ChangeTextFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_textFileWidget->isVisible() || (m_textFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_textFileWidget->text = m_oldText;
 	m_textFileWidget->updateWidgets();
@@ -59,7 +71,9 @@ void ChangeTextFile::undo() {
 }
 
 void ChangeTextFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_textFileWidget->isVisible() || (m_textFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_textFileWidget->text = m_newText;
 	m_textFileWidget->updateWidgets();

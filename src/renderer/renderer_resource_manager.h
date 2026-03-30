@@ -4,6 +4,7 @@
 #include "../../external/cgltf/cgltf.h"
 #include <unordered_map>
 #include <vector>
+#include <set>
 #include <string>
 #include <tuple>
 #include <filesystem>
@@ -80,12 +81,12 @@ public:
 		}
 
 		std::string toString() {
-			return "mag:" + SamplerToGPU::filterToString(magFilter) +
-				"/min:" + SamplerToGPU::filterToString(minFilter) +
-				"/mip:" + SamplerToGPU::filterToString(mipmapFilter) +
-				"/wS:" + SamplerToGPU::wrapToString(wrapS) +
-				"/wT:" + SamplerToGPU::wrapToString(wrapT) +
-				"aL:" + std::to_string(anisotropyLevel);
+			return "mag:" + filterToString(magFilter) +
+				"/min:" + filterToString(minFilter) +
+				"/mip:" + filterToString(mipmapFilter) +
+				"/wS:" + wrapToString(wrapS) +
+				"/wT:" + wrapToString(wrapT) +
+				"/aL:" + std::to_string(anisotropyLevel);
 		}
 
 		Filter magFilter = Filter::Nearest;
@@ -128,6 +129,7 @@ public:
 	void loadMaterial(const std::string& materialPath, const std::string& name);
 	void loadImage(const std::string& imagePath, const std::string& name);
 	void loadSampler(const std::string& samplerPath, const std::string& name);
+	void loadFragmentShader(const std::string& fragmentShaderPath, const std::string& name);
 
 	void loadMeshColliders(Mesh& mesh);
 
@@ -148,22 +150,26 @@ private:
 
 public:
 	std::unordered_map<std::string, RendererModel> rendererModels;
+	std::unordered_map<std::string, RendererMaterial> materials;
 	std::unordered_map<std::string, uint32_t> textures;
 	std::unordered_map<std::string, RendererSampler> samplers;
+	std::unordered_map<std::string, GLuint> fragmentShaders;
+	std::unordered_map<std::string, GLuint> fragmentShaderPrograms;
 
 	std::unordered_map<std::string, Model> models;
-	std::unordered_map<std::string, RendererMaterial> materials;
 	std::unordered_map<std::string, ImageToGPU> imagesToGPU;
 	std::unordered_map<std::string, SamplerToGPU> samplersToGPU;
+	std::unordered_map<std::string, std::string> fragmentShadersToGPU;
 
 	std::vector<std::string> modelsToLoad;
 
-	std::unordered_map<std::string, std::filesystem::file_time_type> modelLastWriteTime;
-	std::unordered_map<std::string, std::filesystem::file_time_type> materialLastWriteTime;
-	std::unordered_map<std::string, std::filesystem::file_time_type> imageLastWriteTime;
-	std::unordered_map<std::string, std::filesystem::file_time_type> samplerLastWriteTime;
+	std::unordered_map<std::string, std::filesystem::file_time_type> modelLastWriteTimes;
+	std::unordered_map<std::string, std::filesystem::file_time_type> materialLastWriteTimes;
+	std::unordered_map<std::string, std::filesystem::file_time_type> imageLastWriteTimes;
+	std::unordered_map<std::string, std::filesystem::file_time_type> samplerLastWriteTimes;
+	std::unordered_map<std::string, std::filesystem::file_time_type> fragmentShaderLastWriteTimes;
 
-	std::unordered_map<std::string, std::vector<std::string>> modelNtmdPrimitiveToMaterialPath;
+	std::unordered_map<std::string, std::vector<std::string>> modelNtmdPrimitiveToMaterialPaths;
 
 	std::string projectDirectory = "";
 

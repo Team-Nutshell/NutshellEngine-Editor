@@ -21,7 +21,7 @@ ScalarSliderWidget::ScalarSliderWidget(GlobalInfo& globalInfo, const std::string
 	valueLineEdit->setFixedWidth(50);
 	layout()->addWidget(valueLineEdit);
 	layout()->setAlignment(valueLineEdit, Qt::AlignmentFlag::AlignRight);
-	slider = new QSlider();
+	slider = new SliderNoScrollWidget();
 	slider->setOrientation(Qt::Orientation::Horizontal);
 	slider->setMinimum(static_cast<int>(min * 100.0f));
 	slider->setMaximum(static_cast<int>(max * 100.0f));

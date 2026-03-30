@@ -22,6 +22,7 @@ private slots:
 	void newModel();
 	void newImageSampler();
 	void newMaterial();
+	void newFragmentShader();
 	void newScene();
 	void newTextFile();
 	void copyPath();
@@ -43,6 +44,7 @@ public:
 	QAction* newModelAction;
 	QAction* newImageSamplerAction;
 	QAction* newMaterialAction;
+	QAction* newFragmentShaderAction;
 	QAction* newSceneAction;
 	QAction* newTextFileAction;
 	QAction* copyPathAction;

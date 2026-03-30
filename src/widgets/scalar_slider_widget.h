@@ -1,9 +1,9 @@
 #pragma once
+#include "slider_no_scroll_widget.h"
 #include "../common/global_info.h"
 #include <QWidget>
 #include <QLabel>
 #include <QLineEdit>
-#include <QSlider>
 #include <QMouseEvent>
 #include <string>
 #include <limits>
@@ -44,5 +44,5 @@ private:
 public:
 	QLabel* nameLabel;
 	QLineEdit* valueLineEdit;
-	QSlider* slider;
+	SliderNoScrollWidget* slider;
 };

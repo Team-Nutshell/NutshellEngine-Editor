@@ -26,6 +26,7 @@ AssetListMenu::AssetListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	newModelAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("model")), this, &AssetListMenu::newModel);
 	newImageSamplerAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("image_sampler")), this, &AssetListMenu::newImageSampler);
 	newMaterialAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("material")), this, &AssetListMenu::newMaterial);
+	newFragmentShaderAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("fragment_shader")), this, &AssetListMenu::newFragmentShader);
 	newSceneAction = createMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("scene")), this, &AssetListMenu::newScene);
 	QMenu* createOtherMenu = createMenu->addMenu(QString::fromStdString(m_globalInfo.localization.getString("assets_create_other")));
 	newTextFileAction = createOtherMenu->addAction(QString::fromStdString(m_globalInfo.localization.getString("text_file")), this, &AssetListMenu::newTextFile);
@@ -38,6 +39,7 @@ void AssetListMenu::setIcons() {
 	newModelAction->setIcon(assetList->modelIcon);
 	newImageSamplerAction->setIcon(assetList->imageSamplerIcon);
 	newMaterialAction->setIcon(assetList->materialIcon);
+	newFragmentShaderAction->setIcon(assetList->fragmentShaderIcon);
 	newSceneAction->setIcon(assetList->sceneIcon);
 	newTextFileAction->setIcon(assetList->textIcon);
 }
@@ -175,6 +177,26 @@ void AssetListMenu::newMaterial() {
 	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newMaterialName + materialExtension, NO_ENTITY, {}));
 
 	assetList->currentlyEditedItemName = newMaterialName + materialExtension;
+}
+
+void AssetListMenu::newFragmentShader() {
+	std::string baseNewFragmentShaderPipelineName = "fragment_shader";
+	std::string fragmentShaderExtension = ".glsl";
+	std::string newFragmentShaderName = baseNewFragmentShaderPipelineName;
+	uint32_t fragmentShaderNameIndex = 0;
+	while (std::filesystem::exists(directory + "/" + newFragmentShaderName + fragmentShaderExtension)) {
+		newFragmentShaderName = baseNewFragmentShaderPipelineName + "_" + std::to_string(fragmentShaderNameIndex);
+		fragmentShaderNameIndex++;
+	}
+	std::ofstream newFragmentShaderFile(directory + "/" + newFragmentShaderName + fragmentShaderExtension);
+	newFragmentShaderFile << R"(void main() {
+    NtshEngn_outColor = vec4(1.0, 0.0, 0.0, 1.0);
+})";
+	newFragmentShaderFile.close();
+
+	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, directory + "/" + newFragmentShaderName + fragmentShaderExtension, NO_ENTITY, {}));
+
+	assetList->currentlyEditedItemName = newFragmentShaderName + fragmentShaderExtension;
 }
 
 void AssetListMenu::newScene() {

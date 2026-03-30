@@ -9,6 +9,7 @@ public:
 	ModelNtmdFileWidget(GlobalInfo& globalInfo);
 
 	void setPath(const std::string& path);
+	std::string getPath();
 
 	void save();
 

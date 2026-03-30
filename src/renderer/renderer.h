@@ -34,7 +34,7 @@ public:
 	void paintGL();
 
 private:
-	GLuint compileShader(GLenum shaderType, const std::string& shaderCode);
+	GLuint compileShader(GLenum shaderType, const std::string& shaderCode, int debugLineOffset = 0);
 	GLuint compileProgram(GLuint vertexShader, GLuint fragmentShader);
 
 	void createSceneImages();
@@ -143,6 +143,8 @@ private:
 	bool m_mouseMoveFlag = false;
 
 	QTimer m_waitTimer;
+	double m_previousTime = 0.0f;
+	float m_time = 0.0f;
 
 	bool m_doPicking = false;
 	bool m_gotResized = false;
@@ -150,12 +152,15 @@ private:
 	enum class DragDropResourceType {
 		Model,
 		Material,
+		FragmentShader,
 		None
 	};
 	DragDropResourceType m_dragDropResourceType = DragDropResourceType::None;
 	std::string m_dragDropResourcePath;
 
 	std::unordered_map<EntityID, Transform> m_entityMoveTransforms;
+
+	GLuint m_entityVertexShader;
 
 	GLuint m_entityProgram;
 	GLuint m_shadowProgram;
@@ -167,6 +172,7 @@ private:
 	GLuint m_outlineSoloProgram;
 	GLuint m_outlineProgram;
 	GLuint m_colliderProgram;
+	GLuint m_copyProgram;
 
 	GLuint m_sceneFramebuffer;
 	GLuint m_sceneColorImage;

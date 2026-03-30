@@ -125,6 +125,9 @@ void AssetList::reloadAsset(const std::string& assetPath, const std::string& ass
 	else if (fileType == AssetHelper::FileType::Material) {
 		m_globalInfo.rendererResourceManager.loadMaterial(assetPath, assetName);
 	}
+	else if (fileType == AssetHelper::FileType::FragmentShader) {
+		m_globalInfo.rendererResourceManager.loadFragmentShader(assetPath, assetName);
+	}
 	else if (fileType == AssetHelper::FileType::Image) {
 		m_globalInfo.rendererResourceManager.loadImage(assetPath, assetName);
 	}
@@ -226,6 +229,9 @@ void AssetList::updateAssetList() {
 		else if (fileType == AssetHelper::FileType::Material) {
 			newItem->setIcon(materialIcon);
 		}
+		else if (fileType == AssetHelper::FileType::FragmentShader) {
+			newItem->setIcon(fragmentShaderIcon);
+		}
 		else if (fileType == AssetHelper::FileType::Model) {
 			newItem->setIcon(modelIcon);
 		}
@@ -267,6 +273,7 @@ void AssetList::loadIcons() {
 	meshIcon = QIcon("assets/icons/mesh.png");
 	imageSamplerIcon = QIcon("assets/icons/image_sampler.png");
 	materialIcon = QIcon("assets/icons/material.png");
+	fragmentShaderIcon = QIcon("assets/icons/fragment_shader.png");
 	modelIcon = QIcon("assets/icons/model.png");
 	soundIcon = QIcon("assets/icons/sound.png");
 	optionsIcon = QIcon("assets/icons/options.png");

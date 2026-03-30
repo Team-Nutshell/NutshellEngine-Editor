@@ -28,11 +28,26 @@ AssetInfoList::AssetInfoList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) 
 	textFileWidget = new TextFileWidget(m_globalInfo);
 	textFileWidget->hide();
 	layout()->addWidget(textFileWidget);
+	shaderFileWidget = new ShaderFileWidget(m_globalInfo);
+	shaderFileWidget->hide();
+	layout()->addWidget(shaderFileWidget);
 	projectNtpjFileWidget = new ProjectNtpjFileWidget(m_globalInfo);
 	projectNtpjFileWidget->hide();
 	layout()->addWidget(projectNtpjFileWidget);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectAssetSignal, this, &AssetInfoList::onAssetSelected);
+}
+
+void AssetInfoList::hideAllWidgets() {
+	materialNtmlFileWidget->hide();
+	modelNtmdFileWidget->hide();
+	optionsNtopFileWidget->hide();
+	samplerNtspFileWidget->hide();
+	imageFileWidget->hide();
+	jsonFileWidget->hide();
+	textFileWidget->hide();
+	shaderFileWidget->hide();
+	projectNtpjFileWidget->hide();
 }
 
 void AssetInfoList::onAssetSelected(const std::string& path) {
@@ -49,113 +64,57 @@ void AssetInfoList::onAssetSelected(const std::string& path) {
 
 		AssetHelper::FileType fileType = AssetHelper::fileType(path);
 		if (fileType == AssetHelper::FileType::Material) {
+			hideAllWidgets();
 			materialNtmlFileWidget->setPath(path);
 			materialNtmlFileWidget->show();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
 		}
 		else if ((fileType == AssetHelper::FileType::Model) && (extension == "ntmd")) {
-			materialNtmlFileWidget->hide();
+			hideAllWidgets();
 			modelNtmdFileWidget->setPath(path);
 			modelNtmdFileWidget->show();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Options) {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
+			hideAllWidgets();
 			optionsNtopFileWidget->setPath(path);
 			optionsNtopFileWidget->show();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::ImageSampler) {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
+			hideAllWidgets();
 			samplerNtspFileWidget->setPath(path);
 			samplerNtspFileWidget->show();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
 		}
 		else if ((fileType == AssetHelper::FileType::Image) ||
 			(fileType == AssetHelper::FileType::Icon)) {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
+			hideAllWidgets();
 			imageFileWidget->setPath(path);
 			imageFileWidget->show();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Json) {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
+			hideAllWidgets();
 			jsonFileWidget->setModel(new JSONModel(m_globalInfo, path));
 			jsonFileWidget->model()->setHeaderData(0, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_key")));
 			jsonFileWidget->model()->setHeaderData(1, Qt::Orientation::Horizontal, QString::fromStdString(m_globalInfo.localization.getString("assets_json_value")));
 			jsonFileWidget->show();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
 		}
 		else if (fileType == AssetHelper::FileType::Text) {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
+			hideAllWidgets();
 			textFileWidget->setPath(path);
 			textFileWidget->show();
-			projectNtpjFileWidget->hide();
+		}
+		else if (fileType == AssetHelper::FileType::FragmentShader) {
+			hideAllWidgets();
+			shaderFileWidget->setPath(path);
+			shaderFileWidget->show();
 		}
 		else if (extension == "ntpj") {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
+			hideAllWidgets();
 			projectNtpjFileWidget->show();
 		}
 		else {
-			materialNtmlFileWidget->hide();
-			modelNtmdFileWidget->hide();
-			optionsNtopFileWidget->hide();
-			samplerNtspFileWidget->hide();
-			imageFileWidget->hide();
-			jsonFileWidget->hide();
-			textFileWidget->hide();
-			projectNtpjFileWidget->hide();
+			hideAllWidgets();
 		}
 	}
 	else {
-		materialNtmlFileWidget->hide();
-		modelNtmdFileWidget->hide();
-		optionsNtopFileWidget->hide();
-		samplerNtspFileWidget->hide();
-		imageFileWidget->hide();
-		jsonFileWidget->hide();
-		textFileWidget->hide();
-		projectNtpjFileWidget->hide();
+		hideAllWidgets();
 	}
 }

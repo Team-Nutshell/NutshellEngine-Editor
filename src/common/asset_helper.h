@@ -34,6 +34,7 @@ struct AssetHelper {
 		Mesh,
 		ImageSampler,
 		Material,
+		FragmentShader,
 		Model,
 		Sound,
 		Options,
@@ -70,6 +71,9 @@ struct AssetHelper {
 			}
 			else if (extension == "ntml") {
 				return FileType::Material;
+			}
+			else if (extension == "glsl") {
+				return FileType::FragmentShader;
 			}
 			else if ((extension == "ntmd") ||
 				(extension == "gltf") ||

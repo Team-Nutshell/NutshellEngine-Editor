@@ -92,6 +92,10 @@ void SamplerNtspFileWidget::setPath(const std::string& path) {
 	updateWidgets();
 }
 
+std::string SamplerNtspFileWidget::getPath() {
+	return m_samplerFilePath;
+}
+
 void SamplerNtspFileWidget::updateWidgets() {
 	magFilterWidget->setElementByText(typeToFilter(samplerNtsp.magFilter));
 	minFilterWidget->setElementByText(typeToFilter(samplerNtsp.minFilter));
@@ -279,7 +283,9 @@ ChangeSamplerNtspFile::ChangeSamplerNtspFile(GlobalInfo& globalInfo, SamplerNtsp
 }
 
 void ChangeSamplerNtspFile::undo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_samplerNtspFileWidget->isVisible() || (m_samplerNtspFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_samplerNtspFileWidget->samplerNtsp = m_oldSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();
@@ -288,7 +294,9 @@ void ChangeSamplerNtspFile::undo() {
 }
 
 void ChangeSamplerNtspFile::redo() {
-	m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	if (!m_samplerNtspFileWidget->isVisible() || (m_samplerNtspFileWidget->getPath() != m_filePath)) {
+		m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_filePath, NO_ENTITY, {}));
+	}
 
 	m_samplerNtspFileWidget->samplerNtsp = m_newSamplerNtsp;
 	m_samplerNtspFileWidget->updateWidgets();

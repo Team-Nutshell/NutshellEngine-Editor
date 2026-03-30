@@ -302,9 +302,9 @@ std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> Scri
 			if (openParenthesisPos != std::string::npos) {
 				valueString = valueString.substr(openParenthesisPos + 1);
 			}
-			size_t closedParenthesisPos = valueString.find(')');
-			if (closedParenthesisPos != std::string::npos) {
-				valueString = valueString.substr(0, closedParenthesisPos);
+			size_t closeParenthesisPos = valueString.find(')');
+			if (closeParenthesisPos != std::string::npos) {
+				valueString = valueString.substr(0, closeParenthesisPos);
 			}
 			size_t commaPos = valueString.find(',');
 			if (commaPos == std::string::npos) {
@@ -341,9 +341,9 @@ std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> Scri
 			if (openParenthesisPos != std::string::npos) {
 				valueString = valueString.substr(openParenthesisPos + 1);
 			}
-			size_t closedParenthesisPos = valueString.find(')');
-			if (closedParenthesisPos != std::string::npos) {
-				valueString = valueString.substr(0, closedParenthesisPos);
+			size_t closeParenthesisPos = valueString.find(')');
+			if (closeParenthesisPos != std::string::npos) {
+				valueString = valueString.substr(0, closeParenthesisPos);
 			}
 			size_t commaPos = valueString.find(',');
 			if (commaPos == std::string::npos) {
@@ -387,9 +387,9 @@ std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> Scri
 			if (openParenthesisPos != std::string::npos) {
 				valueString = valueString.substr(openParenthesisPos + 1);
 			}
-			size_t closedParenthesisPos = valueString.find(')');
-			if (closedParenthesisPos != std::string::npos) {
-				valueString = valueString.substr(0, closedParenthesisPos);
+			size_t closeParenthesisPos = valueString.find(')');
+			if (closeParenthesisPos != std::string::npos) {
+				valueString = valueString.substr(0, closeParenthesisPos);
 			}
 			size_t commaPos = valueString.find(',');
 			if (commaPos == std::string::npos) {
@@ -440,9 +440,9 @@ std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> Scri
 			if (openParenthesisPos != std::string::npos) {
 				valueString = valueString.substr(openParenthesisPos + 1);
 			}
-			size_t closedParenthesisPos = valueString.find('(');
-			if (closedParenthesisPos != std::string::npos) {
-				valueString = valueString.substr(0, closedParenthesisPos);
+			size_t closeParenthesisPos = valueString.find('(');
+			if (closeParenthesisPos != std::string::npos) {
+				valueString = valueString.substr(0, closeParenthesisPos);
 			}
 			size_t commaPos = valueString.find(',');
 			if (commaPos != std::string::npos) {

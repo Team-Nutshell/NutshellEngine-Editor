@@ -77,6 +77,7 @@ public:
 	QIcon meshIcon;
 	QIcon imageSamplerIcon;
 	QIcon materialIcon;
+	QIcon fragmentShaderIcon;
 	QIcon modelIcon;
 	QIcon soundIcon;
 	QIcon optionsIcon;

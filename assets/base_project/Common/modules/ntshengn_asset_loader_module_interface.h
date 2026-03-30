@@ -17,17 +17,17 @@ namespace NtshEngn {
 		virtual ~AssetLoaderModuleInterface() {}
 		
 		// Loads the sound in file at path filePath
-		virtual Sound loadSound(const std::string& filePath) = 0;
+		virtual bool loadSound(const std::string& filePath, Sound& sound) = 0;
 		// Loads the image in file at path filePath
-		virtual Image loadImage(const std::string& filePath) = 0;
+		virtual bool loadImage(const std::string& filePath, Image& image) = 0;
 		// Loads the model in file at path filePath
-		virtual Model loadModel(const std::string& filePath) = 0;
+		virtual bool loadModel(const std::string& filePath, Model& model) = 0;
 		// Loads the material in file at path filePath
-		virtual Material loadMaterial(const std::string& filePath) = 0;
+		virtual bool loadMaterial(const std::string& filePath, Material& material) = 0;
 		// Loads the bitmap font in file at path filePath
-		virtual Font loadFontBitmap(const std::string& filePath, float fontHeight) = 0;
+		virtual bool loadFontBitmap(const std::string& filePath, float fontHeight, Font& font) = 0;
 		// Loads the SDF font in file at path filePath
-		virtual Font loadFontSDF(const std::string& filePath) = 0;
+		virtual bool loadFontSDF(const std::string& filePath, Font& font) = 0;
 
 	public:
 		void setAssetManager(AssetManagerInterface* passAssetManager) {

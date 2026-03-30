@@ -122,6 +122,7 @@ set(WIDGET_SOURCES
 	src/widgets/boolean_widget.cpp
 	src/widgets/camera_component_widget.cpp
 	src/widgets/close_scene_widget.cpp
+	src/widgets/code_editor_widget.cpp
 	src/widgets/color_picker_widget.cpp
 	src/widgets/collidable_component_widget.cpp
 	src/widgets/collapsable_widget.cpp
@@ -185,8 +186,11 @@ set(WIDGET_SOURCES
 	src/widgets/script_panel.cpp
 	src/widgets/scriptable_component_widget.cpp
 	src/widgets/separator_line.cpp
+	src/widgets/shader_file_widget.cpp
+	src/widgets/slider_no_scroll_widget.cpp
 	src/widgets/sound_listener_component_widget.cpp
 	src/widgets/string_widget.cpp
+	src/widgets/text_edit_line_number.cpp
 	src/widgets/text_file_widget.cpp
 	src/widgets/text_widget.cpp
 	src/widgets/transform_component_widget.cpp
@@ -211,6 +215,7 @@ set(WIDGET_HEADERS
 	src/widgets/boolean_widget.h
 	src/widgets/camera_component_widget.h
 	src/widgets/close_scene_widget.h
+	src/widgets/code_editor_widget.h
 	src/widgets/color_picker_widget.h
 	src/widgets/collidable_component_widget.h
 	src/widgets/collapsable_widget.h
@@ -274,8 +279,11 @@ set(WIDGET_HEADERS
 	src/widgets/script_panel.h
 	src/widgets/scriptable_component_widget.h
 	src/widgets/separator_line.h
+	src/widgets/shader_file_widget.h
+	src/widgets/slider_no_scroll_widget.h
 	src/widgets/sound_listener_component_widget.h
 	src/widgets/string_widget.h
+	src/widgets/text_edit_line_number.h
 	src/widgets/text_file_widget.h
 	src/widgets/text_widget.h
 	src/widgets/transform_component_widget.h

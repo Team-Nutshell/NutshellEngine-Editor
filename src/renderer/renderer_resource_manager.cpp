@@ -37,8 +37,8 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		return;
 	}
 
-	if (modelLastWriteTime.find(modelPath) != modelLastWriteTime.end()) {
-		if (modelLastWriteTime[modelPath] == std::filesystem::last_write_time(modelPath)) {
+	if (modelLastWriteTimes.find(modelPath) != modelLastWriteTimes.end()) {
+		if (modelLastWriteTimes[modelPath] == std::filesystem::last_write_time(modelPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -106,7 +106,7 @@ void RendererResourceManager::loadModel(const std::string& modelPath, const std:
 		}
 	}
 
-	modelLastWriteTime[modelPath] = std::filesystem::last_write_time(modelPath);
+	modelLastWriteTimes[modelPath] = std::filesystem::last_write_time(modelPath);
 
 	if (!model.primitives.empty()) {
 		models[name] = model;
@@ -120,8 +120,8 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 		return;
 	}
 
-	if (materialLastWriteTime.find(materialPath) != materialLastWriteTime.end()) {
-		if (materialLastWriteTime[materialPath] == std::filesystem::last_write_time(materialPath)) {
+	if (materialLastWriteTimes.find(materialPath) != materialLastWriteTimes.end()) {
+		if (materialLastWriteTimes[materialPath] == std::filesystem::last_write_time(materialPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -140,7 +140,7 @@ void RendererResourceManager::loadMaterial(const std::string& materialPath, cons
 		}
 	}
 
-	materialLastWriteTime[materialPath] = std::filesystem::last_write_time(materialPath);
+	materialLastWriteTimes[materialPath] = std::filesystem::last_write_time(materialPath);
 
 	materials[name] = material;
 }
@@ -151,8 +151,8 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		return;
 	}
 
-	if (imageLastWriteTime.find(imagePath) != imageLastWriteTime.end()) {
-		if (imageLastWriteTime[imagePath] == std::filesystem::last_write_time(imagePath)) {
+	if (imageLastWriteTimes.find(imagePath) != imageLastWriteTimes.end()) {
+		if (imageLastWriteTimes[imagePath] == std::filesystem::last_write_time(imagePath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -178,7 +178,7 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		}
 	}
 
-	imageLastWriteTime[imagePath] = std::filesystem::last_write_time(imagePath);
+	imageLastWriteTimes[imagePath] = std::filesystem::last_write_time(imagePath);
 
 	if (!image.data.empty()) {
 		imagesToGPU[name] = image;
@@ -191,8 +191,8 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 		return;
 	}
 
-	if (samplerLastWriteTime.find(samplerPath) != samplerLastWriteTime.end()) {
-		if (samplerLastWriteTime[samplerPath] == std::filesystem::last_write_time(samplerPath)) {
+	if (samplerLastWriteTimes.find(samplerPath) != samplerLastWriteTimes.end()) {
+		if (samplerLastWriteTimes[samplerPath] == std::filesystem::last_write_time(samplerPath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -211,9 +211,130 @@ void RendererResourceManager::loadSampler(const std::string& samplerPath, const 
 		}
 	}
 
-	samplerLastWriteTime[samplerPath] = std::filesystem::last_write_time(samplerPath);
+	samplerLastWriteTimes[samplerPath] = std::filesystem::last_write_time(samplerPath);
 
 	samplersToGPU[name] = sampler;
+}
+
+void RendererResourceManager::loadFragmentShader(const std::string& fragmentShaderPath, const std::string& name) {
+	if (!std::filesystem::exists(fragmentShaderPath)) {
+		logger->addLog(LogLevel::Warning, localization->getString("log_type_file_does_not_exist", { localization->getString("fragment_shader"), fragmentShaderPath }));
+		return;
+	}
+
+	if (fragmentShaderLastWriteTimes.find(fragmentShaderPath) != fragmentShaderLastWriteTimes.end()) {
+		if (fragmentShaderLastWriteTimes[fragmentShaderPath] == std::filesystem::last_write_time(fragmentShaderPath)) {
+			// Resource is already loaded and hasn't changed
+			return;
+		}
+	}
+
+	const std::string fragmentShaderPrefix = R"(#version 460
+
+#define NtshEngn_position fragPosition
+#define NtshEngn_normal fragTBN[2]
+#define NtshEngn_tangent fragTBN[0]
+#define NtshEngn_bitangent fragTBN[1]
+#define NtshEngn_uv fragUV
+#define NtshEngn_tbn fragTBN
+#define NtshEngn_diffuseTexture diffuseTextureSampler
+#define NtshEngn_normalTexture normalTextureSampler
+#define NtshEngn_metalnessTexture metalnessTextureSampler
+#define NtshEngn_roughnessTexture roughnessTextureSampler
+#define NtshEngn_occlusionTexture occlusionTextureSampler
+#define NtshEngn_emissiveTexture emissiveTextureSampler
+#define NtshEngn_emissiveFactor emissiveFactor
+#define NtshEngn_alphaCutoff alphaCutoff
+#define NtshEngn_scaleUV scaleUV
+#define NtshEngn_offsetUV offsetUV
+#define NtshEngn_useTriplanarMapping useTriplanarMapping
+#define NtshEngn_directionalLightCount lights.count.x
+#define NtshEngn_directionalLight(i) lights.info[i]
+#define NtshEngn_pointLightCount lights.count.y
+#define NtshEngn_pointLight(i) lights.info[lights.count.x + i]
+#define NtshEngn_spotLightCount lights.count.z
+#define NtshEngn_spotLight(i) lights.info[lights.count.x + lights.count.y + i]
+#define NtshEngn_ambientLightCount lights.count.w
+#define NtshEngn_ambientLight(i) lights.info[lights.count.x + lights.count.y + lights.count.z + i]
+#define NtshEngn_time time
+#define NtshEngn_cameraPosition cameraPosition
+#define NtshEngn_useReversedDepth true
+#define NtshEngn_outColor outColor
+#define NtshEngn_outDepth gl_FragDepth
+
+in vec3 position;
+in vec2 uv;
+in mat3 tbn;
+
+struct Light {
+	vec3 position;
+	vec3 direction;
+	vec3 color;
+	float intensity;
+	vec2 cutoff;
+	float distance;
+};
+
+struct Shadow {
+	mat4 viewProj;
+	float splitDepth;
+};
+
+in vec3 fragPosition;
+in vec2 fragUV;
+in mat3 fragTBN;
+
+uniform sampler2D diffuseTextureSampler;
+
+uniform sampler2D normalTextureSampler;
+
+uniform sampler2D metalnessTextureSampler;
+
+uniform sampler2D roughnessTextureSampler;
+
+uniform sampler2D occlusionTextureSampler;
+
+uniform sampler2D emissiveTextureSampler;
+uniform float emissiveFactor;
+
+uniform float alphaCutoff;
+
+uniform bool useTriplanarMapping;
+uniform vec2 scaleUV;
+uniform vec2 offsetUV;
+
+uniform vec3 cameraPosition;
+uniform vec3 cameraDirection;
+uniform mat4 view;
+
+uniform float time;
+
+uniform sampler2DArray shadowMapSampler;
+
+layout(binding = 0) restrict readonly buffer LightBuffer {
+	uvec4 count;
+	Light info[];
+} lights;
+
+layout(binding = 1) restrict readonly buffer ShadowMapBuffer {
+	Shadow info[];
+} shadows;
+
+out vec4 outColor;
+
+)";
+
+	std::string fragmentShaderCode;
+	std::ifstream fragmentShaderFile(fragmentShaderPath, std::ios::in | std::ios::ate | std::ios::binary);
+	if (!fragmentShaderFile.is_open()) {
+		fragmentShaderCode = "";
+	}
+	fragmentShaderFile.seekg(0);
+	fragmentShaderCode = std::string((std::istreambuf_iterator<char>(fragmentShaderFile)), std::istreambuf_iterator<char>());
+
+	fragmentShaderLastWriteTimes[fragmentShaderPath] = std::filesystem::last_write_time(fragmentShaderPath);
+
+	fragmentShadersToGPU[name] = fragmentShaderPrefix + fragmentShaderCode;
 }
 
 void RendererResourceManager::loadMeshColliders(Mesh& mesh) {
@@ -360,7 +481,7 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 	nlohmann::json j = nlohmann::json::parse(modelFile);
 
 	std::string relativeModelPath = AssetHelper::absoluteToRelative(modelPath, projectDirectory);
-	modelNtmdPrimitiveToMaterialPath[relativeModelPath] = std::vector<std::string>();
+	modelNtmdPrimitiveToMaterialPaths[relativeModelPath] = std::vector<std::string>();
 	if (j.contains("primitives")) {
 		for (size_t i = 0; i < j["primitives"].size(); i++) {
 			ModelPrimitive primitive;
@@ -372,10 +493,10 @@ void RendererResourceManager::loadNtmd(const std::string& modelPath, Model& mode
 					std::string fullMaterialPath = projectDirectory + "/" + materialPath;
 					loadMaterial(fullMaterialPath, materialPath);
 					primitive.material = materials[materialPath];
-					modelNtmdPrimitiveToMaterialPath[relativeModelPath].push_back(materialPath);
+					modelNtmdPrimitiveToMaterialPaths[relativeModelPath].push_back(materialPath);
 				}
 				else {
-					modelNtmdPrimitiveToMaterialPath[relativeModelPath].push_back("");
+					modelNtmdPrimitiveToMaterialPaths[relativeModelPath].push_back("");
 				}
 			}
 
@@ -477,11 +598,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 
 	nlohmann::json j = nlohmann::json::parse(materialFile);
 
-	material.hasDiffuseTexture = false;
 	if (j.contains("diffuse")) {
 		if (j["diffuse"].contains("texture")) {
 			if (j["diffuse"]["texture"].contains("imagePath")) {
-				material.hasDiffuseTexture = true;
 				material.diffuseTextureName = j["diffuse"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.diffuseTextureName, projectDirectory), material.diffuseTextureName);
 				if (imagesToGPU.find(material.diffuseTextureName) != imagesToGPU.end()) {
@@ -495,15 +614,25 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 		}
 		else if (j["diffuse"].contains("color")) {
-			material.diffuseColor = { j["diffuse"]["color"][0], j["diffuse"]["color"][1], j["diffuse"]["color"][2], j["diffuse"]["color"][3] };
+			nml::vec4 diffuseColor = { j["diffuse"]["color"][0], j["diffuse"]["color"][1], j["diffuse"]["color"][2], j["diffuse"]["color"][3] };
+			ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * diffuseColor.x)),
+				static_cast<uint8_t>(round(255.0f * diffuseColor.y)),
+				static_cast<uint8_t>(round(255.0f * diffuseColor.z)),
+				static_cast<uint8_t>(round(255.0f * diffuseColor.w))
+			};
+			std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_diffuseTexture";
+			imagesToGPU[imageName] = image;
+			material.diffuseTextureName = imageName;
 		}
 	}
 
-	material.hasNormalTexture = false;
 	if (j.contains("normal")) {
 		if (j["normal"].contains("texture")) {
 			if (j["normal"]["texture"].contains("imagePath")) {
-				material.hasNormalTexture = true;
 				material.normalTextureName = j["normal"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.normalTextureName, projectDirectory), material.normalTextureName);
 				if (imagesToGPU.find(material.normalTextureName) != imagesToGPU.end()) {
@@ -518,11 +647,9 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 		}
 	}
 
-	material.hasMetalnessTexture = false;
 	if (j.contains("metalness")) {
 		if (j["metalness"].contains("texture")) {
 			if (j["metalness"]["texture"].contains("imagePath")) {
-				material.hasMetalnessTexture = true;
 				material.metalnessTextureName = j["metalness"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.metalnessTextureName, projectDirectory), material.metalnessTextureName);
 				if (imagesToGPU.find(material.metalnessTextureName) != imagesToGPU.end()) {
@@ -536,15 +663,25 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 		}
 		else if (j["metalness"].contains("value")) {
-			material.metalnessValue = j["metalness"]["value"];
+			float metalnessValue = j["metalness"]["value"];
+			ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = ImageToGPU::ColorSpace::Linear;
+			image.data = { static_cast<uint8_t>(round(255.0f * metalnessValue)),
+				static_cast<uint8_t>(round(255.0f * metalnessValue)),
+				static_cast<uint8_t>(round(255.0f * metalnessValue)),
+				static_cast<uint8_t>(round(255.0f * metalnessValue))
+			};
+			std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_metalnessTexture";
+			imagesToGPU[imageName] = image;
+			material.metalnessTextureName = imageName;
 		}
 	}
 
-	material.hasRoughnessTexture = false;
 	if (j.contains("roughness")) {
 		if (j["roughness"].contains("texture")) {
 			if (j["roughness"]["texture"].contains("imagePath")) {
-				material.hasRoughnessTexture = true;
 				material.roughnessTextureName = j["roughness"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.roughnessTextureName, projectDirectory), material.roughnessTextureName);
 				if (imagesToGPU.find(material.roughnessTextureName) != imagesToGPU.end()) {
@@ -558,15 +695,25 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 		}
 		else if (j["roughness"].contains("value")) {
-			material.roughnessValue = j["roughness"]["value"];
+			float roughnessValue = j["roughness"]["value"];
+			ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = ImageToGPU::ColorSpace::Linear;
+			image.data = { static_cast<uint8_t>(round(255.0f * roughnessValue)),
+				static_cast<uint8_t>(round(255.0f * roughnessValue)),
+				static_cast<uint8_t>(round(255.0f * roughnessValue)),
+				static_cast<uint8_t>(round(255.0f * roughnessValue))
+			};
+			std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_roughnessTexture";
+			imagesToGPU[imageName] = image;
+			material.roughnessTextureName = imageName;
 		}
 	}
 
-	material.hasOcclusionTexture = false;
 	if (j.contains("occlusion")) {
 		if (j["occlusion"].contains("texture")) {
 			if (j["occlusion"]["texture"].contains("imagePath")) {
-				material.hasOcclusionTexture = true;
 				material.occlusionTextureName = j["occlusion"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.occlusionTextureName, projectDirectory), material.occlusionTextureName);
 				if (imagesToGPU.find(material.occlusionTextureName) != imagesToGPU.end()) {
@@ -580,15 +727,25 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 		}
 		else if (j["occlusion"].contains("value")) {
-			material.occlusionValue = j["occlusion"]["value"];
+			float occlusionValue = j["occlusion"]["value"];
+			ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = ImageToGPU::ColorSpace::Linear;
+			image.data = { static_cast<uint8_t>(round(255.0f * occlusionValue)),
+				static_cast<uint8_t>(round(255.0f * occlusionValue)),
+				static_cast<uint8_t>(round(255.0f * occlusionValue)),
+				static_cast<uint8_t>(round(255.0f * occlusionValue))
+			};
+			std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_occlusionTexture";
+			imagesToGPU[imageName] = image;
+			material.occlusionTextureName = imageName;
 		}
 	}
 
-	material.hasEmissiveTexture = false;
 	if (j.contains("emissive")) {
 		if (j["emissive"].contains("texture")) {
 			if (j["emissive"]["texture"].contains("imagePath")) {
-				material.hasEmissiveTexture = true;
 				material.emissiveTextureName = j["emissive"]["texture"]["imagePath"];
 				loadImage(AssetHelper::relativeToAbsolute(material.emissiveTextureName, projectDirectory), material.emissiveTextureName);
 				if (imagesToGPU.find(material.emissiveTextureName) != imagesToGPU.end()) {
@@ -602,7 +759,19 @@ void RendererResourceManager::loadNtml(const std::string& materialPath, Renderer
 			}
 		}
 		else if (j["emissive"].contains("color")) {
-			material.emissiveColor = { j["emissive"]["color"][0], j["emissive"]["color"][1], j["emissive"]["color"][2] };
+			nml::vec3 emissiveColor = { j["emissive"]["color"][0], j["emissive"]["color"][1], j["emissive"]["color"][2] };
+			ImageToGPU image;
+			image.width = 1;
+			image.height = 1;
+			image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+			image.data = { static_cast<uint8_t>(round(255.0f * emissiveColor.x)),
+				static_cast<uint8_t>(round(255.0f * emissiveColor.y)),
+				static_cast<uint8_t>(round(255.0f * emissiveColor.z)),
+				255
+			};
+			std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_emissiveTexture";
+			imagesToGPU[imageName] = image;
+			material.emissiveTextureName = imageName;
 		}
 
 		if (j["emissive"].contains("factor")) {
@@ -676,61 +845,61 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 
 	samplerFile = std::fstream(samplerPath, std::ios::in);
 
-	nlohmann::json jsmplr = nlohmann::json::parse(samplerFile);
+	nlohmann::json j = nlohmann::json::parse(samplerFile);
 
-	if (jsmplr.contains("minFilter")) {
-		if (jsmplr["minFilter"] == "Nearest") {
+	if (j.contains("minFilter")) {
+		if (j["minFilter"] == "Nearest") {
 			sampler.minFilter = SamplerToGPU::Filter::Nearest;
 		}
-		else if (jsmplr["minFilter"] == "Linear") {
+		else if (j["minFilter"] == "Linear") {
 			sampler.minFilter = SamplerToGPU::Filter::Linear;
 		}
 	}
 
-	if (jsmplr.contains("magFilter")) {
-		if (jsmplr["magFilter"] == "Nearest") {
+	if (j.contains("magFilter")) {
+		if (j["magFilter"] == "Nearest") {
 			sampler.magFilter = SamplerToGPU::Filter::Nearest;
 		}
-		else if (jsmplr["magFilter"] == "Linear") {
+		else if (j["magFilter"] == "Linear") {
 			sampler.magFilter = SamplerToGPU::Filter::Linear;
 		}
 	}
 
-	if (jsmplr.contains("mipmapFilter")) {
-		if (jsmplr["mipmapFilter"] == "Nearest") {
+	if (j.contains("mipmapFilter")) {
+		if (j["mipmapFilter"] == "Nearest") {
 			sampler.mipmapFilter = SamplerToGPU::Filter::Nearest;
 		}
-		else if (jsmplr["mipmapFilter"] == "Linear") {
+		else if (j["mipmapFilter"] == "Linear") {
 			sampler.mipmapFilter = SamplerToGPU::Filter::Linear;
 		}
 	}
 
-	if (jsmplr.contains("addressModeU")) {
-		if (jsmplr["addressModeU"] == "Repeat") {
+	if (j.contains("addressModeU")) {
+		if (j["addressModeU"] == "Repeat") {
 			sampler.wrapS = SamplerToGPU::Wrap::Repeat;
 		}
-		else if (jsmplr["addressModeU"] == "MirroredRepeat") {
+		else if (j["addressModeU"] == "MirroredRepeat") {
 			sampler.wrapS = SamplerToGPU::Wrap::MirroredRepeat;
 		}
-		else if (jsmplr["addressModeU"] == "ClampToEdge") {
+		else if (j["addressModeU"] == "ClampToEdge") {
 			sampler.wrapS = SamplerToGPU::Wrap::ClampToEdge;
 		}
 	}
 
-	if (jsmplr.contains("addressModeV")) {
-		if (jsmplr["addressModeV"] == "Repeat") {
+	if (j.contains("addressModeV")) {
+		if (j["addressModeV"] == "Repeat") {
 			sampler.wrapT = SamplerToGPU::Wrap::Repeat;
 		}
-		else if (jsmplr["addressModeV"] == "MirroredRepeat") {
+		else if (j["addressModeV"] == "MirroredRepeat") {
 			sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 		}
-		else if (jsmplr["addressModeV"] == "ClampToEdge") {
+		else if (j["addressModeV"] == "ClampToEdge") {
 			sampler.wrapT = SamplerToGPU::Wrap::ClampToEdge;
 		}
 	}
 
-	if (jsmplr.contains("anisotropyLevel")) {
-		sampler.anisotropyLevel = jsmplr["anisotropyLevel"];
+	if (j.contains("anisotropyLevel")) {
+		sampler.anisotropyLevel = j["anisotropyLevel"];
 	}
 }
 
@@ -990,7 +1159,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								imageURI = modelDirectory + "/" + imageURI;
 							}
 
-							primitive.material.hasDiffuseTexture = true;
 							primitive.material.diffuseTextureName = imageURI;
 
 							hasImage = true;
@@ -1004,7 +1172,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							}
 							loadImageFromMemory(buffer, bufferView->size, imageName);
 
-							primitive.material.hasDiffuseTexture = true;
 							primitive.material.diffuseTextureName = imageName;
 
 							hasImage = true;
@@ -1060,8 +1227,19 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 					}
 					else if (baseColorFactor != NULL) {
-						primitive.material.hasDiffuseTexture = false;
-						primitive.material.diffuseColor = nml::vec4(baseColorFactor);
+						nml::vec4 diffuseColor = nml::vec4(baseColorFactor);
+						ImageToGPU image;
+						image.width = 1;
+						image.height = 1;
+						image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+						image.data = { static_cast<uint8_t>(round(255.0f * diffuseColor.x)),
+							static_cast<uint8_t>(round(255.0f * diffuseColor.y)),
+							static_cast<uint8_t>(round(255.0f * diffuseColor.z)),
+							static_cast<uint8_t>(round(255.0f * diffuseColor.w))
+						};
+						std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_diffuseTexture";
+						imagesToGPU[imageName] = image;
+						primitive.material.diffuseTextureName = imageName;
 					}
 
 					// Metallic Roughness texture
@@ -1100,10 +1278,8 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								imageURI = modelDirectory + "/" + imageURI;
 							}
 
-							primitive.material.hasMetalnessTexture = true;
 							primitive.material.metalnessTextureName = imageURI;
 
-							primitive.material.hasRoughnessTexture = true;
 							primitive.material.roughnessTextureName = imageURI;
 
 							hasImage = true;
@@ -1117,10 +1293,8 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							}
 							loadImageFromMemory(buffer, bufferView->size, imageName);
 
-							primitive.material.hasMetalnessTexture = true;
 							primitive.material.metalnessTextureName = imageName;
 
-							primitive.material.hasRoughnessTexture = true;
 							primitive.material.roughnessTextureName = imageName;
 
 							hasImage = true;
@@ -1177,11 +1351,19 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 					}
 					else {
-						primitive.material.hasRoughnessTexture = false;
-						primitive.material.metalnessValue = metallicFactor;
-
-						primitive.material.hasRoughnessTexture = false;
-						primitive.material.roughnessValue = roughnessFactor;
+						ImageToGPU image;
+						image.width = 1;
+						image.height = 1;
+						image.colorSpace = ImageToGPU::ColorSpace::Linear;
+						image.data = { 0,
+							static_cast<uint8_t>(round(255.0f * roughnessFactor)),
+							static_cast<uint8_t>(round(255.0f * metallicFactor)),
+							0
+						};
+						std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_roughnessMetallicTexture";
+						imagesToGPU[imageName] = image;
+						primitive.material.roughnessTextureName = imageName;
+						primitive.material.metalnessTextureName = imageName;
 					}
 				}
 
@@ -1219,7 +1401,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							imageURI = modelDirectory + "/" + imageURI;
 						}
 
-						primitive.material.hasNormalTexture = true;
 						primitive.material.normalTextureName = imageURI;
 
 						hasImage = true;
@@ -1233,7 +1414,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 						loadImageFromMemory(buffer, bufferView->size, imageName);
 
-						primitive.material.hasNormalTexture = true;
 						primitive.material.normalTextureName = imageName;
 
 						hasImage = true;
@@ -1287,9 +1467,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 
 						primitive.material.normalTextureSamplerName = sampler.toString();
 					}
-					else {
-						primitive.material.hasNormalTexture = false;
-					}
 				}
 
 				// Emissive texture
@@ -1329,7 +1506,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 
 						hasImage = true;
 
-						primitive.material.hasEmissiveTexture = true;
 						primitive.material.emissiveTextureName = imageURI;
 					}
 					else if (emissiveImage->buffer_view) {
@@ -1341,7 +1517,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 						loadImageFromMemory(buffer, bufferView->size, imageName);
 
-						primitive.material.hasEmissiveTexture = true;
 						primitive.material.emissiveTextureName = imageName;
 
 						hasImage = true;
@@ -1397,8 +1572,19 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					}
 				}
 				else if (emissiveFactor != NULL) {
-					primitive.material.hasEmissiveTexture = false;
-					primitive.material.emissiveColor = nml::vec3(emissiveFactor);
+					 nml::vec3 emissiveColor = nml::vec3(emissiveFactor);
+					 ImageToGPU image;
+					 image.width = 1;
+					 image.height = 1;
+					 image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+					 image.data = { static_cast<uint8_t>(round(255.0f * emissiveColor.x)),
+						 static_cast<uint8_t>(round(255.0f * emissiveColor.y)),
+						 static_cast<uint8_t>(round(255.0f * emissiveColor.z)),
+						 static_cast<uint8_t>(0.0f)
+					 };
+					 std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_emissiveTexture";
+					 imagesToGPU[imageName] = image;
+					 primitive.material.emissiveTextureName = imageName;
 				}
 
 				// Occlusion texture
@@ -1437,7 +1623,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 
 						hasImage = true;
 
-						primitive.material.hasOcclusionTexture = true;
 						primitive.material.occlusionTextureName = imageURI;
 					}
 					else if (occlusionImage->buffer_view) {
@@ -1449,7 +1634,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 						loadImageFromMemory(buffer, bufferView->size, imageName);
 
-						primitive.material.hasOcclusionTexture = true;
 						primitive.material.occlusionTextureName = imageName;
 
 						hasImage = true;
@@ -1502,9 +1686,6 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						samplersToGPU[sampler.toString()] = sampler;
 
 						primitive.material.occlusionTextureSamplerName = sampler.toString();
-					}
-					else {
-						primitive.material.hasOcclusionTexture = false;
 					}
 				}
 
@@ -1793,14 +1974,23 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 		}
 		else if (tokens[0] == "Kd") {
 			if (currentMaterial) {
-				currentMaterial->hasDiffuseTexture = false;
-				currentMaterial->diffuseColor = nml::vec4(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str()), std::atof(tokens[3].c_str()), 1.0f);
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+				image.data = { static_cast<uint8_t>(round(255.0f * std::atof(tokens[1].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[2].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[3].c_str()))),
+					static_cast<uint8_t>(round(255.0f))
+				};
+				std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_diffuseTexture";
+				imagesToGPU[imageName] = image;
+				currentMaterial->diffuseTextureName = imageName;
 			}
 		}
 		else if (tokens[0] == "map_Kd") {
 			loadImage(materialDirectory + "/" + tokens[1], materialDirectory + "/" + tokens[1]);
 			if (currentMaterial) {
-				currentMaterial->hasDiffuseTexture = true;
 				currentMaterial->diffuseTextureName = materialDirectory + "/" + tokens[1];
 				if (imagesToGPU.find(currentMaterial->diffuseTextureName) != imagesToGPU.end()) {
 					imagesToGPU[currentMaterial->diffuseTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
@@ -1809,14 +1999,23 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 		}
 		else if (tokens[0] == "Ke") {
 			if (currentMaterial) {
-				currentMaterial->hasEmissiveTexture = false;
-				currentMaterial->emissiveColor = nml::vec3(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str()), std::atof(tokens[3].c_str()));
+				ImageToGPU image;
+				image.width = 1;
+				image.height = 1;
+				image.colorSpace = ImageToGPU::ColorSpace::SRGB;
+				image.data = { static_cast<uint8_t>(round(255.0f * std::atof(tokens[1].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[2].c_str()))),
+					static_cast<uint8_t>(round(255.0f * std::atof(tokens[3].c_str()))),
+					static_cast<uint8_t>(round(255.0f))
+				};
+				std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_emissiveTexture";
+				imagesToGPU[imageName] = image;
+				currentMaterial->emissiveTextureName = imageName;
 			}
 		}
 		else if (tokens[0] == "map_Ke") {
 			loadImage(materialDirectory + "/" + tokens[1], materialDirectory + "/" + tokens[1]);
 			if (currentMaterial) {
-				currentMaterial->hasEmissiveTexture = true;
 				currentMaterial->emissiveTextureName = materialDirectory + "/" + tokens[1];
 				if (imagesToGPU.find(currentMaterial->emissiveTextureName) != imagesToGPU.end()) {
 					imagesToGPU[currentMaterial->emissiveTextureName].colorSpace = ImageToGPU::ColorSpace::SRGB;
