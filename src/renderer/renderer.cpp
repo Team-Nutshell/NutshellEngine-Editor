@@ -2906,7 +2906,7 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 
 	for (const auto& fragmentShaderToGPU : m_globalInfo.rendererResourceManager.fragmentShadersToGPU) {
-		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -94);
+		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -93);
 		if (fragmentShader != 0xFFFFFFFF) {
 			if (m_globalInfo.rendererResourceManager.fragmentShaders.find(fragmentShaderToGPU.first) != m_globalInfo.rendererResourceManager.fragmentShaders.end()) {
 				gl.glDeleteShader(m_globalInfo.rendererResourceManager.fragmentShaders[fragmentShaderToGPU.first]);
