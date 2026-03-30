@@ -231,6 +231,8 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 
 	const std::string fragmentShaderPrefix = R"(#version 460
 
+#define SHADOW_MAPPING_CASCADE_COUNT 3
+
 #define NtshEngn_position fragPosition
 #define NtshEngn_normal fragTBN[2]
 #define NtshEngn_tangent fragTBN[0]
@@ -250,10 +252,13 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 #define NtshEngn_useTriplanarMapping useTriplanarMapping
 #define NtshEngn_directionalLightCount lights.count.x
 #define NtshEngn_directionalLight(i) lights.info[i]
+#define NtshEngn_directionalLightShadows(i, p) directionalLightShadows(i, p)
 #define NtshEngn_pointLightCount lights.count.y
 #define NtshEngn_pointLight(i) lights.info[lights.count.x + i]
+#define NtshEngn_pointLightShadows(i, p) pointLightShadows(i, p)
 #define NtshEngn_spotLightCount lights.count.z
 #define NtshEngn_spotLight(i) lights.info[lights.count.x + lights.count.y + i]
+#define NtshEngn_spotLightShadows(i, p) spotLightShadows(i, p)
 #define NtshEngn_ambientLightCount lights.count.w
 #define NtshEngn_ambientLight(i) lights.info[lights.count.x + lights.count.y + lights.count.z + i]
 #define NtshEngn_time time
@@ -265,6 +270,13 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 in vec3 position;
 in vec2 uv;
 in mat3 tbn;
+
+const mat4 shadowOffset = mat4(
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0
+);
 
 struct Light {
 	vec3 position;
@@ -321,6 +333,92 @@ layout(binding = 1) restrict readonly buffer ShadowMapBuffer {
 } shadows;
 
 out vec4 outColor;
+
+vec2 sampleCube(vec3 direction, out uint faceIndex) {
+	vec3 directionAbs = abs(direction);
+	float offset = 0.0f;
+	vec2 uv;
+	if ((directionAbs.z >= directionAbs.x) && (directionAbs.z >= directionAbs.y)) {
+		faceIndex = (direction.z < 0.0) ? 5 : 4;
+		offset = 0.5 / directionAbs.z;
+		uv = vec2((direction.z < 0.0) ? -direction.x : direction.x, -direction.y);
+	}
+	else if (directionAbs.y >= directionAbs.x) {
+		faceIndex = (direction.y < 0.0) ? 3 : 2;
+		offset = 0.5 / directionAbs.y;
+		uv = vec2(direction.x, (direction.y < 0.0) ? -direction.z : direction.z);
+	}
+	else {
+		faceIndex = (direction.x < 0.0) ? 1 : 0;
+		offset = 0.5 / directionAbs.x;
+		uv = vec2((direction.x < 0.0) ? direction.z : -direction.z, -direction.y);
+	}
+
+	return (uv * offset) + 0.5;
+}
+
+float shadowValue(uint shadowLayer, vec4 shadowCoord, float bias) {
+	float shadow = 0.0;
+	if ((shadowCoord.z < -1.0) || (shadowCoord.z > 1.0)) {
+		return 1.0;
+	}
+
+	const vec2 texelSize = 0.75 * (1.0 / vec2(textureSize(shadowMapSampler, 0).xy));
+	for (int x = -1; x <= 1; x++) {
+		for (int y = -1; y <= 1; y++) {
+			const float depth = texture(shadowMapSampler, vec3(shadowCoord.xy + (vec2(x, y) * texelSize), float(shadowLayer))).r;
+			if (depth >= (shadowCoord.z - bias)) {
+				shadow += 1.0;
+			}
+		}
+	}
+
+	return shadow / 9.0;
+}
+
+float shadowCubeValue(uint shadowLayer, uint faceIndex, vec2 uv, float currentDepth, float bias) {
+	const float depth = texture(shadowMapSampler, vec3(uv, float(shadowLayer + faceIndex))).r;
+	if (depth >= (currentDepth - bias)) {
+		return 1.0;
+	}
+
+	return 0.0;
+}
+
+float directionalLightShadows(uint lightIndex, vec3 position) {
+	const uint shadowLayer = lightIndex * SHADOW_MAPPING_CASCADE_COUNT;
+	const vec3 viewPosition = vec3(view * vec4(position, 1.0));
+
+	uint cascadeIndex = 0;
+	for (uint i = 0; i < SHADOW_MAPPING_CASCADE_COUNT - 1; i++) {
+		if (viewPosition.z < shadows.info[shadowLayer + i].splitDepth) {
+			cascadeIndex = i + 1;
+		}
+	}
+
+	const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + cascadeIndex].viewProj) * vec4(position, 1.0);
+
+	return shadowValue(shadowLayer + cascadeIndex, shadowCoord / shadowCoord.w, 0.00005);
+}
+
+float pointLightShadows(uint lightIndex, vec3 position) {
+	const uint shadowLayer = (lights.count.x * SHADOW_MAPPING_CASCADE_COUNT) + lightIndex;
+	const vec3 lightDirection = position - lights.info[lights.count.x + lightIndex].position;
+
+	uint faceIndex;
+	const vec2 cubeUV = sampleCube(lightDirection, faceIndex);
+
+	const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer + faceIndex].viewProj) * vec4(position, 1.0);
+
+	return shadowCubeValue(shadowLayer, faceIndex, cubeUV, shadowCoord.z / shadowCoord.w, 0.00005);
+}
+
+float spotLightShadows(uint lightIndex, vec3 position) {
+	const uint shadowLayer = (lights.count.x * SHADOW_MAPPING_CASCADE_COUNT) + (lights.count.y * 6) + lightIndex;
+	const vec4 shadowCoord = (shadowOffset * shadows.info[shadowLayer].viewProj) * vec4(position, 1.0);
+
+	return shadowValue(shadowLayer, shadowCoord / shadowCoord.w, 0.00005);
+}
 
 )";
 
