@@ -496,7 +496,7 @@ void MaterialNtmlFileWidget::onTemporaryValueChanged() {
 			RendererResourceManager::ImageToGPU image;
 			image.width = 1;
 			image.height = 1;
-			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::Linear;
 			image.data = { static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * metalnessValueWidget->getTemporaryValue())),
@@ -510,7 +510,7 @@ void MaterialNtmlFileWidget::onTemporaryValueChanged() {
 			RendererResourceManager::ImageToGPU image;
 			image.width = 1;
 			image.height = 1;
-			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::Linear;
 			image.data = { static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * roughnessValueWidget->getTemporaryValue())),
@@ -524,14 +524,13 @@ void MaterialNtmlFileWidget::onTemporaryValueChanged() {
 			RendererResourceManager::ImageToGPU image;
 			image.width = 1;
 			image.height = 1;
-			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::SRGB;
+			image.colorSpace = RendererResourceManager::ImageToGPU::ColorSpace::Linear;
 			image.data = { static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue())),
 				static_cast<uint8_t>(round(255.0f * occlusionValueWidget->getTemporaryValue()))
 			};
 			m_globalInfo.rendererResourceManager.imagesToGPU[materialPath + "_occlusionTexture"] = image;
-			rendererMaterial.occlusionTextureName = materialPath + "_occlusionTexture";
 		}
 	}
 	else if (senderWidget == emissiveColorWidget) {
