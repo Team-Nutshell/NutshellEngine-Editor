@@ -176,6 +176,57 @@ void CodeEditorWidget::keyPressEvent(QKeyEvent* event) {
 			cursor.endEditBlock();
 			setTextCursor(cursor);
 		}
+		else if (event->key() == Qt::Key_ParenLeft) {
+			QTextCursor cursor = textCursor();
+			cursor.beginEditBlock();
+			int cursorStartPosition = textCursor().selectionStart();
+			int cursorEndPosition = textCursor().selectionEnd();
+
+			cursor.setPosition(cursorStartPosition);
+			cursor.insertText("(");
+			cursorEndPosition++;
+			cursor.setPosition(cursorEndPosition);
+			cursor.insertText(")");
+			cursorEndPosition++;
+
+			cursor.setPosition(cursorEndPosition);
+			cursor.endEditBlock();
+			setTextCursor(cursor);
+		}
+		else if (event->key() == Qt::Key_Apostrophe) {
+			QTextCursor cursor = textCursor();
+			cursor.beginEditBlock();
+			int cursorStartPosition = textCursor().selectionStart();
+			int cursorEndPosition = textCursor().selectionEnd();
+
+			cursor.setPosition(cursorStartPosition);
+			cursor.insertText("\'");
+			cursorEndPosition++;
+			cursor.setPosition(cursorEndPosition);
+			cursor.insertText("\'");
+			cursorEndPosition++;
+
+			cursor.setPosition(cursorEndPosition);
+			cursor.endEditBlock();
+			setTextCursor(cursor);
+		}
+		else if (event->key() == Qt::Key_QuoteDbl) {
+			QTextCursor cursor = textCursor();
+			cursor.beginEditBlock();
+			int cursorStartPosition = textCursor().selectionStart();
+			int cursorEndPosition = textCursor().selectionEnd();
+
+			cursor.setPosition(cursorStartPosition);
+			cursor.insertText("\"");
+			cursorEndPosition++;
+			cursor.setPosition(cursorEndPosition);
+			cursor.insertText("\"");
+			cursorEndPosition++;
+
+			cursor.setPosition(cursorEndPosition);
+			cursor.endEditBlock();
+			setTextCursor(cursor);
+		}
 		else {
 			QTextEdit::keyPressEvent(event);
 		}
