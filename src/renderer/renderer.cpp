@@ -1356,7 +1356,10 @@ void Renderer::paintGL() {
 		if (entity.isVisible) {
 			GLuint program;
 			if (entity.renderable &&
-				(m_globalInfo.rendererResourceManager.fragmentShaderPrograms.find(entity.renderable->fragmentShaderPath) != m_globalInfo.rendererResourceManager.fragmentShaderPrograms.end())) {
+				(m_globalInfo.rendererResourceManager.fragmentShaderPrograms.find(entity.renderable->fragmentShaderPath) != m_globalInfo.rendererResourceManager.fragmentShaderPrograms.end()) &&
+				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+				(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+				(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
 				// Entity has a custom fragment shader
 				GLuint& entityProgram = m_globalInfo.rendererResourceManager.fragmentShaderPrograms[entity.renderable->fragmentShaderPath];
 
