@@ -656,6 +656,7 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 				mesh.vertices[i].color.x = j["vertices"][i]["color"][0];
 				mesh.vertices[i].color.y = j["vertices"][i]["color"][1];
 				mesh.vertices[i].color.z = j["vertices"][i]["color"][2];
+				mesh.vertices[i].color.w = j["vertices"][i]["color"][3];
 			}
 
 			if (j["vertices"][i].contains("tangent")) {
