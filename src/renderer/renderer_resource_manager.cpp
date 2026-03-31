@@ -238,6 +238,7 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 #define NtshEngn_tangent fragTBN[0]
 #define NtshEngn_bitangent fragTBN[1]
 #define NtshEngn_uv fragUV
+#define NtshEngn_color fragColor
 #define NtshEngn_tbn fragTBN
 #define NtshEngn_diffuseTexture diffuseTextureSampler
 #define NtshEngn_normalTexture normalTextureSampler
@@ -294,6 +295,7 @@ struct Shadow {
 
 in vec3 fragPosition;
 in vec2 fragUV;
+in vec3 fragColor;
 in mat3 fragTBN;
 
 uniform sampler2D diffuseTextureSampler;
@@ -648,6 +650,12 @@ RendererResourceManager::Mesh RendererResourceManager::loadNtmh(const std::strin
 				mesh.vertices[i].uv.x = j["vertices"][i]["uv"][0];
 				mesh.vertices[i].uv.y = j["vertices"][i]["uv"][1];
 				hasUvs = true;
+			}
+
+			if (j["vertices"][i].contains("color")) {
+				mesh.vertices[i].color.x = j["vertices"][i]["color"][0];
+				mesh.vertices[i].color.y = j["vertices"][i]["color"][1];
+				mesh.vertices[i].color.z = j["vertices"][i]["color"][2];
 			}
 
 			if (j["vertices"][i].contains("tangent")) {
@@ -1052,16 +1060,19 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 			float* position = nullptr;
 			float* normal = nullptr;
 			float* uv = nullptr;
+			float* color = nullptr;
 			float* tangent = nullptr;
 
 			size_t positionCount = 0;
 			size_t normalCount = 0;
 			size_t uvCount = 0;
+			size_t colorCount = 0;
 			size_t tangentCount = 0;
 
 			size_t positionStride = 0;
 			size_t normalStride = 0;
 			size_t uvStride = 0;
+			size_t colorStride = 0;
 			size_t tangentStride = 0;
 
 			for (size_t j = 0; j < nodeMeshPrimitive.attributes_count; j++) {
@@ -1087,6 +1098,11 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					uvCount = attribute.data->count;
 					uvStride = std::max(bufferView->stride, 2 * sizeof(float));
 				}
+				else if (attributeName == "COLOR_0") {
+					color = reinterpret_cast<float*>(bufferOffset);
+					colorCount = attribute.data->count;
+					colorStride = std::max(bufferView->stride, 3 * sizeof(float));
+				}
 				else if (attributeName == "TANGENT") {
 					tangent = reinterpret_cast<float*>(bufferOffset);
 					tangentCount = attribute.data->count;
@@ -1099,6 +1115,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 			size_t positionCursor = 0;
 			size_t normalCursor = 0;
 			size_t uvCursor = 0;
+			size_t colorCursor = 0;
 			size_t tangentCursor = 0;
 
 			for (size_t j = 0; j < vertexCount; j++) {
@@ -1122,6 +1139,16 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				}
 				else {
 					primitive.mesh.vertices[j].uv = nml::vec2(0.0f, 0.0f);
+				}
+
+				if (colorCount != 0) {
+					primitive.mesh.vertices[j].color.x = *(color + colorCursor);
+					primitive.mesh.vertices[j].color.y = *(color + colorCursor + 1);
+					primitive.mesh.vertices[j].color.z = *(color + colorCursor + 2);
+					colorCursor += (colorStride / sizeof(float));
+				}
+				else {
+					primitive.mesh.vertices[j].color = nml::vec3(0.0f, 0.0f, 0.0f);
 				}
 
 				if (tangentCount != 0) {
