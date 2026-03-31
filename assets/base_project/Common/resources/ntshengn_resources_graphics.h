@@ -216,7 +216,7 @@ namespace NtshEngn {
 		Math::vec3 position;
 		Math::vec3 normal;
 		Math::vec2 uv;
-		Math::vec3 color;
+		Math::vec4 color;
 		Math::vec4 tangent;
 		std::array<uint32_t, 4> joints = { 0, 0, 0, 0 };
 		Math::vec4 weights;
