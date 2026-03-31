@@ -103,7 +103,7 @@ void Renderer::initializeGL() {
 	in vec3 position;
 	in vec3 normal;
 	in vec2 uv;
-	in vec3 color;
+	in vec4 color;
 	in vec4 tangent;
 
 	uniform mat4 viewProj;
@@ -111,7 +111,7 @@ void Renderer::initializeGL() {
 
 	out vec3 fragPosition;
 	out vec2 fragUV;
-	out vec3 fragColor;
+	out vec4 fragColor;
 	out mat3 fragTBN;
 
 	void main() {
@@ -176,7 +176,7 @@ void Renderer::initializeGL() {
 
 	in vec3 fragPosition;
 	in vec2 fragUV;
-	in vec3 fragColor;
+	in vec4 fragColor;
 	in mat3 fragTBN;
 
 	uniform sampler2D diffuseTextureSampler;
@@ -1101,8 +1101,8 @@ void Renderer::initializeGL() {
 	}
 
 	void main() {
-		vec4 color = texture(originalTextureSampler, fragUV);
-		outColor = vec4(linearToSRGB(color.rgb), color.a);
+		vec3 color = texture(originalTextureSampler, fragUV).rgb;
+		outColor = vec4(linearToSRGB(color), 1.0);
 	}
 	)GLSL";
 	GLuint copyFragmentShader = compileShader(GL_FRAGMENT_SHADER, copyFragmentShaderCode);
@@ -3163,31 +3163,31 @@ void Renderer::bindMesh(const RendererMesh& mesh, GLuint program) {
 	GLint positionLocation = gl.glGetAttribLocation(program, "position");
 	if (positionLocation != -1) {
 		gl.glEnableVertexAttribArray(positionLocation);
-		gl.glVertexAttribPointer(positionLocation, 3, GL_FLOAT, false, 60, (void*)0);
+		gl.glVertexAttribPointer(positionLocation, 3, GL_FLOAT, false, 64, (void*)0);
 	}
 
 	GLint normalLocation = gl.glGetAttribLocation(program, "normal");
 	if (normalLocation != -1) {
 		gl.glEnableVertexAttribArray(normalLocation);
-		gl.glVertexAttribPointer(normalLocation, 3, GL_FLOAT, false, 60, (void*)12);
+		gl.glVertexAttribPointer(normalLocation, 3, GL_FLOAT, false, 64, (void*)12);
 	}
 
 	GLint uvLocation = gl.glGetAttribLocation(program, "uv");
 	if (uvLocation != -1) {
 		gl.glEnableVertexAttribArray(uvLocation);
-		gl.glVertexAttribPointer(uvLocation, 2, GL_FLOAT, false, 60, (void*)24);
+		gl.glVertexAttribPointer(uvLocation, 2, GL_FLOAT, false, 64, (void*)24);
 	}
 
 	GLint colorLocation = gl.glGetAttribLocation(program, "color");
 	if (colorLocation != -1) {
 		gl.glEnableVertexAttribArray(colorLocation);
-		gl.glVertexAttribPointer(colorLocation, 3, GL_FLOAT, false, 60, (void*)32);
+		gl.glVertexAttribPointer(colorLocation, 4, GL_FLOAT, false, 64, (void*)32);
 	}
 
 	GLint tangentLocation = gl.glGetAttribLocation(program, "tangent");
 	if (tangentLocation != -1) {
 		gl.glEnableVertexAttribArray(tangentLocation);
-		gl.glVertexAttribPointer(tangentLocation, 4, GL_FLOAT, false, 60, (void*)44);
+		gl.glVertexAttribPointer(tangentLocation, 4, GL_FLOAT, false, 64, (void*)48);
 	}
 
 	gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);

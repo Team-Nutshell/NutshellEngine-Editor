@@ -29,7 +29,7 @@ public:
 			nml::vec3 position;
 			nml::vec3 normal;
 			nml::vec2 uv;
-			nml::vec3 color;
+			nml::vec4 color;
 			nml::vec4 tangent;
 		};
 
