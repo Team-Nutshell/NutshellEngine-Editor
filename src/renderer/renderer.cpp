@@ -2208,7 +2208,7 @@ void Renderer::createSceneImages() {
 
 	gl.glGenTextures(1, &m_sceneColorImage);
 	gl.glBindTexture(GL_TEXTURE_2D, m_sceneColorImage);
-	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio), 0, GL_RGBA, GL_FLOAT, NULL);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
