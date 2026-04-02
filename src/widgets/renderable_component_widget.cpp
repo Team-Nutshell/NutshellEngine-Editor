@@ -26,12 +26,18 @@ RenderableComponentWidget::RenderableComponentWidget(GlobalInfo& globalInfo) : m
 	layout()->addWidget(materialPathWidget);
 	fragmentShaderPathWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_fragment_shader"), m_globalInfo.localization.getString("component_renderable_no_fragment_shader_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(fragmentShaderPathWidget);
+	isVisibleWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_is_visible"));
+	layout()->addWidget(isVisibleWidget);
+	castsShadowsWidget = new BooleanWidget(m_globalInfo, m_globalInfo.localization.getString("component_renderable_casts_shadows"));
+	layout()->addWidget(castsShadowsWidget);
 	layout()->addWidget(new SeparatorLine());
 
 	connect(modelPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(primitiveIndexWidget, &ComboBoxWidget::elementSelected, this, &RenderableComponentWidget::onElementChanged);
 	connect(materialPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
 	connect(fragmentShaderPathWidget, &FileSelectorWidget::fileSelected, this, &RenderableComponentWidget::onPathChanged);
+	connect(isVisibleWidget, &BooleanWidget::stateChanged, this, &RenderableComponentWidget::onBooleanChanged);
+	connect(castsShadowsWidget, &BooleanWidget::stateChanged, this, &RenderableComponentWidget::onBooleanChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &RenderableComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityRenderableSignal, this, &RenderableComponentWidget::onEntityRenderableRemoved);
@@ -94,6 +100,9 @@ void RenderableComponentWidget::updateWidgets(const Renderable& renderable) {
 	else {
 		fragmentShaderPathWidget->setPath("");
 	}
+
+	isVisibleWidget->setValue(renderable.isVisible);
+	castsShadowsWidget->setValue(renderable.castsShadows);
 }
 
 void RenderableComponentWidget::updateComponents(const std::vector<EntityID>& entityIDs, std::vector<Renderable>& renderables) {
@@ -217,6 +226,34 @@ void RenderableComponentWidget::onElementChanged(const std::string& element) {
 
 			if (senderWidget == primitiveIndexWidget) {
 				newRenderable.primitiveIndex = primitiveIndex;
+			}
+
+			entityIDs.push_back(selectedEntityID);
+			newRenderables.push_back(newRenderable);
+		}
+	}
+
+	updateComponents(entityIDs, newRenderables);
+}
+
+void RenderableComponentWidget::onBooleanChanged(bool boolean) {
+	QObject* senderWidget = sender();
+
+	std::vector<EntityID> entityIDs;
+	std::vector<Renderable> newRenderables;
+
+	std::set<EntityID> selectedEntityIDs = m_globalInfo.otherSelectedEntityIDs;
+	selectedEntityIDs.insert(m_globalInfo.currentEntityID);
+	for (EntityID selectedEntityID : selectedEntityIDs) {
+		if (m_globalInfo.entities[selectedEntityID].renderable) {
+			Renderable newRenderable = m_globalInfo.entities[selectedEntityID].renderable.value();
+
+			if (senderWidget == isVisibleWidget) {
+				newRenderable.isVisible = boolean;
+				emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(selectedEntityID, m_globalInfo.entities[selectedEntityID].isVisible, newRenderable.isVisible);
+			}
+			else if (senderWidget == castsShadowsWidget) {
+				newRenderable.castsShadows = boolean;
 			}
 
 			entityIDs.push_back(selectedEntityID);

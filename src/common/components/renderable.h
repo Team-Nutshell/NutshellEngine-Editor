@@ -11,6 +11,8 @@ struct Renderable : public Component {
 	uint32_t primitiveIndex = NTSHENGN_NO_MODEL_PRIMITIVE;
 	std::string materialPath = "";
 	std::string fragmentShaderPath = "";
+	bool isVisible = true;
+	bool castsShadows = true;
 
 	nlohmann::json toJson() const {
 		nlohmann::json j;
@@ -26,6 +28,8 @@ struct Renderable : public Component {
 		if (!fragmentShaderPath.empty()) {
 			j["fragmentShaderPath"] = fragmentShaderPath;
 		}
+		j["isVisible"] = isVisible;
+		j["castsShadows"] = castsShadows;
 
 		if (j.empty()) {
 			j = nlohmann::json::object();
@@ -47,6 +51,12 @@ struct Renderable : public Component {
 		}
 		if (j.contains("fragmentShaderPath")) {
 			renderable.fragmentShaderPath = j["fragmentShaderPath"];
+		}
+		if (j.contains("isVisible")) {
+			renderable.isVisible = j["isVisible"];
+		}
+		if (j.contains("castsShadows")) {
+			renderable.castsShadows = j["castsShadows"];
 		}
 
 		return renderable;

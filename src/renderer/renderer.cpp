@@ -1302,6 +1302,7 @@ void Renderer::paintGL() {
 
 			for (const Entity& entity : lightEntities) {
 				if (entity.renderable &&
+					entity.renderable->castsShadows &&
 					(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
 					(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
 					(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
@@ -1353,7 +1354,8 @@ void Renderer::paintGL() {
 	std::vector<Entity> cameraEntities = frustumCulling(m_camera.viewProjNonReversedMatrix, true, false);
 
 	for (const Entity& entity : cameraEntities) {
-		if (entity.isVisible) {
+		if (entity.isVisible &&
+			((entity.renderable && entity.renderable->isVisible) || !entity.renderable)) {
 			GLuint program;
 			if (entity.renderable &&
 				(m_globalInfo.rendererResourceManager.fragmentShaderPrograms.find(entity.renderable->fragmentShaderPath) != m_globalInfo.rendererResourceManager.fragmentShaderPrograms.end()) &&
@@ -1615,7 +1617,8 @@ void Renderer::paintGL() {
 		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
 		for (const Entity& entity : cameraEntities) {
-			if (entity.isVisible) {
+			if (entity.isVisible &&
+				((entity.renderable && entity.renderable->isVisible) || !entity.renderable)) {
 				bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
 				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
 				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));

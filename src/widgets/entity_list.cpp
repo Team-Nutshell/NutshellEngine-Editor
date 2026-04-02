@@ -107,6 +107,12 @@ void EntityList::duplicateEntities() {
 void EntityList::onEntityCreated(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
 
+	Entity& entity = m_globalInfo.entities[entityID];
+	if (entity.renderable && !entity.renderable->isVisible) {
+		EntityListItem* item = findItemWithEntityID(entityID);
+		item->setForeground(QBrush(m_entityRenderableNotVisibleColor));
+	}
+
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
@@ -133,17 +139,28 @@ void EntityList::onEntityPersistenceChanged(EntityID entityID, bool isPersistent
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
-void EntityList::onEntityVisibilityToggled(EntityID entityID, bool isVisible) {
+void EntityList::onEntityVisibilityToggled(EntityID entityID, bool entityIsVisible, bool renderableIsVisible) {
 	EntityListItem* item = findItemWithEntityID(entityID);
 	QFont font = item->font();
-	if (isVisible) {
+	if (entityIsVisible) {
 		font.setItalic(false);
-		item->setForeground(QBrush());
+		if (renderableIsVisible) {
+			item->setForeground(QBrush());
+		}
+		else {
+			item->setForeground(QBrush(m_entityRenderableNotVisibleColor));
+		}
 	}
 	else {
 		font.setItalic(true);
-		item->setForeground(QBrush(QColor(120.0f, 120.0f, 120.0f)));
+		if (renderableIsVisible) {
+			item->setForeground(QBrush(m_entityNotVisibleColor));
+		}
+		else {
+			item->setForeground(QBrush(m_entityNotVisibleRenderableNotVisibleColor));
+		}
 	}
+
 	findItemWithEntityID(entityID)->setFont(font);
 }
 

@@ -48,11 +48,13 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 }
 
 void ViewMenu::toggleCurrentEntityVisibility() {
-	m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible = !m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible;
-	emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(m_globalInfo.currentEntityID, m_globalInfo.entities[m_globalInfo.currentEntityID].isVisible);
+	Entity& currentEntity = m_globalInfo.entities[m_globalInfo.currentEntityID];
+	currentEntity.isVisible = !currentEntity.isVisible;
+	emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(m_globalInfo.currentEntityID, currentEntity.isVisible, currentEntity.renderable ? currentEntity.renderable->isVisible : true);
 	for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-		m_globalInfo.entities[otherSelectedEntityID].isVisible = !m_globalInfo.entities[otherSelectedEntityID].isVisible;
-		emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(otherSelectedEntityID, m_globalInfo.entities[otherSelectedEntityID].isVisible);
+		Entity& otherSelectedEntity = m_globalInfo.entities[otherSelectedEntityID];
+		otherSelectedEntity.isVisible = !otherSelectedEntity.isVisible;
+		emit m_globalInfo.signalEmitter.toggleEntityVisibilitySignal(otherSelectedEntityID, otherSelectedEntity.isVisible, otherSelectedEntity.renderable ? otherSelectedEntity.renderable->isVisible : true);
 	}
 }
 
@@ -170,10 +172,12 @@ void ViewMenu::onEntitySelected() {
 	}
 }
 
-void ViewMenu::onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible) {
-	m_globalInfo.entities[entityID].isVisible = isEntityVisible;
+void ViewMenu::onEntityVisibilityToggled(EntityID entityID, bool entityIsVisible, bool renderableIsVisible) {
+	(void)renderableIsVisible;
+
+	m_globalInfo.entities[entityID].isVisible = entityIsVisible;
 	if (m_globalInfo.otherSelectedEntityIDs.empty()) {
-		toggleCurrentEntityVisibilityAction->setText(isEntityVisible ? QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_current_entity")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_show_current_entity")));
+		toggleCurrentEntityVisibilityAction->setText(entityIsVisible ? QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_current_entity")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_show_current_entity")));
 	}
 }
 

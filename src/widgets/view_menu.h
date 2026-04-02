@@ -35,7 +35,7 @@ private:
 
 private slots:
 	void onEntitySelected();
-	void onEntityVisibilityToggled(EntityID entityID, bool isEntityVisible);
+	void onEntityVisibilityToggled(EntityID entityID, bool entityIsVisible, bool renderableIsVisible);
 	void onCameraProjectionSwitched(bool cameraProjectionOrthographic);
 
 private:

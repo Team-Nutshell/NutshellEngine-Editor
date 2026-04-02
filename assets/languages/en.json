@@ -142,6 +142,8 @@
 	"component_renderable_primitive_index": "Primitive Index",
 	"component_renderable_material": "Material",
 	"component_renderable_fragment_shader": "Fragment Shader",
+	"component_renderable_is_visible": "Is Visible",
+	"component_renderable_casts_shadows": "Casts Shadows",
 	"component_rigidbody": "Rigidbody",
 	"component_rigidbody_is_static": "Is Static",
 	"component_rigidbody_is_affected_by_constants": "Is Affected By Constants",

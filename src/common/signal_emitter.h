@@ -44,7 +44,7 @@ signals:
 	void removeEntityScriptableSignal(EntityID);
 	void changeEntityScriptableSignal(EntityID, const Scriptable&);
 
-	void toggleEntityVisibilitySignal(EntityID, bool);
+	void toggleEntityVisibilitySignal(EntityID, bool entityIsVisible, bool renderableIsVisible);
 	void switchCameraProjectionSignal(bool);
 	void resetCameraSignal();
 	void orthographicCameraToAxisSignal(const nml::vec3&);

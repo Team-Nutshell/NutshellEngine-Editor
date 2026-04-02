@@ -2,6 +2,7 @@
 #include "../common/global_info.h"
 #include "file_selector_widget.h"
 #include "combo_box_widget.h"
+#include "boolean_widget.h"
 #include <QWidget>
 
 class RenderableComponentWidget : public QWidget {
@@ -20,6 +21,7 @@ private slots:
 	void onEntityRenderableChanged(EntityID entityID, const Renderable& renderable);
 	void onPathChanged(const std::string& path);
 	void onElementChanged(const std::string& element);
+	void onBooleanChanged(bool boolean);
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -29,4 +31,6 @@ public:
 	ComboBoxWidget* primitiveIndexWidget;
 	FileSelectorWidget* materialPathWidget;
 	FileSelectorWidget* fragmentShaderPathWidget;
+	BooleanWidget* isVisibleWidget;
+	BooleanWidget* castsShadowsWidget;
 };
