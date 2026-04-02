@@ -7,6 +7,8 @@ namespace NtshEngn {
 		Mesh* mesh = nullptr;
 		Material material;
 		std::string fragmentShader;
+		bool isVisible = true;
+		bool castsShadows = true;
 	};
 
 }
