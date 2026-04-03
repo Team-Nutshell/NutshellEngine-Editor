@@ -59,38 +59,38 @@ void CameraComponentWidget::updateWidgets(const Camera& camera) {
 	projectionTypeWidget->setElementByText(typeToProjectionType(camera.projectionType));
 	fovWidget->setValue(camera.fov);
 	if (camera.projectionType == "Perspective") {
-		fovWidget->setEnabled(true);
+		fovWidget->show();
 	}
 	else {
-		fovWidget->setEnabled(false);
+		fovWidget->hide();
 	}
 	leftWidget->setValue(camera.left);
 	if (camera.projectionType == "Orthographic") {
-		leftWidget->setEnabled(true);
+		leftWidget->show();
 	}
 	else {
-		leftWidget->setEnabled(false);
+		leftWidget->hide();
 	}
 	rightWidget->setValue(camera.right);
 	if (camera.projectionType == "Orthographic") {
-		rightWidget->setEnabled(true);
+		rightWidget->show();
 	}
 	else {
-		rightWidget->setEnabled(false);
+		rightWidget->hide();
 	}
 	bottomWidget->setValue(camera.bottom);
 	if (camera.projectionType == "Orthographic") {
-		bottomWidget->setEnabled(true);
+		bottomWidget->show();
 	}
 	else {
-		bottomWidget->setEnabled(false);
+		bottomWidget->hide();
 	}
 	topWidget->setValue(camera.top);
 	if (camera.projectionType == "Orthographic") {
-		topWidget->setEnabled(true);
+		topWidget->show();
 	}
 	else {
-		topWidget->setEnabled(false);
+		topWidget->hide();
 	}
 	nearPlaneWidget->setValue(camera.nearPlane);
 	farPlaneWidget->setValue(camera.farPlane);

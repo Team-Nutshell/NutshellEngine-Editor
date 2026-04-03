@@ -49,23 +49,23 @@ void LightComponentWidget::updateWidgets(const Light& light) {
 	directionWidget->setValue(light.direction);
 	distanceWidget->setValue(light.distance);
 	if ((light.type == "Directional") || (light.type == "Spot")) {
-		directionWidget->setEnabled(true);
+		directionWidget->show();
 	}
 	else {
-		directionWidget->setEnabled(false);
+		directionWidget->hide();
 	}
 	cutoffWidget->setValue(light.cutoff);
 	if (light.type == "Spot") {
-		cutoffWidget->setEnabled(true);
+		cutoffWidget->show();
 	}
 	else {
-		cutoffWidget->setEnabled(false);
+		cutoffWidget->hide();
 	}
 	if ((light.type == "Point") || (light.type == "Spot")) {
-		distanceWidget->setEnabled(true);
+		distanceWidget->show();
 	}
 	else {
-		distanceWidget->setEnabled(false);
+		distanceWidget->hide();
 	}
 }
 

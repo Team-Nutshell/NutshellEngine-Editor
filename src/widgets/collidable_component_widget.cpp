@@ -57,45 +57,45 @@ void CollidableComponentWidget::updateWidgets(const Collidable& collidable) {
 	typeWidget->setElementByText(typeToColliderType(collidable.type));
 	centerWidget->setValue(collidable.center);
 	if ((collidable.type == "Box") || (collidable.type == "Sphere")) {
-		centerWidget->setEnabled(true);
+		centerWidget->show();
 	}
 	else {
-		centerWidget->setEnabled(false);
+		centerWidget->hide();
 	}
 	radiusWidget->setValue(collidable.radius);
 	if ((collidable.type == "Sphere") || (collidable.type == "Capsule")) {
-		radiusWidget->setEnabled(true);
+		radiusWidget->show();
 	}
 	else {
-		radiusWidget->setEnabled(false);
+		radiusWidget->hide();
 	}
 	halfExtentWidget->setValue(collidable.halfExtent);
 	if (collidable.type == "Box") {
-		halfExtentWidget->setEnabled(true);
+		halfExtentWidget->show();
 	}
 	else {
-		halfExtentWidget->setEnabled(false);
+		halfExtentWidget->hide();
 	}
 	rotationWidget->setValue(collidable.rotation);
 	if (collidable.type == "Box") {
-		rotationWidget->setEnabled(true);
+		rotationWidget->show();
 	}
 	else {
-		rotationWidget->setEnabled(false);
+		rotationWidget->hide();
 	}
 	baseWidget->setValue(collidable.base);
 	if (collidable.type == "Capsule") {
-		baseWidget->setEnabled(true);
+		baseWidget->show();
 	}
 	else {
-		baseWidget->setEnabled(false);
+		baseWidget->hide();
 	}
 	tipWidget->setValue(collidable.tip);
 	if (collidable.type == "Capsule") {
-		tipWidget->setEnabled(true);
+		tipWidget->show();
 	}
 	else {
-		tipWidget->setEnabled(false);
+		tipWidget->hide();
 	}
 	updateFromRenderableWidget();
 }
