@@ -149,28 +149,27 @@ float dot(const quat& a, const quat& b) {
 }
 
 quat slerp(const quat& a, const quat& b, const float interpolationValue) {
-	quat tmpB = b;
-
-	float aDotb = dot(a, b);
-
-	if (aDotb < 0.0) {
-		tmpB = tmpB * -1.0f;
-		aDotb = -aDotb;
+	float cosHalfTheta = dot(a, b);
+	if (std::abs(cosHalfTheta) >= 1.0f) {
+		return a;
 	}
 
-	if (aDotb > 0.9995) {
-		return nml::normalize(a + interpolationValue * (tmpB - a));
+	float cosHalfThetaSign = 1.0f;
+	if (cosHalfTheta < 0.0f) {
+		cosHalfTheta = -cosHalfTheta;
+		cosHalfThetaSign = -1.0f;
+	}
+	
+	float halfTheta = std::acos(cosHalfTheta);
+	float sinHalfTheta = std::sqrt(1.0f - (cosHalfTheta * cosHalfTheta));
+	if (std::fabs(sinHalfTheta) < 0.001f) {
+		return (a * 0.5f) + (b * cosHalfThetaSign * 0.5f);
 	}
 
-	const float theta0 = std::acos(aDotb);
-	const float theta = interpolationValue * theta0;
-	const float sinTheta0 = std::sin(theta0);
-	const float sinTheta = std::sin(theta);
+	float aRatio = std::sin((1.0f - interpolationValue) * halfTheta) / sinHalfTheta;
+	float bRatio = std::sin(interpolationValue * halfTheta) / sinHalfTheta;
 
-	float scaleA = std::cos(theta) - aDotb * (sinTheta / sinTheta0);
-	float scaleB = sinTheta / sinTheta0;
-
-	return (scaleA * a + scaleB * tmpB);
+	return (a * aRatio) + (b * cosHalfThetaSign * bRatio);
 }
 
 quat eulerAnglesToQuat(const vec3& vec) {
