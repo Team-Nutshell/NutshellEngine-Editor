@@ -1418,7 +1418,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							static_cast<uint8_t>(round(255.0f * diffuseColor.z)),
 							static_cast<uint8_t>(round(255.0f * diffuseColor.w))
 						};
-						std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_diffuseTexture";
+						std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":diffuse";
 						imagesToGPU[imageName] = image;
 						primitive.material.diffuseTextureName = imageName;
 					}
@@ -1541,7 +1541,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							static_cast<uint8_t>(round(255.0f * metallicFactor)),
 							0
 						};
-						std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_roughnessMetallicTexture";
+						std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":metallicRoughness";
 						imagesToGPU[imageName] = image;
 						primitive.material.roughnessTextureName = imageName;
 						primitive.material.metalnessTextureName = imageName;
@@ -1763,7 +1763,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						 static_cast<uint8_t>(round(255.0f * emissiveColor.z)),
 						 static_cast<uint8_t>(0.0f)
 					 };
-					 std::string imageName = AssetHelper::absoluteToRelative(modelPath, projectDirectory) + "_emissiveTexture";
+					 std::string imageName = modelPath + ":" + std::to_string(rendererModel.primitives.size()) + ":emissive";
 					 imagesToGPU[imageName] = image;
 					 primitive.material.emissiveTextureName = imageName;
 				}
