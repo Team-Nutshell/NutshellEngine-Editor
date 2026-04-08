@@ -1394,16 +1394,6 @@ void Renderer::paintGL() {
 				gl.glUniform3f(cameraPositionLocation, m_camera.position.x, m_camera.position.y, m_camera.position.z);
 			}
 
-			GLint cameraDirectionLocation = gl.glGetUniformLocation(program, "cameraDirection");
-			if (cameraDirectionLocation != -1) {
-				if (!m_camera.useOrthographicProjection) {
-					gl.glUniform3f(cameraDirectionLocation, m_camera.perspectiveDirection.x, m_camera.perspectiveDirection.y, m_camera.perspectiveDirection.z);
-				}
-				else {
-					gl.glUniform3f(cameraDirectionLocation, m_camera.orthographicDirection.x, m_camera.orthographicDirection.y, m_camera.orthographicDirection.z);
-				}
-			}
-
 			GLint viewLocation = gl.glGetUniformLocation(program, "view");
 			if (viewLocation != -1) {
 				gl.glUniformMatrix4fv(viewLocation, 1, false, m_camera.viewMatrix.data());
@@ -1412,6 +1402,16 @@ void Renderer::paintGL() {
 			GLint timeLocation = gl.glGetUniformLocation(program, "time");
 			if (timeLocation != -1) {
 				gl.glUniform1f(timeLocation, m_time);
+			}
+
+			GLint widthLocation = gl.glGetUniformLocation(program, "width");
+			if (widthLocation != -1) {
+				gl45.glUniform1ui(widthLocation, width());
+			}
+
+			GLint heightLocation = gl.glGetUniformLocation(program, "height");
+			if (heightLocation != -1) {
+				gl45.glUniform1ui(heightLocation, height());
 			}
 
 			GLint shadowMapSamplerLocation = gl.glGetUniformLocation(program, "shadowMapSampler");
@@ -2916,7 +2916,7 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 
 	for (const auto& fragmentShaderToGPU : m_globalInfo.rendererResourceManager.fragmentShadersToGPU) {
-		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -193);
+		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -197);
 		if (fragmentShader != 0xFFFFFFFF) {
 			if (m_globalInfo.rendererResourceManager.fragmentShaders.find(fragmentShaderToGPU.first) != m_globalInfo.rendererResourceManager.fragmentShaders.end()) {
 				gl.glDeleteShader(m_globalInfo.rendererResourceManager.fragmentShaders[fragmentShaderToGPU.first]);

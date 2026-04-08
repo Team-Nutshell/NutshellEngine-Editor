@@ -264,6 +264,8 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 #define NtshEngn_ambientLight(i) lights.info[lights.count.x + lights.count.y + lights.count.z + i]
 #define NtshEngn_time time
 #define NtshEngn_cameraPosition cameraPosition
+#define NtshEngn_width width
+#define NtshEngn_height height
 #define NtshEngn_useReversedDepth true
 #define NtshEngn_outColor outColor
 #define NtshEngn_outDepth gl_FragDepth
@@ -318,10 +320,12 @@ uniform vec2 scaleUV;
 uniform vec2 offsetUV;
 
 uniform vec3 cameraPosition;
-uniform vec3 cameraDirection;
 uniform mat4 view;
 
 uniform float time;
+
+uniform uint width;
+uniform uint height;
 
 uniform sampler2DArray shadowMapSampler;
 
