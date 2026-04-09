@@ -16,11 +16,11 @@ namespace NtshEngn {
 			m_tu[elem] = key;
 		}
 
-		bool exist(const T& key) const {
+		bool contains(const T& key) const {
 			return (m_tu.find(key) != m_tu.end());
 		}
 
-		bool exist(const U& key) const {
+		bool contains(const U& key) const {
 			return (m_ut.find(key) != m_ut.end());
 		}
 

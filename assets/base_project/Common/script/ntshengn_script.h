@@ -881,20 +881,20 @@ namespace NtshEngn {
 			return audioModule->isSoundPlaying(soundID);
 		}
 
-		void setSoundSourceTime(SoundSourceID soundSourceID, float newTime) {
+		void setSoundSourceCurrentTime(SoundSourceID soundSourceID, float newTime) {
 			if (!audioModule) {
 				return;
 			}
 
-			audioModule->setSoundSourceTime(soundSourceID, newTime);
+			audioModule->setSoundSourceCurrentTime(soundSourceID, newTime);
 		}
 		
-		float getSoundSourceTime(SoundSourceID soundSourceID) {
+		float getSoundSourceCurrentTime(SoundSourceID soundSourceID) {
 			if (!audioModule) {
 				return false;
 			}
 
-			return audioModule->getSoundSourceTime(soundSourceID);
+			return audioModule->getSoundSourceCurrentTime(soundSourceID);
 		}
 
 
@@ -979,12 +979,20 @@ namespace NtshEngn {
 		}
 
 		// Animation
-		void playAnimation(Entity entity, uint32_t animationIndex) {
+		void playAnimation(Entity entity, uint32_t animationIndex, bool looping = false) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->playAnimation(entity, animationIndex);
+			graphicsModule->playAnimation(entity, animationIndex, looping);
+		}
+
+		void resumeAnimation(Entity entity) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->resumeAnimation(entity);
 		}
 
 		void pauseAnimation(Entity entity) {
@@ -1003,20 +1011,44 @@ namespace NtshEngn {
 			graphicsModule->stopAnimation(entity);
 		}
 
-		void setAnimationCurrentTime(Entity entity, float time) {
-			if (!graphicsModule) {
-				return;
-			}
-
-			graphicsModule->setAnimationCurrentTime(entity, time);
-		}
-
 		bool isAnimationPlaying(Entity entity, uint32_t animationIndex) {
 			if (!graphicsModule) {
 				return false;
 			}
 
 			return graphicsModule->isAnimationPlaying(entity, animationIndex);
+		}
+
+		void setAnimationCurrentTime(Entity entity, float newTime) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->setAnimationCurrentTime(entity, newTime);
+		}
+
+		float getAnimationCurrentTime(Entity entity) {
+			if (!graphicsModule) {
+				return 0.0f;
+			}
+
+			return graphicsModule->getAnimationCurrentTime(entity);
+		}
+
+		void setAnimationSpeed(Entity entity, float newSpeed) {
+			if (!graphicsModule) {
+				return;
+			}
+
+			graphicsModule->setAnimationSpeed(entity, newSpeed);
+		}
+
+		float getAnimationSpeed(Entity entity) {
+			if (!graphicsModule) {
+				return false;
+			}
+
+			return graphicsModule->getAnimationSpeed(entity);
 		}
 
 		// UI

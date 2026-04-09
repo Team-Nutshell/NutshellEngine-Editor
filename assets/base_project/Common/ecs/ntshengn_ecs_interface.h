@@ -51,7 +51,7 @@ namespace NtshEngn {
 		}
 
 		Entity createEntity(const std::string& name) {
-			NTSHENGN_ASSERT(!m_entityNames.exist(name), "An Entity named \"" + name + "\" already exists.");
+			NTSHENGN_ASSERT(!m_entityNames.contains(name), "An Entity named \"" + name + "\" already exists.");
 
 			Entity id = createEntity();
 			m_entityNames.insert_or_assign(id, name);
@@ -68,7 +68,7 @@ namespace NtshEngn {
 
 			m_existingEntities.erase(entity);
 
-			if (m_entityNames.exist(entity)) {
+			if (m_entityNames.contains(entity)) {
 				m_entityNames.erase(entity);
 			}
 
@@ -111,17 +111,17 @@ namespace NtshEngn {
 		}
 
 		void setEntityName(Entity entity, const std::string& name) {
-			NTSHENGN_ASSERT(!m_entityNames.exist(name), "An Entity named \"" + name + "\" already exists.");
+			NTSHENGN_ASSERT(!m_entityNames.contains(name), "An Entity named \"" + name + "\" already exists.");
 
 			m_entityNames.insert_or_assign(entity, name);
 		}
 
 		bool entityHasName(Entity entity) {
-			return m_entityNames.exist(entity);
+			return m_entityNames.contains(entity);
 		}
 
 		std::string getEntityName(Entity entity) {
-			if (m_entityNames.exist(entity)) {
+			if (m_entityNames.contains(entity)) {
 				return m_entityNames[entity];
 			}
 			else {
@@ -130,7 +130,7 @@ namespace NtshEngn {
 		}
 
 		Entity findEntityByName(const std::string& name) {
-			if (m_entityNames.exist(name)) {
+			if (m_entityNames.contains(name)) {
 				return m_entityNames[name];
 			}
 			else {

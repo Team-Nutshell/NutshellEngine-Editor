@@ -231,7 +231,7 @@ namespace NtshEngn {
 
 	struct Skin {
 		std::vector<Joint> joints;
-		uint32_t rootJoint = 0;
+		std::vector<uint32_t> rootJoints;
 		Math::mat4 baseMatrix = Math::mat4::identity();
 		Math::mat4 inverseGlobalTransform = Math::mat4::identity();
 	};
