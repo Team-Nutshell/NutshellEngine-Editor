@@ -1406,12 +1406,12 @@ void Renderer::paintGL() {
 
 			GLint widthLocation = gl.glGetUniformLocation(program, "width");
 			if (widthLocation != -1) {
-				gl45.glUniform1ui(widthLocation, width());
+				gl45.glUniform1ui(widthLocation, static_cast<uint32_t>(width()));
 			}
 
 			GLint heightLocation = gl.glGetUniformLocation(program, "height");
 			if (heightLocation != -1) {
-				gl45.glUniform1ui(heightLocation, height());
+				gl45.glUniform1ui(heightLocation, static_cast<uint32_t>(height()));
 			}
 
 			GLint shadowMapSamplerLocation = gl.glGetUniformLocation(program, "shadowMapSampler");
