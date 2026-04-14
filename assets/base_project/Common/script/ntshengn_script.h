@@ -978,6 +978,22 @@ namespace NtshEngn {
 			return audioModule->getMasterGain();
 		}
 
+		void startAudioInputCapture() {
+			if (!audioModule) {
+				return;
+			}
+
+			audioModule->startAudioInputCapture();
+		}
+
+		SoundID stopAudioInputCapture() {
+			if (!audioModule) {
+				return NTSHENGN_SOUND_UNKNOWN;
+			}
+
+			return audioModule->stopAudioInputCapture();
+		}
+
 		// Animation
 		void playAnimation(Entity entity, uint32_t animationIndex, bool looping = false) {
 			if (!graphicsModule) {

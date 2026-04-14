@@ -59,6 +59,11 @@ namespace NtshEngn {
 		virtual void setMasterGain(float newGain) = 0;
 		// Returns the master gain
 		virtual float getMasterGain() = 0;
+
+		// Starts the audio input capture
+		virtual void startAudioInputCapture() = 0;
+		// Stops the audio input capture
+		virtual SoundID stopAudioInputCapture() = 0;
 	};
 
 }
