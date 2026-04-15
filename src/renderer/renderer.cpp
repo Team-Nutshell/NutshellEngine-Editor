@@ -2864,6 +2864,11 @@ void Renderer::loadResourcesToGPU() {
 		}
 		gl.glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imageToGPU.second.width, imageToGPU.second.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageToGPU.second.data.data());
 		gl.glGenerateMipmap(GL_TEXTURE_2D);
+
+		std::string fullPath = AssetHelper::relativeToAbsolute(imageToGPU.first, m_globalInfo.projectDirectory);
+		if (m_globalInfo.rendererResourceManager.imageLastWriteTimeAndColorSpaces.find(fullPath) != m_globalInfo.rendererResourceManager.imageLastWriteTimeAndColorSpaces.end()) {
+			m_globalInfo.rendererResourceManager.imageLastWriteTimeAndColorSpaces[fullPath].second = imageToGPU.second.colorSpace; // Update color space according to actual usage
+		}
 	}
 	m_globalInfo.rendererResourceManager.imagesToGPU.clear();
 

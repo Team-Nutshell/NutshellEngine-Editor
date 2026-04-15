@@ -151,8 +151,10 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 		return;
 	}
 
-	if (imageLastWriteTimes.find(imagePath) != imageLastWriteTimes.end()) {
-		if (imageLastWriteTimes[imagePath] == std::filesystem::last_write_time(imagePath)) {
+	ImageToGPU::ColorSpace colorSpace = ImageToGPU::ColorSpace::Linear;
+	if (imageLastWriteTimeAndColorSpaces.find(imagePath) != imageLastWriteTimeAndColorSpaces.end()) {
+		colorSpace = imageLastWriteTimeAndColorSpaces[imagePath].second;
+		if (imageLastWriteTimeAndColorSpaces[imagePath].first == std::filesystem::last_write_time(imagePath)) {
 			// Resource is already loaded and hasn't changed
 			return;
 		}
@@ -172,13 +174,15 @@ void RendererResourceManager::loadImage(const std::string& imagePath, const std:
 			(extension == "bmp") ||
 			(extension == "gif")) {
 			loadImageStb(imagePath, image);
+			image.colorSpace = colorSpace;
 		}
 		else {
 			logger->addLog(LogLevel::Warning, localization->getString("log_type_file_extension_not_supported_editor", { localization->getString("image"), extension }));
 		}
 	}
 
-	imageLastWriteTimes[imagePath] = std::filesystem::last_write_time(imagePath);
+	imageLastWriteTimeAndColorSpaces[imagePath].first = std::filesystem::last_write_time(imagePath);
+	imageLastWriteTimeAndColorSpaces[imagePath].second = image.colorSpace;
 
 	if (!image.data.empty()) {
 		imagesToGPU[name] = image;

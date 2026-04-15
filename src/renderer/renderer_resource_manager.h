@@ -166,7 +166,7 @@ public:
 
 	std::unordered_map<std::string, std::filesystem::file_time_type> modelLastWriteTimes;
 	std::unordered_map<std::string, std::filesystem::file_time_type> materialLastWriteTimes;
-	std::unordered_map<std::string, std::filesystem::file_time_type> imageLastWriteTimes;
+	std::unordered_map<std::string, std::pair<std::filesystem::file_time_type, ImageToGPU::ColorSpace>> imageLastWriteTimeAndColorSpaces;
 	std::unordered_map<std::string, std::filesystem::file_time_type> samplerLastWriteTimes;
 	std::unordered_map<std::string, std::filesystem::file_time_type> fragmentShaderLastWriteTimes;
 
