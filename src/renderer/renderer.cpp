@@ -914,6 +914,7 @@ void Renderer::initializeGL() {
 		vec4 clipSpacePos = viewProj * vec4(fragPos, 1.0);
 		gl_FragDepth = (clipSpacePos.z / clipSpacePos.w);
 		float fading = max(0.5 - linearizeDepth(gl_FragDepth), 0.0);
+		gl_FragDepth += 0.0000001;
 
 		outColor = grid(fragPos) * float(t > 0.0);
 		outColor.a *= fading;
