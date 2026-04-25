@@ -144,7 +144,7 @@ void CodeEditorWidget::keyPressEvent(QKeyEvent* event) {
 				if (toPlainText().toStdString()[newlinePos + 1] == '\t') {
 					cursor.setPosition(static_cast<int>(newlinePos) + 1);
 					cursor.deleteChar();
-					if (cursorStartPosition > (newlinePos + 1)) {
+					if (cursorStartPosition > (static_cast<int>(newlinePos) + 1)) {
 						cursorStartPosition--;
 					}
 					cursorEndPosition--;
