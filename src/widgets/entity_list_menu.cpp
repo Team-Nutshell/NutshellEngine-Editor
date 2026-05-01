@@ -21,6 +21,9 @@ void EntityListMenu::renameEntities() {
 
 void EntityListMenu::newEntities() {
 	m_globalInfo.actionUndoStack->push(new CreateEntityCommand(m_globalInfo, "Entity_" + std::to_string(m_globalInfo.globalEntityID)));
+	QListWidgetItem* item = entityList->item(entityList->count() - 1);
+	item->setFlags(item->flags() | Qt::ItemFlag::ItemIsEditable);
+	entityList->editItem(item);
 }
 
 void EntityListMenu::deleteEntities() {
