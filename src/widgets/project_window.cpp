@@ -55,6 +55,8 @@ void ProjectWindow::onNewProjectButtonClicked(const std::string& projectDirector
 
 	nlohmann::json jOptions;
 	jOptions["windowTitle"] = projectName;
+	jOptions["windowWidth"] = 1280;
+	jOptions["windowHeight"] = 720;
 	jOptions["maxFPS"] = 60;
 	std::filesystem::create_directory(projectDirectory + "/assets/options/");
 	std::fstream optionsFile(projectDirectory + "/assets/options/options.ntop", std::ios::out | std::ios::trunc);

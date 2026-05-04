@@ -238,6 +238,8 @@
 	"assets_options_file": "Options File",
 	"assets_options_window_title": "Window Title",
 	"assets_options_window_icon": "Window Icon",
+	"assets_options_window_width": "Window Width",
+	"assets_options_window_height": "Window Height",
 	"assets_options_no_window_icon_selected": "No window icon selected",
 	"assets_options_max_fps": "Max FPS",
 	"assets_options_first_scene": "First Scene",

@@ -66,6 +66,12 @@ void ProjectMenu::importGlobalResources() {
 	if (!j.contains("windowTitle")) {
 		j["windowTitle"] = m_globalInfo.projectName;
 	}
+	if (!j.contains("windowWidth")) {
+		j["windowWidth"] = 1280;
+	}
+	if (!j.contains("windowHeight")) {
+		j["windowHeight"] = 720;
+	}
 	if (!j.contains("maxFPS")) {
 		j["maxFPS"] = 60;
 	}

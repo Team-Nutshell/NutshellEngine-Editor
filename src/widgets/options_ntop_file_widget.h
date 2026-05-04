@@ -9,6 +9,8 @@
 struct OptionsNtop {
 	std::string windowTitle = "";
 	std::string windowIconImagePath = "";
+	uint32_t windowWidth = 1280;
+	uint32_t windowHeight = 720;
 	int maxFPS = 0;
 	std::string firstScenePath = "";
 	bool startProfiling = false;
@@ -16,6 +18,8 @@ struct OptionsNtop {
 	bool operator==(const OptionsNtop& rhs) {
 		return (windowTitle == rhs.windowTitle) &&
 			(windowIconImagePath == rhs.windowIconImagePath) &&
+			(windowWidth == rhs.windowWidth) &&
+			(windowHeight == rhs.windowHeight) &&
 			(maxFPS == rhs.maxFPS) &&
 			(firstScenePath == rhs.firstScenePath) &&
 			(startProfiling == rhs.startProfiling);
@@ -50,6 +54,8 @@ public:
 
 	StringWidget* windowTitleWidget;
 	FileSelectorWidget* windowIconImageWidget;
+	IntegerWidget* windowWidthWidget;
+	IntegerWidget* windowHeightWidget;
 	IntegerWidget* maxFPSWidget;
 	FileSelectorWidget* firstSceneWidget;
 	BooleanWidget* startProfilingWidget;

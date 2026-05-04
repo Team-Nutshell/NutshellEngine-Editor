@@ -20,6 +20,12 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo) : m_globalI
 	layout()->addWidget(windowTitleWidget);
 	windowIconImageWidget = new FileSelectorWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_window_icon"), m_globalInfo.localization.getString("assets_options_no_window_icon_selected"), m_globalInfo.projectDirectory + "/assets");
 	layout()->addWidget(windowIconImageWidget);
+	windowWidthWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_window_width"));
+	windowWidthWidget->setMin(1);
+	layout()->addWidget(windowWidthWidget);
+	windowHeightWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_window_height"));
+	windowHeightWidget->setMin(1);
+	layout()->addWidget(windowHeightWidget);
 	maxFPSWidget = new IntegerWidget(m_globalInfo, m_globalInfo.localization.getString("assets_options_max_fps"));
 	maxFPSWidget->setMin(0);
 	layout()->addWidget(maxFPSWidget);
@@ -30,6 +36,8 @@ OptionsNtopFileWidget::OptionsNtopFileWidget(GlobalInfo& globalInfo) : m_globalI
 
 	connect(windowTitleWidget, &StringWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(windowIconImageWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(windowWidthWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
+	connect(windowHeightWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(maxFPSWidget, &IntegerWidget::valueChanged, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(firstSceneWidget, &FileSelectorWidget::fileSelected, this, &OptionsNtopFileWidget::onValueChanged);
 	connect(startProfilingWidget, &BooleanWidget::stateChanged, this, &OptionsNtopFileWidget::onValueChanged);
@@ -60,6 +68,12 @@ void OptionsNtopFileWidget::setPath(const std::string& path) {
 	if (j.contains("windowIconImagePath")) {
 		optionsNtop.windowIconImagePath = j["windowIconImagePath"];
 	}
+	if (j.contains("windowWidth")) {
+		optionsNtop.windowWidth = j["windowWidth"];
+	}
+	if (j.contains("windowHeight")) {
+		optionsNtop.windowHeight = j["windowHeight"];
+	}
 	if (j.contains("maxFPS")) {
 		optionsNtop.maxFPS = j["maxFPS"];
 	}
@@ -80,6 +94,8 @@ std::string OptionsNtopFileWidget::getPath() {
 void OptionsNtopFileWidget::updateWidgets() {
 	windowTitleWidget->setText(optionsNtop.windowTitle);
 	windowIconImageWidget->setPath(optionsNtop.windowIconImagePath);
+	windowWidthWidget->setValue(optionsNtop.windowWidth);
+	windowHeightWidget->setValue(optionsNtop.windowHeight);
 	maxFPSWidget->setValue(optionsNtop.maxFPS);
 	firstSceneWidget->setPath(optionsNtop.firstScenePath);
 	startProfilingWidget->setValue(optionsNtop.startProfiling);
@@ -93,6 +109,8 @@ void OptionsNtopFileWidget::save() {
 	if (!optionsNtop.windowIconImagePath.empty()) {
 		j["windowIconImagePath"] = optionsNtop.windowIconImagePath;
 	}
+	j["windowWidth"] = optionsNtop.windowWidth;
+	j["windowHeight"] = optionsNtop.windowHeight;
 	j["maxFPS"] = optionsNtop.maxFPS;
 	if (!optionsNtop.firstScenePath.empty()) {
 		j["firstScenePath"] = optionsNtop.firstScenePath;
@@ -118,6 +136,12 @@ void OptionsNtopFileWidget::onValueChanged() {
 	else if (senderWidget == windowIconImageWidget) {
 		std::string iconImagePath = AssetHelper::absoluteToRelative(windowIconImageWidget->getPath(), m_globalInfo.projectDirectory);
 		newOptionsNtop.windowIconImagePath = iconImagePath;
+	}
+	else if (senderWidget == windowWidthWidget) {
+		newOptionsNtop.windowWidth = windowWidthWidget->getValue();
+	}
+	else if (senderWidget == windowHeightWidget) {
+		newOptionsNtop.windowHeight = windowHeightWidget->getValue();
 	}
 	else if (senderWidget == maxFPSWidget) {
 		newOptionsNtop.maxFPS = maxFPSWidget->getValue();
