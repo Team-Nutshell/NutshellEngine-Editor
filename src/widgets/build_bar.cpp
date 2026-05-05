@@ -502,7 +502,7 @@ void BuildBar::run() {
 	std::filesystem::current_path(buildType);
 	const std::string runCommand = "NutshellEngine.exe";
 	m_globalInfo.logger.addLog(LogLevel::Info, m_globalInfo.localization.getString("log_run_launching_run_command", { runCommand }));
-	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInformation)) {
+	if (CreateProcessA(NULL, const_cast<char*>(runCommand.c_str()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startupInfo, &processInformation)) {
 		CloseHandle(pipeWrite);
 
 		m_process = processInformation.hProcess;
