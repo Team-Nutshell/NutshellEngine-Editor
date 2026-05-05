@@ -22,6 +22,31 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	setMouseTracking(true);
 	setAcceptDrops(true);
 
+	const std::string optionsFilePath = m_globalInfo.projectDirectory + "/assets/options/options.ntop";
+	std::fstream optionsFile(optionsFilePath, std::ios::in);
+	if (optionsFile.is_open()) {
+		if (!nlohmann::json::accept(optionsFile)) {
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_is_not_valid_json", { optionsFilePath }));
+			return;
+		}
+	}
+	else {
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_file_cannot_be_opened", { optionsFilePath }));
+		return;
+	}
+
+	optionsFile = std::fstream(optionsFilePath, std::ios::in);
+	nlohmann::json j = nlohmann::json::parse(optionsFile);
+
+	if (j.contains("windowWidth")) {
+		m_applicationBaseWindowWidth = j["windowWidth"];
+	}
+	if (j.contains("windowHeight")) {
+		m_applicationBaseWindowHeight = j["windowHeight"];
+	}
+
+	optionsFile.close();
+
 	connect(&m_waitTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
 	connect(&globalInfo.signalEmitter, &SignalEmitter::destroyEntitySignal, this, &Renderer::onEntityDestroyed);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &Renderer::onEntitySelected);
@@ -29,6 +54,7 @@ Renderer::Renderer(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::resetCameraSignal, this, &Renderer::onCameraReset);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::orthographicCameraToAxisSignal, this, &Renderer::onOrthographicCameraToAxisChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::cameraGoToEntitySignal, this, &Renderer::onCameraGoToEntity);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeApplicationBaseWindowSizeSignal, this, &Renderer::onApplicationBaseWindowSizeChanged);
 }
 
 Renderer::~Renderer() {
@@ -1499,12 +1525,12 @@ void Renderer::paintGL() {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.second.camera->forward, entity.second.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
-					float defaultAspectRatio = 16.0f / 9.0f;
+					float applicationBaseAspectRatio = static_cast<float>(m_applicationBaseWindowWidth) / static_cast<float>(m_applicationBaseWindowHeight);
 					if (entity.second.camera->projectionType == "Perspective") {
-						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), defaultAspectRatio, entity.second.camera->nearPlane, entity.second.camera->farPlane);
+						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.second.camera->fov), applicationBaseAspectRatio, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					}
 					else if (entity.second.camera->projectionType == "Orthographic") {
-						entityCameraProjectionMatrix = nml::orthoRH(entity.second.camera->left * defaultAspectRatio, entity.second.camera->right * defaultAspectRatio, entity.second.camera->bottom, entity.second.camera->top, entity.second.camera->nearPlane, entity.second.camera->farPlane);
+						entityCameraProjectionMatrix = nml::orthoRH(entity.second.camera->left * applicationBaseAspectRatio, entity.second.camera->right * applicationBaseAspectRatio, entity.second.camera->bottom, entity.second.camera->top, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					}
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
@@ -1974,12 +2000,12 @@ void Renderer::paintGL() {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.camera->forward, entity.camera->up);
 					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
-					float defaultAspectRatio = 16.0f / 9.0f;
+					float applicationBaseAspectRatio = static_cast<float>(m_applicationBaseWindowWidth) / static_cast<float>(m_applicationBaseWindowHeight);
 					if (entity.camera->projectionType == "Perspective") {
-						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), defaultAspectRatio, entity.camera->nearPlane, entity.camera->farPlane);
+						entityCameraProjectionMatrix = nml::perspectiveRH(nml::toRad(entity.camera->fov), applicationBaseAspectRatio, entity.camera->nearPlane, entity.camera->farPlane);
 					}
 					else if (entity.camera->projectionType == "Orthographic") {
-						entityCameraProjectionMatrix = nml::orthoRH(entity.camera->left * defaultAspectRatio, entity.camera->right * defaultAspectRatio, entity.camera->bottom, entity.camera->top, entity.camera->nearPlane, entity.camera->farPlane);
+						entityCameraProjectionMatrix = nml::orthoRH(entity.camera->left * applicationBaseAspectRatio, entity.camera->right * applicationBaseAspectRatio, entity.camera->bottom, entity.camera->top, entity.camera->nearPlane, entity.camera->farPlane);
 					}
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
 					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, invEntityCameraModel.data());
@@ -3368,6 +3394,11 @@ void Renderer::onCameraGoToEntity(EntityID entityID) {
 	else {
 		m_camera.position = m_globalInfo.entities[entityID].transform.position - (m_camera.perspectiveDirection * 5.0f);
 	}
+}
+
+void Renderer::onApplicationBaseWindowSizeChanged(uint32_t width, uint32_t height) {
+	m_applicationBaseWindowWidth = width;
+	m_applicationBaseWindowHeight = height;
 }
 
 #if defined(NTSHENGN_DEBUG)

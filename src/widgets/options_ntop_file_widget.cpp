@@ -139,9 +139,13 @@ void OptionsNtopFileWidget::onValueChanged() {
 	}
 	else if (senderWidget == windowWidthWidget) {
 		newOptionsNtop.windowWidth = windowWidthWidget->getValue();
+
+		emit m_globalInfo.signalEmitter.changeApplicationBaseWindowSizeSignal(newOptionsNtop.windowWidth, newOptionsNtop.windowHeight);
 	}
 	else if (senderWidget == windowHeightWidget) {
 		newOptionsNtop.windowHeight = windowHeightWidget->getValue();
+
+		emit m_globalInfo.signalEmitter.changeApplicationBaseWindowSizeSignal(newOptionsNtop.windowWidth, newOptionsNtop.windowHeight);
 	}
 	else if (senderWidget == maxFPSWidget) {
 		newOptionsNtop.maxFPS = maxFPSWidget->getValue();

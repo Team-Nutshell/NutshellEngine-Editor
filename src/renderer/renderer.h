@@ -74,6 +74,8 @@ private slots:
 	void onOrthographicCameraToAxisChanged(const nml::vec3& axis);
 	void onCameraGoToEntity(EntityID entityID);
 
+	void onApplicationBaseWindowSizeChanged(uint32_t width, uint32_t height);
+
 #if defined(NTSHENGN_DEBUG)
 	void onMessageLogged(const QOpenGLDebugMessage& debugMessage);
 #endif
@@ -194,6 +196,9 @@ private:
 	std::vector<Shadow> m_shadowInfo;
 	GLuint m_shadowMapBuffer;
 	uint32_t m_shadowMapResolution = 2048;
+
+	uint32_t m_applicationBaseWindowWidth = 1280;
+	uint32_t m_applicationBaseWindowHeight = 720;
 
 	QOpenGLFunctions gl;
 	QOpenGLExtraFunctions glex;

@@ -50,6 +50,8 @@ signals:
 	void orthographicCameraToAxisSignal(const nml::vec3&);
 	void cameraGoToEntitySignal(EntityID);
 
+	void changeApplicationBaseWindowSizeSignal(uint32_t, uint32_t);
+
 	void selectAssetSignal(const std::string&);
 	void renameFileSignal(const std::string&, const std::string&);
 
