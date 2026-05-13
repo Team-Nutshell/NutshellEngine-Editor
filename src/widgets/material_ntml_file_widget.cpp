@@ -242,20 +242,52 @@ void MaterialNtmlFileWidget::updateWidgets() {
 	diffuseTextureImageSamplerWidget->setPath(materialNtml.diffuseTextureImageSamplerPath);
 	diffuseColorWidget->setColor(materialNtml.diffuseColor);
 	opacityValueWidget->setValue(materialNtml.opacity);
+	if (diffuseTextureImageWidget->getPath().empty()) {
+		diffuseColorWidget->setEnabled(true);
+		opacityValueWidget->setEnabled(true);
+	}
+	else {
+		diffuseColorWidget->setEnabled(false);
+		opacityValueWidget->setEnabled(false);
+	}
 	normalTextureImageWidget->setPath(materialNtml.normalTextureImagePath);
 	normalTextureImageSamplerWidget->setPath(materialNtml.normalTextureImageSamplerPath);
 	metalnessTextureImageWidget->setPath(materialNtml.metalnessTextureImagePath);
 	metalnessTextureImageSamplerWidget->setPath(materialNtml.metalnessTextureImageSamplerPath);
 	metalnessValueWidget->setValue(materialNtml.metalnessValue);
+	if (metalnessTextureImageWidget->getPath().empty()) {
+		metalnessValueWidget->setEnabled(true);
+	}
+	else {
+		metalnessValueWidget->setEnabled(false);
+	}
 	roughnessTextureImageWidget->setPath(materialNtml.roughnessTextureImagePath);
 	roughnessTextureImageSamplerWidget->setPath(materialNtml.roughnessTextureImageSamplerPath);
 	roughnessValueWidget->setValue(materialNtml.roughnessValue);
+	if (roughnessTextureImageWidget->getPath().empty()) {
+		roughnessValueWidget->setEnabled(true);
+	}
+	else {
+		roughnessValueWidget->setEnabled(false);
+	}
 	occlusionTextureImageWidget->setPath(materialNtml.occlusionTextureImagePath);
 	occlusionTextureImageSamplerWidget->setPath(materialNtml.occlusionTextureImageSamplerPath);
 	occlusionValueWidget->setValue(materialNtml.occlusionValue);
+	if (occlusionTextureImageWidget->getPath().empty()) {
+		occlusionValueWidget->setEnabled(true);
+	}
+	else {
+		occlusionValueWidget->setEnabled(false);
+	}
 	emissiveTextureImageWidget->setPath(materialNtml.emissiveTextureImagePath);
 	emissiveTextureImageSamplerWidget->setPath(materialNtml.emissiveTextureImageSamplerPath);
 	emissiveColorWidget->setColor(materialNtml.emissiveColor);
+	if (emissiveTextureImageWidget->getPath().empty()) {
+		emissiveColorWidget->setEnabled(true);
+	}
+	else {
+		emissiveColorWidget->setEnabled(false);
+	}
 	emissiveFactorWidget->setValue(materialNtml.emissiveFactor);
 	alphaCutoffWidget->setValue(materialNtml.alphaCutoff);
 	indexOfRefractionWidget->setValue(materialNtml.indexOfRefraction);
