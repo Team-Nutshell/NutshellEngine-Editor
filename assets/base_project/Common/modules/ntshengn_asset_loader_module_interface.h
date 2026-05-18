@@ -8,8 +8,6 @@
 
 namespace NtshEngn {
 
-	class AssetManagerInterface;
-
 	class AssetLoaderModuleInterface : public ModuleInterface {
 	public:
 		AssetLoaderModuleInterface() {}
@@ -28,14 +26,6 @@ namespace NtshEngn {
 		virtual bool loadFontBitmap(const std::string& filePath, float fontHeight, Font& font) = 0;
 		// Loads the SDF font in file at path filePath
 		virtual bool loadFontSDF(const std::string& filePath, Font& font) = 0;
-
-	public:
-		void setAssetManager(AssetManagerInterface* passAssetManager) {
-			assetManager = passAssetManager;
-		}
-
-	protected:
-		AssetManagerInterface* assetManager = nullptr;
 	};
 
 }

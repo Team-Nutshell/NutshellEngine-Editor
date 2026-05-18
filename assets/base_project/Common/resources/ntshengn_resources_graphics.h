@@ -111,7 +111,7 @@ namespace NtshEngn {
 	// Texture
 	struct Texture {
 		// Texture image
-		Image* image = nullptr;
+		ImageID image = NTSHENGN_IMAGE_UNKNOWN;
 
 		// Texture image sampler
 		ImageSampler imageSampler;
@@ -299,7 +299,7 @@ namespace NtshEngn {
 		std::array<float, 2> speedRange = { 0.0f, 0.0f };
 
 		// Texture of the particles
-		Image* image = nullptr;
+		Texture texture;
 
 		// Range of color per particle, if image is not null, the color is multiplied to the image
 		std::array<Math::vec4, 2> colorRange = { Math::vec4(0.0f, 0.0f, 0.0f, 0.0f), Math::vec4(0.0f, 0.0f, 0.0f, 0.0f) };

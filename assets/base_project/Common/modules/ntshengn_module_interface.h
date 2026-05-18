@@ -1,10 +1,18 @@
 #pragma once
 #include "../utils/ntshengn_enums.h"
+#include "../asset_manager/ntshengn_asset_manager_interface.h"
+#include "../job_system/ntshengn_job_system_interface.h"
 #include "../command_line/ntshengn_command_line_interface.h"
 #include "../profiler/ntshengn_profiler_interface.h"
 #include <string>
 
 namespace NtshEngn {
+
+	class GraphicsModuleInterface;
+	class PhysicsModuleInterface;
+	class WindowModuleInterface;
+	class AudioModuleInterface;
+	class PlatformModuleInterface;
 
 	class ModuleInterface {
 	public:
@@ -24,6 +32,22 @@ namespace NtshEngn {
 			return m_name;
 		}
 
+		void setModules(GraphicsModuleInterface* passGraphicsModule, PhysicsModuleInterface* passPhysicsModule, WindowModuleInterface* passWindowModule, AudioModuleInterface* passAudioModule, PlatformModuleInterface* passPlatformModule) {
+			graphicsModule = passGraphicsModule;
+			physicsModule = passPhysicsModule;
+			windowModule = passWindowModule;
+			audioModule = passAudioModule;
+			platformModule = passPlatformModule;
+		}
+
+		void setAssetManager(AssetManagerInterface* passAssetManager) {
+			assetManager = passAssetManager;
+		}
+
+		void setJobSystem(JobSystemInterface* passJobSystem) {
+			jobSystem = passJobSystem;
+		}
+
 		void setCommandLine(CommandLineInterface* passCommandLine) {
 			commandLine = passCommandLine;
 		}
@@ -33,6 +57,14 @@ namespace NtshEngn {
 		}
 
 	protected:
+		GraphicsModuleInterface* graphicsModule = nullptr;
+		PhysicsModuleInterface* physicsModule = nullptr;
+		WindowModuleInterface* windowModule = nullptr;
+		AudioModuleInterface* audioModule = nullptr;
+		PlatformModuleInterface* platformModule = nullptr;
+
+		AssetManagerInterface* assetManager = nullptr;
+		JobSystemInterface* jobSystem = nullptr;
 		CommandLineInterface* commandLine = nullptr;
 		ProfilerInterface* profiler = nullptr;
 
