@@ -2,6 +2,7 @@
 #include "../common/global_info.h"
 #include "boolean_widget.h"
 #include "file_selector_widget.h"
+#include "image_size_widget.h"
 #include "integer_widget.h"
 #include "string_widget.h"
 #include <string>
@@ -54,8 +55,7 @@ public:
 
 	StringWidget* windowTitleWidget;
 	FileSelectorWidget* windowIconImageWidget;
-	IntegerWidget* windowWidthWidget;
-	IntegerWidget* windowHeightWidget;
+	ImageSizeWidget* windowSizeWidget;
 	IntegerWidget* maxFPSWidget;
 	FileSelectorWidget* firstSceneWidget;
 	BooleanWidget* startProfilingWidget;

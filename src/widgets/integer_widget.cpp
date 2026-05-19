@@ -1,8 +1,6 @@
 #include "integer_widget.h"
 #include <QHBoxLayout>
-#include <QLocale>
 #include <QIntValidator>
-#include <QSignalBlocker>
 #include <algorithm>
 #include <cstdlib>
 
@@ -53,8 +51,5 @@ void IntegerWidget::onEditingFinished() {
 	else {
 		valueLineEdit->setText(QString::number(m_value));
 	}
-	{
-		const QSignalBlocker signalBlocker(valueLineEdit);
-		valueLineEdit->clearFocus();
-	}
+	valueLineEdit->clearFocus();
 }
