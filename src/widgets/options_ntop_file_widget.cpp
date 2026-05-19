@@ -94,6 +94,8 @@ void OptionsNtopFileWidget::updateWidgets() {
 	maxFPSWidget->setValue(optionsNtop.maxFPS);
 	firstSceneWidget->setPath(optionsNtop.firstScenePath);
 	startProfilingWidget->setValue(optionsNtop.startProfiling);
+
+	emit m_globalInfo.signalEmitter.changeApplicationBaseWindowSizeSignal(windowSizeWidget->getWidth(), windowSizeWidget->getHeight());
 }
 
 void OptionsNtopFileWidget::save() {
