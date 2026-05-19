@@ -11,6 +11,7 @@ public:
 
 private:
 	void openEditorParameters();
+	void openProjectOptions();
 
 private slots:
 	void onEditorParametersWidgetClose();
@@ -19,6 +20,7 @@ private:
 	GlobalInfo& m_globalInfo;
 
 	QAction* m_openEditorParametersAction;
+	QAction* m_openProjectOptionsAction;
 
 	EditorParametersWidget* m_editorParametersWidget = nullptr;
 };
