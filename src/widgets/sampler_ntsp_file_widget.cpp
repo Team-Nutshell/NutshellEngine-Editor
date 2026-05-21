@@ -31,9 +31,15 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo) : m_globalI
 	std::vector<std::string> borderColorElements = { m_globalInfo.localization.getString("assets_image_sampler_border_color_float_transparent_black"), m_globalInfo.localization.getString("assets_image_sampler_border_color_int_transparent_black"), m_globalInfo.localization.getString("assets_image_sampler_border_color_float_opaque_black"), m_globalInfo.localization.getString("assets_image_sampler_border_color_int_opaque_black"), m_globalInfo.localization.getString("assets_image_sampler_border_color_float_opaque_white"), m_globalInfo.localization.getString("assets_image_sampler_border_color_int_opaque_white"), m_globalInfo.localization.getString("assets_image_sampler_border_color_unknown") };
 	borderColorWidget = new ComboBoxWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_border_color"), borderColorElements);
 	layout()->addWidget(borderColorWidget);
-	anisotropyLevelWidget = new IntegerWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_anisotropy_level"));
-	anisotropyLevelWidget->setMin(1);
-	layout()->addWidget(anisotropyLevelWidget);
+	minLodWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_min_lod"));
+	minLodWidget->setMin(0.0f);
+	layout()->addWidget(minLodWidget);
+	maxLodWidget = new ScalarWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_max_lod"));
+	maxLodWidget->setMin(0.0f);
+	layout()->addWidget(maxLodWidget);
+	maxAnisotropyWidget = new IntegerWidget(globalInfo, m_globalInfo.localization.getString("assets_image_sampler_max_anisotropy"));
+	maxAnisotropyWidget->setMin(0);
+	layout()->addWidget(maxAnisotropyWidget);
 
 	connect(magFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(minFilterWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
@@ -42,7 +48,9 @@ SamplerNtspFileWidget::SamplerNtspFileWidget(GlobalInfo& globalInfo) : m_globalI
 	connect(addressModeVWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(addressModeWWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
 	connect(borderColorWidget, &ComboBoxWidget::elementSelected, this, &SamplerNtspFileWidget::onValueChanged);
-	connect(anisotropyLevelWidget, &IntegerWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(minLodWidget, &ScalarWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(maxLodWidget, &ScalarWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
+	connect(maxAnisotropyWidget, &IntegerWidget::valueChanged, this, &SamplerNtspFileWidget::onValueChanged);
 }
 
 void SamplerNtspFileWidget::setPath(const std::string& path) {
@@ -85,8 +93,14 @@ void SamplerNtspFileWidget::setPath(const std::string& path) {
 	if (j.contains("borderColor")) {
 		samplerNtsp.borderColor = j["borderColor"];
 	}
-	if (j.contains("anisotropyLevel")) {
-		samplerNtsp.anisotropyLevel = j["anisotropyLevel"];
+	if (j.contains("minLod")) {
+		samplerNtsp.minLod = j["minLod"];
+	}
+	if (j.contains("maxLod")) {
+		samplerNtsp.maxLod = j["maxLod"];
+	}
+	if (j.contains("maxAnisotropy")) {
+		samplerNtsp.maxAnisotropy = j["maxAnisotropy"];
 	}
 
 	updateWidgets();
@@ -104,7 +118,11 @@ void SamplerNtspFileWidget::updateWidgets() {
 	addressModeVWidget->setElementByText(typeToAddressMode(samplerNtsp.addressModeV));
 	addressModeWWidget->setElementByText(typeToAddressMode(samplerNtsp.addressModeW));
 	borderColorWidget->setElementByText(typeToBorderColor(samplerNtsp.borderColor));
-	anisotropyLevelWidget->setValue(samplerNtsp.anisotropyLevel);
+	minLodWidget->setValue(samplerNtsp.minLod);
+	maxLodWidget->setValue(samplerNtsp.maxLod);
+	minLodWidget->setMax(maxLodWidget->getValue());
+	maxLodWidget->setMin(minLodWidget->getValue());
+	maxAnisotropyWidget->setValue(samplerNtsp.maxAnisotropy);
 }
 
 void SamplerNtspFileWidget::save() {
@@ -116,7 +134,9 @@ void SamplerNtspFileWidget::save() {
 	j["addressModeV"] = samplerNtsp.addressModeV;
 	j["addressModeW"] = samplerNtsp.addressModeW;
 	j["borderColor"] = samplerNtsp.borderColor;
-	j["anisotropyLevel"] = samplerNtsp.anisotropyLevel;
+	j["minLod"] = samplerNtsp.minLod;
+	j["maxLod"] = samplerNtsp.maxLod;
+	j["maxAnisotropy"] = samplerNtsp.maxAnisotropy;
 
 	std::fstream samplerFile(m_samplerFilePath, std::ios::out | std::ios::trunc);
 	if (j.empty()) {
@@ -264,8 +284,16 @@ void SamplerNtspFileWidget::onValueChanged() {
 	else if (senderWidget == borderColorWidget) {
 		newSamplerNtsp.borderColor = borderColorToType(borderColorWidget->getElementText());
 	}
-	else if (senderWidget == anisotropyLevelWidget) {
-		newSamplerNtsp.anisotropyLevel = anisotropyLevelWidget->getValue();
+	else if (senderWidget == minLodWidget) {
+		newSamplerNtsp.minLod = minLodWidget->getValue();
+		maxLodWidget->setMin(newSamplerNtsp.minLod);
+	}
+	else if (senderWidget == maxLodWidget) {
+		newSamplerNtsp.maxLod = maxLodWidget->getValue();
+		minLodWidget->setMax(newSamplerNtsp.maxLod);
+	}
+	else if (senderWidget == maxAnisotropyWidget) {
+		newSamplerNtsp.maxAnisotropy = maxAnisotropyWidget->getValue();
 	}
 
 	if (newSamplerNtsp != samplerNtsp) {

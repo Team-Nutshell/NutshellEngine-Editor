@@ -28,7 +28,11 @@ struct RendererSampler {
 		}
 		gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
 		gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
-		gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropyLevel);
+		gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, minLod);
+		gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, maxLod);
+		if (maxAnisotropy >= 1.0f) {
+			gl.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy);
+		}
 	}
 
 	GLint magFilter = GL_NEAREST;
@@ -36,7 +40,9 @@ struct RendererSampler {
 	GLint mipmapFilter = GL_NEAREST;
 	GLint wrapS = GL_CLAMP_TO_EDGE;
 	GLint wrapT = GL_CLAMP_TO_EDGE;
-	GLfloat anisotropyLevel = 1.0f;
+	GLfloat minLod = 0.0f;
+	GLfloat maxLod = 1000.0f;
+	GLfloat maxAnisotropy = 0.0f;
 };
 
 struct RendererMesh {

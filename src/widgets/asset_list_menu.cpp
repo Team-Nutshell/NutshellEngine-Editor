@@ -114,8 +114,10 @@ void AssetListMenu::newImageSampler() {
 	"addressModeU": "ClampToEdge",
 	"addressModeV": "ClampToEdge",
 	"addressModeW": "ClampToEdge",
-	"borderColor": "FloatOpaqueBlack",
-	"anisotropyLevel": 0
+	"borderColor": "IntOpaqueBlack",
+	"minLod": 0.0,
+	"maxLod": 1000.0,
+	"maxAnisotropy": 0.0
 })";
 	newImageSamplerFile.close();
 

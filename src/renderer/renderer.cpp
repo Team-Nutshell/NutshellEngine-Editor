@@ -2941,7 +2941,9 @@ void Renderer::loadResourcesToGPU() {
 			sampler.wrapT = GL_MIRRORED_REPEAT;
 		}
 
-		sampler.anisotropyLevel = samplerToGPU.second.anisotropyLevel;
+		sampler.minLod = samplerToGPU.second.minLod;
+		sampler.maxLod = samplerToGPU.second.maxLod;
+		sampler.maxAnisotropy = samplerToGPU.second.maxAnisotropy;
 
 		m_globalInfo.rendererResourceManager.samplers[samplerToGPU.first] = sampler;
 	}

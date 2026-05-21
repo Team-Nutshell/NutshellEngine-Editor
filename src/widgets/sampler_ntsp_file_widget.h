@@ -2,17 +2,20 @@
 #include "../common/global_info.h"
 #include "combo_box_widget.h"
 #include "integer_widget.h"
+#include "scalar_widget.h"
 #include <string>
 
 struct SamplerNtsp {
-	std::string magFilter = "Linear";
-	std::string minFilter = "Linear";
-	std::string mipmapFilter = "Linear";
-	std::string addressModeU = "Repeat";
-	std::string addressModeV = "Repeat";
-	std::string addressModeW = "Repeat";
-	std::string borderColor = "FloatTransparentBlack";
-	int anisotropyLevel = 0;
+	std::string magFilter = "Nearest";
+	std::string minFilter = "Nearest";
+	std::string mipmapFilter = "Nearest";
+	std::string addressModeU = "ClampToEdge";
+	std::string addressModeV = "ClampToEdge";
+	std::string addressModeW = "ClampToEdge";
+	std::string borderColor = "IntOpaqueBlack";
+	float minLod = 0.0f;
+	float maxLod = 1000.0f;
+	float maxAnisotropy = 0.0f;
 
 	bool operator==(const SamplerNtsp& rhs) {
 		return (magFilter == rhs.magFilter) &&
@@ -22,7 +25,9 @@ struct SamplerNtsp {
 			(addressModeV == rhs.addressModeV) &&
 			(addressModeW == rhs.addressModeW) &&
 			(borderColor == rhs.borderColor) &&
-			(anisotropyLevel == rhs.anisotropyLevel);
+			(minLod == rhs.minLod) &&
+			(maxLod == rhs.maxLod) &&
+			(maxAnisotropy == rhs.maxAnisotropy);
 	}
 
 	bool operator!=(const SamplerNtsp& rhs) {
@@ -67,7 +72,9 @@ public:
 	ComboBoxWidget* addressModeVWidget;
 	ComboBoxWidget* addressModeWWidget;
 	ComboBoxWidget* borderColorWidget;
-	IntegerWidget* anisotropyLevelWidget;
+	ScalarWidget* minLodWidget;
+	ScalarWidget* maxLodWidget;
+	IntegerWidget* maxAnisotropyWidget;
 };
 
 class ChangeSamplerNtspFile : public QUndoCommand {

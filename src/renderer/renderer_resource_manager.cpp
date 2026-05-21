@@ -1013,8 +1013,16 @@ void RendererResourceManager::loadNtsp(const std::string& samplerPath, SamplerTo
 		}
 	}
 
-	if (j.contains("anisotropyLevel")) {
-		sampler.anisotropyLevel = j["anisotropyLevel"];
+	if (j.contains("minLod")) {
+		sampler.minLod = j["minLod"];
+	}
+
+	if (j.contains("maxLod")) {
+		sampler.maxLod = j["maxLod"];
+	}
+
+	if (j.contains("maxAnisotropy")) {
+		sampler.maxAnisotropy = j["maxAnisotropy"];
 	}
 }
 
@@ -1408,7 +1416,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 									sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 								}
 
-								sampler.anisotropyLevel = 16.0f;
+								sampler.maxAnisotropy = 16.0f;
 							}
 							samplersToGPU[sampler.toString()] = sampler;
 
@@ -1531,7 +1539,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 									sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 								}
 
-								sampler.anisotropyLevel = 16.0f;
+								sampler.maxAnisotropy = 16.0f;
 							}
 							samplersToGPU[sampler.toString()] = sampler;
 
@@ -1650,7 +1658,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 							}
 
-							sampler.anisotropyLevel = 16.0f;
+							sampler.maxAnisotropy = 16.0f;
 						}
 						samplersToGPU[sampler.toString()] = sampler;
 
@@ -1753,7 +1761,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 							}
 
-							sampler.anisotropyLevel = 16.0f;
+							sampler.maxAnisotropy = 16.0f;
 						}
 						samplersToGPU[sampler.toString()] = sampler;
 
@@ -1870,7 +1878,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 								sampler.wrapT = SamplerToGPU::Wrap::MirroredRepeat;
 							}
 
-							sampler.anisotropyLevel = 16.0f;
+							sampler.maxAnisotropy = 16.0f;
 						}
 						samplersToGPU[sampler.toString()] = sampler;
 

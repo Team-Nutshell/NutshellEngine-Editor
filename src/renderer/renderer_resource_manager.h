@@ -87,7 +87,9 @@ public:
 				"/mip:" + filterToString(mipmapFilter) +
 				"/wS:" + wrapToString(wrapS) +
 				"/wT:" + wrapToString(wrapT) +
-				"/aL:" + std::to_string(anisotropyLevel);
+				"/mL:" + std::to_string(minLod) +
+				"/ML:" + std::to_string(maxLod) +
+				"/MA:" + std::to_string(maxAnisotropy);
 		}
 
 		Filter magFilter = Filter::Nearest;
@@ -95,7 +97,9 @@ public:
 		Filter mipmapFilter = Filter::Nearest;
 		Wrap wrapS = Wrap::ClampToEdge;
 		Wrap wrapT = Wrap::ClampToEdge;
-		float anisotropyLevel = 0.0f;
+		float minLod = 0.0f;
+		float maxLod = 1000.0f;
+		float maxAnisotropy = 0.0;
 	};
 
 	struct ModelPrimitive {

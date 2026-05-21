@@ -84,28 +84,34 @@ namespace NtshEngn {
 	// Image Sampler
 	struct ImageSampler {
 		// Magnification filter
-		ImageSamplerFilter magFilter = ImageSamplerFilter::Unknown;
+		ImageSamplerFilter magFilter = ImageSamplerFilter::Nearest;
 
 		// Minification filter
-		ImageSamplerFilter minFilter = ImageSamplerFilter::Unknown;
+		ImageSamplerFilter minFilter = ImageSamplerFilter::Nearest;
 
 		// Mipmap filter
-		ImageSamplerFilter mipmapFilter = ImageSamplerFilter::Unknown;
+		ImageSamplerFilter mipmapFilter = ImageSamplerFilter::Nearest;
 
 		// Address mode U
-		ImageSamplerAddressMode addressModeU = ImageSamplerAddressMode::Unknown;
+		ImageSamplerAddressMode addressModeU = ImageSamplerAddressMode::ClampToEdge;
 
 		// Address mode V
-		ImageSamplerAddressMode addressModeV = ImageSamplerAddressMode::Unknown;
+		ImageSamplerAddressMode addressModeV = ImageSamplerAddressMode::ClampToEdge;
 
 		// Address mode W
-		ImageSamplerAddressMode addressModeW = ImageSamplerAddressMode::Unknown;
+		ImageSamplerAddressMode addressModeW = ImageSamplerAddressMode::ClampToEdge;
 
 		// Border color
-		ImageSamplerBorderColor borderColor = ImageSamplerBorderColor::Unknown;
+		ImageSamplerBorderColor borderColor = ImageSamplerBorderColor::IntOpaqueBlack;
+
+		// Minimum level of detail
+		float minLod = 0.0f;
+
+		// Maximum level of detail
+		float maxLod = 1000.0f;
 
 		// Anisotropy
-		float anisotropyLevel = 0.0f;
+		float maxAnisotropy = 0.0f;
 	};
 
 	// Texture
