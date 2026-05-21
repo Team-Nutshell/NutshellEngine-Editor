@@ -1237,7 +1237,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 
 			// Indices
 			cgltf_accessor* accessor = nodeMeshPrimitive.indices;
-			if (accessor != NULL) {
+			if (accessor) {
 				primitive.mesh.indices.reserve(accessor->count);
 				cgltf_buffer_view* bufferView = accessor->buffer_view;
 				cgltf_component_type componentType = accessor->component_type;
@@ -1317,7 +1317,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 
 			// Material
 			cgltf_material* primitiveMaterial = nodeMeshPrimitive.material;
-			if (primitiveMaterial != NULL) {
+			if (primitiveMaterial) {
 				if (primitiveMaterial->has_pbr_metallic_roughness) {
 					cgltf_pbr_metallic_roughness pbrMetallicRoughness = primitiveMaterial->pbr_metallic_roughness;
 
@@ -1325,7 +1325,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					cgltf_texture_view baseColorTextureView = pbrMetallicRoughness.base_color_texture;
 					cgltf_texture* baseColorTexture = baseColorTextureView.texture;
 					cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
-					if (baseColorTexture != NULL) {
+					if (baseColorTexture) {
 						cgltf_image* baseColorImage = baseColorTexture->image;
 						bool hasImage = false;
 						if (baseColorImage->uri) {
@@ -1380,7 +1380,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							}
 
 							SamplerToGPU sampler;
-							if (baseColorTexture->sampler != NULL) {
+							if (baseColorTexture->sampler) {
 								if ((baseColorTexture->sampler->min_filter == 9728) || (baseColorTexture->sampler->min_filter == 9984) || (baseColorTexture->sampler->min_filter == 9986)) {
 									sampler.minFilter = SamplerToGPU::Filter::Nearest;
 								}
@@ -1423,7 +1423,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							primitive.material.diffuseTextureSamplerName = sampler.toString();
 						}
 					}
-					else if (baseColorFactor != NULL) {
+					else if (baseColorFactor) {
 						nml::vec4 diffuseColor = nml::vec4(baseColorFactor);
 						ImageToGPU image;
 						image.width = 1;
@@ -1444,7 +1444,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 					cgltf_texture* metallicRoughnessTexture = metallicRoughnessTextureView.texture;
 					cgltf_float metallicFactor = pbrMetallicRoughness.metallic_factor;
 					cgltf_float roughnessFactor = pbrMetallicRoughness.roughness_factor;
-					if (metallicRoughnessTexture != NULL) {
+					if (metallicRoughnessTexture) {
 						cgltf_image* metallicRoughnessImage = metallicRoughnessTexture->image;
 						bool hasImage = false;
 						if (metallicRoughnessImage->uri) {
@@ -1503,7 +1503,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 							}
 
 							SamplerToGPU sampler;
-							if (metallicRoughnessTexture->sampler != NULL) {
+							if (metallicRoughnessTexture->sampler) {
 								if ((metallicRoughnessTexture->sampler->min_filter == 9728) || (metallicRoughnessTexture->sampler->min_filter == 9984) || (metallicRoughnessTexture->sampler->min_filter == 9986)) {
 									sampler.minFilter = SamplerToGPU::Filter::Nearest;
 								}
@@ -1567,7 +1567,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				// Normal texture
 				cgltf_texture_view normalTextureView = primitiveMaterial->normal_texture;
 				cgltf_texture* normalTexture = normalTextureView.texture;
-				if (normalTexture != NULL) {
+				if (normalTexture) {
 					cgltf_image* normalImage = normalTexture->image;
 					bool hasImage = false;
 					if (normalImage->uri) {
@@ -1622,7 +1622,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						SamplerToGPU sampler;
-						if (normalTexture->sampler != NULL) {
+						if (normalTexture->sampler) {
 							if ((normalTexture->sampler->min_filter == 9728) || (normalTexture->sampler->min_filter == 9984) || (normalTexture->sampler->min_filter == 9986)) {
 								sampler.minFilter = SamplerToGPU::Filter::Nearest;
 							}
@@ -1670,7 +1670,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				cgltf_texture_view emissiveTextureView = primitiveMaterial->emissive_texture;
 				cgltf_texture* emissiveTexture = emissiveTextureView.texture;
 				cgltf_float* emissiveFactor = primitiveMaterial->emissive_factor;
-				if (emissiveTexture != NULL) {
+				if (emissiveTexture) {
 					cgltf_image* emissiveImage = emissiveTexture->image;
 					bool hasImage = false;
 					if (emissiveImage->uri) {
@@ -1725,7 +1725,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						SamplerToGPU sampler;
-						if (emissiveTexture->sampler != NULL) {
+						if (emissiveTexture->sampler) {
 							if ((emissiveTexture->sampler->min_filter == 9728) || (emissiveTexture->sampler->min_filter == 9984) || (emissiveTexture->sampler->min_filter == 9986)) {
 								sampler.minFilter = SamplerToGPU::Filter::Nearest;
 							}
@@ -1768,7 +1768,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						primitive.material.emissiveTextureSamplerName = sampler.toString();
 					}
 				}
-				else if (emissiveFactor != NULL) {
+				else if (emissiveFactor) {
 					 nml::vec3 emissiveColor = nml::vec3(emissiveFactor);
 					 ImageToGPU image;
 					 image.width = 1;
@@ -1787,7 +1787,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 				// Occlusion texture
 				cgltf_texture_view occlusionTextureView = primitiveMaterial->occlusion_texture;
 				cgltf_texture* occlusionTexture = occlusionTextureView.texture;
-				if (occlusionTexture != NULL) {
+				if (occlusionTexture) {
 					cgltf_image* occlusionImage = occlusionTexture->image;
 					bool hasImage = false;
 					if (occlusionImage->uri) {
@@ -1842,7 +1842,7 @@ void RendererResourceManager::loadGltfNode(const std::string& modelPath, Model& 
 						}
 
 						SamplerToGPU sampler;
-						if (occlusionTexture->sampler != NULL) {
+						if (occlusionTexture->sampler) {
 							if ((occlusionTexture->sampler->min_filter == 9728) || (occlusionTexture->sampler->min_filter == 9984) || (occlusionTexture->sampler->min_filter == 9986)) {
 								sampler.minFilter = SamplerToGPU::Filter::Nearest;
 							}
