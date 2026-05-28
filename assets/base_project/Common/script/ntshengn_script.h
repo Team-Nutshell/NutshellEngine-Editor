@@ -1027,6 +1027,14 @@ namespace NtshEngn {
 			graphicsModule->stopAnimation(entity);
 		}
 
+		uint32_t getPlayingAnimation(Entity entity) {
+			if (!graphicsModule) {
+				return 0xFFFFFFFF;
+			}
+
+			return graphicsModule->getPlayingAnimation(entity);
+		}
+
 		bool isAnimationPlaying(Entity entity, uint32_t animationIndex) {
 			if (!graphicsModule) {
 				return false;
