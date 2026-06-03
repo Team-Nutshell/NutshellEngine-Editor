@@ -265,6 +265,7 @@
 	"scripts_delete": "Delete",
 	"scripts_duplicate": "Duplicate",
 	"scripts_copy_name": "Copy Script Name",
+	"scripts_open_directory_code_editor": "Open scripts directory in code editor",
 	"editor_parameters": "Editor Parameters",
 	"editor_parameters_renderer": "Renderer",
 	"editor_parameters_camera_forward": "Camera Forward",

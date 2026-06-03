@@ -16,6 +16,8 @@ ScriptListMenu::ScriptListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo
 	duplicateAction->setShortcut(QKeySequence::fromString("Ctrl+D"));
 	addSeparator();
 	copyNameAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("scripts_copy_name")), this, &ScriptListMenu::copyName);
+	addSeparator();
+	openDirectoryInCodeEditorAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("scripts_open_directory_code_editor")), this, &ScriptListMenu::openDirectoryInCodeEditor);
 }
 
 void ScriptListMenu::newScript() {
@@ -39,4 +41,22 @@ void ScriptListMenu::duplicateScript() {
 
 void ScriptListMenu::copyName() {
 	QGuiApplication::clipboard()->setText(QString::fromStdString(scriptName));
+}
+
+void ScriptListMenu::openDirectoryInCodeEditor() {
+	std::string codeEditorCommand = m_globalInfo.editorParameters.code.codeEditorCommand;
+
+	if (codeEditorCommand.empty()) {
+		m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_code_editor_none"));
+
+		return;
+	}
+
+	std::string filePathTemplate = "${FILE_PATH}";
+	size_t filePathTemplatePos = codeEditorCommand.find(filePathTemplate);
+	if (filePathTemplatePos != std::string::npos) {
+		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), m_globalInfo.projectDirectory + "/scripts");
+	}
+
+	std::system(codeEditorCommand.c_str());
 }

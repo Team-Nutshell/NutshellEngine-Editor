@@ -17,6 +17,7 @@ private slots:
 	void deleteScript();
 	void duplicateScript();
 	void copyName();
+	void openDirectoryInCodeEditor();
 
 private:
 	GlobalInfo& m_globalInfo;
@@ -31,4 +32,5 @@ public:
 	QAction* deleteAction;
 	QAction* duplicateAction;
 	QAction* copyNameAction;
+	QAction* openDirectoryInCodeEditorAction;
 };
