@@ -20,8 +20,8 @@ namespace NtshEngn {
 		// Sets the background color
 		virtual void setBackgroundColor(const Math::vec4& backgroundColor) = 0;
 
-		// Plays an animation for an entity, indexed in the entity's model animation list, looping or not
-		virtual void playAnimation(Entity entity, uint32_t animationIndex, bool looping) = 0;
+		// Plays an animation for an entity, looping or not
+		virtual void playAnimation(Entity entity, Animation* animation, bool looping) = 0;
 		// Resumes the animation played by an entity
 		virtual void resumeAnimation(Entity entity) = 0;
 		// Pauses an animation played by an entity
@@ -29,10 +29,10 @@ namespace NtshEngn {
 		// Stops an animation played by an entity
 		virtual void stopAnimation(Entity entity) = 0;
 
-		// Returns the index of the playing animation
-		virtual uint32_t getPlayingAnimation(Entity entity) = 0;
-		// Returns true if the entity is currently playing the animation with index animationIndex, else, returns false
-		virtual bool isAnimationPlaying(Entity entity, uint32_t animationIndex) = 0;
+		// Returns the animation played by an entity
+		virtual Animation* getPlayingAnimation(Entity entity) = 0;
+		// Returns true if the entity is currently playing the animation, else, returns false
+		virtual bool isAnimationPlaying(Entity entity, Animation* animation) = 0;
 		
 		// Sets the current playing time of an animation played by an entity
 		virtual void setAnimationCurrentTime(Entity entity, float newTime) = 0;

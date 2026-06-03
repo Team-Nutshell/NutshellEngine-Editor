@@ -57,6 +57,10 @@ namespace NtshEngn {
 			return assetManager->getModelName(model);
 		}
 
+		std::vector<std::string> getModelNames() {
+			return assetManager->getModelNames();
+		}
+
 		Material* createMaterial(const std::string& materialName) {
 			return assetManager->createMaterial(materialName);
 		}
@@ -75,6 +79,10 @@ namespace NtshEngn {
 
 		std::string getMaterialName(const Material* material) {
 			return assetManager->getMaterialName(material);
+		}
+
+		std::vector<std::string> getMaterialNames() {
+			return assetManager->getMaterialNames();
 		}
 
 		Image* createImage(const std::string& imageName) {
@@ -103,6 +111,10 @@ namespace NtshEngn {
 
 		std::string getImageName(const Image* image) {
 			return assetManager->getImageName(image);
+		}
+
+		std::vector<std::string> getImageNames() {
+			return assetManager->getImageNames();
 		}
 
 		Font* createFont(const std::string& fontName) {
@@ -137,6 +149,10 @@ namespace NtshEngn {
 			return assetManager->getFontName(font);
 		}
 
+		std::vector<std::string> getFontNames() {
+			return assetManager->getFontNames();
+		}
+
 		Sound* createSound(const std::string& soundName) {
 			return assetManager->createSound(soundName);
 		}
@@ -163,6 +179,30 @@ namespace NtshEngn {
 
 		std::string getSoundName(const Sound* sound) {
 			return assetManager->getSoundName(sound);
+		}
+
+		std::vector<std::string> getSoundNames() {
+			return assetManager->getSoundNames();
+		}
+
+		Animation* createAnimation(const std::string& animationName) {
+			return assetManager->createAnimation(animationName);
+		}
+
+		void destroyAnimation(const std::string& animationName) {
+			assetManager->destroyAnimation(animationName);
+		}
+
+		Animation* findAnimationByName(const std::string& animationName) {
+			return assetManager->findAnimationByName(animationName);
+		}
+
+		std::string getAnimationName(const Animation* animation) {
+			return assetManager->getAnimationName(animation);
+		}
+
+		std::vector<std::string> getAnimationNames() {
+			return assetManager->getAnimationNames();
 		}
 
 		// Scenes
@@ -995,12 +1035,12 @@ namespace NtshEngn {
 		}
 
 		// Animation
-		void playAnimation(Entity entity, uint32_t animationIndex, bool looping = false) {
+		void playAnimation(Entity entity, Animation* animation, bool looping = false) {
 			if (!graphicsModule) {
 				return;
 			}
 
-			graphicsModule->playAnimation(entity, animationIndex, looping);
+			graphicsModule->playAnimation(entity, animation, looping);
 		}
 
 		void resumeAnimation(Entity entity) {
@@ -1027,20 +1067,20 @@ namespace NtshEngn {
 			graphicsModule->stopAnimation(entity);
 		}
 
-		uint32_t getPlayingAnimation(Entity entity) {
+		Animation* getPlayingAnimation(Entity entity) {
 			if (!graphicsModule) {
-				return 0xFFFFFFFF;
+				return nullptr;
 			}
 
 			return graphicsModule->getPlayingAnimation(entity);
 		}
 
-		bool isAnimationPlaying(Entity entity, uint32_t animationIndex) {
+		bool isAnimationPlaying(Entity entity, Animation* animation) {
 			if (!graphicsModule) {
 				return false;
 			}
 
-			return graphicsModule->isAnimationPlaying(entity, animationIndex);
+			return graphicsModule->isAnimationPlaying(entity, animation);
 		}
 
 		void setAnimationCurrentTime(Entity entity, float newTime) {

@@ -242,11 +242,13 @@ namespace NtshEngn {
 		Math::mat4 inverseGlobalTransform = Math::mat4::identity();
 	};
 
+	struct Model;
+
 	struct Mesh {
+		Model* model = nullptr;
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		Skin skin;
-		std::vector<Animation> animations;
 		MeshTopology topology = MeshTopology::Unknown;
 	};
 

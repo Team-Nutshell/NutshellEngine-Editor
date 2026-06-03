@@ -1,6 +1,8 @@
 #pragma once
 #include <fstream>
 #include <string>
+#include <filesystem>
+#include <algorithm>
 #include <cstdio>
 #if defined(NTSHENGN_OS_LINUX) || defined(NTSHENGN_OS_FREEBSD)
 #include <iconv.h>
@@ -119,6 +121,22 @@ namespace NtshEngn {
 			}
 
 			return filePath.substr(0, slashPosition + 1);
+		}
+
+		static std::string normalize(const std::string& filePath) {
+			if (filePath.empty()) {
+				return "";
+			}
+
+			std::string normalizedPath = std::filesystem::canonical(filePath).string();
+			std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+			std::string currentPath = std::filesystem::current_path().string();
+			std::replace(currentPath.begin(), currentPath.end(), '\\', '/');
+			if (normalizedPath.substr(0, currentPath.size()) == currentPath) {
+				normalizedPath = normalizedPath.substr(currentPath.size() + 1);
+			}
+
+			return normalizedPath;
 		}
 	};
 
