@@ -215,9 +215,13 @@ namespace NtshEngn {
 			return sceneManager->getCurrentScenePath();
 		}
 
+		void createEntitiesFromScene(const std::string& filePath) {
+			sceneManager->createEntitiesFromScene(filePath);
+		}
+
 		// ECS
 		Entity createEntity(const std::string& name = "") {
-			if (name != "") {
+			if (!name.empty()) {
 				return ecs->createEntity(name);
 			}
 
@@ -824,20 +828,20 @@ namespace NtshEngn {
 		}
 
 		// Physics
-		IntersectionInformation intersect(const ColliderShape* shape1, const ColliderShape* shape2) {
+		IntersectionInformation intersect(const ColliderShape& collider1, const ColliderShape& collider2) {
 			if (!physicsModule) {
 				return IntersectionInformation();
 			}
 
-			return physicsModule->intersect(shape1, shape2);
+			return physicsModule->intersect(collider1, collider2);
 		}
 		
-		RaycastInformation raycast(const Math::vec3& rayOrigin, const Math::vec3& rayDirection, const ColliderShape* shape, float tMin = 0.0001f, float tMax = 1000000.0f) {
+		RaycastInformation raycast(const Math::vec3& rayOrigin, const Math::vec3& rayDirection, const ColliderShape& collider, float tMin = 0.0001f, float tMax = 1000000.0f) {
 			if (!physicsModule) {
 				return RaycastInformation();
 			}
 
-			return physicsModule->raycast(rayOrigin, rayDirection, tMin, tMax, shape);
+			return physicsModule->raycast(rayOrigin, rayDirection, tMin, tMax, collider);
 		}
 
 		std::vector<std::pair<Entity, RaycastInformation>> raycastAll(const Math::vec3& rayOrigin, const Math::vec3& rayDirection, float tMin = 0.0001f, float tMax = 1000000.0f) {

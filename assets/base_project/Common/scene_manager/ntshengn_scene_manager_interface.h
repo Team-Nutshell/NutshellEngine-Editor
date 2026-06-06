@@ -12,6 +12,8 @@ namespace NtshEngn {
 		virtual void goToScene(const std::string& filePath) = 0;
 
 		virtual std::string getCurrentScenePath() = 0;
+
+		virtual void createEntitiesFromScene(const std::string& filePath) = 0;
 	};
 
 }

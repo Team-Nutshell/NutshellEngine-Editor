@@ -118,18 +118,14 @@ namespace NtshEngn {
 			float getNumber() const {
 				NTSHENGN_ASSERT(m_type == Type::Number, "JSON Node has a wrong type (should be Number).");
 
-				const float val = std::get<float>(m_value);
-
-				return val;
+				return std::get<float>(m_value);
 			}
 
 			// Access JSON::Type::String
 			std::string getString() const {
 				NTSHENGN_ASSERT(m_type == Type::String, "JSON Node has a wrong type (should be String).");
 
-				const std::string& val = std::get<std::string>(m_value);
-
-				return val;
+				return std::get<std::string>(m_value);
 			}
 
 			// Access JSON::Type::Array
@@ -155,9 +151,7 @@ namespace NtshEngn {
 			bool getBoolean() const {
 				NTSHENGN_ASSERT(m_type == Type::Boolean, "JSON Node has a wrong type (should be Boolean).");
 
-				const bool val = std::get<bool>(m_value);
-
-				return val;
+				return std::get<bool>(m_value);
 			}
 
 			// Add object to JSON::Type::Object
@@ -175,40 +169,32 @@ namespace NtshEngn {
 			void setNumber(float number) {
 				NTSHENGN_ASSERT((m_type == Type::Number) || (m_type == Type::Null), "JSON Node has a wrong type (should be Number or Null).");
 
-				float& val = std::get<float>(m_value);
-
 				m_type = Type::Number;
-				val = number;
+				std::get<float>(m_value) = number;
 			}
 
 			// Set string to JSON::Type::String
 			void setString(const std::string& string) {
 				NTSHENGN_ASSERT((m_type == Type::String) || (m_type == Type::Null), "JSON Node has a wrong type (should be String or Null).");
 
-				std::string& val = std::get<std::string>(m_value);
-
 				m_type = Type::String;
-				val = string;
+				std::get<std::string>(m_value) = string;
 			}
 
 			// Add object to JSON::Type::Array
 			void addObject(Node* element) {
 				NTSHENGN_ASSERT((m_type == Type::Array) || (m_type == Type::Null), "JSON Node has a wrong type (should be Array or Null).");
 
-				std::vector<Node*>& val = std::get<std::vector<Node*>>(m_value);
-
 				m_type = Type::Array;
-				val.push_back(element);
+				std::get<std::vector<Node*>>(m_value).push_back(element);
 			}
 
 			// Set boolean to JSON::Type::Boolean
 			void setBoolean(bool boolean) {
 				NTSHENGN_ASSERT((m_type == Type::Boolean) || (m_type == Type::Null), "JSON Node has a wrong type (should be Boolean or Null).");
 				
-				bool& val = std::get<bool>(m_value);
-
 				m_type = Type::Boolean;
-				val = boolean;
+				std::get<bool>(m_value) = boolean;
 			}
 
 		private:
