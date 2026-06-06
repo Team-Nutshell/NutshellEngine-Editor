@@ -17,6 +17,7 @@ ScriptList::ScriptList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 
 	setWrapping(true);
 	setAcceptDrops(true);
+	setDragDropMode(QListWidget::DragDrop);
 	setResizeMode(QListWidget::Adjust);
 	menu = new ScriptListMenu(m_globalInfo);
 	menu->scriptList = this;
@@ -221,6 +222,17 @@ void ScriptList::showMenu(const QPoint& pos) {
 		menu->copyNameAction->setEnabled(true);
 	}
 	menu->popup(QCursor::pos());
+}
+
+QStringList ScriptList::mimeTypes() const {
+	return QStringList("text/script");
+}
+
+QMimeData* ScriptList::mimeData(const QList<QListWidgetItem*>& items) const {
+	QMimeData* itemMimeData = new QMimeData();
+	itemMimeData->setText(items[0]->text());
+
+	return itemMimeData;
 }
 
 void ScriptList::keyPressEvent(QKeyEvent* event) {

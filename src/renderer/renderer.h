@@ -155,6 +155,7 @@ private:
 		Model,
 		Material,
 		FragmentShader,
+		Script,
 		None
 	};
 	DragDropResourceType m_dragDropResourceType = DragDropResourceType::None;

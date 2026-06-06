@@ -31,6 +31,9 @@ private slots:
 
 	void showMenu(const QPoint& pos);
 
+	QStringList mimeTypes() const;
+	QMimeData* mimeData(const QList<QListWidgetItem*>& items) const;
+
 	void keyPressEvent(QKeyEvent* event);
 	void wheelEvent(QWheelEvent* event);
 	void onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEditHint hint);

@@ -1934,6 +1934,46 @@ void Renderer::paintGL() {
 					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changeEntityIDs, "Renderable", componentPointers));
 				}
 			}
+			else if (m_dragDropResourceType == DragDropResourceType::Script) {
+				if (pickedEntityID < (NO_ENTITY - 3)) {
+					std::set<EntityID> entityIDsToChange;
+					if ((m_globalInfo.currentEntityID == pickedEntityID) ||
+						(m_globalInfo.otherSelectedEntityIDs.find(pickedEntityID) != m_globalInfo.otherSelectedEntityIDs.end())) {
+						entityIDsToChange = m_globalInfo.otherSelectedEntityIDs;
+						entityIDsToChange.insert(m_globalInfo.currentEntityID);
+					}
+					else {
+						entityIDsToChange = { pickedEntityID };
+					}
+
+					std::vector<EntityID> entityIDsAddScriptable;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						if (!entityToChange.scriptable) {
+							entityIDsAddScriptable.push_back(entityIDToChange);
+						}
+					}
+					if (!entityIDsAddScriptable.empty()) {
+						m_globalInfo.actionUndoStack->push(new AddEntitiesComponentCommand(m_globalInfo, entityIDsAddScriptable, "Scriptable"));
+					}
+
+					std::vector<EntityID> changeEntityIDs;
+					std::vector<Scriptable> newScriptables;
+					for (EntityID entityIDToChange : entityIDsToChange) {
+						Entity& entityToChange = m_globalInfo.entities[entityIDToChange];
+						Scriptable newScriptable = entityToChange.scriptable.value();
+						newScriptable.scriptName = m_dragDropResourcePath;
+
+						changeEntityIDs.push_back(entityIDToChange);
+						newScriptables.push_back(newScriptable);
+					}
+					std::vector<Component*> componentPointers;
+					for (Scriptable& newScriptable : newScriptables) {
+						componentPointers.push_back(&newScriptable);
+					}
+					m_globalInfo.actionUndoStack->push(new ChangeEntitiesComponentCommand(m_globalInfo, changeEntityIDs, "Scriptable", componentPointers));
+				}
+			}
 		}
 
 		m_doPicking = false;
@@ -3702,39 +3742,49 @@ void Renderer::resizeEvent(QResizeEvent* event) {
 }
 
 void Renderer::dragEnterEvent(QDragEnterEvent* event) {
-	if (event->mimeData()->hasUrls()) {
+	if (event->mimeData()->hasUrls() || event->mimeData()->hasText()) {
 		event->acceptProposedAction();
 	}
 }
 
 void Renderer::dragMoveEvent(QDragMoveEvent* event) {
-	if (event->mimeData()->hasUrls()) {
+	if (event->mimeData()->hasUrls() || event->mimeData()->hasText()) {
 		event->acceptProposedAction();
 	}
 }
 
 void Renderer::dropEvent(QDropEvent* event) {
-	QList<QUrl> sources = event->mimeData()->urls();
-	if (!sources.isEmpty()) {
-		std::string path = sources[0].toLocalFile().toStdString();
-		std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
-		if (!path.empty()) {
-			AssetHelper::FileType fileType = AssetHelper::fileType(path);
-			if (fileType == AssetHelper::FileType::Model) { // Drag and drop model
-				m_doPicking = true;
-				m_dragDropResourceType = DragDropResourceType::Model;
-				m_dragDropResourcePath = relativePath;
+	if (event->mimeData()->hasUrls()) {
+		QList<QUrl> sources = event->mimeData()->urls();
+		if (!sources.isEmpty()) {
+			std::string path = sources[0].toLocalFile().toStdString();
+			std::string relativePath = AssetHelper::absoluteToRelative(path, m_globalInfo.projectDirectory);
+			if (!path.empty()) {
+				AssetHelper::FileType fileType = AssetHelper::fileType(path);
+				if (fileType == AssetHelper::FileType::Model) { // Drag and drop model
+					m_doPicking = true;
+					m_dragDropResourceType = DragDropResourceType::Model;
+					m_dragDropResourcePath = relativePath;
+				}
+				else if (fileType == AssetHelper::FileType::Material) { // Drag and drop material
+					m_doPicking = true;
+					m_dragDropResourceType = DragDropResourceType::Material;
+					m_dragDropResourcePath = relativePath;
+				}
+				else if (fileType == AssetHelper::FileType::FragmentShader) { // Drag and drop fragment shader
+					m_doPicking = true;
+					m_dragDropResourceType = DragDropResourceType::FragmentShader;
+					m_dragDropResourcePath = relativePath;
+				}
 			}
-			else if (fileType == AssetHelper::FileType::Material) { // Drag and drop material
-				m_doPicking = true;
-				m_dragDropResourceType = DragDropResourceType::Material;
-				m_dragDropResourcePath = relativePath;
-			}
-			else if (fileType == AssetHelper::FileType::FragmentShader) { // Drag and drop fragment shader
-				m_doPicking = true;
-				m_dragDropResourceType = DragDropResourceType::FragmentShader;
-				m_dragDropResourcePath = relativePath;
-			}
+		}
+	}
+	else if (event->mimeData()->hasText()) { // Drag and drop script
+		std::string text = event->mimeData()->text().toStdString();
+		if (!text.empty()) {
+			m_doPicking = true;
+			m_dragDropResourceType = DragDropResourceType::Script;
+			m_dragDropResourcePath = text;
 		}
 	}
 
