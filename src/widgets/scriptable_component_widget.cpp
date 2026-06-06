@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <limits>
 #include <regex>
+#include <thread>
 #include <cstdlib>
 #include <cstdint>
 #include <cctype>
@@ -941,7 +942,10 @@ void ScriptableComponentWidget::onOpenCodeEditorButtonClicked() {
 		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), scriptPath);
 	}
 
-	std::system(codeEditorCommand.c_str());
+	std::thread systemThread([codeEditorCommand]() {
+		std::system(codeEditorCommand.c_str());
+		});
+	systemThread.detach();
 }
 
 void ScriptableComponentWidget::onDirectoryChanged(const QString& path) {

@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <filesystem>
 #include <fstream>
+#include <thread>
 
 ScriptListMenu::ScriptListMenu(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	newAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("script_new_script")), this, &ScriptListMenu::newScript);
@@ -58,5 +59,8 @@ void ScriptListMenu::openDirectoryInCodeEditor() {
 		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), m_globalInfo.projectDirectory + "/scripts");
 	}
 
-	std::system(codeEditorCommand.c_str());
+	std::thread systemThread([codeEditorCommand]() {
+		std::system(codeEditorCommand.c_str());
+		});
+	systemThread.detach();
 }

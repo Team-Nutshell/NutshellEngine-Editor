@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <thread>
 
 ScriptList::ScriptList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	if (!std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
@@ -194,7 +195,10 @@ void ScriptList::openCodeEditor(const std::string& scriptName) {
 		codeEditorCommand.replace(filePathTemplatePos, filePathTemplate.length(), scriptPath);
 	}
 
-	std::system(codeEditorCommand.c_str());
+	std::thread systemThread([codeEditorCommand]() {
+		std::system(codeEditorCommand.c_str());
+		});
+	systemThread.detach();
 }
 
 void ScriptList::onItemDoubleClicked(QListWidgetItem* listWidgetItem) {
