@@ -4,6 +4,7 @@
 #include "../common/scene_manager.h"
 #include <QHBoxLayout>
 #include <QFileDialog>
+#include <QGuiApplication>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
