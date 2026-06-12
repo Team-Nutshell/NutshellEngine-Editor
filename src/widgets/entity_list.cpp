@@ -266,27 +266,31 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 			else {
-				std::vector<int> entityIndexes = { currentSelectionIndex };
+				std::vector<std::pair<EntityID, int>> entityIndexes = { { currentEntityID, currentSelectionIndex } };
 				for (EntityID otherSelectedEntityID : otherSelectedEntityIDs) {
-					entityIndexes.push_back(row(findItemWithEntityID(otherSelectedEntityID)));
+					entityIndexes.push_back({ otherSelectedEntityID, row(findItemWithEntityID(otherSelectedEntityID)) });
 				}
-				std::sort(entityIndexes.begin(), entityIndexes.end());
-				bool stopMoving = false;
-				for (int entityIndex : entityIndexes) {
-					EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(entityIndex));
-					int newPosition = 0;
-					if (entityIndex == 0) {
-						newPosition = count();
-						stopMoving = true;
+				std::sort(entityIndexes.begin(), entityIndexes.end(), [](const std::pair<EntityID, int>& a, const std::pair<EntityID, int>& b) {
+					return a.second < b.second;
+					});
+				clearSelection();
+				bool stopMove = false;
+				for (const std::pair<EntityID, int>& entityIndex : entityIndexes) {
+					EntityListItem* entityListItem = findItemWithEntityID(entityIndex.first);
+					if (!stopMove) {
+						int currentRow = row(entityListItem);
+						entityListItem = static_cast<EntityListItem*>(takeItem(currentRow));
+						int newPosition = 0;
+						if (currentRow == 0) {
+							newPosition = count();
+							stopMove = true;
+						}
+						else {
+							newPosition = currentRow - 1;
+						}
+						insertItem(newPosition, entityListItem);
 					}
-					else {
-						newPosition = entityIndex - 1;
-					}
-					insertItem(newPosition, entityListItem);
-
-					if (stopMoving) {
-						break;
-					}
+					entityListItem->setSelected(true);
 				}
 
 				SaveTitleChanger::change(m_globalInfo.mainWindow);
@@ -308,27 +312,31 @@ void EntityList::keyPressEvent(QKeyEvent* event) {
 				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Entities, "", currentEntityID, otherSelectedEntityIDs));
 			}
 			else {
-				std::vector<int> entityIndexes = { currentSelectionIndex };
-				for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-					entityIndexes.push_back(row(findItemWithEntityID(otherSelectedEntityID)));
+				std::vector<std::pair<EntityID, int>> entityIndexes = { { currentEntityID, currentSelectionIndex } };
+				for (EntityID otherSelectedEntityID : otherSelectedEntityIDs) {
+					entityIndexes.push_back({ otherSelectedEntityID, row(findItemWithEntityID(otherSelectedEntityID)) });
 				}
-				std::sort(entityIndexes.begin(), entityIndexes.end(), std::greater<int>());
-				bool stopMoving = false;
-				for (int entityIndex : entityIndexes) {
-					EntityListItem* entityListItem = static_cast<EntityListItem*>(takeItem(entityIndex));
-					int newPosition = 0;
-					if (entityIndex == count()) {
-						newPosition = 0;
-						stopMoving = true;
+				std::sort(entityIndexes.begin(), entityIndexes.end(), [](const std::pair<EntityID, int>& a, const std::pair<EntityID, int>& b) {
+					return a.second > b.second;
+					});
+				clearSelection();
+				bool stopMove = false;
+				for (const std::pair<EntityID, int>& entityIndex : entityIndexes) {
+					EntityListItem* entityListItem = findItemWithEntityID(entityIndex.first);
+					if (!stopMove) {
+						int currentRow = row(entityListItem);
+						entityListItem = static_cast<EntityListItem*>(takeItem(currentRow));
+						int newPosition = 0;
+						if (currentRow == count()) {
+							newPosition = 0;
+							stopMove = true;
+						}
+						else {
+							newPosition = currentRow + 1;
+						}
+						insertItem(newPosition, entityListItem);
 					}
-					else {
-						newPosition = entityIndex + 1;
-					}
-					insertItem(newPosition, entityListItem);
-
-					if (stopMoving) {
-						break;
-					}
+					entityListItem->setSelected(true);
 				}
 
 				SaveTitleChanger::change(m_globalInfo.mainWindow);
