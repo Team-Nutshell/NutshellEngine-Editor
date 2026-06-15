@@ -2375,7 +2375,7 @@ void Renderer::updateCamera() {
 
 	if (!m_camera.useOrthographicProjection) {
 		m_camera.perspectiveYaw = std::fmod(m_camera.perspectiveYaw + (m_mouseCursorDifference.x * m_globalInfo.editorParameters.renderer.cameraSensitivity), 360.0f);
-		m_camera.perspectivePitch = std::max(-89.0f, std::min(89.0f, m_camera.perspectivePitch + (m_mouseCursorDifference.y * m_globalInfo.editorParameters.renderer.cameraSensitivity)));
+		m_camera.perspectivePitch = std::max(-89.99f, std::min(89.99f, m_camera.perspectivePitch + (m_mouseCursorDifference.y * m_globalInfo.editorParameters.renderer.cameraSensitivity)));
 
 		float cameraYawRad = nml::toRad(m_camera.perspectiveYaw);
 		float cameraPitchRad = nml::toRad(m_camera.perspectivePitch);
