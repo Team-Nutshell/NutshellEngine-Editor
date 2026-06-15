@@ -226,7 +226,7 @@ void Renderer::initializeGL() {
 
 	uniform bool enableShading;
 
-	uniform vec3 cameraPosition;
+	uniform vec4 cameraPositionAndType;
 	uniform mat4 view;
 
 	uniform sampler2DArray shadowMapSampler;
@@ -463,7 +463,15 @@ void Renderer::initializeGL() {
 
 		if (enableShading) {
 			const vec3 d = diffuseTextureSample.rgb;
-			const vec3 v = normalize(cameraPosition - fragPosition);
+
+			vec3 v;
+			if (cameraPositionAndType.w == 0.0f) { // Perspective
+				v = normalize(cameraPositionAndType.xyz - fragPosition);
+			}
+			else { // Orthographic
+				v = vec3(view[0][2], view[1][2], view[2][2]);
+			}
+
 			const vec3 viewPosition = vec3(view * vec4(fragPosition, 1.0));
 			
 			uint lightIndex = 0;
@@ -1416,9 +1424,9 @@ void Renderer::paintGL() {
 				gl.glUniformMatrix4fv(viewProjLocation, 1, false, m_camera.viewProjMatrix.data());
 			}
 
-			GLint cameraPositionLocation = gl.glGetUniformLocation(program, "cameraPosition");
-			if (cameraPositionLocation != -1) {
-				gl.glUniform3f(cameraPositionLocation, m_camera.position.x, m_camera.position.y, m_camera.position.z);
+			GLint cameraPositionAndTypeLocation = gl.glGetUniformLocation(program, "cameraPositionAndType");
+			if (cameraPositionAndTypeLocation != -1) {
+				gl.glUniform4f(cameraPositionAndTypeLocation, m_camera.position.x, m_camera.position.y, m_camera.position.z, m_camera.useOrthographicProjection ? 1.0f : 0.0f);
 			}
 
 			GLint viewLocation = gl.glGetUniformLocation(program, "view");
