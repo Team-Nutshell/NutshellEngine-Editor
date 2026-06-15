@@ -1403,7 +1403,7 @@ void Renderer::paintGL() {
 			// Bind data
 			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
 			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
-			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
 			GLint modelLocation = gl.glGetUniformLocation(program, "model");
@@ -1523,7 +1523,7 @@ void Renderer::paintGL() {
 					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
 					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.second.camera->forward, entity.second.camera->up);
-					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 entityCameraRotation = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
 					float applicationBaseAspectRatio = static_cast<float>(m_applicationBaseWindowWidth) / static_cast<float>(m_applicationBaseWindowHeight);
 					if (entity.second.camera->projectionType == "Perspective") {
@@ -1553,7 +1553,7 @@ void Renderer::paintGL() {
 				if (entity.second.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.first)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
 					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
 					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
-					nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 					nml::vec3 scale = transform.scale;
 					if (entity.second.collidable->type == "Sphere") {
 						scale = nml::vec3(std::max(std::abs(transform.scale.x), std::max(std::abs(transform.scale.y), std::abs(transform.scale.z))));
@@ -1648,7 +1648,7 @@ void Renderer::paintGL() {
 				((entity.renderable && entity.renderable->isVisible) || !entity.renderable)) {
 				bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
 				const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
-				nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+				nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 				nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 				gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_pickingProgram, "model"), 1, false, modelMatrix.data());
 
@@ -2005,7 +2005,7 @@ void Renderer::paintGL() {
 			// Entity
 			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entityID) != m_entityMoveTransforms.end();
 			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entityID] : entity.transform;
-			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 			gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
 
@@ -2038,7 +2038,7 @@ void Renderer::paintGL() {
 			if (m_globalInfo.editorParameters.renderer.showCameras) {
 				if (entity.camera) {
 					nml::mat4 entityCameraViewMatrix = nml::lookAtRH(transform.position, transform.position + entity.camera->forward, entity.camera->up);
-					nml::mat4 entityCameraRotation = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+					nml::mat4 entityCameraRotation = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 					nml::mat4 entityCameraProjectionMatrix = nml::mat4::identity();
 					float applicationBaseAspectRatio = static_cast<float>(m_applicationBaseWindowWidth) / static_cast<float>(m_applicationBaseWindowHeight);
 					if (entity.camera->projectionType == "Perspective") {
@@ -2505,14 +2505,7 @@ void Renderer::updateLights() {
 			if (light.type == "Directional") {
 				lightsCount[0]++;
 
-				const nml::vec3 baseLightDirection = nml::normalize(light.direction);
-				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
-				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
-				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
-					-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
-					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
-				));
+				const nml::vec3 lightDirection = nml::normalize(nml::rotateVectorByQuat(light.direction, nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z)))));
 
 				directionalLightsInfos.push_back(nml::vec4());
 				directionalLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
@@ -2534,14 +2527,7 @@ void Renderer::updateLights() {
 			else if (light.type == "Spot") {
 				lightsCount[2]++;
 
-				const nml::vec3 baseLightDirection = nml::normalize(light.direction);
-				const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
-				const float baseDirectionPitch = -std::asin(baseLightDirection.y);
-				const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
-					-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
-					std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
-				));
+				const nml::vec3 lightDirection = nml::normalize(nml::rotateVectorByQuat(light.direction, nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z)))));
 
 				spotLightsInfos.push_back(nml::vec4(transform.position, 0.0f));
 				spotLightsInfos.push_back(nml::vec4(lightDirection, 0.0f));
@@ -2795,7 +2781,7 @@ std::vector<Entity> Renderer::frustumCulling(const nml::mat4& viewProj, bool noM
 		if (addNotVisible || entity.second.isVisible) {
 			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
 			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
-			nml::mat4 rotationMatrix = nml::rotate(nml::toRad(transform.rotation.x), nml::vec3(1.0f, 0.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.y), nml::vec3(0.0f, 1.0f, 0.0f)) * nml::rotate(nml::toRad(transform.rotation.z), nml::vec3(0.0f, 0.0f, 1.0f));
+			nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
 			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
 
 			if (!noMesh) {
