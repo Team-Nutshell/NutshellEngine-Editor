@@ -650,6 +650,13 @@ namespace NtshEngn {
 
     		return rotationMatrixToEulerAngles(rotationMatrix);
 		}
+		inline vec3 rotateVectorByQuat(const vec3& vec, const quat& qua) {
+			const vec3 u(qua.b, qua.c, qua.d);
+			const vec3 uXv(cross(u, vec));
+			const vec3 uXuXv(cross(u, uXv));
+
+			return vec + ((uXv * qua.a) + uXuXv) * 2.0f;
+		}
 		
 		inline std::string to_string(const vec3& vec) {
 			return ("[" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ", " + std::to_string(vec.z) + "]");
@@ -946,6 +953,11 @@ namespace NtshEngn {
 				sinHalfX * cosHalfY * cosHalfZ + cosHalfX * sinHalfY * sinHalfZ,
 				cosHalfX * sinHalfY * cosHalfZ - sinHalfX * cosHalfY * sinHalfZ,
 				cosHalfX * cosHalfY * sinHalfZ + sinHalfX * sinHalfY * cosHalfZ);
+		}
+		inline quat axisAngleToQuat(const vec3& axis, float angle) {
+			const float factor = std::sin(angle / 2.0f);
+	
+			return normalize(quat(std::cos(angle / 2.0f), axis.x * factor, axis.y * factor, axis.z * factor));
 		}
 
 		inline std::string to_string(const quat& qua) {

@@ -9,7 +9,7 @@ namespace NtshEngn {
 	struct ColliderBox {
 		Math::vec3 center;
 		Math::vec3 halfExtent;
-		Math::vec3 rotation;
+		Math::quat rotation = Math::quat::identity();
 	};
 
 	struct ColliderSphere {

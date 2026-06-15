@@ -222,6 +222,12 @@ quat rotationMatrixToQuat(const mat4& mat) {
 	return quaternion;
 }
 
+quat axisAngleToQuat(const vec3& axis, float angle) {
+	const float factor = std::sin(angle / 2.0f);
+	
+	return normalize(quat(std::cos(angle / 2.0f), axis.x * factor, axis.y * factor, axis.z * factor));
+}
+
 std::string to_string(const quat& qua) {
 	return std::to_string(qua.a) + " + " + std::to_string(qua.b) + "i + " + std::to_string(qua.c) + "j + " + std::to_string(qua.d) + "k";
 }

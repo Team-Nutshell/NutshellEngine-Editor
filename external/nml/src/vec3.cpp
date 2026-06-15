@@ -164,6 +164,14 @@ vec3 rotationMatrixToEulerAngles(const mat4& mat) {
 	return eulerAngles;
 }
 
+vec3 rotateVectorByQuat(const vec3& vec, const quat& qua) {
+	const vec3 u(qua.b, qua.c, qua.d);
+	const vec3 uXv(cross(u, vec));
+	const vec3 uXuXv(cross(u, uXv));
+
+	return vec + ((uXv * qua.a) + uXuXv) * 2.0f;
+}
+
 std::string to_string(const vec3& vec) {
 	return ("[" + std::to_string(vec.x) + ", " + std::to_string(vec.y) + ", " + std::to_string(vec.z) + "]");
 }

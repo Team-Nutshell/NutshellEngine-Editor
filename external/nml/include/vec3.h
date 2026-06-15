@@ -55,6 +55,7 @@ vec3 reflect(const vec3& i, const vec3& n);
 vec3 refract(const vec3& i, const vec3& n, float ior);
 vec3 quatToEulerAngles(const quat& qua);
 vec3 rotationMatrixToEulerAngles(const mat4& mat);
+vec3 rotateVectorByQuat(const vec3& vec, const quat& qua);
 
 std::string to_string(const vec3& vec);
 
