@@ -5,7 +5,6 @@
 #include "../common/asset_helper.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entities_component_command.h"
-#include "../renderer/collider_mesh.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -131,8 +130,6 @@ void RenderableComponentWidget::onEntityRenderableAdded(EntityID entityID) {
 		show();
 	}
 
-	ColliderMesh::update(m_globalInfo, entityID);
-
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
 
@@ -151,8 +148,6 @@ void RenderableComponentWidget::onEntityRenderableChanged(EntityID entityID, con
 			updateWidgets(renderable);
 		}
 	}
-
-	ColliderMesh::update(m_globalInfo, entityID);
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }

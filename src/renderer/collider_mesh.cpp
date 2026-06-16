@@ -76,10 +76,10 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 			}
 		}
 
-		for (size_t j = 1; j < modelPrimitive.mesh.vertices.size(); j++) {
-			if (j % (nbLongLat / 2 + 1) != 0) {
-				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j) - 1);
-				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j));
+		for (size_t i = 1; i < modelPrimitive.mesh.vertices.size(); i++) {
+			if (i % (nbLongLat / 2 + 1) != 0) {
+				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i) - 1);
+				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
 			}
 		}
 

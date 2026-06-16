@@ -63,6 +63,8 @@
 	"header_view_disable_lighting": "Disable Lighting",
 	"header_view_show_colliders": "Show Colliders",
 	"header_view_hide_colliders": "Hide Colliders",
+	"header_view_show_lights": "Show Lights",
+	"header_view_hide_lights": "Hide Lights",
 	"header_view_switch_camera_projection_perspective": "Switch Camera Projection To Perspective",
 	"header_view_switch_camera_projection_orthographic": "Switch Camera Projection To Orthographic",
 	"header_view_reset_camera": "Reset Camera",

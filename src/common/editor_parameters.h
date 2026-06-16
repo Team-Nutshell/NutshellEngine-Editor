@@ -55,6 +55,7 @@ struct RendererParameters {
 	bool showCameras = true;
 	bool enableLighting = true;
 	bool showColliders = true;
+	bool showLights = true;
 };
 
 struct BuildParameters {

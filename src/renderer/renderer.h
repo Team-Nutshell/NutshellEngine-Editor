@@ -167,14 +167,13 @@ private:
 
 	GLuint m_entityProgram;
 	GLuint m_shadowProgram;
-	GLuint m_cameraFrustumProgram;
 	GLuint m_grid2DProgram;
 	GLuint m_grid3DProgram;
 	GLuint m_gizmoProgram;
 	GLuint m_pickingProgram;
 	GLuint m_outlineSoloProgram;
 	GLuint m_outlineProgram;
-	GLuint m_colliderProgram;
+	GLuint m_componentMeshProgram;
 	GLuint m_copyProgram;
 
 	GLuint m_sceneFramebuffer;

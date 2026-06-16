@@ -15,6 +15,7 @@ private:
 	void toggleCamerasVisibility();
 	void toggleLighting();
 	void toggleCollidersVisibility();
+	void toggleLightsVisibility();
 	void switchCameraProjection();
 	void resetCamera();
 	void orthographicCameraToXM();
@@ -30,6 +31,7 @@ private:
 	void setCamerasVisibility(bool showCameras);
 	void setLighting(bool lightingEnabled);
 	void setCollidersVisibility(bool showCameras);
+	void setLightsVisibility(bool showLights);
 
 	void save();
 
@@ -50,6 +52,7 @@ public:
 	QAction* toggleCamerasVisibilityAction;
 	QAction* toggleLightingAction;
 	QAction* toggleCollidersVisibilityAction;
+	QAction* toggleLightsVisibilityAction;
 	QAction* switchCameraProjectionAction;
 	QAction* resetCameraAction;
 	QAction* orthographicCameraToXMAction;

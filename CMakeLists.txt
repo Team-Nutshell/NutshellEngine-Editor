@@ -67,10 +67,12 @@ set(COMMON_SOURCES
 
 set(RENDERER_SOURCES
 	src/renderer/collider_mesh.cpp
+	src/renderer/light_mesh.cpp
 	src/renderer/renderer.cpp
 	src/renderer/renderer_resource_manager.cpp)
 set(RENDERER_HEADERS
 	src/renderer/collider_mesh.h
+	src/renderer/light_mesh.h
 	src/renderer/renderer.h
 	src/renderer/renderer_camera.h
 	src/renderer/renderer_resources.h

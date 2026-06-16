@@ -4,6 +4,7 @@
 #include "main_window.h"
 #include "../common/save_title_changer.h"
 #include "../undo_commands/change_entities_component_command.h"
+#include "../renderer/light_mesh.h"
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <vector>
@@ -36,6 +37,7 @@ LightComponentWidget::LightComponentWidget(GlobalInfo& globalInfo) : m_globalInf
 	connect(directionWidget, &Vector3Widget::valueChanged, this, &LightComponentWidget::onVec3Changed);
 	connect(cutoffWidget, &Vector2Widget::valueChanged, this, &LightComponentWidget::onVec2Changed);
 	connect(distanceWidget, &ScalarWidget::valueChanged, this, &LightComponentWidget::onScalarChanged);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::createEntitySignal, this, &LightComponentWidget::onEntityCreated);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &LightComponentWidget::onEntitySelected);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::addEntityLightSignal, this, &LightComponentWidget::onEntityLightAdded);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::removeEntityLightSignal, this, &LightComponentWidget::onEntityLightRemoved);
@@ -114,6 +116,13 @@ std::string LightComponentWidget::typeToLightType(const std::string& type) {
 	}
 }
 
+void LightComponentWidget::onEntityCreated(EntityID entityID) {
+	const Entity& entity = m_globalInfo.entities[entityID];
+	if (entity.light) {
+		LightMesh::update(m_globalInfo, entityID);
+	}
+}
+
 void LightComponentWidget::onEntitySelected() {
 	if ((m_globalInfo.currentEntityID != NO_ENTITY) && m_globalInfo.entities[m_globalInfo.currentEntityID].light.has_value()) {
 		show();
@@ -130,6 +139,8 @@ void LightComponentWidget::onEntityLightAdded(EntityID entityID) {
 		updateWidgets(light);
 		show();
 	}
+
+	LightMesh::update(m_globalInfo, entityID);
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }
@@ -149,6 +160,8 @@ void LightComponentWidget::onEntityLightChanged(EntityID entityID, const Light& 
 			updateWidgets(light);
 		}
 	}
+
+	LightMesh::update(m_globalInfo, entityID);
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
 }

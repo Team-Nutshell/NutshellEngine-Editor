@@ -149,7 +149,7 @@ std::string CollidableComponentWidget::typeToColliderType(const std::string& typ
 }
 
 void CollidableComponentWidget::onEntityCreated(EntityID entityID) {
-	Entity& entity = m_globalInfo.entities[entityID];
+	const Entity& entity = m_globalInfo.entities[entityID];
 	if (entity.collidable) {
 		ColliderMesh::update(m_globalInfo, entityID);
 	}

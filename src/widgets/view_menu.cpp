@@ -16,6 +16,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	toggleLightingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 	toggleCollidersVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_show_colliders")), this, &ViewMenu::toggleCollidersVisibility);
 	toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
+	toggleLightsVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_show_lights")), this, &ViewMenu::toggleLightsVisibility);
 	addSeparator();
 	switchCameraProjectionAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_switch_camera_projection_orthographic")), this, &ViewMenu::switchCameraProjection);
 	switchCameraProjectionAction->setShortcut(m_globalInfo.editorParameters.renderer.switchCameraProjectionKey);
@@ -41,6 +42,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	setCamerasVisibility(m_globalInfo.editorParameters.renderer.showCameras);
 	setLighting(m_globalInfo.editorParameters.renderer.enableLighting);
 	setCollidersVisibility(m_globalInfo.editorParameters.renderer.showColliders);
+	setLightsVisibility(m_globalInfo.editorParameters.renderer.showLights);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &ViewMenu::onEntitySelected);
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &ViewMenu::onEntityVisibilityToggled);
@@ -84,6 +86,12 @@ void ViewMenu::toggleLighting() {
 
 void ViewMenu::toggleCollidersVisibility() {
 	setCollidersVisibility(!m_globalInfo.editorParameters.renderer.showColliders);
+
+	save();
+}
+
+void ViewMenu::toggleLightsVisibility() {
+	setLightsVisibility(!m_globalInfo.editorParameters.renderer.showLights);
 
 	save();
 }
@@ -204,6 +212,11 @@ void ViewMenu::setLighting(bool lightingEnabled) {
 void ViewMenu::setCollidersVisibility(bool showColliders) {
 	m_globalInfo.editorParameters.renderer.showColliders = showColliders;
 	toggleCollidersVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showColliders ? QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_colliders")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_show_colliders")));
+}
+
+void ViewMenu::setLightsVisibility(bool showLights) {
+	m_globalInfo.editorParameters.renderer.showLights = showLights;
+	toggleLightsVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showLights ? QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_lights")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_show_lights")));
 }
 
 void ViewMenu::onCameraProjectionSwitched(bool cameraProjectionOrthographic) {

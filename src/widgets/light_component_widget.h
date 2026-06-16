@@ -20,6 +20,7 @@ private:
 	std::string typeToLightType(const std::string& type);
 
 private slots:
+	void onEntityCreated(EntityID entityID);
 	void onEntitySelected();
 	void onEntityLightAdded(EntityID entityID);
 	void onEntityLightRemoved(EntityID entityID);

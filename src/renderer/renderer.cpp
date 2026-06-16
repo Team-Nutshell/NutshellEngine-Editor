@@ -89,11 +89,14 @@ Renderer::~Renderer() {
 
 	gl.glDeleteProgram(m_entityProgram);
 	gl.glDeleteProgram(m_shadowProgram);
-	gl.glDeleteProgram(m_cameraFrustumProgram);
+	gl.glDeleteProgram(m_grid2DProgram);
 	gl.glDeleteProgram(m_grid3DProgram);
+	gl.glDeleteProgram(m_gizmoProgram);
 	gl.glDeleteProgram(m_pickingProgram);
 	gl.glDeleteProgram(m_outlineSoloProgram);
 	gl.glDeleteProgram(m_outlineProgram);
+	gl.glDeleteProgram(m_componentMeshProgram);
+	gl.glDeleteProgram(m_copyProgram);
 }
 
 void Renderer::initializeGL() {
@@ -689,34 +692,6 @@ void Renderer::initializeGL() {
 
 	m_shadowProgram = compileProgram(shadowVertexShader, shadowFragmentShader);
 
-	// Camera frustum
-	std::string cameraFrustumVertexShaderCode = R"GLSL(
-	#version 460
-
-	in vec3 position;
-
-	uniform mat4 viewProj;
-	uniform mat4 model;
-
-	void main() {
-		gl_Position = viewProj * model * vec4(position, 1.0);
-	}
-	)GLSL";
-	GLuint cameraFrustumVertexShader = compileShader(GL_VERTEX_SHADER, cameraFrustumVertexShaderCode);
-
-	std::string cameraFrustumFragmentShaderCode = R"GLSL(
-	#version 460
-
-	out vec4 outColor;
-
-	void main() {
-		outColor = vec4(0.0, 1.0, 0.0, 1.0);
-	}
-	)GLSL";
-	GLuint cameraFrustumFragmentShader = compileShader(GL_FRAGMENT_SHADER, cameraFrustumFragmentShaderCode);
-
-	m_cameraFrustumProgram = compileProgram(cameraFrustumVertexShader, cameraFrustumFragmentShader);
-
 	// Grid 2D
 	std::string grid2DVertexShaderCode = R"GLSL(
 	#version 460
@@ -1091,8 +1066,8 @@ void Renderer::initializeGL() {
 
 	m_outlineProgram = compileProgram(fullscreenVertexShader, outlineFragmentShader);
 
-	// Collider
-	std::string colliderVertexShaderCode = R"GLSL(
+	// Component mesh
+	std::string componentMeshVertexShaderCode = R"GLSL(
 	#version 460
 
 	in vec3 position;
@@ -1104,22 +1079,22 @@ void Renderer::initializeGL() {
 		gl_Position = viewProj * model * vec4(position, 1.0);
 	}
 	)GLSL";
-	GLuint colliderVertexShader = compileShader(GL_VERTEX_SHADER, colliderVertexShaderCode);
+	GLuint componentMeshVertexShader = compileShader(GL_VERTEX_SHADER, componentMeshVertexShaderCode);
 
-	std::string colliderFragmentShaderCode = R"GLSL(
+	std::string componentMeshFragmentShaderCode = R"GLSL(
 	#version 460
 
-	uniform vec3 colliderColor;
+	uniform vec3 componentMeshColor;
 
 	out vec4 outColor;
 
 	void main() {
-		outColor = vec4(colliderColor, 1.0f);
+		outColor = vec4(componentMeshColor, 1.0f);
 	}
 	)GLSL";
-	GLuint colliderFragmentShader = compileShader(GL_FRAGMENT_SHADER, colliderFragmentShaderCode);
+	GLuint componentMeshFragmentShader = compileShader(GL_FRAGMENT_SHADER, componentMeshFragmentShaderCode);
 
-	m_colliderProgram = compileProgram(colliderVertexShader, colliderFragmentShader);
+	m_componentMeshProgram = compileProgram(componentMeshVertexShader, componentMeshFragmentShader);
 
 	// Copy
 	std::string copyFragmentShaderCode = R"GLSL(
@@ -1520,10 +1495,10 @@ void Renderer::paintGL() {
 	// Entities Cameras
 	gl.glDisable(GL_CULL_FACE);
 	if (m_globalInfo.editorParameters.renderer.showCameras) {
-		gl.glUseProgram(m_cameraFrustumProgram);
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+		gl.glUseProgram(m_componentMeshProgram);
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
-		bindMesh(m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh, m_cameraFrustumProgram);
+		bindMesh(m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh, m_componentMeshProgram);
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
@@ -1541,7 +1516,9 @@ void Renderer::paintGL() {
 						entityCameraProjectionMatrix = nml::orthoRH(entity.second.camera->left * applicationBaseAspectRatio, entity.second.camera->right * applicationBaseAspectRatio, entity.second.camera->bottom, entity.second.camera->top, entity.second.camera->nearPlane, entity.second.camera->farPlane);
 					}
 					nml::mat4 invEntityCameraModel = nml::inverse(entityCameraProjectionMatrix * entityCameraRotation * entityCameraViewMatrix);
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_cameraFrustumProgram, "model"), 1, false, invEntityCameraModel.data());
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "model"), 1, false, invEntityCameraModel.data());
+
+					gl.glUniform3f(gl.glGetUniformLocation(m_componentMeshProgram, "componentMeshColor"), 0.0f, 1.0f, 0.0f);
 
 					gl.glDrawElements(GL_LINES, m_globalInfo.rendererResourceManager.rendererModels["cameraFrustumCube"].primitives[0].mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
@@ -1553,8 +1530,8 @@ void Renderer::paintGL() {
 	if (m_globalInfo.editorParameters.renderer.showColliders) {
 		gl.glDepthFunc(GL_GEQUAL);
 
-		gl.glUseProgram(m_colliderProgram);
-		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+		gl.glUseProgram(m_componentMeshProgram);
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
 
 		for (const auto& entity : m_globalInfo.entities) {
 			if (entity.second.isVisible) {
@@ -1568,21 +1545,58 @@ void Renderer::paintGL() {
 					}
 					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(scale);
 
-					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_colliderProgram, "model"), 1, false, modelMatrix.data());
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "model"), 1, false, modelMatrix.data());
 
 					if (entity.second.rigidbody) {
-						gl.glUniform3f(gl.glGetUniformLocation(m_colliderProgram, "colliderColor"), 1.0f, 0.0f, 0.0f);
+						gl.glUniform3f(gl.glGetUniformLocation(m_componentMeshProgram, "componentMeshColor"), 1.0f, 0.0f, 0.0f);
 					}
 					else {
-						gl.glUniform3f(gl.glGetUniformLocation(m_colliderProgram, "colliderColor"), 0.5f, 0.0f, 0.0f);
+						gl.glUniform3f(gl.glGetUniformLocation(m_componentMeshProgram, "componentMeshColor"), 0.5f, 0.0f, 0.0f);
 					}
 
 					const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.first)];
 					const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
 
-					bindMesh(colliderPrimitive.mesh, m_colliderProgram);
+					bindMesh(colliderPrimitive.mesh, m_componentMeshProgram);
 
 					gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+				}
+			}
+		}
+	}
+
+	// Entities Lights
+	if (m_globalInfo.editorParameters.renderer.showLights) {
+		gl.glDepthFunc(GL_GEQUAL);
+
+		gl.glUseProgram(m_componentMeshProgram);
+		gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "viewProj"), 1, false, m_camera.viewProjMatrix.data());
+
+		for (const auto& entity : m_globalInfo.entities) {
+			if (entity.second.isVisible) {
+				if (entity.second.light && (entity.second.light->type != "Ambient") && (m_globalInfo.rendererResourceManager.rendererModels.find("Light_" + std::to_string(entity.first)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+					bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.second.entityID) != m_entityMoveTransforms.end();
+					const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.second.entityID] : entity.second.transform;
+					const nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
+					nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix;
+
+					gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_componentMeshProgram, "model"), 1, false, modelMatrix.data());
+
+					nml::vec3 lightColor = entity.second.light->color;
+					if ((m_globalInfo.currentEntityID == entity.first) || (m_globalInfo.otherSelectedEntityIDs.count(entity.first) != 0)) {
+						if (m_globalInfo.mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->lightWidget->useTemporaryColor) {
+							lightColor = m_globalInfo.mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->lightWidget->temporaryColor;
+						}
+					}
+
+					gl.glUniform3f(gl.glGetUniformLocation(m_componentMeshProgram, "componentMeshColor"), lightColor.x, lightColor.y, lightColor.z);
+
+					const RendererModel& lightModel = m_globalInfo.rendererResourceManager.rendererModels["Light_" + std::to_string(entity.first)];
+					const RendererPrimitive& lightPrimitive = lightModel.primitives[0];
+
+					bindMesh(lightPrimitive.mesh, m_componentMeshProgram);
+
+					gl.glDrawElements(GL_LINES, lightPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 				}
 			}
 		}
@@ -2069,12 +2083,34 @@ void Renderer::paintGL() {
 				if (entity.isVisible) {
 					if (entity.collidable && (m_globalInfo.rendererResourceManager.rendererModels.find("Collider_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
 						const RendererModel& colliderModel = m_globalInfo.rendererResourceManager.rendererModels["Collider_" + std::to_string(entity.entityID)];
-						gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, modelMatrix.data());
+						nml::vec3 scale = transform.scale;
+						if (entity.collidable->type == "Sphere") {
+							scale = nml::vec3(std::max(std::abs(transform.scale.x), std::max(std::abs(transform.scale.y), std::abs(transform.scale.z))));
+						}
+						nml::mat4 colliderModelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(scale);
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, colliderModelMatrix.data());
 						const RendererPrimitive& colliderPrimitive = colliderModel.primitives[0];
 
 						bindMesh(colliderPrimitive.mesh, m_outlineSoloProgram);
 
 						gl.glDrawElements(GL_LINES, colliderPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
+					}
+				}
+			}
+
+			// Entity Light
+			if (m_globalInfo.editorParameters.renderer.showLights) {
+				if (entity.isVisible) {
+					if (entity.light && (entity.light->type != "Ambient") && (m_globalInfo.rendererResourceManager.rendererModels.find("Light_" + std::to_string(entity.entityID)) != m_globalInfo.rendererResourceManager.rendererModels.end())) {
+						const RendererModel& lightModel = m_globalInfo.rendererResourceManager.rendererModels["Light_" + std::to_string(entity.entityID)];
+						const nml::mat4 lightRotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
+						nml::mat4 lightModelMatrix = nml::translate(transform.position) * lightRotationMatrix;
+						gl.glUniformMatrix4fv(gl.glGetUniformLocation(m_outlineSoloProgram, "model"), 1, false, lightModelMatrix.data());
+						const RendererPrimitive& lightPrimitive = lightModel.primitives[0];
+
+						bindMesh(lightPrimitive.mesh, m_outlineSoloProgram);
+
+						gl.glDrawElements(GL_LINES, lightPrimitive.mesh.indexCount, GL_UNSIGNED_INT, NULL);
 					}
 				}
 			}
@@ -2631,14 +2667,7 @@ void Renderer::updateLights() {
 			bool hasEntityMoveTransform = m_entityMoveTransforms.find(directionalLightEntity.entityID) != m_entityMoveTransforms.end();
 			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[directionalLightEntity.entityID] : directionalLightEntity.transform;
 
-			const nml::vec3 baseLightDirection = nml::normalize(directionalLightEntity.light->direction);
-			const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
-			const float baseDirectionPitch = -std::asin(baseLightDirection.y);
-			const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-				std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
-				-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
-				std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
-			));
+			const nml::vec3 lightDirection = nml::normalize(nml::rotateVectorByQuat(directionalLightEntity.light->direction, nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z)))));
 			const nml::vec3 upVector = (std::abs(nml::dot(lightDirection, nml::vec3(0.0f, 1.0f, 0.0f))) == 1.0f) ? nml::vec3(1.0f, 0.0f, 0.0f) : nml::vec3(0.0f, 1.0f, 0.0f);
 
 			const nml::mat4 scaledLightView = scale * nml::lookAtRH(nml::vec3(0.0f, 0.0f, 0.0f), -lightDirection, upVector);
@@ -2687,15 +2716,7 @@ void Renderer::updateLights() {
 		bool hasEntityMoveTransform = m_entityMoveTransforms.find(spotLightEntity.entityID) != m_entityMoveTransforms.end();
 		const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[spotLightEntity.entityID] : spotLightEntity.transform;
 
-		const nml::vec3 baseLightDirection = nml::normalize(spotLightEntity.light->direction);
-		const float baseDirectionYaw = std::atan2(baseLightDirection.z, baseLightDirection.x);
-		const float baseDirectionPitch = -std::asin(baseLightDirection.y);
-		const nml::vec3 lightDirection = nml::normalize(nml::vec3(
-			std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::cos(baseDirectionYaw + nml::toRad(transform.rotation.y)),
-			-std::sin(baseDirectionPitch + nml::toRad(transform.rotation.x)),
-			std::cos(baseDirectionPitch + nml::toRad(transform.rotation.x)) * std::sin(baseDirectionYaw + nml::toRad(transform.rotation.y))
-		));
-
+		const nml::vec3 lightDirection = nml::normalize(nml::rotateVectorByQuat(spotLightEntity.light->direction, nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z)))));
 		const nml::vec3 upVector = (std::abs(nml::dot(lightDirection, nml::vec3(0.0f, 1.0f, 0.0f))) == 1.0f) ? nml::vec3(1.0f, 0.0f, 0.0f) : nml::vec3(0.0f, 1.0f, 0.0f);
 		const nml::mat4 lightView = nml::lookAtRH(transform.position, transform.position + lightDirection, upVector);
 		nml::mat4 lightProj = nml::perspectiveRH(nml::toRad(spotLightEntity.light->cutoff.y) * 2.0f, 1.0f, 0.05f, spotLightEntity.light->distance);
