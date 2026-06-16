@@ -18,8 +18,9 @@ struct CameraScript : public Script {
 		const Camera& camera = getEntityComponent<Camera>(entityID);
 		Math::vec3 cameraForward = Math::normalize(camera.forward);
 
-		m_yaw = Math::toDeg(transform.rotation.y) + Math::toDeg(std::atan2(cameraForward.z, cameraForward.x));
-		m_pitch = Math::toDeg(transform.rotation.x) + Math::toDeg(-std::asin(cameraForward.y));
+		Math::vec3 rotationEulerAngles = Math::quatToEulerAngles(transform.rotation);
+		m_yaw = Math::toDeg(rotationEulerAngles.y) + Math::toDeg(std::atan2(cameraForward.z, cameraForward.x));
+		m_pitch = Math::toDeg(rotationEulerAngles.x) + Math::toDeg(-std::asin(cameraForward.y));
 	}
 
 	void update(float dt) {
