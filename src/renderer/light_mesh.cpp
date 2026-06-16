@@ -30,9 +30,10 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 	else if (light.type == "Point") {
 		RendererResourceManager::ModelPrimitive modelPrimitive;
 
-		const size_t nbLongLat = 25;
-		const float thetaStep = nml::PI / static_cast<size_t>(nbLongLat);
-		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongLat));
+		const size_t nbLatitudes = 5;
+		const size_t nbLongitudes = 25;
+		const float thetaStep = nml::PI / static_cast<size_t>(nbLatitudes);
+		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongitudes));
 
 		for (float theta = 0.0f; theta < 2.0f * nml::PI; theta += thetaStep) {
 			for (float phi = 0.0f; phi < nml::PI; phi += phiStep) {
@@ -50,7 +51,7 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		}
 
 		for (size_t i = 1; i < modelPrimitive.mesh.vertices.size(); i++) {
-			if (i % (nbLongLat / 2 + 1) != 0) {
+			if (i % (nbLongitudes / 2 + 1) != 0) {
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i) - 1);
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
 			}
