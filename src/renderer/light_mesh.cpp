@@ -35,7 +35,7 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		const float thetaStep = nml::PI / static_cast<size_t>(nbLatitudes);
 		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongitudes));
 
-		for (float theta = 0.0f; theta < 2.0f * nml::PI; theta += thetaStep) {
+		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			for (float phi = 0.0f; phi < nml::PI; phi += phiStep) {
 				if ((phi + phiStep) >= nml::PI) {
 					RendererResourceManager::Mesh::Vertex vertex;
@@ -44,7 +44,7 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 				}
 				else {
 					RendererResourceManager::Mesh::Vertex vertex;
-					vertex.position = (nml::vec3(std::cos(theta) * std::sin(phi), std::cos(phi), std::sin(theta) * std::sin(phi)) * light.distance);
+					vertex.position = nml::vec3(std::cos(theta) * std::sin(phi), std::cos(phi), std::sin(theta) * std::sin(phi)) * light.distance;
 					modelPrimitive.mesh.vertices.push_back(vertex);
 				}
 			}
@@ -75,12 +75,12 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		modelPrimitive.mesh.indices.push_back(0);
 		modelPrimitive.mesh.indices.push_back(1);
 
-		const size_t nbLongLat = 25;
-		const float thetaStep = nml::PI / static_cast<size_t>(nbLongLat);
+		const size_t nbSections = 25;
+		const float thetaStep = nml::PI / static_cast<size_t>(nbSections);
 
-		for (float theta = 0.0f; theta < 2.0f * nml::PI; theta += thetaStep) {
+		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			RendererResourceManager::Mesh::Vertex vertex;
-			vertex.position = (nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.x)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.x))));
+			vertex.position = nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.x)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.x)));
 			modelPrimitive.mesh.vertices.push_back(vertex);
 		}
 
@@ -92,9 +92,9 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		modelPrimitive.mesh.indices.push_back(innerCircleLastIndex);
 		modelPrimitive.mesh.indices.push_back(3);
 
-		for (float theta = 0.0f; theta < 2.0f * nml::PI; theta += thetaStep) {
+		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			RendererResourceManager::Mesh::Vertex vertex;
-			vertex.position = (nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.y)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.y))));
+			vertex.position = nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.y)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.y)));
 			modelPrimitive.mesh.vertices.push_back(vertex);
 		}
 

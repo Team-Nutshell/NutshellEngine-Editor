@@ -62,7 +62,7 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		const float thetaStep = nml::PI / static_cast<size_t>(nbLatitudes);
 		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongitudes));
 
-		for (float theta = 0.0f; theta < 2.0f * nml::PI; theta += thetaStep) {
+		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			for (float phi = 0.0f; phi < nml::PI; phi += phiStep) {
 				if ((phi + phiStep) >= nml::PI) {
 					RendererResourceManager::Mesh::Vertex vertex;
