@@ -61,10 +61,10 @@ public:
 	KeySelectWidget* scaleEntityKeySelect;
 	KeySelectWidget* toggleCurrentEntityVisibilityKeySelect;
 	KeySelectWidget* toggleGridVisibilityKeySelect;
-	KeySelectWidget* toggleBackfaceCullingKeySelect;
 	KeySelectWidget* toggleCamerasVisibilityKeySelect;
 	KeySelectWidget* toggleLightingKeySelect;
 	KeySelectWidget* toggleCollidersVisibilityKeySelect;
+	KeySelectWidget* toggleLightsVisibilityKeySelect;
 	ScalarWidget* cameraNearPlaneWidget;
 	ScalarWidget* cameraFarPlaneWidget;
 	ScalarWidget* perspectiveCameraSpeedWidget;

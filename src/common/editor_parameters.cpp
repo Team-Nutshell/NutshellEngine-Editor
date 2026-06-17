@@ -141,12 +141,6 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 				renderer.toggleGridVisibilityKey = sequence[0].key();
 			}
 		}
-		if (j["renderer"].contains("toggleBackfaceCullingKey")) {
-			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["toggleBackfaceCullingKey"]));
-			if (!sequence.isEmpty()) {
-				renderer.toggleBackfaceCullingKey = sequence[0].key();
-			}
-		}
 		if (j["renderer"].contains("toggleCamerasVisibilityKey")) {
 			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["toggleCamerasVisibilityKey"]));
 			if (!sequence.isEmpty()) {
@@ -163,6 +157,12 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["toggleCollidersVisibilityKey"]));
 			if (!sequence.isEmpty()) {
 				renderer.toggleCollidersVisibilityKey = sequence[0].key();
+			}
+		}
+		if (j["renderer"].contains("toggleLightsVisibilityKey")) {
+			QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(j["renderer"]["toggleLightsVisibilityKey"]));
+			if (!sequence.isEmpty()) {
+				renderer.toggleLightsVisibilityKey = sequence[0].key();
 			}
 		}
 
@@ -229,9 +229,6 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 		if (j["renderer"].contains("showGrid")) {
 			renderer.showGrid = j["renderer"]["showGrid"];
 		}
-		if (j["renderer"].contains("enableBackfaceCulling")) {
-			renderer.enableBackfaceCulling = j["renderer"]["enableBackfaceCulling"];
-		}
 		if (j["renderer"].contains("showCameras")) {
 			renderer.showCameras = j["renderer"]["showCameras"];
 		}
@@ -240,6 +237,9 @@ void EditorParameters::fromJson(const nlohmann::json& j) {
 		}
 		if (j["renderer"].contains("showColliders")) {
 			renderer.showColliders = j["renderer"]["showColliders"];
+		}
+		if (j["renderer"].contains("showLights")) {
+			renderer.showLights = j["renderer"]["showLights"];
 		}
 	}
 
@@ -279,10 +279,10 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["scaleEntityKey"] = QKeySequence(renderer.scaleEntityKey).toString().toStdString();
 	j["renderer"]["toggleCurrentEntityVisibilityKey"] = QKeySequence(renderer.toggleCurrentEntityVisibilityKey).toString().toStdString();
 	j["renderer"]["toggleGridVisibilityKey"] = QKeySequence(renderer.toggleGridVisibilityKey).toString().toStdString();
-	j["renderer"]["toggleBackfaceCullingKey"] = QKeySequence(renderer.toggleBackfaceCullingKey).toString().toStdString();
 	j["renderer"]["toggleCamerasVisibilityKey"] = QKeySequence(renderer.toggleCamerasVisibilityKey).toString().toStdString();
 	j["renderer"]["toggleLightingKey"] = QKeySequence(renderer.toggleLightingKey).toString().toStdString();
 	j["renderer"]["toggleCollidersVisibilityKey"] = QKeySequence(renderer.toggleCollidersVisibilityKey).toString().toStdString();
+	j["renderer"]["toggleLightsVisibilityKey"] = QKeySequence(renderer.toggleLightsVisibilityKey).toString().toStdString();
 	j["renderer"]["cameraNearPlane"] = renderer.cameraNearPlane;
 	j["renderer"]["cameraFarPlane"] = renderer.cameraFarPlane;
 	j["renderer"]["perspectiveCameraSpeed"] = renderer.perspectiveCameraSpeed;
@@ -299,10 +299,10 @@ nlohmann::json EditorParameters::toJson() const {
 	j["renderer"]["currentEntityOutlineColor"] = { renderer.currentEntityOutlineColor.x, renderer.currentEntityOutlineColor.y, renderer.currentEntityOutlineColor.z };
 	j["renderer"]["otherEntitiesOutlineColor"] = { renderer.otherEntitiesOutlineColor.x, renderer.otherEntitiesOutlineColor.y, renderer.otherEntitiesOutlineColor.z };
 	j["renderer"]["showGrid"] = renderer.showGrid;
-	j["renderer"]["enableBackfaceCulling"] = renderer.enableBackfaceCulling;
 	j["renderer"]["showCameras"] = renderer.showCameras;
 	j["renderer"]["enableLighting"] = renderer.enableLighting;
 	j["renderer"]["showColliders"] = renderer.showColliders;
+	j["renderer"]["showLights"] = renderer.showLights;
 
 	j["build"]["cMakePath"] = build.cMakePath;
 

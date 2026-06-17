@@ -8,8 +8,6 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	toggleCurrentEntityVisibilityAction->setEnabled(false);
 	toggleGridVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_grid")), this, &ViewMenu::toggleGridVisibility);
 	toggleGridVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
-	toggleBackfaceCullingAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_enable_backface_culling")), this, &ViewMenu::toggleBackfaceCulling);
-	toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
 	toggleCamerasVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_show_cameras")), this, &ViewMenu::toggleCamerasVisibility);
 	toggleCamerasVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 	toggleLightingAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_enable_lighting")), this, &ViewMenu::toggleLighting);
@@ -17,6 +15,7 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	toggleCollidersVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_show_colliders")), this, &ViewMenu::toggleCollidersVisibility);
 	toggleCollidersVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 	toggleLightsVisibilityAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_show_lights")), this, &ViewMenu::toggleLightsVisibility);
+	toggleLightsVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightsVisibilityKey);
 	addSeparator();
 	switchCameraProjectionAction = addAction(QString::fromStdString(m_globalInfo.localization.getString("header_view_switch_camera_projection_orthographic")), this, &ViewMenu::switchCameraProjection);
 	switchCameraProjectionAction->setShortcut(m_globalInfo.editorParameters.renderer.switchCameraProjectionKey);
@@ -38,7 +37,6 @@ ViewMenu::ViewMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 	cameraGoToEntityAction->setShortcut(m_globalInfo.editorParameters.renderer.cameraGoToEntityKey);
 
 	setGridVisibility(m_globalInfo.editorParameters.renderer.showGrid);
-	setBackfaceCulling(m_globalInfo.editorParameters.renderer.enableBackfaceCulling);
 	setCamerasVisibility(m_globalInfo.editorParameters.renderer.showCameras);
 	setLighting(m_globalInfo.editorParameters.renderer.enableLighting);
 	setCollidersVisibility(m_globalInfo.editorParameters.renderer.showColliders);
@@ -62,12 +60,6 @@ void ViewMenu::toggleCurrentEntityVisibility() {
 
 void ViewMenu::toggleGridVisibility() {
 	setGridVisibility(!m_globalInfo.editorParameters.renderer.showGrid);
-
-	save();
-}
-
-void ViewMenu::toggleBackfaceCulling() {
-	setBackfaceCulling(!m_globalInfo.editorParameters.renderer.enableBackfaceCulling);
 
 	save();
 }
@@ -192,11 +184,6 @@ void ViewMenu::onEntityVisibilityToggled(EntityID entityID, bool entityIsVisible
 void ViewMenu::setGridVisibility(bool showGrid) {
 	m_globalInfo.editorParameters.renderer.showGrid = showGrid;
 	toggleGridVisibilityAction->setText(m_globalInfo.editorParameters.renderer.showGrid ? QString::fromStdString(m_globalInfo.localization.getString("header_view_hide_grid")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_show_grid")));
-}
-
-void ViewMenu::setBackfaceCulling(bool backfaceCulling) {
-	m_globalInfo.editorParameters.renderer.enableBackfaceCulling = backfaceCulling;
-	toggleBackfaceCullingAction->setText(m_globalInfo.editorParameters.renderer.enableBackfaceCulling ? QString::fromStdString(m_globalInfo.localization.getString("header_view_disable_backface_culling")) : QString::fromStdString(m_globalInfo.localization.getString("header_view_enable_backface_culling")));
 }
 
 void ViewMenu::setCamerasVisibility(bool showCameras) {

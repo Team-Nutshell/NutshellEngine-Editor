@@ -11,7 +11,6 @@ public:
 private:
 	void toggleCurrentEntityVisibility();
 	void toggleGridVisibility();
-	void toggleBackfaceCulling();
 	void toggleCamerasVisibility();
 	void toggleLighting();
 	void toggleCollidersVisibility();
@@ -27,7 +26,6 @@ private:
 	void cameraGoToEntity();
 
 	void setGridVisibility(bool showGrid);
-	void setBackfaceCulling(bool backfaceCullingEnabled);
 	void setCamerasVisibility(bool showCameras);
 	void setLighting(bool lightingEnabled);
 	void setCollidersVisibility(bool showCameras);
@@ -48,7 +46,6 @@ private:
 public:
 	QAction* toggleCurrentEntityVisibilityAction;
 	QAction* toggleGridVisibilityAction;
-	QAction* toggleBackfaceCullingAction;
 	QAction* toggleCamerasVisibilityAction;
 	QAction* toggleLightingAction;
 	QAction* toggleCollidersVisibilityAction;

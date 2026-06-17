@@ -25,10 +25,10 @@ struct RendererParameters {
 	Qt::Key scaleEntityKey = Qt::Key_E;
 	Qt::Key toggleCurrentEntityVisibilityKey = Qt::Key_V;
 	Qt::Key toggleGridVisibilityKey = Qt::Key_G;
-	Qt::Key toggleBackfaceCullingKey = Qt::Key_F;
 	Qt::Key toggleCamerasVisibilityKey = Qt::Key_C;
-	Qt::Key toggleLightingKey = Qt::Key_L;
+	Qt::Key toggleLightingKey = Qt::Key_F;
 	Qt::Key toggleCollidersVisibilityKey = Qt::Key_X;
+	Qt::Key toggleLightsVisibilityKey = Qt::Key_L;
 
 	float cameraNearPlane = 0.01f;
 	float cameraFarPlane = 500.0f;
@@ -51,7 +51,6 @@ struct RendererParameters {
 	nml::vec3 otherEntitiesOutlineColor = nml::vec3(1.0f, 0.7f, 0.0f);
 
 	bool showGrid = true;
-	bool enableBackfaceCulling = true;
 	bool showCameras = true;
 	bool enableLighting = true;
 	bool showColliders = true;

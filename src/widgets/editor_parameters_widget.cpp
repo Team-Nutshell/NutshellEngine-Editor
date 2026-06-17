@@ -126,25 +126,25 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	toggleGridVisibilityKeySelect->layout()->setAlignment(toggleGridVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
 	rendererKeyGridLayout->addWidget(toggleGridVisibilityKeySelect, 3, 2);
 
-	QKeySequence toggleBackfaceCullingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
-	toggleBackfaceCullingKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_backface_culling"), toggleBackfaceCullingKeySequence.toString().toStdString());
-	toggleBackfaceCullingKeySelect->layout()->setAlignment(toggleBackfaceCullingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleBackfaceCullingKeySelect, 4, 2);
-
 	QKeySequence toggleCamerasVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCamerasVisibilityKey);
 	toggleCamerasVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_cameras_visibility"), toggleCamerasVisibilityKeySequence.toString().toStdString());
 	toggleCamerasVisibilityKeySelect->layout()->setAlignment(toggleCamerasVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleCamerasVisibilityKeySelect, 5, 2);
+	rendererKeyGridLayout->addWidget(toggleCamerasVisibilityKeySelect, 4, 2);
 
 	QKeySequence toggleLightingKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleLightingKey);
 	toggleLightingKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_lighting"), toggleLightingKeySequence.toString().toStdString());
 	toggleLightingKeySelect->layout()->setAlignment(toggleLightingKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleLightingKeySelect, 6, 2);
+	rendererKeyGridLayout->addWidget(toggleLightingKeySelect, 5, 2);
 
 	QKeySequence toggleCollidersVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 	toggleCollidersVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_colliders_visibility"), toggleCollidersVisibilityKeySequence.toString().toStdString());
 	toggleCollidersVisibilityKeySelect->layout()->setAlignment(toggleCollidersVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
-	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 7, 2);
+	rendererKeyGridLayout->addWidget(toggleCollidersVisibilityKeySelect, 6, 2);
+
+	QKeySequence toggleLightsVisibilityKeySequence = QKeySequence(m_globalInfo.editorParameters.renderer.toggleLightsVisibilityKey);
+	toggleLightsVisibilityKeySelect = new KeySelectWidget(m_globalInfo, m_globalInfo.localization.getString("editor_parameters_toggle_lights_visibility"), toggleLightsVisibilityKeySequence.toString().toStdString());
+	toggleLightsVisibilityKeySelect->layout()->setAlignment(toggleLightsVisibilityKeySelect->button, Qt::AlignmentFlag::AlignLeft);
+	rendererKeyGridLayout->addWidget(toggleLightsVisibilityKeySelect, 7, 2);
 
 	rendererVerticalLayout->addWidget(new SeparatorLine());
 
@@ -301,7 +301,6 @@ EditorParametersWidget::EditorParametersWidget(GlobalInfo& globalInfo) : m_globa
 	connect(scaleEntityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCurrentEntityVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleGridVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
-	connect(toggleBackfaceCullingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCamerasVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleLightingKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
 	connect(toggleCollidersVisibilityKeySelect, &KeySelectWidget::keyChanged, this, &EditorParametersWidget::onKeyChanged);
@@ -554,17 +553,6 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleGridVisibilityKey);
 		}
 	}
-	else if (senderWidget == toggleBackfaceCullingKeySelect) {
-		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
-		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
-			m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey = sequence[0].key();
-			m_globalInfo.mainWindow->viewMenu->toggleBackfaceCullingAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
-		}
-		else {
-			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_toggle_backface_culling"), key }));
-			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleBackfaceCullingKey);
-		}
-	}
 	else if (senderWidget == toggleCamerasVisibilityKeySelect) {
 		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
 		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
@@ -598,6 +586,17 @@ void EditorParametersWidget::onKeyChanged(const std::string& key) {
 			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleCollidersVisibilityKey);
 		}
 	}
+	else if (senderWidget == toggleLightsVisibilityKeySelect) {
+		QKeySequence sequence = QKeySequence::fromString(QString::fromStdString(key));
+		if (!sequence.isEmpty() && authorizedKey(sequence[0].key())) {
+			m_globalInfo.editorParameters.renderer.toggleLightsVisibilityKey = sequence[0].key();
+			m_globalInfo.mainWindow->viewMenu->toggleLightsVisibilityAction->setShortcut(m_globalInfo.editorParameters.renderer.toggleLightsVisibilityKey);
+		}
+		else {
+			m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_binding_unauthorized", { m_globalInfo.localization.getString("editor_parameters_toggle_lights_visibility"), key }));
+			senderWidget->setKey(m_globalInfo.editorParameters.renderer.toggleLightsVisibilityKey);
+		}
+		}
 
 	save();
 }

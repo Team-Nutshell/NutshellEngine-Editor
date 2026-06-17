@@ -1342,13 +1342,7 @@ void Renderer::paintGL() {
 	// Scene
 	gl.glViewport(0, 0, static_cast<GLsizei>(width() * m_globalInfo.devicePixelRatio), static_cast<GLsizei>(height() * m_globalInfo.devicePixelRatio));
 
-	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
-		gl.glEnable(GL_CULL_FACE);
-		gl.glCullFace(GL_BACK);
-	}
-	else {
-		gl.glDisable(GL_CULL_FACE);
-	}
+	gl.glEnable(GL_CULL_FACE);
 
 	gl.glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
 	gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1638,13 +1632,8 @@ void Renderer::paintGL() {
 			gl.glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 	}
-
-	if (m_globalInfo.editorParameters.renderer.enableBackfaceCulling) {
-		gl.glEnable(GL_CULL_FACE);
-	}
-	else {
-		gl.glDisable(GL_CULL_FACE);
-	}
+	
+	gl.glEnable(GL_CULL_FACE);
 
 	nml::vec3 gizmoPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 	bool gizmoPositionCalculated = false;
