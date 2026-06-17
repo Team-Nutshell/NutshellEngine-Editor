@@ -92,9 +92,10 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		capsule.tip = collidable.tip;
 		capsule.radius = collidable.radius;
 
-		const size_t nbLongLat = 25;
-		const float thetaStep = nml::PI / static_cast<size_t>(nbLongLat);
-		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongLat));
+		const size_t nbLatitudes = 10;
+		const size_t nbLongitudes = 25;
+		const float thetaStep = nml::PI / static_cast<size_t>(nbLatitudes);
+		const float phiStep = 2.0f * (nml::PI / static_cast<size_t>(nbLongitudes));
 
 		RendererResourceManager::ModelPrimitive modelPrimitive;
 
@@ -139,7 +140,7 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		}
 
 		for (size_t j = 1; j < modelPrimitive.mesh.vertices.size(); j++) {
-			if (j % (nbLongLat / 4 + 1) != 0) {
+			if (j % (nbLongitudes / 4 + 1) != 0) {
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j) - 1);
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j));
 			}
@@ -163,7 +164,7 @@ void ColliderMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		}
 
 		for (size_t j = baseVertexCount; j < modelPrimitive.mesh.vertices.size(); j++) {
-			if (j % (nbLongLat / 4 + 1) != 0) {
+			if (j % (nbLongitudes / 4 + 1) != 0) {
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j) - 1);
 				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(j));
 			}
