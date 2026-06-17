@@ -67,40 +67,61 @@ void LightMesh::update(GlobalInfo& globalInfo, EntityID entityID) {
 		modelPrimitive.mesh.vertices.push_back(baseVertex);
 
 		const nml::vec3 normalizedDirection = nml::normalize(light.direction);
+		nml::vec3 orthogonalVector = nml::vec3(0.0f, 0.0f, 0.0f);
+		uint8_t nonZeroIndex = 3;
+		for (uint8_t i = 0; i < 3; i++) {
+			if (normalizedDirection[i] != 0.0f) {
+				nonZeroIndex = i;
+				break;
+			}
+		}
+		if (nonZeroIndex == 3) { // Direction is (0, 0, 0)
+			return;
+		}
+		uint8_t secondIndex = (nonZeroIndex + 1) % 3;
+		orthogonalVector[secondIndex] = normalizedDirection[nonZeroIndex];
+		orthogonalVector[nonZeroIndex] = -normalizedDirection[secondIndex];
+		orthogonalVector = nml::normalize(orthogonalVector);
+		nml::vec3 baseLastVector = nml::cross(normalizedDirection, orthogonalVector);
 
-		RendererResourceManager::Mesh::Vertex tipVertex;
-		tipVertex.position = nml::vec3(normalizedDirection * light.distance);
-		modelPrimitive.mesh.vertices.push_back(tipVertex);
-
-		modelPrimitive.mesh.indices.push_back(0);
-		modelPrimitive.mesh.indices.push_back(1);
+		nml::vec3 tip = nml::vec3(normalizedDirection * light.distance);
 
 		const size_t nbSections = 25;
 		const float thetaStep = nml::PI / static_cast<size_t>(nbSections);
 
 		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			RendererResourceManager::Mesh::Vertex vertex;
-			vertex.position = nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.x)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.x)));
+			vertex.position = (((orthogonalVector * std::sin(theta)) + (baseLastVector * std::cos(theta))) * (nml::toRad(light.cutoff.x) * light.distance)) + tip;
 			modelPrimitive.mesh.vertices.push_back(vertex);
 		}
 
-		for (size_t i = 3; i < modelPrimitive.mesh.vertices.size(); i++) {
+		for (size_t i = 2; i < modelPrimitive.mesh.vertices.size(); i++) {
 			modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i) - 1);
 			modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
+
+			if ((i % 8) == 0) {
+				modelPrimitive.mesh.indices.push_back(0);
+				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
+			}
 		}
 		uint32_t innerCircleLastIndex = static_cast<uint32_t>(modelPrimitive.mesh.vertices.size()) - 1;
 		modelPrimitive.mesh.indices.push_back(innerCircleLastIndex);
-		modelPrimitive.mesh.indices.push_back(3);
+		modelPrimitive.mesh.indices.push_back(2);
 
 		for (float theta = 0.0f; theta < (2.0f * nml::PI); theta += thetaStep) {
 			RendererResourceManager::Mesh::Vertex vertex;
-			vertex.position = nml::vec3(std::cos(theta) * std::sin(nml::toRad(light.cutoff.y)), 0.0f, std::sin(theta) * std::sin(nml::toRad(light.cutoff.y)));
+			vertex.position = (((orthogonalVector * std::sin(theta)) + (baseLastVector * std::cos(theta))) * (nml::toRad(light.cutoff.y) * light.distance)) + tip;
 			modelPrimitive.mesh.vertices.push_back(vertex);
 		}
 
 		for (size_t i = innerCircleLastIndex + 2; i < modelPrimitive.mesh.vertices.size(); i++) {
 			modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i) - 1);
 			modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
+
+			if ((i % 8) == 0) {
+				modelPrimitive.mesh.indices.push_back(0);
+				modelPrimitive.mesh.indices.push_back(static_cast<uint32_t>(i));
+			}
 		}
 		uint32_t outerCircleLastIndex = static_cast<uint32_t>(modelPrimitive.mesh.vertices.size()) - 1;
 		modelPrimitive.mesh.indices.push_back(outerCircleLastIndex);
