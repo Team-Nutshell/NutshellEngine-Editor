@@ -32,6 +32,7 @@ CameraComponentWidget::CameraComponentWidget(GlobalInfo& globalInfo) : m_globalI
 	topWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_top"));
 	layout()->addWidget(topWidget);
 	nearPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_near_plane"));
+	nearPlaneWidget->setMin(0.0f);
 	layout()->addWidget(nearPlaneWidget);
 	farPlaneWidget = new ScalarWidget(m_globalInfo, m_globalInfo.localization.getString("component_camera_far_plane"));
 	layout()->addWidget(farPlaneWidget);
