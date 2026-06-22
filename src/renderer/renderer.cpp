@@ -1358,133 +1358,8 @@ void Renderer::paintGL() {
 	std::vector<Entity> cameraEntities = frustumCulling(m_camera.viewProjNonReversedMatrix, true, false);
 
 	for (const Entity& entity : cameraEntities) {
-		if (entity.isVisible &&
-			((entity.renderable && entity.renderable->isVisible) || !entity.renderable)) {
-			GLuint program;
-			if (entity.renderable &&
-				(m_globalInfo.rendererResourceManager.fragmentShaderPrograms.find(entity.renderable->fragmentShaderPath) != m_globalInfo.rendererResourceManager.fragmentShaderPrograms.end()) &&
-				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
-				(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
-				(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
-				// Entity has a custom fragment shader
-				GLuint& entityProgram = m_globalInfo.rendererResourceManager.fragmentShaderPrograms[entity.renderable->fragmentShaderPath];
-
-				program = entityProgram;
-			}
-			else {
-				// Entity does not have a custom fragment shader, default program
-				program = m_entityProgram;
-			}
-			gl.glUseProgram(program);
-
-			// Bind data
-			bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
-			const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
-			nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
-			nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
-
-			GLint modelLocation = gl.glGetUniformLocation(program, "model");
-			if (modelLocation != -1) {
-				gl.glUniformMatrix4fv(modelLocation, 1, false, modelMatrix.data());
-			}
-
-			GLint viewProjLocation = gl.glGetUniformLocation(program, "viewProj");
-			if (viewProjLocation != -1) {
-				gl.glUniformMatrix4fv(viewProjLocation, 1, false, m_camera.viewProjMatrix.data());
-			}
-
-			GLint cameraPositionAndTypeLocation = gl.glGetUniformLocation(program, "cameraPositionAndType");
-			if (cameraPositionAndTypeLocation != -1) {
-				gl.glUniform4f(cameraPositionAndTypeLocation, m_camera.position.x, m_camera.position.y, m_camera.position.z, m_camera.useOrthographicProjection ? 1.0f : 0.0f);
-			}
-
-			GLint viewLocation = gl.glGetUniformLocation(program, "view");
-			if (viewLocation != -1) {
-				gl.glUniformMatrix4fv(viewLocation, 1, false, m_camera.viewMatrix.data());
-			}
-
-			GLint timeLocation = gl.glGetUniformLocation(program, "time");
-			if (timeLocation != -1) {
-				gl.glUniform1f(timeLocation, m_time);
-			}
-
-			GLint widthLocation = gl.glGetUniformLocation(program, "width");
-			if (widthLocation != -1) {
-				gl45.glUniform1ui(widthLocation, static_cast<uint32_t>(width()));
-			}
-
-			GLint heightLocation = gl.glGetUniformLocation(program, "height");
-			if (heightLocation != -1) {
-				gl45.glUniform1ui(heightLocation, static_cast<uint32_t>(height()));
-			}
-
-			GLint shadowMapSamplerLocation = gl.glGetUniformLocation(program, "shadowMapSampler");
-			if (shadowMapSamplerLocation != -1) {
-				if (m_shadowMapImage != 0xFFFFFFFF) {
-					gl.glActiveTexture(GL_TEXTURE6);
-					gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapImage);
-					gl.glUniform1i(shadowMapSamplerLocation, 6);
-				}
-				else {
-					gl.glActiveTexture(GL_TEXTURE6);
-					gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapDummyImage);
-					gl.glUniform1i(shadowMapSamplerLocation, 6);
-				}
-			}
-
-			GLuint indexCount = 0;
-			bool hasMesh = false;
-			RendererMaterial primitiveMaterial;
-			if (entity.renderable &&
-				(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
-				(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
-				(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
-				// Entity has a mesh
-				const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
-				const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
-				const RendererMesh& entityMesh = entityPrimitive.mesh;
-				primitiveMaterial = entityPrimitive.material;
-
-				bindMesh(entityMesh, program);
-
-				indexCount = entityMesh.indexCount;
-				hasMesh = true;
-			}
-			else {
-				// Entity does not have a mesh, default cube
-				const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-				const RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
-				
-				bindMesh(defaultMesh, program);
-
-				indexCount = defaultMesh.indexCount;
-			}
-
-			if (hasMesh &&
-				entity.renderable) {
-				// Entity has a material
-				const RendererMaterial& material = !entity.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.renderable->materialPath] : primitiveMaterial;
-				bindMaterial(material, program, 0);
-
-				GLint enableShadingLocation = gl.glGetUniformLocation(program, "enableShading");
-				if (enableShadingLocation != -1) {
-					gl.glUniform1i(enableShadingLocation, m_globalInfo.editorParameters.renderer.enableLighting);
-				}
-			}
-			else {
-				// Entity has no material or no mesh, default material
-				const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
-				bindMaterial(defaultModelPrimitive.material, m_entityProgram, 0);
-
-				gl.glUniform1i(gl.glGetUniformLocation(m_entityProgram, "enableShading"), 0);
-
-				gl.glUniform3f(gl.glGetUniformLocation(m_entityProgram, "cameraPosition"), m_camera.position.x, m_camera.position.y, m_camera.position.z);
-			}
-
-			gl.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, NULL);
-		}
+		renderEntity(entity);
 	}
-
 	
 	// Entities Cameras
 	gl.glDisable(GL_CULL_FACE);
@@ -2238,7 +2113,6 @@ void Renderer::paintGL() {
 }
 
 GLuint Renderer::compileShader(GLenum shaderType, const std::string& shaderCode, int debugLineOffset) {
-	(void)debugLineOffset;
 	GLuint shader = gl.glCreateShader(shaderType);
 	const char* shaderCodec_str = shaderCode.c_str();
 	GLint shaderLength = static_cast<GLint>(shaderCode.size());
@@ -2820,7 +2694,7 @@ std::vector<Entity> Renderer::frustumCulling(const nml::mat4& viewProj, bool noM
 				nml::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
 				nml::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
 				nml::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-				nml::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z),
+				nml::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
 			};
 
 			for (const nml::vec3& corner : corners) {
@@ -2877,6 +2751,140 @@ std::vector<Entity> Renderer::frustumCulling(const nml::mat4& viewProj, bool noM
 	}
 
 	return inFrustumEntities;
+}
+
+void Renderer::renderEntity(const Entity& entity) {
+	if (entity.isVisible &&
+		((entity.renderable && entity.renderable->isVisible) || !entity.renderable)) {
+		GLuint program;
+		if (entity.renderable &&
+			(m_globalInfo.rendererResourceManager.fragmentShaderPrograms.find(entity.renderable->fragmentShaderPath) != m_globalInfo.rendererResourceManager.fragmentShaderPrograms.end()) &&
+			(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+			(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+			(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
+			// Entity has a custom fragment shader
+			GLuint& entityProgram = m_globalInfo.rendererResourceManager.fragmentShaderPrograms[entity.renderable->fragmentShaderPath];
+
+			program = entityProgram;
+		}
+		else {
+			// Entity does not have a custom fragment shader, default program
+			program = m_entityProgram;
+		}
+		gl.glUseProgram(program);
+
+		// Bind data
+		bool hasEntityMoveTransform = m_entityMoveTransforms.find(entity.entityID) != m_entityMoveTransforms.end();
+		const Transform& transform = hasEntityMoveTransform ? m_entityMoveTransforms[entity.entityID] : entity.transform;
+		nml::mat4 rotationMatrix = nml::quatToRotationMatrix(nml::eulerAnglesToQuat(nml::vec3(nml::toRad(transform.rotation.x), nml::toRad(transform.rotation.y), nml::toRad(transform.rotation.z))));
+		nml::mat4 modelMatrix = nml::translate(transform.position) * rotationMatrix * nml::scale(transform.scale);
+
+		GLint modelLocation = gl.glGetUniformLocation(program, "model");
+		if (modelLocation != -1) {
+			gl.glUniformMatrix4fv(modelLocation, 1, false, modelMatrix.data());
+		}
+
+		GLint viewProjLocation = gl.glGetUniformLocation(program, "viewProj");
+		if (viewProjLocation != -1) {
+			gl.glUniformMatrix4fv(viewProjLocation, 1, false, m_camera.viewProjMatrix.data());
+		}
+
+		GLint cameraPositionAndTypeLocation = gl.glGetUniformLocation(program, "cameraPositionAndType");
+		if (cameraPositionAndTypeLocation != -1) {
+			gl.glUniform4f(cameraPositionAndTypeLocation, m_camera.position.x, m_camera.position.y, m_camera.position.z, m_camera.useOrthographicProjection ? 1.0f : 0.0f);
+		}
+
+		GLint viewLocation = gl.glGetUniformLocation(program, "view");
+		if (viewLocation != -1) {
+			gl.glUniformMatrix4fv(viewLocation, 1, false, m_camera.viewMatrix.data());
+		}
+
+		GLint projectionLocation = gl.glGetUniformLocation(program, "projection");
+		if (projectionLocation != -1) {
+			gl.glUniformMatrix4fv(projectionLocation, 1, false, m_camera.projectionMatrix.data());
+		}
+
+		GLint timeLocation = gl.glGetUniformLocation(program, "time");
+		if (timeLocation != -1) {
+			gl.glUniform1f(timeLocation, m_time);
+		}
+
+		GLint widthLocation = gl.glGetUniformLocation(program, "width");
+		if (widthLocation != -1) {
+			gl45.glUniform1ui(widthLocation, static_cast<uint32_t>(width()));
+		}
+
+		GLint heightLocation = gl.glGetUniformLocation(program, "height");
+		if (heightLocation != -1) {
+			gl45.glUniform1ui(heightLocation, static_cast<uint32_t>(height()));
+		}
+
+		GLint shadowMapSamplerLocation = gl.glGetUniformLocation(program, "shadowMapSampler");
+		if (shadowMapSamplerLocation != -1) {
+			if (m_shadowMapImage != 0xFFFFFFFF) {
+				gl.glActiveTexture(GL_TEXTURE6);
+				gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapImage);
+				gl.glUniform1i(shadowMapSamplerLocation, 6);
+			}
+			else {
+				gl.glActiveTexture(GL_TEXTURE6);
+				gl.glBindTexture(GL_TEXTURE_2D_ARRAY, m_shadowMapDummyImage);
+				gl.glUniform1i(shadowMapSamplerLocation, 6);
+			}
+		}
+
+		GLuint indexCount = 0;
+		bool hasMesh = false;
+		RendererMaterial primitiveMaterial;
+		if (entity.renderable &&
+			(m_globalInfo.rendererResourceManager.rendererModels.find(entity.renderable->modelPath) != m_globalInfo.rendererResourceManager.rendererModels.end()) &&
+			(entity.renderable->primitiveIndex != NTSHENGN_NO_MODEL_PRIMITIVE) &&
+			(entity.renderable->primitiveIndex < m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath].primitives.size())) {
+			// Entity has a mesh
+			const RendererModel& entityModel = m_globalInfo.rendererResourceManager.rendererModels[entity.renderable->modelPath];
+			const RendererPrimitive& entityPrimitive = entityModel.primitives[entity.renderable->primitiveIndex];
+			const RendererMesh& entityMesh = entityPrimitive.mesh;
+			primitiveMaterial = entityPrimitive.material;
+
+			bindMesh(entityMesh, program);
+
+			indexCount = entityMesh.indexCount;
+			hasMesh = true;
+		}
+		else {
+			// Entity does not have a mesh, default cube
+			const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
+			const RendererMesh& defaultMesh = defaultModelPrimitive.mesh;
+
+			bindMesh(defaultMesh, program);
+
+			indexCount = defaultMesh.indexCount;
+		}
+
+		if (hasMesh &&
+			entity.renderable) {
+			// Entity has a material
+			const RendererMaterial& material = !entity.renderable->materialPath.empty() ? m_globalInfo.rendererResourceManager.materials[entity.renderable->materialPath] : primitiveMaterial;
+			bindMaterial(material, program, 0);
+
+			GLint enableShadingLocation = gl.glGetUniformLocation(program, "enableShading");
+			if (enableShadingLocation != -1) {
+				gl.glUniform1i(enableShadingLocation, m_globalInfo.editorParameters.renderer.enableLighting);
+			}
+		}
+		else {
+			// Entity has no material or no mesh, default material
+			const RendererPrimitive& defaultModelPrimitive = m_globalInfo.rendererResourceManager.rendererModels["defaultCube"].primitives[0];
+			bindMaterial(defaultModelPrimitive.material, m_entityProgram, 0);
+
+			GLint enableShadingLocation = gl.glGetUniformLocation(program, "enableShading");
+			if (enableShadingLocation != -1) {
+				gl.glUniform1i(enableShadingLocation, 0);
+			}
+		}
+
+		gl.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, NULL);
+	}
 }
 
 void Renderer::loadResourcesToGPU() {
@@ -2994,7 +3002,7 @@ void Renderer::loadResourcesToGPU() {
 	m_globalInfo.rendererResourceManager.samplersToGPU.clear();
 
 	for (const auto& fragmentShaderToGPU : m_globalInfo.rendererResourceManager.fragmentShadersToGPU) {
-		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -197);
+		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderToGPU.second, -203);
 		if (fragmentShader != 0xFFFFFFFF) {
 			if (m_globalInfo.rendererResourceManager.fragmentShaders.find(fragmentShaderToGPU.first) != m_globalInfo.rendererResourceManager.fragmentShaders.end()) {
 				gl.glDeleteShader(m_globalInfo.rendererResourceManager.fragmentShaders[fragmentShaderToGPU.first]);

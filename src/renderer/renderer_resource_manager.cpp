@@ -237,13 +237,15 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 
 #define SHADOW_MAPPING_CASCADE_COUNT 3
 
+#define NTSHENGN_CAMERA_TYPE_PERSPECTIVE 0.0
+#define NTSHENGN_CAMERA_TYPE_ORTHOGRAPHIC 1.0
+
 #define NtshEngn_position fragPosition
 #define NtshEngn_normal fragTBN[2]
 #define NtshEngn_tangent fragTBN[0]
 #define NtshEngn_bitangent fragTBN[1]
 #define NtshEngn_uv fragUV
 #define NtshEngn_color fragColor
-#define NtshEngn_tbn fragTBN
 #define NtshEngn_diffuseTexture diffuseTextureSampler
 #define NtshEngn_normalTexture normalTextureSampler
 #define NtshEngn_metalnessTexture metalnessTextureSampler
@@ -267,7 +269,10 @@ void RendererResourceManager::loadFragmentShader(const std::string& fragmentShad
 #define NtshEngn_ambientLightCount lights.count.w
 #define NtshEngn_ambientLight(i) lights.info[lights.count.x + lights.count.y + lights.count.z + i]
 #define NtshEngn_time time
-#define NtshEngn_cameraPosition cameraPosition
+#define NtshEngn_cameraPosition cameraPositionAndType.xyz
+#define NtshEngn_cameraType cameraPositionAndType.w
+#define NtshEngn_cameraView view
+#define NtshEngn_cameraProjection projection
 #define NtshEngn_width width
 #define NtshEngn_height height
 #define NtshEngn_useReversedDepth true
@@ -323,8 +328,9 @@ uniform bool useTriplanarMapping;
 uniform vec2 scaleUV;
 uniform vec2 offsetUV;
 
-uniform vec3 cameraPosition;
+uniform vec4 cameraPositionAndType;
 uniform mat4 view;
+uniform mat4 projection;
 
 uniform float time;
 

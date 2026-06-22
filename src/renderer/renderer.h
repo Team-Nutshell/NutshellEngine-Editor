@@ -52,6 +52,8 @@ private:
 
 	std::vector<Entity> frustumCulling(const nml::mat4& viewProj, bool noMesh, bool addNotVisible);
 
+	void renderEntity(const Entity& entity);
+
 	void loadResourcesToGPU();
 
 	void calculateTranslation(const std::set<EntityID> entityIDs, const nml::vec2& mouseCursorCurrentPosition);
