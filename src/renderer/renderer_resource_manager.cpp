@@ -406,7 +406,7 @@ float directionalLightShadows(uint lightIndex, vec3 position) {
 	const vec3 viewPosition = vec3(view * vec4(position, 1.0));
 
 	uint cascadeIndex = 0;
-	for (uint i = 0; i < SHADOW_MAPPING_CASCADE_COUNT - 1; i++) {
+	for (uint i = SHADOW_MAPPING_CASCADE_COUNT - 2; i >= 0; i--) {
 		if (viewPosition.z < shadows.info[shadowLayer + i].splitDepth) {
 			cascadeIndex = i + 1;
 		}
