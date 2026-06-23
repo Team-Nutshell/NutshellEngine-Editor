@@ -34,6 +34,7 @@ EntityList::EntityList(GlobalInfo& globalInfo) : m_globalInfo(globalInfo) {
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityNameSignal, this, &EntityList::onEntityNameChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityPersistenceSignal, this, &EntityList::onEntityPersistenceChanged);
 	connect(&globalInfo.signalEmitter, &SignalEmitter::toggleEntityVisibilitySignal, this, &EntityList::onEntityVisibilityToggled);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityRenderableSignal, this, &EntityList::onEntityRenderableChanged);
 	connect(itemDelegate(), &QAbstractItemDelegate::closeEditor, this, &EntityList::onLineEditClose);
 }
 
@@ -162,6 +163,10 @@ void EntityList::onEntityVisibilityToggled(EntityID entityID, bool entityIsVisib
 	}
 
 	findItemWithEntityID(entityID)->setFont(font);
+}
+
+void EntityList::onEntityRenderableChanged(EntityID entityID, const Renderable& renderable) {
+	onEntityVisibilityToggled(entityID, m_globalInfo.entities[entityID].isVisible, renderable.isVisible);
 }
 
 void EntityList::showMenu(const QPoint& pos) {

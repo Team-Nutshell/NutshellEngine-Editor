@@ -31,6 +31,7 @@ private slots:
 	void onEntityNameChanged(EntityID entityID, const std::string& name);
 	void onEntityPersistenceChanged(EntityID entityID, bool isPersistent);
 	void onEntityVisibilityToggled(EntityID entityID, bool entityIsVisible, bool renderableIsVisible);
+	void onEntityRenderableChanged(EntityID entityID, const Renderable& renderable);
 	void showMenu(const QPoint& pos);
 	void dropEvent(QDropEvent* event);
 	void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
