@@ -44,6 +44,7 @@ def parseVariableLineTokens(tokens, usingNamespaceStd, usingNamespaceNtshEngnMat
 	return ("", "Unknown")
 
 scriptNames = []
+parentScriptNames = []
 scriptPaths = []
 scriptEditableVariables = []
 
@@ -57,15 +58,23 @@ for filePath in os.listdir(sys.argv[1] + "/scripts/"):
 	if os.path.isfile(sys.argv[1] + "/scripts/" + filePath):
 		with open(sys.argv[1] + "/scripts/" + filePath, 'r') as file:
 			fileContent = file.read()
-			scriptName = re.search(scriptDefine + "(.*)", fileContent)
-			if scriptName != None:
+			scriptNameRegex = re.search(scriptDefine + "(.*)", fileContent)
+			if scriptNameRegex != None:
+				parentScriptNameRegex = re.search(" : public .* {", fileContent)
+				parentScriptName = ""
+				if parentScriptNameRegex != None:
+					parentScriptName = parentScriptNameRegex.group()[10:len(parentScriptNameRegex.group()) - 2].strip()
+					if parentScriptName == "Script":
+						parentScriptName = ""
+
 				output += "#include \"../" + filePath + "\"\n"
-				scriptNames.append(scriptName.group()[16:len(scriptName.group()) - 2].strip())
+				scriptNames.append(scriptNameRegex.group()[16:len(scriptNameRegex.group()) - 2].strip())
+				parentScriptNames.append(parentScriptName)
 				scriptPaths.append(sys.argv[1] + "/scripts/" + filePath)
 
 				scriptEditableVariables.append([])
 				usingNamespaceStd = fileContent.find("using namespace std;") != -1
-				usingNamespaceNtshEngnMath = fileContent.find("using namespace NtshEngn::Math;") != -1
+				usingNamespaceNtshEngnMath = fileContent.find("using namespace NtshEngn::Math;") != -1 or fileContent.find("using namespace Math;") != -1
 				currentParsing = fileContent
 				editableScriptVariableIndex = currentParsing.find(editableVariableDefine)
 				while editableScriptVariableIndex != -1:
@@ -98,6 +107,8 @@ output += "}\n\n"
 
 for i, scriptName in enumerate(scriptNames):
 	output += "void " + scriptName + "::createEditableScriptVariableMap() {\n"
+	if len(parentScriptNames[i]) != 0:
+		output += "\t" + parentScriptNames[i] + "::createEditableScriptVariableMap();\n";
 	for scriptEditableVariable in scriptEditableVariables[i]:
 		if scriptEditableVariable[1] != "Unknown":
 			output += "\teditableScriptVariables[\"" + scriptEditableVariable[0] + "\"] = { NtshEngn::EditableScriptVariableType::" + scriptEditableVariable[1] + ", &" + scriptEditableVariable[0] + " };\n"
