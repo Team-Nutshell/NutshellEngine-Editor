@@ -23,7 +23,7 @@ private:
 
 	std::pair<std::string, std::pair<std::string, EditableScriptVariableValue>> parseVariableLineTokens(const std::vector<std::string>& tokens, bool usingNamespaceStd, bool usingNamespaceNtshEngnMath);
 	void updateEditableScriptVariables(const std::string& scriptName);
-	void createEditableScriptVariablesWidget(const std::string& scriptName);
+	void createEditableScriptVariablesWidget(const std::string& scriptName, bool clearLayout);
 	void updateEditableScriptVariablesWidget(Scriptable& scriptable);
 
 private slots:
@@ -45,6 +45,7 @@ private:
 	std::unordered_map<std::string, QWidget*> m_editableScriptVariableNameToWidget;
 
 	std::unordered_map<std::string, std::string> m_scriptToPath;
+	std::unordered_map<std::string, std::string> m_scriptParent;
 	std::set<std::string> m_scriptsNoCase;
 
 	QFileSystemWatcher m_scriptsDirectoryWatcher;

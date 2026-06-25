@@ -906,7 +906,7 @@ void BuildBar::generateScriptManager() {
 	const std::string scriptDefine = "NTSHENGN_SCRIPT";
 	const std::string editableVariableDefine = "NTSHENGN_EDITABLE_VARIABLE";
 
-	std::vector<std::tuple<std::string, std::string, std::vector<std::pair<std::string, std::string>>>> scriptEntries;
+	std::vector<std::tuple<std::string, std::string, std::string, std::vector<std::pair<std::string, std::string>>>> scriptEntries;
 	if (std::filesystem::exists(m_globalInfo.projectDirectory + "/scripts/")) {
 		for (const auto& entry : std::filesystem::directory_iterator(m_globalInfo.projectDirectory + "/scripts/")) {
 			if (entry.is_directory()) {
@@ -923,10 +923,26 @@ void BuildBar::generateScriptManager() {
 					if (scriptNameLength != std::string::npos) {
 						std::string scriptName = scriptContent.substr(scriptNameStartPos, scriptNameLength);
 						std::string scriptPath = entry.path().string().substr((m_globalInfo.projectDirectory + "/scripts/").length());
+
+						std::string parentScriptName;
+						std::string startScriptLine = "struct " + scriptName + " : public ";
+						size_t startScript = scriptContent.find(startScriptLine);
+						if (startScript != std::string::npos) {
+							size_t scriptOpenCurlyBracket = scriptContent.find("{", startScript);
+							if (scriptOpenCurlyBracket) {
+								parentScriptName = scriptContent.substr(startScript + startScriptLine.size(), scriptOpenCurlyBracket - (startScript + startScriptLine.size()) - 1);
+								parentScriptName.erase(0, parentScriptName.find_first_not_of(' '));
+								parentScriptName.erase(parentScriptName.find_last_not_of(' ') + 1);
+							}
+						}
+						if (parentScriptName == "Script") {
+							parentScriptName.clear();
+						}
+
 						std::vector<std::pair<std::string, std::string>> editableScriptVariables;
 
 						bool usingNamespaceStd = scriptContent.find("using namespace std;") != std::string::npos;
-						bool usingNamespaceNtshEngnMath = scriptContent.find("using namespace NtshEngn::Math;") != std::string::npos;
+						bool usingNamespaceNtshEngnMath = (scriptContent.find("using namespace NtshEngn::Math;") != std::string::npos) || (scriptContent.find("using namespace Math;") != std::string::npos);
 						std::string currentParsing = scriptContent;
 						size_t editableVariableIndex;
 						while ((editableVariableIndex = currentParsing.find(editableVariableDefine)) != std::string::npos) {
@@ -947,7 +963,7 @@ void BuildBar::generateScriptManager() {
 							editableScriptVariables.push_back(parseVariableLineTokens(variableLineTokens, usingNamespaceStd, usingNamespaceNtshEngnMath));
 						}
 
-						scriptEntries.push_back({ scriptName, scriptPath, editableScriptVariables });
+						scriptEntries.push_back({ scriptName, scriptPath, parentScriptName, editableScriptVariables });
 					}
 				}
 			}
@@ -982,7 +998,11 @@ void BuildBar::generateScriptManager() {
 
 	for (size_t i = 0; i < scriptEntries.size(); i++) {
 		scriptManagerFileContent += "void " + std::get<0>(scriptEntries[i]) + "::createEditableScriptVariableMap() {\n";
-		const std::vector<std::pair<std::string, std::string>>& editableVariables = std::get<2>(scriptEntries[i]);
+		std::string parentScriptName = std::get<2>(scriptEntries[i]);
+		if (!parentScriptName.empty()) {
+			scriptManagerFileContent += "\t" + parentScriptName + "::createEditableScriptVariableMap();\n";
+		}
+		const std::vector<std::pair<std::string, std::string>>& editableVariables = std::get<3>(scriptEntries[i]);
 		for (const auto& editableVariable : editableVariables) {
 			if (editableVariable.second != "Unknown") {
 				scriptManagerFileContent += "\teditableScriptVariables[\"" + editableVariable.first + "\"] = { NtshEngn::EditableScriptVariableType::" + editableVariable.second + ", &" + editableVariable.first + " };\n";
