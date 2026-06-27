@@ -563,8 +563,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 			}
 		}
 
-		editableScriptVariablesWidget->layout()->addWidget(new QLabel("<b><i>" + QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_from_script", { scriptName })) + "</i></b>"));
-		bool addedWidgets = false;
+		std::vector<QWidget*> editableVariableWidgets;
 		for (const auto& editableScriptVariable : m_editableScriptVariables[scriptName]) {
 			std::string name = editableScriptVariable.first;
 			std::string type = editableScriptVariable.second.first;
@@ -578,8 +577,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &BooleanWidget::stateChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Int8") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -592,8 +590,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Int16") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -606,8 +603,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Int32") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -618,8 +614,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Int64") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -630,8 +625,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Uint8") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -644,8 +638,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Uint16") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -658,8 +651,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Uint32") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -670,8 +662,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Uint64") {
 					IntegerWidget* widget = new IntegerWidget(m_globalInfo, name);
@@ -682,8 +673,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &IntegerWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Float32") {
 					ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
@@ -694,8 +684,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Float64") {
 					ScalarWidget* widget = new ScalarWidget(m_globalInfo, name);
@@ -706,8 +695,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &ScalarWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "String") {
 					StringWidget* widget = new StringWidget(m_globalInfo, name);
@@ -718,8 +706,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &StringWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Vector2") {
 					Vector2Widget* widget = new Vector2Widget(m_globalInfo, name);
@@ -730,8 +717,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &Vector2Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Vector3") {
 					Vector3Widget* widget = new Vector3Widget(m_globalInfo, name);
@@ -742,8 +728,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &Vector3Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Vector4") {
 					Vector4Widget* widget = new Vector4Widget(m_globalInfo, name);
@@ -754,8 +739,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &Vector4Widget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else if (type == "Quaternion") {
 					QuaternionWidget* widget = new QuaternionWidget(m_globalInfo, name);
@@ -767,8 +751,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 					connect(widget, &QuaternionWidget::valueChanged, this, &ScriptableComponentWidget::onEditableScriptVariableChanged);
 
-					editableScriptVariablesWidget->layout()->addWidget(widget);
-					addedWidgets = true;
+					editableVariableWidgets.push_back(widget);
 				}
 				else {
 					m_globalInfo.logger.addLog(LogLevel::Warning, m_globalInfo.localization.getString("log_script_unsupported_editable_variable_type", { scriptName, name, type }));
@@ -776,8 +759,11 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 			}
 		}
 
-		if (!addedWidgets) {
-			editableScriptVariablesWidget->layout()->takeAt(editableScriptVariablesWidget->layout()->count() - 1);
+		if (!editableVariableWidgets.empty()) {
+			editableScriptVariablesWidget->layout()->addWidget(new QLabel("<b><i>" + QString::fromStdString(m_globalInfo.localization.getString("component_scriptable_from_script", { scriptName })) + "</i></b>"));
+			for (QWidget* editableVariableWidget : editableVariableWidgets) {
+				editableScriptVariablesWidget->layout()->addWidget(editableVariableWidget);
+			}
 		}
 	}
 
