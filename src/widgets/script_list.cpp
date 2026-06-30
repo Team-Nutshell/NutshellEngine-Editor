@@ -130,6 +130,8 @@ void ScriptList::duplicateScript(const std::string& scriptName) {
 	std::filesystem::copy(m_scriptsDirectory + "/" + scriptName + ".h", m_scriptsDirectory + "/" + duplicatedScriptName + ".h", std::filesystem::copy_options::none);
 
 	renameScriptClass(scriptName, duplicatedScriptName);
+
+	currentlyEditedItemName = duplicatedScriptName;
 }
 
 void ScriptList::resizeFont(int delta) {
