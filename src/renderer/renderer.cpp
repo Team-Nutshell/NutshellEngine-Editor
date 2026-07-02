@@ -3744,6 +3744,7 @@ void Renderer::focusOutEvent(QFocusEvent* event) {
 	m_cameraUpKeyPressed = false;
 	m_cameraDownKeyPressed = false;
 	m_moveCameraButtonPressed = false;
+	m_multiSelectionKeyPressed = false;
 	setCursor(Qt::CursorShape::ArrowCursor);
 	event->accept();
 }
