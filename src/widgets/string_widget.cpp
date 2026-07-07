@@ -7,6 +7,7 @@ StringWidget::StringWidget(GlobalInfo& globalInfo, const std::string& name) : m_
 	nameLabel = new QLabel(QString::fromStdString(name));
 	layout()->addWidget(nameLabel);
 	valueLineEdit = new QLineEdit("");
+	valueLineEdit->setMinimumWidth(200);
 	layout()->addWidget(valueLineEdit);
 	layout()->setAlignment(valueLineEdit, Qt::AlignmentFlag::AlignRight);
 
