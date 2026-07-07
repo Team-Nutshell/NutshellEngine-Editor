@@ -519,6 +519,7 @@ void AssetList::onLineEditClose(QWidget* lineEdit, QAbstractItemDelegate::EndEdi
 			emit m_globalInfo.signalEmitter.renameFileSignal(m_currentDirectory + "/" + currentlyEditedItemName, m_currentDirectory + "/" + newName);
 			if (!std::filesystem::is_directory(m_currentDirectory + "/" + newName)) {
 				m_globalInfo.selectionUndoStack->push(new SelectAssetEntitiesCommand(m_globalInfo, SelectionType::Asset, m_currentDirectory + "/" + newName, NO_ENTITY, {}));
+				actionOnFile(newName);
 			}
 		}
 	}
