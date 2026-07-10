@@ -3,7 +3,6 @@
 #include "../undo_commands/copy_entities_command.h"
 #include <QKeySequence>
 #include <algorithm>
-#include <iterator>
 
 EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(globalInfo.localization.getString("header_edit"))), m_globalInfo(globalInfo) {
 	m_undoActionAction = m_globalInfo.actionUndoStack->createUndoAction(this, "&" + QString::fromStdString(m_globalInfo.localization.getString("header_edit_action_undo")));
@@ -33,10 +32,20 @@ EditMenu::EditMenu(GlobalInfo& globalInfo) : QMenu("&" + QString::fromStdString(
 void EditMenu::copyEntities() {
 	if (m_globalInfo.currentEntityID != NO_ENTITY) {
 		m_globalInfo.copiedEntities.clear();
-		m_globalInfo.copiedEntities.push_back(m_globalInfo.entities[m_globalInfo.currentEntityID]);
+
+		std::vector<std::pair<EntityID, int>> entityPositions;
+		entityPositions.push_back({ m_globalInfo.currentEntityID, m_globalInfo.mainWindow->entityPanel->entityList->row(m_globalInfo.mainWindow->entityPanel->entityList->findItemWithEntityID(m_globalInfo.currentEntityID)) });
 		for (EntityID otherSelectedEntityID : m_globalInfo.otherSelectedEntityIDs) {
-			m_globalInfo.copiedEntities.push_back(m_globalInfo.entities[otherSelectedEntityID]);
+			entityPositions.push_back({ otherSelectedEntityID, m_globalInfo.mainWindow->entityPanel->entityList->row(m_globalInfo.mainWindow->entityPanel->entityList->findItemWithEntityID(otherSelectedEntityID)) });
 		}
+		std::sort(entityPositions.begin(), entityPositions.end(), [](const std::pair<EntityID, int>& a, const std::pair<EntityID, int>& b) {
+			return a.second < b.second;
+			});
+
+		for (size_t i = 0; i < entityPositions.size(); i++) {
+			m_globalInfo.copiedEntities.push_back(m_globalInfo.entities[entityPositions[i].first]);
+		}
+
 		m_pasteEntitiesAction->setEnabled(true);
 	}
 }
