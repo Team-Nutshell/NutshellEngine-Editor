@@ -285,6 +285,8 @@ namespace NtshEngn {
 		Image* image = nullptr;
 		ImageSamplerFilter imageSamplerFilter = ImageSamplerFilter::Unknown;
 		float height = 0.0f;
+		Math::vec2 topLeft;
+		Math::vec2 bottomRight;
 		std::unordered_map<wchar_t, FontGlyph> glyphs;
 	};
 

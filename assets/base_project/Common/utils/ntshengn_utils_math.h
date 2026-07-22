@@ -954,7 +954,7 @@ namespace NtshEngn {
 				cosHalfX * sinHalfY * cosHalfZ - sinHalfX * cosHalfY * sinHalfZ,
 				cosHalfX * cosHalfY * sinHalfZ + sinHalfX * sinHalfY * cosHalfZ);
 		}
-		inline quat axisAngleToQuat(const vec3& axis, float angle) {
+		inline quat axisAngleToQuat(const float angle, const vec3& axis) {
 			const float factor = std::sin(angle / 2.0f);
 	
 			return normalize(quat(std::cos(angle / 2.0f), axis.x * factor, axis.y * factor, axis.z * factor));
