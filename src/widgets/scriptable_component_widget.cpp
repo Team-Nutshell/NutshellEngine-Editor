@@ -558,9 +558,7 @@ void ScriptableComponentWidget::createEditableScriptVariablesWidget(const std::s
 
 	if (m_scriptToPath.find(scriptName) != m_scriptToPath.end()) {
 		if (m_scriptParent.find(scriptName) != m_scriptParent.end()) {
-			if (m_editableScriptVariables.find(m_scriptParent[scriptName]) != m_editableScriptVariables.end()) {
-				createEditableScriptVariablesWidget(m_scriptParent[scriptName], false);
-			}
+			createEditableScriptVariablesWidget(m_scriptParent[scriptName], false);
 		}
 
 		std::vector<QWidget*> editableVariableWidgets;
