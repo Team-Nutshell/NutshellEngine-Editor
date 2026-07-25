@@ -3229,6 +3229,12 @@ void Renderer::cancelTransform() {
 		m_scaleEntityMode = false;
 		m_selectionMeanPosition = nml::vec3(0.0f, 0.0f, 0.0f);
 		m_entityMoveTransforms.clear();
+
+		// Update Transform Widget
+		if (m_globalInfo.currentEntityID != NO_ENTITY) {
+			MainWindow* mainWindow = m_globalInfo.mainWindow;
+			mainWindow->infoPanel->entityInfoPanel->componentScrollArea->componentList->transformWidget->updateWidgets(m_globalInfo.entities[m_globalInfo.currentEntityID].transform);
+		}
 	}
 }
 
