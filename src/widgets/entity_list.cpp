@@ -109,9 +109,20 @@ void EntityList::onEntityCreated(EntityID entityID) {
 	addItem(new EntityListItem(m_globalInfo, entityID));
 
 	Entity& entity = m_globalInfo.entities[entityID];
+	bool entityNotVisible = false;
+	if (!entity.isVisible) {
+		EntityListItem* item = findItemWithEntityID(entityID);
+		item->setForeground(QBrush(m_entityNotVisibleColor));
+		entityNotVisible = true;
+	}
 	if (entity.renderable && !entity.renderable->isVisible) {
 		EntityListItem* item = findItemWithEntityID(entityID);
-		item->setForeground(QBrush(m_entityRenderableNotVisibleColor));
+		if (entityNotVisible) {
+			item->setForeground(QBrush(m_entityNotVisibleRenderableNotVisibleColor));
+		}
+		else {
+			item->setForeground(QBrush(m_entityRenderableNotVisibleColor));
+		}
 	}
 
 	SaveTitleChanger::change(m_globalInfo.mainWindow);
