@@ -5,16 +5,13 @@
 
 CopyEntitiesCommand::CopyEntitiesCommand(GlobalInfo& globalInfo, std::vector<Entity> entities) : m_globalInfo(globalInfo) {
 	m_copiedEntities = entities;
-	std::set<std::string> copiedEntitiesNames;
-	for (const Entity& copiedEntity : m_copiedEntities) {
-		copiedEntitiesNames.insert(copiedEntity.name);
-	}
 	m_pastedEntityIDs.resize(m_copiedEntities.size());
 	for (size_t i = 0; i < m_copiedEntities.size(); i++) {
 		Entity& copiedEntity = m_copiedEntities[i];
 
 		uint32_t entityNameIndex = 0;
-		if ((m_globalInfo.findEntityByName(copiedEntity.name) == NO_ENTITY) && (copiedEntitiesNames.count(copiedEntity.name) == 0)) {
+		if ((m_globalInfo.findEntityByName(copiedEntity.name) == NO_ENTITY) &&
+			(std::find(m_pastedEntityNames.begin(), m_pastedEntityNames.end(), copiedEntity.name) == m_pastedEntityNames.end())) {
 			m_pastedEntityNames.push_back(copiedEntity.name);
 		}
 		else {
