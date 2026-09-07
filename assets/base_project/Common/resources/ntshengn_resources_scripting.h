@@ -49,6 +49,10 @@ namespace NtshEngn {
 	// Script
 	struct ScriptBase {
 		virtual ~ScriptBase() {}
+		
+		virtual void lateUpdate(float dt) {
+			NTSHENGN_UNUSED(dt);
+		}
 
 		virtual void onSceneEnter(const std::string& scenePath) {
 			NTSHENGN_UNUSED(scenePath);
