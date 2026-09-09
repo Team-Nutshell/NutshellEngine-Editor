@@ -74,11 +74,7 @@ void AssetList::duplicateAsset(const std::string& path) {
 	std::string directory = path.substr(0, lastSlashPosition);
 	std::string filename = path.substr(lastSlashPosition + 1);
 
-	bool isDirectory = false;
-	if (std::filesystem::is_directory(directory + "/" + filename)) {
-		filename.pop_back();
-		isDirectory = true;
-	}
+	bool isDirectory = std::filesystem::is_directory(directory + "/" + filename);
 
 	std::string extension = "";
 	std::string baseAssetName = filename;
