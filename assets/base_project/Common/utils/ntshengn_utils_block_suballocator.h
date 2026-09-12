@@ -49,8 +49,7 @@ namespace NtshEngn {
 						if (!previousBlock.inUse && !nextBlock.inUse) { // Merge
 							previousBlock.size += size + nextBlock.size;
 
-							m_blockQueue.erase(it + 1);
-							m_blockQueue.erase(it);
+							m_blockQueue.erase(it, it + 2);
 						}
 						else if (previousBlock.inUse && nextBlock.inUse) { // Not in use anymore
 							currentBlock.inUse = false;
