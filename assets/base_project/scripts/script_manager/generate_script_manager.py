@@ -90,18 +90,23 @@ if len(scriptNames) != 0:
 output += "NtshEngn::Scriptable NtshEngn::ScriptManager::createScriptable(const std::string& scriptName) {\n"
 if len(scriptNames) == 0:
 	output += "\tNTSHENGN_UNUSED(scriptName);\n\n"
-output += "\tScriptable scriptable;\n\n"
+output += "\tScriptable scriptable;\n"
+if len(scriptNames) != 0:
+	output += "\tScriptBase* script = nullptr;\n\n"
+else:
+	output += "\n"
 for i, scriptName in enumerate(scriptNames):
 	output += "\t"
 	if i != 0:
 		output += "else "
 	output += "if (scriptName == \"" + scriptName + "\") {\n"
-	output += "\t\t" + scriptName + "* script = createScript<" + scriptName + ">();\n"
-	output += "\t\tscript->createEditableScriptVariableMap();\n"
-	output += "\t\tscriptable.script = script;\n"
+	output += "\t\tscript = createScript<" + scriptName + ">();\n"
 	output += "\t}\n"
 if len(scriptNames) != 0:
-	output += "\n"
+	output += "\n\tif (script) {\n"
+	output += "\t\tscript->createEditableScriptVariableMap();\n"
+	output += "\t\tscriptable.script = script;\n"
+	output += "\t}\n\n"
 output += "\treturn scriptable;\n"
 output += "}\n\n"
 
