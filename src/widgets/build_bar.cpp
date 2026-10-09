@@ -983,22 +983,12 @@ void BuildBar::generateScriptManager() {
 	if (scriptEntries.empty()) {
 		scriptManagerFileContent += "\tNTSHENGN_UNUSED(scriptName);\n\n";
 	}
-	scriptManagerFileContent += "\tScriptable scriptable;\n";
-	if (!scriptEntries.empty()) {
-		scriptManagerFileContent += "\tScriptBase* script = nullptr;\n\n";
-	}
-	else {
-		scriptManagerFileContent += "\n";
-	}
+	scriptManagerFileContent += "\tScriptable scriptable;\n\n";
 	for (size_t i = 0; i < scriptEntries.size(); i++) {
-		scriptManagerFileContent += "\t";
-		if (i != 0) {
-			scriptManagerFileContent += "else ";
-		}
-		scriptManagerFileContent += "if (scriptName == \"" + std::get<0>(scriptEntries[i]) + "\") {\n\t\tscript = createScript<" + std::get<0>(scriptEntries[i]) + ">();\n\t}\n";
+		scriptManagerFileContent += "\tif (scriptName == \"" + std::get<0>(scriptEntries[i]) + "\") {\n\t\t" + std::get<0>(scriptEntries[i]) + "* script = createScript<" + std::get<0>(scriptEntries[i]) + ">();\n\t\tscript->createEditableScriptVariableMap();\n\t\tscriptable.script = script;\n\t\treturn scriptable;\n\t}\n";
 	}
 	if (!scriptEntries.empty()) {
-		scriptManagerFileContent += "\n\tif (script) {\n\t\tscript->createEditableScriptVariableMap();\n\t\tscriptable.script = script;\n\t}\n\n";
+		scriptManagerFileContent += "\n";
 	}
 	scriptManagerFileContent += "\treturn scriptable;\n}\n\n";
 
