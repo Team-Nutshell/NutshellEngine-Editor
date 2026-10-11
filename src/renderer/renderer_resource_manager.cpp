@@ -2184,7 +2184,7 @@ std::unordered_map<std::string, RendererMaterial> RendererResourceManager::loadM
 				image.data = { static_cast<uint8_t>(round(255.0f * std::atof(tokens[1].c_str()))),
 					static_cast<uint8_t>(round(255.0f * std::atof(tokens[2].c_str()))),
 					static_cast<uint8_t>(round(255.0f * std::atof(tokens[3].c_str()))),
-					static_cast<uint8_t>(round(255.0f))
+					255
 				};
 				std::string imageName = AssetHelper::absoluteToRelative(materialPath, projectDirectory) + "_diffuseTexture";
 				imagesToGPU[imageName] = image;
