@@ -29,9 +29,9 @@ void EntityGroupNameWidget::onRemoveEntityGroupClicked() {
 
 void EntityGroupNameWidget::onEditingFinished() {
 	std::string newValue = entityGroupNameLineEdit->text().toStdString();
+	entityGroupNameLineEdit->clearFocus();
 	if (m_text != newValue) {
 		setText(newValue);
 		emit changeEntityGroupNameSignal(m_text);
 	}
-	entityGroupNameLineEdit->clearFocus();
 }

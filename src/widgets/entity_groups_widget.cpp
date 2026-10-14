@@ -12,6 +12,22 @@ EntityGroupsWidget::EntityGroupsWidget(GlobalInfo& globalInfo) : m_globalInfo(gl
 
 	connect(&globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityGroupsWidget::onEntitySelected);
 	connect(addEntityGroupButton, &QPushButton::clicked, this, &EntityGroupsWidget::onAddEntityGroupClicked);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityEntityGroups, this, &EntityGroupsWidget::updateWidget);
+}
+
+void EntityGroupsWidget::updateWidget() {
+	if (m_globalInfo.currentEntityID != NO_ENTITY) {
+		QLayoutItem* item = nullptr;
+		while ((layout()->count() != 1) && (item = layout()->takeAt(0))) {
+			delete item->widget();
+			delete item;
+		}
+
+		for (const std::string& entityGroupName : m_globalInfo.entities[m_globalInfo.currentEntityID].entityGroups) {
+			EntityGroupNameWidget* newEntityGroupNameWidget = addEntityGroupNameWidget();
+			newEntityGroupNameWidget->setText(entityGroupName);
+		}
+	}
 }
 
 void EntityGroupsWidget::updateEntityGroups() {
@@ -28,7 +44,7 @@ void EntityGroupsWidget::updateEntityGroups() {
 	}
 	m_globalInfo.actionUndoStack->push(new ChangeEntitiesEntityGroupsCommand(m_globalInfo, changedEntityIDs, changedEntityGroupNames));
 
-	emit updateEntityGroupsSignal();
+	emit m_globalInfo.signalEmitter.changeEntityEntityGroups(m_globalInfo.currentEntityID);
 }
 
 EntityGroupNameWidget* EntityGroupsWidget::addEntityGroupNameWidget() {
@@ -42,18 +58,7 @@ EntityGroupNameWidget* EntityGroupsWidget::addEntityGroupNameWidget() {
 }
 
 void EntityGroupsWidget::onEntitySelected() {
-	if (m_globalInfo.currentEntityID != NO_ENTITY) {
-		QLayoutItem* item = nullptr;
-		while ((layout()->count() != 1) && (item = layout()->takeAt(0))) {
-			delete item->widget();
-			delete item;
-		}
-
-		for (const std::string& entityGroupName : m_globalInfo.entities[m_globalInfo.currentEntityID].entityGroups) {
-			EntityGroupNameWidget* newEntityGroupNameWidget = addEntityGroupNameWidget();
-			newEntityGroupNameWidget->setText(entityGroupName);
-		}
-	}
+	updateWidget();
 }
 
 void EntityGroupsWidget::onEntityGroupNameChanged() {

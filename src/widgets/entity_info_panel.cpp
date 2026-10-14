@@ -17,7 +17,7 @@ EntityInfoPanel::EntityInfoPanel(GlobalInfo& globalInfo) : m_globalInfo(globalIn
 	layout()->addWidget(componentScrollArea);
 
 	connect(&m_globalInfo.signalEmitter, &SignalEmitter::selectEntitySignal, this, &EntityInfoPanel::updateEntityGroupsNumber);
-	connect(entityGroupsWidget, &EntityGroupsWidget::updateEntityGroupsSignal, this, &EntityInfoPanel::updateEntityGroupsNumber);
+	connect(&globalInfo.signalEmitter, &SignalEmitter::changeEntityEntityGroups, this, &EntityInfoPanel::updateEntityGroupsNumber);
 }
 
 void EntityInfoPanel::updateEntityGroupsNumber() {

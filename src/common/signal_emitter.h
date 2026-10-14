@@ -21,6 +21,7 @@ signals:
 	void selectEntitySignal();
 	void changeEntityNameSignal(EntityID, const std::string&);
 	void changeEntityPersistenceSignal(EntityID, bool);
+	void changeEntityEntityGroups(EntityID);
 	void changeEntityTransformSignal(EntityID, const Transform&);
 	void addEntityCameraSignal(EntityID);
 	void removeEntityCameraSignal(EntityID);

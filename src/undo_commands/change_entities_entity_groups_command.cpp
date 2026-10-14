@@ -17,11 +17,15 @@ ChangeEntitiesEntityGroupsCommand::ChangeEntitiesEntityGroupsCommand(GlobalInfo&
 void ChangeEntitiesEntityGroupsCommand::undo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		m_globalInfo.entities[m_entityIDs[i]].entityGroups = m_oldEntityGroups[i];
+
+		emit m_globalInfo.signalEmitter.changeEntityEntityGroups(m_entityIDs[i]);
 	}
 }
 
 void ChangeEntitiesEntityGroupsCommand::redo() {
 	for (size_t i = 0; i < m_entityIDs.size(); i++) {
 		m_globalInfo.entities[m_entityIDs[i]].entityGroups = m_newEntityGroups;
+
+		emit m_globalInfo.signalEmitter.changeEntityEntityGroups(m_entityIDs[i]);
 	}
 }

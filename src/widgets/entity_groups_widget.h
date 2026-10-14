@@ -11,12 +11,10 @@ public:
 	EntityGroupsWidget(GlobalInfo& globalInfo);
 
 private:
+	void updateWidget();
 	void updateEntityGroups();
 
 	EntityGroupNameWidget* addEntityGroupNameWidget();
-
-signals:
-	void updateEntityGroupsSignal();
 
 private slots:
 	void onEntitySelected();
