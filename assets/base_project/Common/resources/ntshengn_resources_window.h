@@ -11,6 +11,14 @@ namespace NtshEngn {
 	typedef void* NativeWindowHandle;
 	typedef void* NativeWindowAdditionalInformation;
 
+	// Display protocols
+	enum class DisplayProtocol {
+		Win32,
+		X11,
+		Wayland,
+		Unknown
+	};
+
 	// Input
 	enum class InputState {
 		None, // State when the input is neutral
