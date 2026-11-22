@@ -1,5 +1,5 @@
 #pragma once
-#include "../utils/ntshengn_enums.h"
+#include "../resources/ntshengn_resources_module.h"
 #include "../asset_manager/ntshengn_asset_manager_interface.h"
 #include "../job_system/ntshengn_job_system_interface.h"
 #include "../command_line/ntshengn_command_line_interface.h"
@@ -23,6 +23,17 @@ namespace NtshEngn {
 		virtual void init() = 0;
 		virtual void update(float dt) = 0;
 		virtual void destroy() = 0;
+
+		virtual void setParameter(const std::string& parameterName, void* data) {
+			NTSHENGN_UNUSED(parameterName);
+			NTSHENGN_UNUSED(data);
+		}
+
+		virtual void* getParameter(const std::string& parameterName) {
+			NTSHENGN_UNUSED(parameterName);
+
+			return nullptr;
+		}
 
 		const ModuleType getType() const {
 			return m_type;
