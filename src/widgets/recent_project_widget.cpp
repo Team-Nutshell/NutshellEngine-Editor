@@ -20,7 +20,7 @@ RecentProjectWidget::RecentProjectWidget(GlobalInfo& globalInfo, const std::stri
 	}
 
 	setLayout(new QVBoxLayout());
-	layout()->setContentsMargins(0, 0, 0, 0);
+	layout()->setContentsMargins(2, 0, 2, 0);
 	QWidget* hBoxLayoutWidget = new QWidget();
 	hBoxLayoutWidget->setLayout(new QHBoxLayout());
 	hBoxLayoutWidget->layout()->setContentsMargins(0, 0, 0, 0);
